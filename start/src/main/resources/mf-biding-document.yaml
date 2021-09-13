@@ -1,0 +1,69 @@
+#nacos 配置 Data Id ：mf-biding-document.yaml  Group：mfexpress2
+project:
+  name: mf-deliver
+server:
+  port: 9220
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  cloud:
+    nacos:
+      profile: dev
+      discovery:
+        server-addr: 127.0.0.1:8848
+  application:
+    name: mf-deliver
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://dev2mysql.baic-mfexpress.com:3306/mf-deliver?useUnicode=true&characterEncoding=utf8&characterSetResults=utf8
+    username: root
+    password: root
+  redis:
+    commandTimeout: 60000
+    database: 0
+    host: 'dev2mysql.baic-mfexpress.com'
+    password: 'Huaxing@100'
+    jedis:
+      pool:
+        max-active: 200
+        max-idle: 10
+        max-wait: -1
+        min-idle: 0
+    port: 6379
+    timeout: 60000
+mfexpress:
+  name: mf-deliver
+feign:
+  hystrix:
+    enabled: true
+hystrix:
+  command:
+    default:
+      circuitBreaker:
+        forceClosed: true
+        sleepWindowInMilliseconds: 500000
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 500000
+ribbon:
+  ConnectTimeout: 50000
+  ReadTimeout: 500000
+  SocketTimeout: 500000
+elasticsearch:
+  #host:172.16.2.231
+  host: 121.43.148.158
+  port: 9200
+  user-name: ''
+  password: ''
+rocketmq:
+  consumer:
+    group-name: project_customer
+    namesrv-addr: 121.43.148.158:9876
+    topics: mysql_binlog~*;
+  producer:
+    group-name: project_producer
+    namesrv-addr: 121.43.148.158:9876
+domain:
+  perfix_url: http://dev2vehicle.baic-mfexpress.com/domain/

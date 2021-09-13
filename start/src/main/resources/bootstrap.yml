@@ -1,0 +1,87 @@
+spring:
+  application:
+    name: mf-deliver
+  profiles:
+    active: @spring.active@
+---
+spring:
+  profiles: dev2local
+  cloud:
+    nacos:
+      config:
+        server-addr: 127.0.0.1:8848
+        file-extension: yaml
+        enabled: true
+        prefix: ${spring.application.name}
+        group: mfexpress2
+
+---
+spring:
+  profiles: dev2m1
+  cloud:
+    nacos:
+      config:
+        server-addr: dev2nacos.baic-mfexpress.com:8848
+        #        server-addr: 127.0.0.1:8848
+        file-extension: yaml
+        enabled: true
+        prefix: ${spring.application.name}
+        group: mfexpress2
+        namespace: dev2m1
+      discovery:
+        server-addr: ${spring.cloud.nacos.config.server-addr}
+        group: ${spring.cloud.nacos.config.group}
+        namespace: ${spring.cloud.nacos.config.namespace}
+---
+spring:
+  profiles: dev2m2
+  cloud:
+    nacos:
+      config:
+        server-addr: dev2nacos.baic-mfexpress.com:8848
+        #        server-addr: 127.0.0.1:8848
+        file-extension: yaml
+        enabled: true
+        prefix: ${spring.application.name}
+        group: mfexpress2
+        namespace: dev2m2
+      discovery:
+        server-addr: ${spring.cloud.nacos.config.server-addr}
+        group: ${spring.cloud.nacos.config.group}
+        namespace: ${spring.cloud.nacos.config.namespace}
+---
+spring:
+  profiles: test
+  cloud:
+    nacos:
+      config:
+        server-addr: dev2nacos.baic-mfexpress.com:8848
+        #        server-addr: 127.0.0.1:8848
+        file-extension: yaml
+        enabled: true
+        prefix: ${spring.application.name}
+        group: mfexpress2
+        namespace: test
+      discovery:
+        server-addr: ${spring.cloud.nacos.config.server-addr}
+        group: ${spring.cloud.nacos.config.group}
+        namespace: ${spring.cloud.nacos.config.namespace}
+---
+spring:
+  profiles: prod
+  cloud:
+    nacos:
+      config:
+        server-addr: dev2nacos.baic-mfexpress.com:8848
+        #        server-addr: 127.0.0.1:8848
+        file-extension: yaml
+        enabled: true
+        prefix: ${spring.application.name}
+        group: mfexpress2
+        namespace: prod
+      discovery:
+        server-addr: ${spring.cloud.nacos.config.server-addr}
+        group: ${spring.cloud.nacos.config.group}
+        namespace: ${spring.cloud.nacos.config.namespace}
+
+
