@@ -20,6 +20,9 @@ public class ServeDeliverTaskVO {
     @ApiModelProperty(value = "提车时间 ")
     private Date extractVehicleTime;
 
+    @ApiModelProperty(value = "合同编号")
+    private String contractNo;
+
     @ApiModelProperty(value = "订单车型列表")
     private List<OrderCarModelVO> carModelVOList;
 
