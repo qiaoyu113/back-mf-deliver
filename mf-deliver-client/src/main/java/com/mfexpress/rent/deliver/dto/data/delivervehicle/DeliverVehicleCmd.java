@@ -23,5 +23,7 @@ public class DeliverVehicleCmd {
 
     @ApiModelProperty(value = "发车时间")
     private Date deliverVehicleTime;
+    @ApiModelProperty(value = "客户id")
+    private Integer customerId;
 
 }

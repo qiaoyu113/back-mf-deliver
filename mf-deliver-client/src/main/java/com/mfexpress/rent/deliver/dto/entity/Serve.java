@@ -22,6 +22,8 @@ public class Serve {
 
     private Long serveId;
 
+    private Integer customerId;
+
     private String serveNo;
 
     private Integer carModelId;

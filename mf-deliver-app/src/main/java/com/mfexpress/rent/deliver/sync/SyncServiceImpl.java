@@ -1,8 +1,6 @@
 package com.mfexpress.rent.deliver.sync;
 
-import com.mfexpress.common.domain.api.DictAggregateRootApi;
-import com.mfexpress.common.domain.dto.DictDataDTO;
-import com.mfexpress.common.domain.dto.DictTypeDTO;
+
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
 import com.mfexpress.component.starter.utils.MqTools;
@@ -30,12 +28,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class SyncServiceImpl implements SyncServiceI {
@@ -55,8 +49,7 @@ public class SyncServiceImpl implements SyncServiceI {
     private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
-    @Resource
-    private DictAggregateRootApi dictAggregateRootApi;
+
     @Resource
     private MFOrderAggregateRootApi mfOrderAggregateRootApi;
 
@@ -82,7 +75,7 @@ public class SyncServiceImpl implements SyncServiceI {
         BeanUtils.copyProperties(serveDTO, serveEs);
         serveEs.setServeStatus(serveDTO.getStatus());
         //租赁方式
-        serveEs.setLeaseModelDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.DELIVER_LEASE_MODE), serveEs.getLeaseModelId().toString()));
+//        serveEs.setLeaseModelDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.DELIVER_LEASE_MODE), serveEs.getLeaseModelId().toString()));
         //品牌车型描述
         Result<String> carModelResult = vehicleAggregateRootApi.getVehicleBrandTypeById(serveEs.getCarId());
         serveEs.setBrandModelDisplay(carModelResult.getData());
@@ -177,25 +170,5 @@ public class SyncServiceImpl implements SyncServiceI {
 
     }
 
-    private Map<String, DictDataDTO> getDictDataDtoMapByDictType(String dictType) {
-        DictTypeDTO dictTypeDTO = new DictTypeDTO();
-        dictTypeDTO.setDictType(dictType);
-        List<DictDataDTO> dictDataDTOList = dictAggregateRootApi.getDictByType(dictTypeDTO);
-        if (dictDataDTOList == null || dictDataDTOList.isEmpty()) {
-            return new HashMap<>(16);
-        }
-        Map<String, DictDataDTO> dictDataDTOMap = dictDataDTOList.stream().collect(Collectors.toMap(DictDataDTO::getDictValue, Function.identity(), (key1, key2) -> key1));
-        return dictDataDTOMap;
-    }
 
-    /**
-     * 字典值
-     */
-    private String getDictDataDtoLabelByValue(Map<String, DictDataDTO> dictDataDtoMap, String value) {
-        DictDataDTO dictDataDTO = dictDataDtoMap.get(value);
-        if (dictDataDTO != null) {
-            return dictDataDTO.getDictLabel();
-        }
-        return "";
-    }
 }

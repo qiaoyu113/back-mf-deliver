@@ -78,11 +78,7 @@
                 <version>${feign.version}</version>
                 <scope>compile</scope>
             </dependency>
-            <dependency>
-                <groupId>com.mfexpress</groupId>
-                <artifactId>mf-common-client</artifactId>
-                <version>${project.version}</version>
-            </dependency>
+
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>

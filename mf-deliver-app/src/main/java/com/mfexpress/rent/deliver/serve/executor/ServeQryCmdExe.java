@@ -174,6 +174,7 @@ public class ServeQryCmdExe {
             servePreselectedListVO.setExtractVehicleTime(serveListVO.getExtractVehicleTime());
             servePreselectedListVO.setCustomerName(serveListVO.getCustomerName());
             servePreselectedListVO.setPage(serveListVO.getPage());
+            servePreselectedListVO.setCustomerId(serveListVO.getCustomerId());
         }
 
         return servePreselectedListVO;
@@ -254,6 +255,7 @@ public class ServeQryCmdExe {
             serveListVO.setCustomerName(serveEsExample.getCustomerName());
             serveListVO.setContractNo(serveEsExample.getContractNo());
             serveListVO.setExtractVehicleTime(serveEsExample.getExtractVehicleTime());
+            serveListVO.setCustomerId(serveEsExample.getCustomerId());
         } else {
             //todo es查询订单信息
         }

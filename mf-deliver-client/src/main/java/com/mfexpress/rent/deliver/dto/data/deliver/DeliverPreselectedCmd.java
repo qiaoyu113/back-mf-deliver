@@ -9,6 +9,8 @@ import java.util.List;
 @Data
 public class DeliverPreselectedCmd {
 
+    @ApiModelProperty(value = "客户Id")
+    private Integer customerId;
 
     @ApiModelProperty(value = "服务单编号列表")
     private List<String> serveList;

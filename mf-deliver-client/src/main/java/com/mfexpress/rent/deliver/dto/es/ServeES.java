@@ -18,6 +18,8 @@ public class ServeES {
     private String customerName;
     @ApiModelProperty(value = "客户手机号")
     private String customerPhone;
+    @ApiModelProperty(value = "客户id")
+    private Integer customerId;
     @ApiModelProperty(value = "合同编号")
     private String contractNo;
     @ApiModelProperty(value = "提车日期")

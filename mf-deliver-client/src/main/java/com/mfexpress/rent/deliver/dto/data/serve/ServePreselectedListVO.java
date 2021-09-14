@@ -16,7 +16,8 @@ public class ServePreselectedListVO extends ListVO {
 
     @ApiModelProperty(value = "订单id")
     private Long orderId;
-
+    @ApiModelProperty(value = "客户id")
+    private Integer customerId;
     @ApiModelProperty(value = "客户名称")
     private String customerName;
 

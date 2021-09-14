@@ -22,6 +22,8 @@ public class RecoverVehicleVO {
     private String cardNum;
     @ApiModelProperty(value = "车型id")
     private Integer carModelId;
+    @ApiModelProperty(value = "客户id")
+    private Integer customerId;
 
     @ApiModelProperty(value = "品牌id")
     private Integer brandId;

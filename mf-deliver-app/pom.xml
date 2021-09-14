@@ -14,10 +14,6 @@
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
-            <groupId>com.mfexpress</groupId>
-            <artifactId>mf-common-client</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.mfexpress.</groupId>
             <artifactId>mf-order-client</artifactId>
         </dependency>

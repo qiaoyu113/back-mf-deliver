@@ -21,6 +21,8 @@ public class Deliver {
 
     private Long deliverId;
 
+    private Integer customerId;
+
     private String serveNo;
 
     private Integer isCheck;
