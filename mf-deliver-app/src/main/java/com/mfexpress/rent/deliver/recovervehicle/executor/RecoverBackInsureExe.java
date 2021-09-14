@@ -50,13 +50,7 @@ public class RecoverBackInsureExe {
         VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
         vehicleSaveCmd.setId(recoverBackInsureCmd.getCarIdList());
         vehicleSaveCmd.setSelectStatus(2);
-        for (Integer carId : recoverBackInsureCmd.getCarIdList()) {
-            for (RecoverVehicleDTO recoverVehicleDTO : recoverVehicleDTOList) {
-                if (recoverVehicleDTO.getCarId().equals(carId)) {
-                    vehicleSaveCmd.setStockStatus(recoverVehicleDTO.getWareHouseId());
-                }
-            }
-        }
+        vehicleSaveCmd.setStockStatus(recoverResult.getData().get(0).getWareHouseId());
 
 
         vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);

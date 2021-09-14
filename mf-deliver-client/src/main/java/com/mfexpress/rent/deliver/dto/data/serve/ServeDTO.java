@@ -11,6 +11,7 @@ public class ServeDTO {
     private Long orderId;
 
     private String serveNo;
+    private Integer customerId;
 
     private Integer carModelId;
 

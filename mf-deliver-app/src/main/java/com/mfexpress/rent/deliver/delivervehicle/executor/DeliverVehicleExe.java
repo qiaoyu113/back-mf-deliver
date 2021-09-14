@@ -57,6 +57,7 @@ public class DeliverVehicleExe {
         vehicleSaveCmd.setStockStatus(2);
         vehicleSaveCmd.setSelectStatus(3);
         vehicleSaveCmd.setId(carIdList);
+        vehicleSaveCmd.setCustomerId(deliverVehicleCmd.getCustomerId());
         Result<String> vehicleResult = vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
         if (vehicleResult.getCode() != 0) {
             return vehicleResult.getMsg();

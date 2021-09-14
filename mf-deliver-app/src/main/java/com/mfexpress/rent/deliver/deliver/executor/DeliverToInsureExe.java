@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.deliver.executor;
 
 import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverInsureCmd;
 import com.mfexpress.rent.deliver.utils.Utils;
@@ -27,6 +28,7 @@ public class DeliverToInsureExe {
         VehicleInsuranceSaveListCmd vehicleInsuranceSaveListCmd = new VehicleInsuranceSaveListCmd();
         vehicleInsuranceSaveListCmd.setStartTime(Utils.getDateByYYMMDD(deliverInsureCmd.getStartInsureDate()));
         vehicleInsuranceSaveListCmd.setStartTime(Utils.getDateByYYMMDD(deliverInsureCmd.getEndInsureDate()));
+        vehicleInsuranceSaveListCmd.setInsuranceStatus(ValidStatusEnum.VALID.getCode());
         vehicleInsuranceSaveListCmd.setId(deliverInsureCmd.getCarIdList());
         Result<String> vehicleResult = vehicleInsuranceAggregateRootApi.saveVehicleInsuranceById(vehicleInsuranceSaveListCmd);
         if (vehicleResult.getCode() != 0) {

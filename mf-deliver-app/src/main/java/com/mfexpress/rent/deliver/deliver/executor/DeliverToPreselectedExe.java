@@ -3,7 +3,6 @@ package com.mfexpress.rent.deliver.deliver.executor;
 
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -68,8 +67,7 @@ public class DeliverToPreselectedExe {
 
         VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
         vehicleSaveCmd.setId(carIdList);
-        vehicleSaveCmd.setStockStatus(1);
-        vehicleSaveCmd.setSelectStatus(JudgeEnum.YES.getCode());
+        vehicleSaveCmd.setSelectStatus(1);
         Result<String> vehicleResult = vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
         if (vehicleResult.getCode() != 0) {
             return vehicleResult.getMsg();

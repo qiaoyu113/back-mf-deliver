@@ -2,7 +2,6 @@ package com.mfexpress.rent.deliver.deliver.executor;
 
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -39,8 +38,7 @@ public class DeliverToReplaceExe {
             DeliverDTO deliverDTO = deliverDtoResult.getData();
             VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
             vehicleSaveCmd.setId(Arrays.asList(deliverDTO.getCarId()));
-            vehicleSaveCmd.setSelectStatus(JudgeEnum.NO.getCode());
-            vehicleSaveCmd.setStockStatus(1);
+            vehicleSaveCmd.setSelectStatus(2);
             Result<String> vehicleResult = vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
             if (vehicleResult.getCode() != 0) {
                 return vehicleResult.getMsg();
@@ -51,8 +49,13 @@ public class DeliverToReplaceExe {
         if (vehicleResult.getCode() != 0) {
             return vehicleResult.getMsg();
         }
-
-
+        VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
+        vehicleSaveCmd.setId(Arrays.asList(deliverVehicleSelectCmd.getCarId()));
+        vehicleSaveCmd.setSelectStatus(1);
+        Result<String> replaceResult = vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
+        if (replaceResult.getCode() != 0) {
+            return replaceResult.getMsg();
+        }
         //更换车辆信息 原交付单失效
         DeliverDTO deliverDTO = new DeliverDTO();
         deliverDTO.setIsInsurance(vehicleResult.getData().getInsuranceStatus());
@@ -62,6 +65,7 @@ public class DeliverToReplaceExe {
         deliverDTO.setDeliverStatus(DeliverEnum.IS_DELIVER.getCode());
         deliverDTO.setStatus(ValidStatusEnum.VALID.getCode());
         Result<String> result = deliverAggregateRootApi.toReplace(deliverDTO);
+
         return result.getData();
 
     }
