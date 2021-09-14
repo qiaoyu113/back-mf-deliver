@@ -12,7 +12,7 @@ import java.util.Date;
 public class RecoverApplyQryCmd {
 
     @ApiModelProperty(value = "订单编号")
-    private Integer orderId;
+    private Long orderId;
 
     @ApiModelProperty(value = "合同编号")
     private String contractNo;

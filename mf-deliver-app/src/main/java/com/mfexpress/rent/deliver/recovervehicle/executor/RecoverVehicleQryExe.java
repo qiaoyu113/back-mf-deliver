@@ -41,8 +41,12 @@ public class RecoverVehicleQryExe {
         if (StringUtils.isNotBlank(recoverApplyQryCmd.getContractNo())) {
             boolQueryBuilder.must(QueryBuilders.matchQuery("contractNo", recoverApplyQryCmd.getContractNo()));
         }
-        if (recoverApplyQryCmd.getCarModelId() != null) {
+        if (recoverApplyQryCmd.getCarModelId() != null && recoverApplyQryCmd.getCarModelId() != 0) {
             boolQueryBuilder.must(QueryBuilders.matchQuery("carModelId", recoverApplyQryCmd.getCarModelId()));
+        }
+        if (recoverApplyQryCmd.getBrandId() != null && recoverApplyQryCmd.getBrandId() != 0) {
+            boolQueryBuilder.must(QueryBuilders.matchQuery("brandId", recoverApplyQryCmd.getBrandId()));
+
         }
         if (recoverApplyQryCmd.getStartDeliverTime() != null && recoverApplyQryCmd.getEndDeliverTime() != null) {
             boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverVehicleTime").gte(recoverApplyQryCmd.getStartDeliverTime()))
@@ -57,6 +61,7 @@ public class RecoverVehicleQryExe {
                 recoverApplyVO.setServeNo(String.valueOf(data.get("serveNo")));
                 recoverApplyVO.setCarNum(String.valueOf(data.get("carNum")));
                 recoverApplyVO.setDeliverNo(String.valueOf(data.get("deliverNo")));
+                recoverApplyVO.setCarId(Integer.valueOf(String.valueOf(data.get("carId"))));
                 return recoverApplyVO;
             }).collect(Collectors.toList());
         }

@@ -25,13 +25,15 @@ public class RecoverToCheckExe {
         RecoverVehicleDTO recoverVehicleDTO = new RecoverVehicleDTO();
         BeanUtils.copyProperties(recoverVehicleDTO, recoverVechicleCmd);
 
-        Result<String> result = recoverVehicleAggregateRootApi.toCheck(recoverVehicleDTO);
-
+        Result<String> recoverResult = recoverVehicleAggregateRootApi.toCheck(recoverVehicleDTO);
+        if (recoverResult.getCode() != 0) {
+            return recoverResult.getMsg();
+        }
         //更新交付单状态未 已验车
-        deliverAggregateRootApi.toCheck(recoverVechicleCmd.getServeNo());
+        Result<String> deliverResult = deliverAggregateRootApi.toCheck(recoverVechicleCmd.getServeNo());
 
 
-        return "";
+        return deliverResult.getData();
     }
 }
 

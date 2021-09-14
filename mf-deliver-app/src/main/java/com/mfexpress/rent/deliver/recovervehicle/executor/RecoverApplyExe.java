@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 
+import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
@@ -41,10 +42,13 @@ public class RecoverApplyExe {
             recoverVehicleDTO.setStatus(ValidStatusEnum.VALID.getCode());
             recoverVehicleDTOList.add(recoverVehicleDTO);
         }
-        //todo 交付单状态更新收车中
-        deliverAggregateRootApi.applyRecover(serveNoList);
+        // 交付单状态更新收车中
+        Result<String> deliverResult = deliverAggregateRootApi.applyRecover(serveNoList);
+        if (deliverResult.getCode() != 0) {
+            return deliverResult.getMsg();
+        }
 
-        //todo 生成收车单
+        //生成收车单
         recoverVehicleAggregateRootApi.addRecoverVehicle(recoverVehicleDTOList);
 
         return "";

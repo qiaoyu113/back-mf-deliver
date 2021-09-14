@@ -17,17 +17,17 @@ public class ServeGatewayImpl implements ServeGateway {
 
 
     @Override
-    public void updateServeByServeNo(String serveNo, Serve serve) {
+    public int updateServeByServeNo(String serveNo, Serve serve) {
         Example example = new Example(Serve.class);
         example.createCriteria().andEqualTo("serveNo", serveNo);
-        serveMapper.updateByExampleSelective(serve, example);
+        return serveMapper.updateByExampleSelective(serve, example);
     }
 
     @Override
-    public void updateServeByServeNoList(List<String> serveNoList, Serve serve) {
+    public int updateServeByServeNoList(List<String> serveNoList, Serve serve) {
         Example example = new Example(Serve.class);
         example.createCriteria().andIn("serveNo", serveNoList);
-        serveMapper.updateByExampleSelective(serve, example);
+        return serveMapper.updateByExampleSelective(serve, example);
 
     }
 

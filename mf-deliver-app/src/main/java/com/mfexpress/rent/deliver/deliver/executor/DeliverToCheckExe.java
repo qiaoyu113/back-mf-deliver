@@ -14,7 +14,6 @@ public class DeliverToCheckExe {
     private DeliverAggregateRootApi deliverAggregateRootApi;
 
     public String toCheck(DeliverCheckCmd deliverCheckCmd) {
-
         Result<String> result = deliverAggregateRootApi.toCheck(deliverCheckCmd.getServeNo());
         return result.getData();
     }

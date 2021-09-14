@@ -7,9 +7,9 @@ import java.util.List;
 public interface ServeGateway {
 
 
-    void updateServeByServeNo(String serveNo, Serve serve);
+     int updateServeByServeNo(String serveNo, Serve serve);
 
-    void updateServeByServeNoList(List<String> serveNoList, Serve serve);
+    int updateServeByServeNoList(List<String> serveNoList, Serve serve);
 
     Serve getServeByServeNo(String serveNo);
     void addServeList(List<Serve> serveList);

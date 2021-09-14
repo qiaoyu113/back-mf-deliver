@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface DeliverVehicleGateway {
 
-    void addDeliverVehicle(List<DeliverVehicle> deliverVehicleList);
+    int addDeliverVehicle(List<DeliverVehicle> deliverVehicleList);
 
     DeliverVehicle getDeliverVehicleByDeliverNo(String deliverNo);
 }

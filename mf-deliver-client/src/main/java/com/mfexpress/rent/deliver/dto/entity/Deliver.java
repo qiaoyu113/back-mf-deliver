@@ -19,6 +19,8 @@ public class Deliver {
 
     private String deliverNo;
 
+    private Long deliverId;
+
     private String serveNo;
 
     private Integer isCheck;

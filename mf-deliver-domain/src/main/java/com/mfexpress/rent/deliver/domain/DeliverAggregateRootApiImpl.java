@@ -53,19 +53,22 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
             long incr = redisTools.incr(Utils.getEnvVariable(Constants.REDIS_DELIVER_KEY) + Utils.getDateByYYMMDD(new Date()), 1);
             Deliver deliver = new Deliver();
             BeanUtil.copyProperties(deliverDTO, deliver);
+            Long bizId = redisTools.getBizId(Constants.REDIS_BIZ_ID_DELIVER);
+            deliver.setDeliverId(bizId);
             deliver.setDeliverNo(Utils.getNo(Constants.REDIS_DELIVER_KEY, incr));
             return deliver;
         }).collect(Collectors.toList());
-        deliverGateway.addDeliver(deliverList);
-        return Result.getInstance("预选成功").success();
+        int i = deliverGateway.addDeliver(deliverList);
+        return i > 0 ? Result.getInstance("预选成功").success() : Result.getInstance("预选失败").fail(-1, "预选失败");
+
     }
 
     @Override
     @PostMapping("/toCheck")
     public Result<String> toCheck(@RequestParam("serveNo") String serveNo) {
         Deliver deliver = Deliver.builder().isCheck(JudgeEnum.YES.getCode()).build();
-        deliverGateway.updateDeliverByServeNo(serveNo, deliver);
-        return Result.getInstance("验车完成").success();
+        int i = deliverGateway.updateDeliverByServeNo(serveNo, deliver);
+        return i > 0 ? Result.getInstance("验车成功").success() : Result.getInstance("验车失败").fail(-1, "验车失败");
     }
 
     @Override
@@ -85,8 +88,8 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/toInsure")
     public Result<String> toInsure(@RequestBody List<String> serveNoList) {
         Deliver deliver = Deliver.builder().isInsurance(JudgeEnum.YES.getCode()).build();
-        deliverGateway.updateDeliverByServeNoList(serveNoList, deliver);
-        return Result.getInstance("").success();
+        int i = deliverGateway.updateDeliverByServeNoList(serveNoList, deliver);
+        return i > 0 ? Result.getInstance("投保成功").success() : Result.getInstance("投保失败").fail(-1, "投保失败");
     }
 
     @Override
@@ -97,24 +100,25 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
                 .isCheck(JudgeEnum.NO.getCode())
                 .isInsurance(JudgeEnum.NO.getCode())
                 .build();
-        deliverGateway.updateDeliverByServeNoList(serveNoList, deliver);
-        return Result.getInstance("").success();
+        int i = deliverGateway.updateDeliverByServeNoList(serveNoList, deliver);
+        return i > 0 ? Result.getInstance("发车成功").success() : Result.getInstance("发车失败").fail(-1, "发车失败");
     }
 
     @Override
     @PostMapping("/applyRecover")
     public Result<String> applyRecover(@RequestBody List<String> serveNoList) {
         Deliver deliver = Deliver.builder().deliverStatus(DeliverEnum.IS_RECOVER.getCode()).build();
-        deliverGateway.updateDeliverByServeNoList(serveNoList, deliver);
-        return Result.getInstance("").success();
+        int i = deliverGateway.updateDeliverByServeNoList(serveNoList, deliver);
+        return i > 0 ? Result.getInstance("申请收车成功").success() : Result.getInstance("申请收车失败").fail(-1, "申请收车失败");
+
     }
 
     @Override
     @PostMapping("/cancelRecover")
     public Result<String> cancelRecover(@RequestParam("serveNo") String serveNo) {
         Deliver deliver = Deliver.builder().deliverStatus(DeliverEnum.DELIVER.getCode()).build();
-        deliverGateway.updateDeliverByServeNo(serveNo, deliver);
-        return Result.getInstance("").success();
+        int i = deliverGateway.updateDeliverByServeNo(serveNo, deliver);
+        return i > 0 ? Result.getInstance("取消收车成功").success() : Result.getInstance("取消收车失败").fail(-1, "取消收车失败");
     }
 
     @Override

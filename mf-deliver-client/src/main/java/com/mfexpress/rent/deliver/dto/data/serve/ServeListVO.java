@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 public class ServeListVO extends ListVO {
     @ApiModelProperty(value = "订单id")
-    private Integer orderId;
+    private Long orderId;
 
     @ApiModelProperty(value = "客户名称")
     private String customerName;
@@ -21,7 +21,7 @@ public class ServeListVO extends ListVO {
     @ApiModelProperty(value = "合同编号")
     private String contractNo;
 
-    @ApiModelProperty(value = "提车时间")
+    @ApiModelProperty(value = "提车日期")
     private Date extractVehicleTime;
 
     @ApiModelProperty(value = "订单车型列表")

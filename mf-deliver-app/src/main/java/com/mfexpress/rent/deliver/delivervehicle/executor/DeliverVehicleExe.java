@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.delivervehicle.executor;
 
+import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -7,6 +8,8 @@ import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleCmd;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleImgCmd;
+import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -22,9 +25,11 @@ public class DeliverVehicleExe {
     private DeliverAggregateRootApi deliverAggregateRootApi;
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
+    @Resource
+    private VehicleAggregateRootApi vehicleAggregateRootApi;
 
     public String deliver(DeliverVehicleCmd deliverVehicleCmd) {
-        //todo 生成发车单 交付单状态更新已发车 初始化操作状态  服务单状态更新为已发车  调用车辆服务为租赁状态
+        //生成发车单 交付单状态更新已发车 初始化操作状态  服务单状态更新为已发车  调用车辆服务为租赁状态
         List<DeliverVehicleImgCmd> deliverVehicleImgCmdList = deliverVehicleCmd.getDeliverVehicleImgCmdList();
         List<DeliverVehicleDTO> deliverVehicleDTOList = new LinkedList<>();
         //更新服务单状态
@@ -47,14 +52,28 @@ public class DeliverVehicleExe {
             deliverVehicleDTOList.add(deliverVehicleDTO);
         }
 
-        //todo 更新车辆状态
+
+        VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
+        vehicleSaveCmd.setStockStatus(0);
+        vehicleSaveCmd.setSelectStatus(3);
+        vehicleSaveCmd.setId(carIdList);
+        Result<String> vehicleResult = vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
+        if (vehicleResult.getCode() != 0) {
+            return vehicleResult.getMsg();
+        }
+
 
         //服务单 更新状态为发车
-        serveAggregateRootApi.deliver(serveNoList);
-        // 交付单 更新状态为已发车 todo  初始化操作状态
-        deliverAggregateRootApi.toDeliver(serveNoList);
-        deliverVehicleAggregateRootApi.addDeliverVehicle(deliverVehicleDTOList);
-
-        return "";
+        Result<String> serveResult = serveAggregateRootApi.deliver(serveNoList);
+        if (serveResult.getCode() != 0) {
+            return serveResult.getMsg();
+        }
+        // 交付单 更新状态为已发车
+        Result<String> deliverResult = deliverAggregateRootApi.toDeliver(serveNoList);
+        if (deliverResult.getCode() != 0) {
+            return deliverResult.getMsg();
+        }
+        Result<String> deliverVehicleResult = deliverVehicleAggregateRootApi.addDeliverVehicle(deliverVehicleDTOList);
+        return deliverVehicleResult.getData();
     }
 }

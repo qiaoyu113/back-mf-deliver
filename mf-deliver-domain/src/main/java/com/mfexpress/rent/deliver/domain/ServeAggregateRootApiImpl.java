@@ -57,6 +57,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 Serve serve = new Serve();
                 long incr = redisTools.incr(Utils.getEnvVariable(Constants.REDIS_SERVE_KEY) + Utils.getDateByYYMMDD(new Date()), 1);
                 String serveNo = Utils.getNo(Constants.REDIS_SERVE_KEY, incr);
+                Long bizId = redisTools.getBizId(Constants.REDIS_BIZ_ID_SERVER);
+                serve.setServeId(bizId);
                 serve.setServeNo(serveNo);
                 serve.setOrderId(serveAddDTO.getOrderId());
                 serve.setCarModelId(serveVehicleDTO.getCarModelId());
@@ -74,24 +76,25 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/toPreselected")
     public Result<String> toPreselected(@RequestBody List<String> serveNoList) {
         Serve serve = Serve.builder().status(ServeEnum.PRESELECTED.getCode()).build();
-        serveGateway.updateServeByServeNoList(serveNoList, serve);
-        return Result.getInstance("").success();
+        int i = serveGateway.updateServeByServeNoList(serveNoList, serve);
+        return i > 0 ? Result.getInstance("预选成功").success() : Result.getInstance("预选失败").fail(-1, "预选失败");
+
     }
 
     @Override
     @PostMapping("/toReplace")
     public Result<String> toReplace(@RequestParam("serveNo") String serveNo) {
         Serve serve = Serve.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
-        serveGateway.updateServeByServeNo(serveNo, serve);
-        return Result.getInstance("").success();
+        int i = serveGateway.updateServeByServeNo(serveNo, serve);
+        return i > 0 ? Result.getInstance("更换成功").success() : Result.getInstance("更换失败").fail(-1, "更换失败");
     }
 
     @Override
     @PostMapping("/deliver")
     public Result<String> deliver(@RequestBody List<String> serveNoList) {
         Serve serve = Serve.builder().status(ServeEnum.DELIVER.getCode()).build();
-        serveGateway.updateServeByServeNoList(serveNoList, serve);
-        return Result.getInstance("").success();
+        int i = serveGateway.updateServeByServeNoList(serveNoList, serve);
+        return i > 0 ? Result.getInstance("发车成功").success() : Result.getInstance("发车失败").fail(-1, "发车失败");
     }
 
     @Override

@@ -53,10 +53,9 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
                 deliverVehicle.setDeliverVehicleNo(deliverVehicleNo);
                 return deliverVehicle;
             }).collect(Collectors.toList());
-            deliverVehicleGateway.addDeliverVehicle(deliverVehicleList);
+            int i = deliverVehicleGateway.addDeliverVehicle(deliverVehicleList);
+            return i > 0 ? Result.getInstance("发车成功").success() : Result.getInstance("发车成功").fail(-1, "发车失败");
         }
-
-
-        return Result.getInstance("").success();
+        return Result.getInstance("发车信息为空").fail(-1, "发车信息为空");
     }
 }

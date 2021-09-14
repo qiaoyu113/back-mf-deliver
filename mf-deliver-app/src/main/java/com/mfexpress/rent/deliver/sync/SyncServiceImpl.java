@@ -1,26 +1,41 @@
 package com.mfexpress.rent.deliver.sync;
 
+import com.mfexpress.common.domain.api.DictAggregateRootApi;
+import com.mfexpress.common.domain.dto.DictDataDTO;
+import com.mfexpress.common.domain.dto.DictTypeDTO;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
 import com.mfexpress.component.starter.utils.MqTools;
+import com.mfexpress.component.utils.util.DateUtils;
+import com.mfexpress.order.api.app.MFOrderAggregateRootApi;
+import com.mfexpress.order.dto.data.OrderDTO;
+import com.mfexpress.order.dto.data.ProductDTO;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.OrderCarModelVO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
 import com.mfexpress.rent.deliver.utils.Utils;
+import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class SyncServiceImpl implements SyncServiceI {
@@ -38,6 +53,12 @@ public class SyncServiceImpl implements SyncServiceI {
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
     @Resource
     private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
+    @Resource
+    private VehicleAggregateRootApi vehicleAggregateRootApi;
+    @Resource
+    private DictAggregateRootApi dictAggregateRootApi;
+    @Resource
+    private MFOrderAggregateRootApi mfOrderAggregateRootApi;
 
     @Value("${rocketmq.listenBinlogTopic}")
     private String listenBinlogTopic;
@@ -60,7 +81,37 @@ public class SyncServiceImpl implements SyncServiceI {
         ServeDTO serveDTO = serveResult.getData();
         BeanUtils.copyProperties(serveDTO, serveEs);
         serveEs.setServeStatus(serveDTO.getStatus());
-        //todo 调用订单查询订单信息
+        //租赁方式
+        serveEs.setLeaseModelDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.DELIVER_LEASE_MODE), serveEs.getLeaseModelId().toString()));
+        //品牌车型描述
+        Result<String> carModelResult = vehicleAggregateRootApi.getVehicleBrandTypeById(serveEs.getCarId());
+        serveEs.setBrandModelDisplay(carModelResult.getData());
+
+        //调用订单查询订单信息
+        OrderDTO orderDTO = new OrderDTO();
+        orderDTO.setOrderId(serveEs.getOrderId());
+        Result<?> orderResult = mfOrderAggregateRootApi.getOrderInfo(orderDTO);
+        if (orderResult.getCode() == 0) {
+            OrderDTO order = (OrderDTO) orderResult.getData();
+            serveEs.setContractNo(order.getContractCode());
+            serveEs.setCustomerName(order.getCustomerName());
+            serveEs.setCustomerPhone(order.getConsigneeMobile());
+            serveEs.setExtractVehicleTime(DateUtils.parseDate(order.getDeliveryDate()));
+            List<OrderCarModelVO> carModelList = new LinkedList<>();
+
+            List<ProductDTO> productList = order.getProductList();
+            for (ProductDTO productDTO : productList) {
+                OrderCarModelVO orderCarModelVO = new OrderCarModelVO();
+                orderCarModelVO.setBrandId(productDTO.getBrandId());
+                orderCarModelVO.setCarModelId(productDTO.getModelsId());
+                Result<String> modeResult = vehicleAggregateRootApi.getVehicleBrandTypeById(productDTO.getModelsId());
+                orderCarModelVO.setNum(productDTO.getProductNum());
+                orderCarModelVO.setBrandModelDisplay(modeResult.getData());
+                carModelList.add(orderCarModelVO);
+            }
+            serveEs.setCarModelVOList(carModelList);
+        }
+
 
         //预选状态下存在交付单
         Result<DeliverDTO> deliverResult = deliverAggregateRootApi.getDeliverByServeNo(serveNo);
@@ -84,7 +135,7 @@ public class SyncServiceImpl implements SyncServiceI {
                 serveEs.setExpectRecoverTime(recoverVehicleDTO.getExpectRecoverTime());
             }
         } else {
-            serveEs.setIsPreselected(ServeEnum.NOT_PRESELECTED.getCode());
+            serveEs.setIsPreselected(JudgeEnum.NO.getCode());
             serveEs.setDeliverStatus(ServeEnum.NOT_PRESELECTED.getCode());
             serveEs.setIsCheck(0);
             serveEs.setIsInsurance(0);
@@ -124,5 +175,27 @@ public class SyncServiceImpl implements SyncServiceI {
 
         return sort;
 
+    }
+
+    private Map<String, DictDataDTO> getDictDataDtoMapByDictType(String dictType) {
+        DictTypeDTO dictTypeDTO = new DictTypeDTO();
+        dictTypeDTO.setDictType(dictType);
+        List<DictDataDTO> dictDataDTOList = dictAggregateRootApi.getDictByType(dictTypeDTO);
+        if (dictDataDTOList == null || dictDataDTOList.isEmpty()) {
+            return new HashMap<>(16);
+        }
+        Map<String, DictDataDTO> dictDataDTOMap = dictDataDTOList.stream().collect(Collectors.toMap(DictDataDTO::getDictValue, Function.identity(), (key1, key2) -> key1));
+        return dictDataDTOMap;
+    }
+
+    /**
+     * 字典值
+     */
+    private String getDictDataDtoLabelByValue(Map<String, DictDataDTO> dictDataDtoMap, String value) {
+        DictDataDTO dictDataDTO = dictDataDtoMap.get(value);
+        if (dictDataDTO != null) {
+            return dictDataDTO.getDictLabel();
+        }
+        return "";
     }
 }

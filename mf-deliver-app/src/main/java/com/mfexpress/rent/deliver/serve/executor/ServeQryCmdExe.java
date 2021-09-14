@@ -63,8 +63,8 @@ public class ServeQryCmdExe {
         List<ServeVO> serveVOList = serveListVO.getServeVOList();
         //手动分页
         if (serveVOList != null) {
-            Map<Integer, List<ServeVO>> aggMap = serveVOList.stream().collect(Collectors.groupingBy(ServeVO::getOrderId));
-            for (Integer orderId : aggMap.keySet()) {
+            Map<Long, List<ServeVO>> aggMap = serveVOList.stream().collect(Collectors.groupingBy(ServeVO::getOrderId));
+            for (Long orderId : aggMap.keySet()) {
                 ServeDeliverTaskVO serveDeliverTaskVO = new ServeDeliverTaskVO();
                 serveDeliverTaskVO.setOrderId(serveListVO.getOrderId());
                 serveDeliverTaskVO.setCarModelVOList(serveListVO.getCarModelVOList());

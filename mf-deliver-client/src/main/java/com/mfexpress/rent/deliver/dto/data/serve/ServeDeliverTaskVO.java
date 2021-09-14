@@ -14,7 +14,7 @@ import java.util.List;
 @Data
 public class ServeDeliverTaskVO {
     @ApiModelProperty(value = "订单id")
-    private Integer orderId;
+    private Long orderId;
     @ApiModelProperty(value = "提车公司")
     private String customerName;
     @ApiModelProperty(value = "提车时间 ")

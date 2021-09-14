@@ -14,8 +14,20 @@
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
+            <groupId>com.mfexpress</groupId>
+            <artifactId>mf-common-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mfexpress.</groupId>
+            <artifactId>mf-order-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.mfexpress.rent.deliver</groupId>
             <artifactId>mf-deliver-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mfexpress.rent.vehicle</groupId>
+            <artifactId>mf-vehicle-client</artifactId>
         </dependency>
         <dependency>
             <groupId>com.mfexpress.rent.deliver</groupId>

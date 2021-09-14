@@ -8,7 +8,7 @@ import java.util.Date;
 public class ServeDTO {
     private Integer id;
 
-    private Integer orderId;
+    private Long orderId;
 
     private String serveNo;
 

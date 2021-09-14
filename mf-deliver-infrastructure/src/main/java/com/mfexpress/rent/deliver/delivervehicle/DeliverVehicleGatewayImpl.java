@@ -17,10 +17,12 @@ public class DeliverVehicleGatewayImpl implements DeliverVehicleGateway {
     private DeliverVehicleMapper deliverVehicleMapper;
 
     @Override
-    public void addDeliverVehicle(List<DeliverVehicle> deliverVehicleList) {
+    public int addDeliverVehicle(List<DeliverVehicle> deliverVehicleList) {
+        int i = 0;
         for (DeliverVehicle deliverVehicle : deliverVehicleList) {
-            deliverVehicleMapper.insertSelective(deliverVehicle);
+            i += deliverVehicleMapper.insertSelective(deliverVehicle);
         }
+        return i;
 
     }
 

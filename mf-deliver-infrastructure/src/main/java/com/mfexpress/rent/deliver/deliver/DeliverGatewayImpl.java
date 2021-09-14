@@ -17,24 +17,28 @@ public class DeliverGatewayImpl implements DeliverGateway {
     private DeliverMapper deliverMapper;
 
     @Override
-    public void addDeliver(List<Deliver> deliverList) {
+    public int addDeliver(List<Deliver> deliverList) {
+        int i = 0;
         for (Deliver deliver : deliverList) {
-            deliverMapper.insertSelective(deliver);
+            i += deliverMapper.insertSelective(deliver);
         }
+        return i;
     }
 
     @Override
-    public void updateDeliverByServeNo(String serveNo, Deliver deliver) {
+    public int updateDeliverByServeNo(String serveNo, Deliver deliver) {
         Example example = new Example(Deliver.class);
         example.createCriteria().andEqualTo("serveNo", serveNo).andEqualTo("status", ValidStatusEnum.VALID.getCode());
-        deliverMapper.updateByExampleSelective(deliver, example);
+        int i = deliverMapper.updateByExampleSelective(deliver, example);
+        return i;
     }
 
     @Override
-    public void updateDeliverByServeNoList(List<String> serveNoList, Deliver deliver) {
+    public int updateDeliverByServeNoList(List<String> serveNoList, Deliver deliver) {
         Example example = new Example(Deliver.class);
         example.createCriteria().andIn("serveNo", serveNoList).andEqualTo("status", ValidStatusEnum.VALID.getCode());
-        deliverMapper.updateByExampleSelective(deliver, example);
+        int i = deliverMapper.updateByExampleSelective(deliver, example);
+        return i;
     }
 
 

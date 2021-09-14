@@ -38,7 +38,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
             BeanUtils.copyProperties(recoverVehicle, recoverVehicleDTO);
             return Result.getInstance(recoverVehicleDTO).success();
         }
-        //todo 查询有效的收车单
+        // 查询有效的收车单
         return Result.getInstance((RecoverVehicleDTO) null).success();
     }
 
@@ -74,8 +74,8 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     public Result<String> toCheck(@RequestBody RecoverVehicleDTO recoverVehicleDTO) {
         RecoverVehicle recoverVehicle = new RecoverVehicle();
         BeanUtils.copyProperties(recoverVehicleDTO, recoverVehicle);
-        recoverVehicleGateway.updateRecoverVehicle(recoverVehicle);
-        return Result.getInstance("").success();
+        int i = recoverVehicleGateway.updateRecoverVehicle(recoverVehicle);
+        return i > 0 ? Result.getInstance("验车成功").success() : Result.getInstance("验车失败").fail(-1, "验车失败");
 
     }
 

@@ -12,7 +12,7 @@ import java.util.Date;
 public class ServeVO {
 
     @ApiModelProperty(value = "订单id")
-    private Integer orderId;
+    private Long orderId;
     @ApiModelProperty(value = "提车公司")
     private String customerName;
     @ApiModelProperty(value = "租赁服务单编号")
