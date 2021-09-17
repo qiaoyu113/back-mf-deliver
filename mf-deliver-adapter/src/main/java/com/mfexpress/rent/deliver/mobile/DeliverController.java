@@ -30,7 +30,6 @@ public class DeliverController {
     @ApiOperation("预选车辆")
     public Result<String> toPreselected(@RequestBody DeliverPreselectedCmd deliverPreselectedCmd) {
 
-
         //组合生成交付单、交付单状态未1发车中 服务单状态更新未已预选
         // 车辆状态若已投保更新交付单投保状态  调用车辆服务 更新为已预选
 

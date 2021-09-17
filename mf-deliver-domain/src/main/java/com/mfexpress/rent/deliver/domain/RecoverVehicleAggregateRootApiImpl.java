@@ -58,7 +58,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
             recoverVehicleGateway.addRecoverVehicle(recoverVehicleList);
         }
 
-        return Result.getInstance("").success();
+        return Result.getInstance("申请收车成功").success();
     }
 
     @Override

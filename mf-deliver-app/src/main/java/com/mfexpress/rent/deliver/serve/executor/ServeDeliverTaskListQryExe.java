@@ -11,6 +11,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeDeliverTaskQryCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDeliverTaskVO;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
+import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -35,8 +36,8 @@ public class ServeDeliverTaskListQryExe {
         ServeDeliverTaskListVO serveDeliverTaskListVO = new ServeDeliverTaskListVO();
         List<ServeDeliverTaskVO> serveDeliverTaskVOList = new LinkedList<>();
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        if (serveDeliverTaskQryCmd.getCustomerId() != null && serveDeliverTaskQryCmd.getCustomerId() != 0) {
-            boolQueryBuilder.must(QueryBuilders.matchQuery("customerId", serveDeliverTaskQryCmd.getCustomerId()));
+        if (StringUtils.isNotBlank(serveDeliverTaskQryCmd.getKeyword())) {
+            boolQueryBuilder.must(QueryBuilders.matchQuery("customerName", serveDeliverTaskQryCmd.getKeyword()));
         }
         if (serveDeliverTaskQryCmd.getTag() == 1) {
             boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverStatus").lt(DeliverEnum.DELIVER.getCode()));

@@ -3,6 +3,7 @@ package com.mfexpress.rent.deliver.deliver.executor;
 
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -52,7 +53,7 @@ public class DeliverToPreselectedExe {
             if (vehicleResult.getCode() != 0 || vehicleResult.getData() == null) {
                 return vehicleResult.getMsg();
             }
-            deliverDTO.setIsInsurance(vehicleResult.getData().getInsuranceStatus());
+            deliverDTO.setIsInsurance(vehicleResult.getData().getInsuranceStatus().equals(JudgeEnum.YES.getCode()) ? JudgeEnum.YES.getCode() : JudgeEnum.NO.getCode());
             deliverDTO.setServeNo(serveNoList.get(i));
             deliverDTO.setCarId(deliverVehicleSelectCmd.getId());
             deliverDTO.setCarNum(deliverVehicleSelectCmd.getPlateNumber());

@@ -85,7 +85,7 @@ public class SyncServiceImpl implements SyncServiceI {
     }
 
     @Override
-    public void execOne(String serveNo) {
+    public void execOne(String serveNo, String table, String type) {
         ServeES serveEs = new ServeES();
         Result<ServeDTO> serveResult = serveAggregateRootApi.getServeDtoByServeNo(serveNo);
         if (serveResult.getData() == null) {
@@ -97,34 +97,38 @@ public class SyncServiceImpl implements SyncServiceI {
         serveEs.setOrderId(serveDTO.getOrderId().toString());
         //租赁方式
         serveEs.setLeaseModelDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.DELIVER_LEASE_MODE), serveEs.getLeaseModelId().toString()));
-        //品牌车型描述
-        Result<String> carModelResult = vehicleAggregateRootApi.getVehicleBrandTypeById(serveEs.getCarModelId());
-        serveEs.setBrandModelDisplay(carModelResult.getData());
-        //调用订单查询订单信息
-        ReviewOrderQry reviewOrderQry = new ReviewOrderQry();
-        reviewOrderQry.setOrderId(Long.valueOf(serveEs.getOrderId()));
-        Result<?> orderResult = orderAggregateRootApi.getOrderInfo(reviewOrderQry);
-        if (orderResult.getCode() == 0 && orderResult.getData() != null) {
-            OrderDTO order = (OrderDTO) orderResult.getData();
-            serveEs.setContractNo(order.getContractCode());
-            Result<Customer> customerResult = customerAggregateRootApi.getCustomerById(order.getCustomerId());
-            if (customerResult.getCode() == 0 && customerResult.getData() != null) {
-                serveEs.setCustomerName(customerResult.getData().getName());
+
+        //生成服务单时调一次
+        if (table.equals(Constants.BINLOG_MQ_SERVE_TABLE) && type.equals("INSERT")) {
+            //品牌车型描述
+            Result<String> carModelResult = vehicleAggregateRootApi.getVehicleBrandTypeById(serveEs.getCarModelId());
+            serveEs.setBrandModelDisplay(carModelResult.getData());
+            //调用订单查询订单信息
+            ReviewOrderQry reviewOrderQry = new ReviewOrderQry();
+            reviewOrderQry.setOrderId(Long.valueOf(serveEs.getOrderId()));
+            Result<?> orderResult = orderAggregateRootApi.getOrderInfo(reviewOrderQry);
+            if (orderResult.getCode() == 0 && orderResult.getData() != null) {
+                OrderDTO order = (OrderDTO) orderResult.getData();
+                serveEs.setContractNo(order.getContractCode());
+                Result<Customer> customerResult = customerAggregateRootApi.getCustomerById(order.getCustomerId());
+                if (customerResult.getCode() == 0 && customerResult.getData() != null) {
+                    serveEs.setCustomerName(customerResult.getData().getName());
+                }
+                serveEs.setCustomerPhone(order.getConsigneeMobile());
+                serveEs.setExtractVehicleTime(DateUtils.parseDate(order.getDeliveryDate()));
+                List<OrderCarModelVO> carModelList = new LinkedList<>();
+                List<ProductDTO> productList = order.getProductList();
+                for (ProductDTO productDTO : productList) {
+                    OrderCarModelVO orderCarModelVO = new OrderCarModelVO();
+                    orderCarModelVO.setBrandId(productDTO.getBrandId());
+                    orderCarModelVO.setCarModelId(productDTO.getModelsId());
+                    Result<String> modeResult = vehicleAggregateRootApi.getVehicleBrandTypeById(productDTO.getModelsId());
+                    orderCarModelVO.setNum(productDTO.getProductNum());
+                    orderCarModelVO.setBrandModelDisplay(modeResult.getData());
+                    carModelList.add(orderCarModelVO);
+                }
+                serveEs.setCarModelVOList(carModelList);
             }
-            serveEs.setCustomerPhone(order.getConsigneeMobile());
-            serveEs.setExtractVehicleTime(DateUtils.parseDate(order.getDeliveryDate()));
-            List<OrderCarModelVO> carModelList = new LinkedList<>();
-            List<ProductDTO> productList = order.getProductList();
-            for (ProductDTO productDTO : productList) {
-                OrderCarModelVO orderCarModelVO = new OrderCarModelVO();
-                orderCarModelVO.setBrandId(productDTO.getBrandId());
-                orderCarModelVO.setCarModelId(productDTO.getModelsId());
-                Result<String> modeResult = vehicleAggregateRootApi.getVehicleBrandTypeById(productDTO.getModelsId());
-                orderCarModelVO.setNum(productDTO.getProductNum());
-                orderCarModelVO.setBrandModelDisplay(modeResult.getData());
-                carModelList.add(orderCarModelVO);
-            }
-            serveEs.setCarModelVOList(carModelList);
         }
 
         //预选状态下存在交付单

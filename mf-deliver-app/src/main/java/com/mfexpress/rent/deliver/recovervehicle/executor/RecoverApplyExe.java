@@ -45,11 +45,9 @@ public class RecoverApplyExe {
         if (deliverResult.getCode() != 0) {
             return deliverResult.getMsg();
         }
-
         //生成收车单
-        recoverVehicleAggregateRootApi.addRecoverVehicle(recoverVehicleDTOList);
-
-        return "";
+        Result<String> recoverResult = recoverVehicleAggregateRootApi.addRecoverVehicle(recoverVehicleDTOList);
+        return recoverResult.getData();
 
     }
 }

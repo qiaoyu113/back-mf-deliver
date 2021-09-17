@@ -11,6 +11,7 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
+import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -32,14 +33,15 @@ public class RecoverEsDataQryExe {
             , List<FieldSortBuilder> fieldSortBuilderList) {
         RecoverTaskListVO recoverTaskListVO = new RecoverTaskListVO();
 
-        if (recoverQryListCmd.getCustomerId() != null && recoverQryListCmd.getCustomerId() != 0) {
-            boolQueryBuilder.must(QueryBuilders.matchQuery("customerId", recoverQryListCmd.getCustomerId()));
+        if (StringUtils.isNotBlank(recoverQryListCmd.getKeyword())) {
+            boolQueryBuilder.must(QueryBuilders.matchQuery("customerName", recoverQryListCmd.getKeyword()));
         }
         if (recoverQryListCmd.getCarModelId() != null && recoverQryListCmd.getCarModelId() != 0) {
             boolQueryBuilder.must(QueryBuilders.matchQuery("carModelId", recoverQryListCmd.getCarModelId()));
         }
-        if (recoverQryListCmd.getExpectRecoverTime() != null) {
-            boolQueryBuilder.must(QueryBuilders.matchQuery("expectRecoverTime", recoverQryListCmd.getExpectRecoverTime()));
+        if (recoverQryListCmd.getExpectRecoverStartTime() != null && recoverQryListCmd.getExpectRecoverEndTime() != null) {
+            boolQueryBuilder.must(QueryBuilders.rangeQuery("expectRecoverTime").gte(recoverQryListCmd.getExpectRecoverStartTime()));
+            boolQueryBuilder.must(QueryBuilders.rangeQuery("expectRecoverTime").lte(recoverQryListCmd.getExpectRecoverEndTime()));
         }
         if (recoverQryListCmd.getStartDeliverTime() != null && recoverQryListCmd.getEndDeliverTime() != null) {
             boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverVehicleTime").gte(recoverQryListCmd.getStartDeliverTime()))
