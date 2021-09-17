@@ -68,16 +68,19 @@ public class SyncServiceImpl implements SyncServiceI {
 
     @Value("${rocketmq.listenBinlogTopic}")
     private String listenBinlogTopic;
+    @Value("${rocketmq.listenOrderTopic}")
+    private String listenOrderTopic;
     @Resource
     private DeliverMqCommand deliverMqCommand;
-
+    @Resource
+    private DeliverUtils deliverUtils;
 
     @PostConstruct
     public void init() {
         DeliverBinlogDispatch deliverBinlogDispatch = new DeliverBinlogDispatch();
         deliverBinlogDispatch.setServiceI(this);
         mqTools.addBinlogCommand(listenBinlogTopic, deliverBinlogDispatch);
-        deliverMqCommand.setTopic(Constants.DELIVER_ORDER_TOPIC);
+        deliverMqCommand.setTopic(DeliverUtils.getEnvVariable(listenOrderTopic));
         deliverMqCommand.setTags(Constants.DELIVER_ORDER_TAG);
         mqTools.add(deliverMqCommand);
 
