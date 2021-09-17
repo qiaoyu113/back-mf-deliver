@@ -140,6 +140,7 @@ public class SyncServiceImpl implements SyncServiceI {
             serveEs.setIsPreselected(ServeEnum.PRESELECTED.getCode());
             DeliverDTO deliverDTO = deliverResult.getData();
             BeanUtils.copyProperties(deliverDTO, serveEs);
+            serveEs.setDeliverStatus(deliverDTO.getDeliverStatus());
             //存在交付单会覆盖原有客户id
             serveEs.setCustomerId(serveDTO.getCustomerId());
             //排序规则

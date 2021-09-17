@@ -41,21 +41,23 @@
                 <spring.active>dev2local</spring.active>
             </properties>
 
+
         </profile>
         <profile>
             <id>dev2m1</id>
             <properties>
                 <spring.active>dev2m1</spring.active>
             </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
         </profile>
         <profile>
             <id>dev2m2</id>
             <properties>
                 <spring.active>dev2m2</spring.active>
             </properties>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
+
         </profile>
         <profile>
             <id>test</id>

@@ -17,7 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 @Component
-public class RecoverTaskListDeduectionQryExe implements RecoverQryServiceI {
+public class RecoverTaskListDeductionQryExe implements RecoverQryServiceI {
     @Resource
     private RecoverEsDataQryExe recoverEsDataQryExe;
 
