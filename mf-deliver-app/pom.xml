@@ -22,7 +22,7 @@
             <artifactId>mf-customer-client</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.mfexpress.</groupId>
+            <groupId>com.mfexpress.rent.order</groupId>
             <artifactId>mf-order-client</artifactId>
         </dependency>
         <dependency>
