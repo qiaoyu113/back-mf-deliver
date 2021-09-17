@@ -25,6 +25,7 @@ public class ServeController {
 
 
     //====================租赁服务单生成===============//
+
     @ApiOperation("生成租赁服务单")
     @PostMapping("/addServe")
     public Result<String> addServe(@RequestBody ServeAddCmd serveAddCmd) {

@@ -10,6 +10,7 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverPreselectedCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleSelectCmd;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInfoDto;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import org.springframework.stereotype.Component;
@@ -28,7 +29,7 @@ public class DeliverToPreselectedExe {
     private VehicleAggregateRootApi vehicleAggregateRootApi;
 
 
-    public String toPreselected(DeliverPreselectedCmd deliverPreselectedCmd) {
+    public String execute(DeliverPreselectedCmd deliverPreselectedCmd) {
         List<DeliverDTO> deliverList = new LinkedList<>();
         //服务单编号
         List<String> serveNoList = deliverPreselectedCmd.getServeList();
@@ -47,27 +48,28 @@ public class DeliverToPreselectedExe {
             }
 
 
-            Result<VehicleInfoDto> vehicleResult = vehicleAggregateRootApi.getVehicleInfoVOById(deliverVehicleSelectCmd.getCarId());
+            Result<VehicleInfoDto> vehicleResult = vehicleAggregateRootApi.getVehicleInfoVOById(deliverVehicleSelectCmd.getId());
             if (vehicleResult.getCode() != 0 || vehicleResult.getData() == null) {
                 return vehicleResult.getMsg();
             }
             deliverDTO.setIsInsurance(vehicleResult.getData().getInsuranceStatus());
             deliverDTO.setServeNo(serveNoList.get(i));
-            deliverDTO.setCarId(deliverVehicleSelectCmd.getCarId());
-            deliverDTO.setCarNum(deliverVehicleSelectCmd.getCarNum());
+            deliverDTO.setCarId(deliverVehicleSelectCmd.getId());
+            deliverDTO.setCarNum(deliverVehicleSelectCmd.getPlateNumber());
             deliverDTO.setDeliverStatus(DeliverEnum.IS_DELIVER.getCode());
             deliverDTO.setStatus(ValidStatusEnum.VALID.getCode());
-            deliverDTO.setFrameNum(deliverVehicleSelectCmd.getFrameNum());
+            deliverDTO.setFrameNum(deliverVehicleSelectCmd.getVin());
             deliverDTO.setMileage(deliverVehicleSelectCmd.getMileage());
             deliverDTO.setVehicleAge(deliverVehicleSelectCmd.getVehicleAge());
+            deliverDTO.setCustomerId(deliverPreselectedCmd.getCustomerId());
             deliverList.add(deliverDTO);
-            carIdList.add(deliverVehicleSelectCmd.getCarId());
+            carIdList.add(deliverVehicleSelectCmd.getId());
 
         }
 
         VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
         vehicleSaveCmd.setId(carIdList);
-        vehicleSaveCmd.setSelectStatus(1);
+        vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.CHECKED.getCode());
         Result<String> vehicleResult = vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
         if (vehicleResult.getCode() != 0) {
             return vehicleResult.getMsg();

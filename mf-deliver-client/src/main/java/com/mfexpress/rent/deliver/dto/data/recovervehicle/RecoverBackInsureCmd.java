@@ -23,6 +23,6 @@ public class RecoverBackInsureCmd {
     @ApiModelProperty(value = "退保时间")
     private Date insuranceTime;
 
-    @ApiModelProperty(value = "暂不退保原因", example = "选择原因，默认传0")
+    @ApiModelProperty(value = "暂不退保原因,默认传0")
     private Integer insuranceRemark;
 }

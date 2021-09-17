@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.dto.data.serve;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -12,7 +13,7 @@ import java.util.Date;
 public class ServeVO {
 
     @ApiModelProperty(value = "订单id")
-    private Long orderId;
+    private String orderId;
     @ApiModelProperty(value = "提车公司")
     private String customerName;
     @ApiModelProperty(value = "租赁服务单编号")
@@ -23,6 +24,11 @@ public class ServeVO {
     private String leaseModelDisplay;
     @ApiModelProperty(value = "车型id")
     private Integer carModelId;
+    @ApiModelProperty(value = "车辆id")
+    private Integer carId;
+    @ApiModelProperty(value = "提车日期")
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date extractVehicleTime;
     @ApiModelProperty(value = "交付单编号")
     private String deliverNo;
 
@@ -36,6 +42,7 @@ public class ServeVO {
     @ApiModelProperty(value = "车架号")
     private String frameNum;
     @ApiModelProperty(value = "发车日期")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date deliverVehicleTime;
     @ApiModelProperty(value = "预选状态")
     private Integer isPreselected;

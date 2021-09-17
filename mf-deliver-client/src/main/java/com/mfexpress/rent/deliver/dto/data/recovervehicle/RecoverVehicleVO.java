@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.dto.data.recovervehicle;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -24,12 +25,10 @@ public class RecoverVehicleVO {
     private Integer carModelId;
     @ApiModelProperty(value = "客户id")
     private Integer customerId;
-
     @ApiModelProperty(value = "品牌id")
     private Integer brandId;
     @ApiModelProperty(value = "品牌车型描述")
     private String brandModelDisplay;
-
     @ApiModelProperty(value = "租赁方式id")
     private Integer leaseModelId;
     @ApiModelProperty(value = "租赁方式描述")
@@ -37,10 +36,13 @@ public class RecoverVehicleVO {
     @ApiModelProperty(value = "车架号")
     private String frameNum;
     @ApiModelProperty(value = "发车时间")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date deliverVehicleTime;
     @ApiModelProperty(value = "收车时间")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date recoverVehicleTime;
     @ApiModelProperty(value = "预计收车时间")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date expectRecoverTime;
     @ApiModelProperty(value = "验车状态")
     private Integer isCheck;

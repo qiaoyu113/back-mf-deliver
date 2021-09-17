@@ -57,4 +57,5 @@ public class RecoverVehicle {
     private Integer wareHouseId;
 
     private Integer carId;
+
 }

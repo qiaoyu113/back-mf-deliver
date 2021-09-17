@@ -9,12 +9,14 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverReplaceCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleSelectCmd;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInfoDto;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
+import java.util.List;
 
 @Component
 public class DeliverToReplaceExe {
@@ -27,43 +29,45 @@ public class DeliverToReplaceExe {
     private VehicleAggregateRootApi vehicleAggregateRootApi;
 
 
-    public String toReplace(DeliverReplaceCmd deliverReplaceCmd) {
-        DeliverVehicleSelectCmd deliverVehicleSelectCmd = deliverReplaceCmd.getDeliverVehicleSelectCmd();
-
-
-        serveAggregateRootApi.toReplace(deliverReplaceCmd.getServeNo());
-
-        Result<DeliverDTO> deliverDtoResult = deliverAggregateRootApi.getDeliverByServeNo(deliverReplaceCmd.getServeNo());
+    public String execute(DeliverReplaceCmd deliverReplaceCmd) {
+        List<DeliverVehicleSelectCmd> deliverVehicleSelectCmd = deliverReplaceCmd.getDeliverVehicleSelectCmd();
+        DeliverDTO deliverDTO = new DeliverDTO();
+        //原车辆未预选状态
+        Result<DeliverDTO> deliverDtoResult = deliverAggregateRootApi.getDeliverByServeNo(deliverReplaceCmd.getServeList().get(0));
         if (deliverDtoResult.getData() != null) {
-            DeliverDTO deliverDTO = deliverDtoResult.getData();
+            DeliverDTO deliver = deliverDtoResult.getData();
             VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
-            vehicleSaveCmd.setId(Arrays.asList(deliverDTO.getCarId()));
-            vehicleSaveCmd.setSelectStatus(2);
+            vehicleSaveCmd.setId(Arrays.asList(deliver.getCarId()));
+            vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.UNCHECKED.getCode());
+            deliverDTO.setCustomerId(deliver.getCustomerId());
             Result<String> vehicleResult = vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
             if (vehicleResult.getCode() != 0) {
                 return vehicleResult.getMsg();
             }
         }
 
-        Result<VehicleInfoDto> vehicleResult = vehicleAggregateRootApi.getVehicleInfoVOById(deliverVehicleSelectCmd.getCarId());
+        Result<VehicleInfoDto> vehicleResult = vehicleAggregateRootApi.getVehicleInfoVOById(deliverVehicleSelectCmd.get(0).getId());
         if (vehicleResult.getCode() != 0) {
             return vehicleResult.getMsg();
         }
         VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
-        vehicleSaveCmd.setId(Arrays.asList(deliverVehicleSelectCmd.getCarId()));
-        vehicleSaveCmd.setSelectStatus(1);
+        vehicleSaveCmd.setId(Arrays.asList(deliverVehicleSelectCmd.get(0).getId()));
+        vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.CHECKED.getCode());
         Result<String> replaceResult = vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
         if (replaceResult.getCode() != 0) {
             return replaceResult.getMsg();
         }
         //更换车辆信息 原交付单失效
-        DeliverDTO deliverDTO = new DeliverDTO();
+
         deliverDTO.setIsInsurance(vehicleResult.getData().getInsuranceStatus());
-        deliverDTO.setServeNo(deliverReplaceCmd.getServeNo());
-        deliverDTO.setCarNum(deliverVehicleSelectCmd.getCarNum());
-        deliverDTO.setCarId(deliverVehicleSelectCmd.getCarId());
+        deliverDTO.setServeNo(deliverReplaceCmd.getServeList().get(0));
+        deliverDTO.setCarNum(deliverVehicleSelectCmd.get(0).getPlateNumber());
+        deliverDTO.setCarId(deliverVehicleSelectCmd.get(0).getId());
         deliverDTO.setDeliverStatus(DeliverEnum.IS_DELIVER.getCode());
         deliverDTO.setStatus(ValidStatusEnum.VALID.getCode());
+        deliverDTO.setFrameNum(deliverVehicleSelectCmd.get(0).getVin());
+        deliverDTO.setMileage(deliverVehicleSelectCmd.get(0).getMileage());
+        deliverDTO.setVehicleAge(deliverVehicleSelectCmd.get(0).getVehicleAge());
         Result<String> result = deliverAggregateRootApi.toReplace(deliverDTO);
 
         return result.getData();

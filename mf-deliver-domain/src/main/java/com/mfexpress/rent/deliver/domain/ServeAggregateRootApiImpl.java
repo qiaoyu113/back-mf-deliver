@@ -12,7 +12,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeVehicleDTO;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
-import com.mfexpress.rent.deliver.utils.Utils;
+import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,9 +38,10 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         ServeDTO serveDTO = new ServeDTO();
         if (serve != null) {
             BeanUtil.copyProperties(serve, serveDTO);
+            return Result.getInstance(serveDTO).success();
         }
 
-        return Result.getInstance(serveDTO).success();
+        return Result.getInstance((ServeDTO) null).success();
     }
 
     @Override
@@ -55,8 +56,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             Integer num = serveVehicleDTO.getNum();
             for (int i = 0; i < num; i++) {
                 Serve serve = new Serve();
-                long incr = redisTools.incr(Utils.getEnvVariable(Constants.REDIS_SERVE_KEY) + Utils.getDateByYYMMDD(new Date()), 1);
-                String serveNo = Utils.getNo(Constants.REDIS_SERVE_KEY, incr);
+                long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_SERVE_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
+                String serveNo = DeliverUtils.getNo(Constants.REDIS_SERVE_KEY, incr);
                 Long bizId = redisTools.getBizId(Constants.REDIS_BIZ_ID_SERVER);
                 serve.setServeId(bizId);
                 serve.setServeNo(serveNo);
@@ -102,16 +103,16 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/recover")
     public Result<String> recover(@RequestBody List<String> serveNoList) {
         Serve serve = Serve.builder().status(ServeEnum.RECOVER.getCode()).build();
-        serveGateway.updateServeByServeNoList(serveNoList, serve);
-        return Result.getInstance("").success();
+        int i = serveGateway.updateServeByServeNoList(serveNoList, serve);
+        return i > 0 ? Result.getInstance("收车完成").success() : Result.getInstance("收车失败").fail(-1, "收车失败");
     }
 
     @Override
     @PostMapping("/completed")
     public Result<String> completed(@RequestParam("serveNo") String serveNo) {
         Serve serve = Serve.builder().status(ServeEnum.COMPLETED.getCode()).build();
-        serveGateway.updateServeByServeNo(serveNo, serve);
-        return Result.getInstance("").success();
+        int i = serveGateway.updateServeByServeNo(serveNo, serve);
+        return i > 0 ? Result.getInstance("退保完成").success() : Result.getInstance("退保失败").fail(-1, "退保失败");
     }
 
 

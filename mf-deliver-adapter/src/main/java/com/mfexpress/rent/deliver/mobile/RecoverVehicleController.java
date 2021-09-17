@@ -23,7 +23,6 @@ public class RecoverVehicleController {
     @Resource
     private RecoverVehicleServiceI recoverVehicleServiceI;
 
-    //=====================申请收车页==============//
 
     @PostMapping("/getRecoverVehicleListVO")
     @ApiOperation("申请收车页选择车辆列表")
@@ -42,9 +41,6 @@ public class RecoverVehicleController {
     }
 
 
-    //==================收车申请页==============//
-
-
     @PostMapping("/cancelRecover")
     @ApiOperation("取消收车")
     public Result<String> cancelRecover(@RequestBody RecoverCancelCmd recoverCancelCmd) {
@@ -55,56 +51,13 @@ public class RecoverVehicleController {
 
     }
 
-    @PostMapping("/getRecoverApplyListAll")
-    @ApiOperation("全部收车申请列表")
-    public Result<RecoverTaskListVO> getRecoverApplyListAll(@RequestBody RecoverQryListCmd recoverQryListCmd) {
+    @PostMapping("/getRecoverListVO")
+    @ApiOperation("收车申请列表")
+    public Result<RecoverTaskListVO> getRecoverListVO(@RequestBody RecoverQryListCmd recoverQryListCmd) {
         // 查询es收车中或已收车数据
-        return Result.getInstance(recoverVehicleServiceI.getRecoverApplyListAll(recoverQryListCmd)).success();
+        return Result.getInstance(recoverVehicleServiceI.getRecoverListVO(recoverQryListCmd)).success();
     }
 
-    @PostMapping("/getStayRecoverApplyList")
-    @ApiOperation("待收车申请列表")
-    public Result<RecoverTaskListVO> getStayRecoverApplyList(@RequestBody RecoverQryListCmd recoverQryListCmd) {
-        //查询es收车中未验车数据
-        return Result.getInstance(recoverVehicleServiceI.getStayRecoverApplyList(recoverQryListCmd)).success();
-    }
-
-    @PostMapping("/getCompletedRecoverApplyList")
-    @ApiOperation("已完成收车申请列表")
-    public Result<RecoverTaskListVO> getCompletedRecoverApplyList(@RequestBody RecoverQryListCmd recoverQryListCmd) {
-        //  查询es收车中已验车数据
-        return Result.getInstance(recoverVehicleServiceI.getCompletedRecoverApplyList(recoverQryListCmd));
-    }
-
-
-    //=================收车任务列表=================//
-
-
-    @PostMapping("/getRecoverTaskListVoInsure")
-    @ApiOperation("收车任务待退保列表")
-    public Result<RecoverTaskListVO> getRecoverTaskListVoInsure(@RequestBody RecoverQryListCmd recoverQryListCmd) {
-
-        // 收车任务已验车待退保数据
-        return Result.getInstance(recoverVehicleServiceI.getRecoverTaskListVoInsure(recoverQryListCmd));
-    }
-
-    @PostMapping("/getRecoverTaskListVoDeduction")
-    @ApiOperation("收车任务待处理违章列表")
-    public Result<RecoverTaskListVO> getRecoverTaskListVoDeduction(@RequestBody RecoverQryListCmd recoverQryListCmd) {
-
-        // 收车中已验车待处理违章数据
-        return Result.getInstance(recoverVehicleServiceI.getRecoverTaskListVoDeduction(recoverQryListCmd));
-    }
-
-    @PostMapping("/getRecoverTaskListVoCompleted")
-    @ApiOperation("收车任务已完成列表")
-    public Result<RecoverTaskListVO> getRecoverTaskListVoCompleted(@RequestBody RecoverQryListCmd recoverQryListCmd) {
-
-        //服务单已完成
-        return Result.getInstance(recoverVehicleServiceI.getRecoverTaskListVoCompleted(recoverQryListCmd));
-    }
-
-    //==================收车操作===============//
 
     @PostMapping("/toCheck")
     @ApiOperation(value = "收车验车")

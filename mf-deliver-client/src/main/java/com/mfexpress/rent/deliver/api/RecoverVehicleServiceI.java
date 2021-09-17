@@ -14,21 +14,12 @@ public interface RecoverVehicleServiceI {
 
     String toCheck(RecoverVechicleCmd recoverVechicleCmd);
 
+
     String toBackInsure(RecoverBackInsureCmd recoverBackInsureCmd);
 
     String toDeduction(RecoverDeductionCmd recoverDeductionCmd);
 
-    RecoverTaskListVO getRecoverApplyListAll(RecoverQryListCmd recoverQryListCmd);
-
-    RecoverTaskListVO getStayRecoverApplyList(RecoverQryListCmd recoverQryListCmd);
-
-    RecoverTaskListVO getCompletedRecoverApplyList(RecoverQryListCmd recoverQryListCmd);
-
-    RecoverTaskListVO getRecoverTaskListVoInsure(RecoverQryListCmd recoverQryListCmd);
-
-    RecoverTaskListVO getRecoverTaskListVoDeduction(RecoverQryListCmd recoverQryListCmd);
-
-    RecoverTaskListVO getRecoverTaskListVoCompleted(RecoverQryListCmd recoverQryListCmd);
+    RecoverTaskListVO getRecoverListVO(RecoverQryListCmd recoverQryListCmd);
 
 
 }

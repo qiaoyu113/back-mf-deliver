@@ -24,20 +24,18 @@ public class RecoverApplyExe {
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
 
 
-    public String applyRecover(RecoverApplyListCmd recoverApplyListCmd) {
+    public String execute(RecoverApplyListCmd recoverApplyListCmd) {
         List<RecoverApplyCmd> recoverApplyCmdList = recoverApplyListCmd.getRecoverApplyCmdList();
 
         List<String> serveNoList = new LinkedList<>();
 
         List<RecoverVehicleDTO> recoverVehicleDTOList = new LinkedList<>();
         for (RecoverApplyCmd recoverApplyCmd : recoverApplyCmdList) {
-
             serveNoList.add(recoverApplyCmd.getServeNo());
-
             RecoverVehicleDTO recoverVehicleDTO = new RecoverVehicleDTO();
             recoverVehicleDTO.setServeNo(recoverApplyCmd.getServeNo());
             recoverVehicleDTO.setDeliverNo(recoverApplyCmd.getDeliverNo());
-
+            recoverVehicleDTO.setCarId(recoverApplyCmd.getCarId());
             recoverVehicleDTO.setExpectRecoverTime(recoverApplyListCmd.getExpectRecoverTime());
             recoverVehicleDTO.setStatus(ValidStatusEnum.VALID.getCode());
             recoverVehicleDTOList.add(recoverVehicleDTO);

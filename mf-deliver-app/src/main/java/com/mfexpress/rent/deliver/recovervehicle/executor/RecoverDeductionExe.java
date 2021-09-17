@@ -22,14 +22,16 @@ public class RecoverDeductionExe {
     private ServeAggregateRootApi serveAggregateRootApi;
 
 
-    public String toDeduction(RecoverDeductionCmd recoverDeductionCmd) {
+    public String execute(RecoverDeductionCmd recoverDeductionCmd) {
         DeliverDTO deliverDTO = new DeliverDTO();
 
         BeanUtils.copyProperties(recoverDeductionCmd, deliverDTO);
         Result<String> result = deliverAggregateRootApi.toDeduction(deliverDTO);
-        if (result.getCode()==0){
-             serveAggregateRootApi.completed(recoverDeductionCmd.getServeNo());
+
+        if (result.getCode() != 0) {
+            return result.getMsg();
+
         }
-        return "";
+        return serveAggregateRootApi.completed(recoverDeductionCmd.getServeNo()).getData();
     }
 }

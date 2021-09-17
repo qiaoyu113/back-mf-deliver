@@ -13,7 +13,7 @@ public class ServeQryListCmd extends ListQry {
 
     @NotEmpty(message = "订单编号不能为空")
     @ApiModelProperty(value = "订单编号")
-    private Long orderId;
+    private String orderId;
 
 
 

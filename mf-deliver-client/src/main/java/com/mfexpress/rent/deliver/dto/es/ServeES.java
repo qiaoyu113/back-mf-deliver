@@ -13,7 +13,7 @@ import java.util.List;
 public class ServeES {
 
     @ApiModelProperty(value = "订单id")
-    private Long orderId;
+    private String orderId;
     @ApiModelProperty(value = "客户名称")
     private String customerName;
     @ApiModelProperty(value = "客户手机号")

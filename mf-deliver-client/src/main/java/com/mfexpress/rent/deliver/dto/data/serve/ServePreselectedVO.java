@@ -15,7 +15,8 @@ public class ServePreselectedVO {
     private Integer num;
     @ApiModelProperty(value = "车型id")
     private Integer carModelId;
-
+    @ApiModelProperty(value = "车辆id")
+    private Integer carId;
     @ApiModelProperty(value = "品牌id")
     private Integer brandId;
     @ApiModelProperty(value = "品牌车型描述")

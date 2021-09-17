@@ -28,7 +28,6 @@
         <dependency>
             <groupId>com.mfexpress</groupId>
             <artifactId>mf-component-dto</artifactId>
-            <version>${mf.components.version}</version>
         </dependency>
     </dependencies>
 

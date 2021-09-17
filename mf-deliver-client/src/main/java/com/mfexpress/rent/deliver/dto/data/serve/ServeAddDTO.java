@@ -12,7 +12,7 @@ public class ServeAddDTO {
 
     @ApiModelProperty(value = "订单id")
     private Long orderId;
-    @ApiModelProperty
+    @ApiModelProperty(value = "客户id")
     private Integer customerId;
     @ApiModelProperty(value = "车辆信息")
     private List<ServeVehicleDTO> vehicleDTOList;

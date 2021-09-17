@@ -8,9 +8,10 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
 import com.mfexpress.component.starter.utils.MqTools;
 import com.mfexpress.component.utils.util.DateUtils;
-import com.mfexpress.order.api.app.MFOrderAggregateRootApi;
+import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.data.ProductDTO;
+import com.mfexpress.order.dto.qry.ReviewOrderQry;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
@@ -23,8 +24,10 @@ import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
-import com.mfexpress.rent.deliver.utils.Utils;
+import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.dto.entity.Customer;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -56,20 +59,28 @@ public class SyncServiceImpl implements SyncServiceI {
     private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
-
     @Resource
-    private MFOrderAggregateRootApi mfOrderAggregateRootApi;
+    private CustomerAggregateRootApi customerAggregateRootApi;
+    @Resource
+    private OrderAggregateRootApi orderAggregateRootApi;
     @Resource
     private DictAggregateRootApi dictAggregateRootApi;
 
     @Value("${rocketmq.listenBinlogTopic}")
     private String listenBinlogTopic;
+    @Resource
+    private DeliverMqCommand deliverMqCommand;
+
 
     @PostConstruct
     public void init() {
         DeliverBinlogDispatch deliverBinlogDispatch = new DeliverBinlogDispatch();
         deliverBinlogDispatch.setServiceI(this);
         mqTools.addBinlogCommand(listenBinlogTopic, deliverBinlogDispatch);
+        deliverMqCommand.setTopic(Constants.DELIVER_ORDER_TOPIC);
+        deliverMqCommand.setTags(Constants.DELIVER_ORDER_TAG);
+        mqTools.add(deliverMqCommand);
+
 
     }
 
@@ -83,24 +94,26 @@ public class SyncServiceImpl implements SyncServiceI {
         ServeDTO serveDTO = serveResult.getData();
         BeanUtils.copyProperties(serveDTO, serveEs);
         serveEs.setServeStatus(serveDTO.getStatus());
+        serveEs.setOrderId(serveDTO.getOrderId().toString());
         //租赁方式
         serveEs.setLeaseModelDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.DELIVER_LEASE_MODE), serveEs.getLeaseModelId().toString()));
         //品牌车型描述
-        Result<String> carModelResult = vehicleAggregateRootApi.getVehicleBrandTypeById(serveEs.getCarId());
+        Result<String> carModelResult = vehicleAggregateRootApi.getVehicleBrandTypeById(serveEs.getCarModelId());
         serveEs.setBrandModelDisplay(carModelResult.getData());
-
         //调用订单查询订单信息
-        OrderDTO orderDTO = new OrderDTO();
-        orderDTO.setOrderId(serveEs.getOrderId());
-        Result<?> orderResult = mfOrderAggregateRootApi.getOrderInfo(orderDTO);
-        if (orderResult.getCode() == 0) {
+        ReviewOrderQry reviewOrderQry = new ReviewOrderQry();
+        reviewOrderQry.setOrderId(Long.valueOf(serveEs.getOrderId()));
+        Result<?> orderResult = orderAggregateRootApi.getOrderInfo(reviewOrderQry);
+        if (orderResult.getCode() == 0 && orderResult.getData() != null) {
             OrderDTO order = (OrderDTO) orderResult.getData();
             serveEs.setContractNo(order.getContractCode());
-            serveEs.setCustomerName(order.getCustomerName());
+            Result<Customer> customerResult = customerAggregateRootApi.getCustomerById(order.getCustomerId());
+            if (customerResult.getCode() == 0 && customerResult.getData() != null) {
+                serveEs.setCustomerName(customerResult.getData().getName());
+            }
             serveEs.setCustomerPhone(order.getConsigneeMobile());
             serveEs.setExtractVehicleTime(DateUtils.parseDate(order.getDeliveryDate()));
             List<OrderCarModelVO> carModelList = new LinkedList<>();
-
             List<ProductDTO> productList = order.getProductList();
             for (ProductDTO productDTO : productList) {
                 OrderCarModelVO orderCarModelVO = new OrderCarModelVO();
@@ -114,13 +127,14 @@ public class SyncServiceImpl implements SyncServiceI {
             serveEs.setCarModelVOList(carModelList);
         }
 
-
         //预选状态下存在交付单
         Result<DeliverDTO> deliverResult = deliverAggregateRootApi.getDeliverByServeNo(serveNo);
         if (deliverResult.getData() != null) {
             serveEs.setIsPreselected(ServeEnum.PRESELECTED.getCode());
             DeliverDTO deliverDTO = deliverResult.getData();
             BeanUtils.copyProperties(deliverDTO, serveEs);
+            //存在交付单会覆盖原有客户id
+            serveEs.setCustomerId(serveDTO.getCustomerId());
             //排序规则
             Integer sort = getSort(serveEs);
             serveEs.setSort(sort);
@@ -144,7 +158,7 @@ public class SyncServiceImpl implements SyncServiceI {
             serveEs.setIsDeduction(0);
             serveEs.setSort(DeliverSortEnum.TWO.getSort());
         }
-        elasticsearchTools.saveByEntity(Utils.getEnvVariable(Constants.ES_DELIVER_INDEX), Utils.getEnvVariable(Constants.ES_DELIVER_INDEX), serveNo, serveEs);
+        elasticsearchTools.saveByEntity(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), serveNo, serveEs);
 
     }
 

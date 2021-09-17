@@ -6,9 +6,10 @@ import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleCmd;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
-
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleImgCmd;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
+import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +29,7 @@ public class DeliverVehicleExe {
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
 
-    public String deliver(DeliverVehicleCmd deliverVehicleCmd) {
+    public String execute(DeliverVehicleCmd deliverVehicleCmd) {
         //生成发车单 交付单状态更新已发车 初始化操作状态  服务单状态更新为已发车  调用车辆服务为租赁状态
         List<DeliverVehicleImgCmd> deliverVehicleImgCmdList = deliverVehicleCmd.getDeliverVehicleImgCmdList();
         List<DeliverVehicleDTO> deliverVehicleDTOList = new LinkedList<>();
@@ -36,11 +37,8 @@ public class DeliverVehicleExe {
         List<String> serveNoList = new LinkedList<>();
         List<Integer> carIdList = new LinkedList<>();
         for (DeliverVehicleImgCmd deliverVehicleImgCmd : deliverVehicleImgCmdList) {
-
             serveNoList.add(deliverVehicleImgCmd.getServeNo());
-
             carIdList.add(deliverVehicleImgCmd.getCarId());
-
             DeliverVehicleDTO deliverVehicleDTO = new DeliverVehicleDTO();
             deliverVehicleDTO.setServeNo(deliverVehicleImgCmd.getServeNo());
             deliverVehicleDTO.setDeliverNo(deliverVehicleImgCmd.getDeliverNo());
@@ -51,19 +49,15 @@ public class DeliverVehicleExe {
             deliverVehicleDTO.setDeliverVehicleTime(deliverVehicleCmd.getDeliverVehicleTime());
             deliverVehicleDTOList.add(deliverVehicleDTO);
         }
-
-
         VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
-        vehicleSaveCmd.setStockStatus(2);
-        vehicleSaveCmd.setSelectStatus(3);
+        vehicleSaveCmd.setStockStatus(ValidStockStatusEnum.OUT.getCode());
+        vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.LEASE.getCode());
         vehicleSaveCmd.setId(carIdList);
         vehicleSaveCmd.setCustomerId(deliverVehicleCmd.getCustomerId());
         Result<String> vehicleResult = vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
         if (vehicleResult.getCode() != 0) {
             return vehicleResult.getMsg();
         }
-
-
         //服务单 更新状态为发车
         Result<String> serveResult = serveAggregateRootApi.deliver(serveNoList);
         if (serveResult.getCode() != 0) {

@@ -12,7 +12,7 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverBackInsureDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
-import com.mfexpress.rent.deliver.utils.Utils;
+import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,12 +50,12 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/addDeliver")
     public Result<String> addDeliver(@RequestBody List<DeliverDTO> list) {
         List<Deliver> deliverList = list.stream().map(deliverDTO -> {
-            long incr = redisTools.incr(Utils.getEnvVariable(Constants.REDIS_DELIVER_KEY) + Utils.getDateByYYMMDD(new Date()), 1);
+            long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_DELIVER_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
             Deliver deliver = new Deliver();
             BeanUtil.copyProperties(deliverDTO, deliver);
             Long bizId = redisTools.getBizId(Constants.REDIS_BIZ_ID_DELIVER);
             deliver.setDeliverId(bizId);
-            deliver.setDeliverNo(Utils.getNo(Constants.REDIS_DELIVER_KEY, incr));
+            deliver.setDeliverNo(DeliverUtils.getNo(Constants.REDIS_DELIVER_KEY, incr));
             return deliver;
         }).collect(Collectors.toList());
         int i = deliverGateway.addDeliver(deliverList);
@@ -127,8 +127,8 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         Deliver deliver = Deliver.builder().isInsurance(JudgeEnum.YES.getCode())
                 .deliverStatus(DeliverEnum.RECOVER.getCode())
                 .insuranceRemark(deliverBackInsureDTO.getInsuranceRemark()).build();
-        deliverGateway.updateDeliverByServeNoList(deliverBackInsureDTO.getServeNoList(), deliver);
-        return Result.getInstance("").success();
+        int i = deliverGateway.updateDeliverByServeNoList(deliverBackInsureDTO.getServeNoList(), deliver);
+        return i > 0 ? Result.getInstance("处理保险成功").success() : Result.getInstance("处理保险失败").fail(-1, "处理保险失败");
     }
 
     @Override
@@ -137,8 +137,9 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         Deliver deliver = new Deliver();
         BeanUtil.copyProperties(deliverDTO, deliver);
         deliver.setIsDeduction(JudgeEnum.YES.getCode());
-        deliverGateway.updateDeliverByServeNo(deliver.getServeNo(), deliver);
+        deliver.setDeliverStatus(DeliverEnum.RECOVER.getCode());
+        int i = deliverGateway.updateDeliverByServeNo(deliver.getServeNo(), deliver);
 
-        return Result.getInstance("").success();
+        return i > 0 ? Result.getInstance("处理违章完成").success() : Result.getInstance("处理违章失败").fail(-1, "处理违章失败");
     }
 }

@@ -15,7 +15,7 @@ public class ServeAddCmdExe {
     private ServeAggregateRootApi serveAggregateRootApi;
 
 
-    public String addServe(ServeAddCmd serveAddCmd) {
+    public String execute(ServeAddCmd serveAddCmd) {
         ServeAddDTO serveAddDTO = new ServeAddDTO();
         serveAddDTO.setOrderId(serveAddCmd.getOrderId());
         serveAddDTO.setVehicleDTOList(serveAddCmd.getServeVehicleCmdList());

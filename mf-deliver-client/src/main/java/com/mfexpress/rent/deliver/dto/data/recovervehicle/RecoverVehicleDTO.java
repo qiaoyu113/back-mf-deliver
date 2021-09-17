@@ -37,8 +37,11 @@ public class RecoverVehicleDTO {
     private Integer updateId;
 
     private Integer status;
-    private Date expectRecoverTime;
 
+    private Date expectRecoverTime;
+    private Integer cancelRemarkId;
+
+    private String cancelRemark;
     private Integer wareHouseId;
     private Integer carId;
 }

@@ -73,6 +73,31 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>com.mfexpress</groupId>
+                <artifactId>mf-component-dto</artifactId>
+                <version>${mf.components.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mfexpress</groupId>
+                <artifactId>mf-component-exception</artifactId>
+                <version>${mf.components.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mfexpress</groupId>
+                <artifactId>mf-component-utils</artifactId>
+                <version>${mf.components.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mfexpress</groupId>
+                <artifactId>mf-component-constant</artifactId>
+                <version>${mf.components.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mfexpress</groupId>
+                <artifactId>mf-component-spring-boot-starter</artifactId>
+                <version>${mf.components.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-openfeign-core</artifactId>
                 <version>${feign.version}</version>
@@ -81,7 +106,12 @@
             <dependency>
                 <groupId>com.mfexpress</groupId>
                 <artifactId>mf-common-client</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mfexpress.transportation.project</groupId>
+                <artifactId>mf-customer-client</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
@@ -286,33 +316,7 @@
                 <version>1.0</version>
             </dependency>
 
-            <dependency>
-                <groupId>com.mfexpress</groupId>
-                <artifactId>mf-component-dto</artifactId>
-                <version>${mf.components.version}</version>
-            </dependency>
 
-
-            <dependency>
-                <groupId>com.mfexpress</groupId>
-                <artifactId>mf-component-exception</artifactId>
-                <version>${mf.components.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.mfexpress</groupId>
-                <artifactId>mf-component-utils</artifactId>
-                <version>${mf.components.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.mfexpress</groupId>
-                <artifactId>mf-component-constant</artifactId>
-                <version>${mf.components.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.mfexpress</groupId>
-                <artifactId>mf-component-spring-boot-starter</artifactId>
-                <version>${mf.components.version}</version>
-            </dependency>
             <dependency>
                 <groupId>commons-lang</groupId>
                 <artifactId>commons-lang</artifactId>

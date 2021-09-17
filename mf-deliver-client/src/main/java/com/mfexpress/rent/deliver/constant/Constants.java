@@ -19,4 +19,6 @@ public class Constants {
     public static final String REDIS_SERVE_KEY = "mf:serve";
     public static final String REDIS_DELIVER_VEHICLE_KEY = "mf:deliver:vehicle";
     public static final String REDIS_RECOVER_VEHICLE_KEY = "mf:recover:vehicle";
+    public static final String DELIVER_ORDER_TOPIC = "dev2m1_event";
+    public static final String DELIVER_ORDER_TAG = "order_payment_finish";
 }

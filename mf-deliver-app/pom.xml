@@ -18,6 +18,10 @@
             <artifactId>mf-common-client</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.mfexpress.transportation.project</groupId>
+            <artifactId>mf-customer-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.mfexpress.</groupId>
             <artifactId>mf-order-client</artifactId>
         </dependency>
@@ -49,11 +53,6 @@
         <dependency>
             <groupId>org.glassfish.web</groupId>
             <artifactId>javax.el</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.mfexpress</groupId>
-            <artifactId>mf-component-spring-boot-starter</artifactId>
-            <version>${mf.components.version}</version>
         </dependency>
         <!-- JSR 303 Validation End-->
         <dependency>

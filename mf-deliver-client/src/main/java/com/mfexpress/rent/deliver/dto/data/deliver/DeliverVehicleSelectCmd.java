@@ -12,16 +12,16 @@ public class DeliverVehicleSelectCmd {
 
     @NotNull(message = "车辆id不能为空")
     @ApiModelProperty(value = "车辆id")
-    private Integer carId;
+    private Integer id;
 
     @ApiModelProperty(value = "车牌号")
-    private String carNum;
+    private String plateNumber;
 
     @ApiModelProperty(value = "车架号")
-    private String frameNum;
+    private String vin;
 
     @ApiModelProperty(value = "是否投保")
-    private Integer isInsurance;
+    private Integer insuranceStatus;
 
     @ApiModelProperty(value = "车龄")
     private Double vehicleAge;
