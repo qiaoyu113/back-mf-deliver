@@ -40,8 +40,8 @@ public class RecoverVehicleQryExe {
 
         }
         if (recoverApplyQryCmd.getStartDeliverTime() != null && recoverApplyQryCmd.getEndDeliverTime() != null) {
-            boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverVehicleTime").gte(recoverApplyQryCmd.getStartDeliverTime()))
-                    .must(QueryBuilders.rangeQuery("deliverVehicleTime").lte(recoverApplyQryCmd.getEndDeliverTime()));
+            boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverVehicleTime").gte(recoverApplyQryCmd.getStartDeliverTime().getTime()))
+                    .must(QueryBuilders.rangeQuery("deliverVehicleTime").lte(recoverApplyQryCmd.getEndDeliverTime().getTime()));
 
         }
         Map<String, Object> map = elasticsearchTools.searchByQuery(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), 0, 0, boolQueryBuilder);

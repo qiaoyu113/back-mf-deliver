@@ -40,12 +40,11 @@ public class RecoverEsDataQryExe {
             boolQueryBuilder.must(QueryBuilders.matchQuery("carModelId", recoverQryListCmd.getCarModelId()));
         }
         if (recoverQryListCmd.getExpectRecoverStartTime() != null && recoverQryListCmd.getExpectRecoverEndTime() != null) {
-            boolQueryBuilder.must(QueryBuilders.rangeQuery("expectRecoverTime").gte(recoverQryListCmd.getExpectRecoverStartTime()));
-            boolQueryBuilder.must(QueryBuilders.rangeQuery("expectRecoverTime").lte(recoverQryListCmd.getExpectRecoverEndTime()));
+            boolQueryBuilder.must(QueryBuilders.rangeQuery("expectRecoverTime").from(recoverQryListCmd.getExpectRecoverStartTime().getTime()).to(recoverQryListCmd.getExpectRecoverEndTime().getTime()));
         }
         if (recoverQryListCmd.getStartDeliverTime() != null && recoverQryListCmd.getEndDeliverTime() != null) {
-            boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverVehicleTime").gte(recoverQryListCmd.getStartDeliverTime()))
-                    .must(QueryBuilders.rangeQuery("deliverVehicleTime").lte(recoverQryListCmd.getEndDeliverTime()));
+            boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverVehicleTime").from(recoverQryListCmd.getStartDeliverTime().getTime()).to(recoverQryListCmd.getEndDeliverTime().getTime()));
+
         }
         int start = (recoverQryListCmd.getPage() - 1) * recoverQryListCmd.getLimit();
         Map<String, Object> map = elasticsearchTools.searchByQuerySort(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX),
