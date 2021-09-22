@@ -51,7 +51,7 @@ public class ServeDeliverTaskListQryExe {
         //查询所有服务单
         Map<String, Object> map = elasticsearchTools.searchByQuerySort(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX),
                 DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), 0, 1000,
-                boolQueryBuilder, fieldSortBuilderList);
+                boolQueryBuilder,fieldSortBuilderList);
         List<Map<String, Object>> data = (List<Map<String, Object>>) map.get("data");
         List<ServeES> serveEsList = new LinkedList<>();
         for (Map<String, Object> serveMap : data) {
