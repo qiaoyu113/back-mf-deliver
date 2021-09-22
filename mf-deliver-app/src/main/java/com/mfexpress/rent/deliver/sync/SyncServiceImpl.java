@@ -101,14 +101,12 @@ public class SyncServiceImpl implements SyncServiceI {
         //租赁方式
         serveEs.setLeaseModelDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.DELIVER_LEASE_MODE), serveEs.getLeaseModelId().toString()));
 
-        //生成服务单时调一次
-
         //品牌车型描述
         Result<String> carModelResult = vehicleAggregateRootApi.getVehicleBrandTypeById(serveEs.getCarModelId());
         serveEs.setBrandModelDisplay(carModelResult.getData());
         //调用订单查询订单信息
         ReviewOrderQry reviewOrderQry = new ReviewOrderQry();
-        reviewOrderQry.setOrderId(Long.valueOf(serveEs.getOrderId()));
+        reviewOrderQry.setId(serveEs.getOrderId());
         Result<?> orderResult = orderAggregateRootApi.getOrderInfo(reviewOrderQry);
         if (orderResult.getCode() == 0 && orderResult.getData() != null) {
             OrderDTO order = (OrderDTO) orderResult.getData();

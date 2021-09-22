@@ -68,7 +68,7 @@ public class ServeEsDataQryExe {
         } else {
             //todo es查询订单信息
             ReviewOrderQry reviewOrderQry = new ReviewOrderQry();
-            reviewOrderQry.setOrderId(Long.valueOf(orderId));
+            reviewOrderQry.setId(orderId);
             Result<?> orderResult = orderAggregateRootApi.getOrderInfo(reviewOrderQry);
             if (orderResult.getCode() == 0 && orderResult.getData() != null) {
                 OrderDTO order = (OrderDTO) orderResult.getData();

@@ -64,7 +64,7 @@ public class RecoverEsDataQryExe {
         BigDecimal bigDecimalLimit = new BigDecimal(recoverQryListCmd.getLimit());
 
         BigDecimal pages = bigDecimalTotal.divide(bigDecimalLimit, BigDecimal.ROUND_UP);
-        Page page = Page.builder().nowPage(recoverQryListCmd.getPage()).pages(pages.intValue()).build();
+        Page page = Page.builder().nowPage(recoverQryListCmd.getPage()).pages(pages.intValue()).total((int) total).build();
         recoverTaskListVO.setRecoverVehicleVOList(recoverVehicleVOList);
         recoverTaskListVO.setPage(page);
 
