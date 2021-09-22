@@ -18,10 +18,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -76,7 +73,9 @@ public class ServeDeliverTaskListQryExe {
         BigDecimal pages = bigDecimalTotal.divide(bigDecimalLimit, BigDecimal.ROUND_UP);
         Page page = Page.builder().nowPage(serveDeliverTaskQryCmd.getPage()).pages(pages.intValue()).total(total).build();
         int start = (serveDeliverTaskQryCmd.getPage() - 1) * serveDeliverTaskQryCmd.getLimit();
-
+        if (start > total) {
+            serveDeliverTaskListVO.setServeDeliverTaskVOList(new ArrayList<>());
+        }
         if (start + serveDeliverTaskQryCmd.getLimit() > total) {
             serveDeliverTaskListVO.setServeDeliverTaskVOList(serveDeliverTaskVOList.subList(start, serveDeliverTaskVOList.size()));
         } else {
