@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.serve;
 
+import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.serve.repository.ServeMapper;
@@ -45,5 +46,12 @@ public class ServeGatewayImpl implements ServeGateway {
 
             serveMapper.insertSelective(serve);
         }
+    }
+
+    @Override
+    public List<ServePreselectedDTO> getServePreselectedByOrderId(List<Long> orderId) {
+
+
+        return serveMapper.getServePreselectedByOrderId(orderId);
     }
 }

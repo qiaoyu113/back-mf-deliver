@@ -7,7 +7,6 @@ import com.mfexpress.common.domain.dto.DictTypeDTO;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
 import com.mfexpress.component.starter.utils.MqTools;
-import com.mfexpress.component.utils.util.DateUtils;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.data.ProductDTO;
@@ -107,16 +106,16 @@ public class SyncServiceImpl implements SyncServiceI {
         //调用订单查询订单信息
         ReviewOrderQry reviewOrderQry = new ReviewOrderQry();
         reviewOrderQry.setId(serveEs.getOrderId());
-        Result<?> orderResult = orderAggregateRootApi.getOrderInfo(reviewOrderQry);
+        Result<OrderDTO> orderResult = orderAggregateRootApi.getOrderInfo(reviewOrderQry);
         if (orderResult.getCode() == 0 && orderResult.getData() != null) {
-            OrderDTO order = (OrderDTO) orderResult.getData();
+            OrderDTO order = orderResult.getData();
             serveEs.setContractNo(order.getContractCode());
             Result<Customer> customerResult = customerAggregateRootApi.getCustomerById(order.getCustomerId());
             if (customerResult.getCode() == 0 && customerResult.getData() != null) {
                 serveEs.setCustomerName(customerResult.getData().getName());
             }
             serveEs.setCustomerPhone(order.getConsigneeMobile());
-            serveEs.setExtractVehicleTime(DateUtils.parseDate(order.getDeliveryDate()));
+            serveEs.setExtractVehicleTime(order.getDeliveryDate());
             List<OrderCarModelVO> carModelList = new LinkedList<>();
             List<ProductDTO> productList = order.getProductList();
             for (ProductDTO productDTO : productList) {

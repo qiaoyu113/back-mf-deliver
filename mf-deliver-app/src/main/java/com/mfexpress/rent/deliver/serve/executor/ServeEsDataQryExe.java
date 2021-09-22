@@ -4,7 +4,6 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
-import com.mfexpress.component.utils.util.DateUtils;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.data.ProductDTO;
@@ -79,7 +78,7 @@ public class ServeEsDataQryExe {
                 if (customerResult.getCode() == 0 && customerResult.getData() != null) {
                     serveListVO.setCustomerName(customerResult.getData().getName());
                 }
-                serveListVO.setExtractVehicleTime(DateUtils.parseDate(order.getDeliveryDate()));
+                serveListVO.setExtractVehicleTime(order.getDeliveryDate());
                 List<OrderCarModelVO> carModelList = new LinkedList<>();
                 List<ProductDTO> productList = order.getProductList();
                 for (ProductDTO productDTO : productList) {
