@@ -80,9 +80,7 @@ public class ServeDeliverTaskListQryExe {
         Page page = Page.builder().nowPage(serveDeliverTaskQryCmd.getPage()).pages(pages.intValue()).total(total).build();
         int start = (serveDeliverTaskQryCmd.getPage() - 1) * serveDeliverTaskQryCmd.getLimit();
 
-        if (start > total) {
-            serveDeliverTaskListVO.setServeDeliverTaskVOList(serveDeliverTaskVOList);
-        } else if (start + serveDeliverTaskQryCmd.getLimit() > total) {
+        if (start + serveDeliverTaskQryCmd.getLimit() > total) {
             serveDeliverTaskListVO.setServeDeliverTaskVOList(serveDeliverTaskVOList.subList(start, serveDeliverTaskVOList.size()));
         } else {
             serveDeliverTaskListVO.setServeDeliverTaskVOList(serveDeliverTaskVOList.subList(start, start + serveDeliverTaskQryCmd.getLimit()));

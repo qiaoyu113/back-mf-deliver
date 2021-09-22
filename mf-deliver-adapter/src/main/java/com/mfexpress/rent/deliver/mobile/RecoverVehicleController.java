@@ -58,6 +58,13 @@ public class RecoverVehicleController {
         return Result.getInstance(recoverVehicleServiceI.getRecoverListVO(recoverQryListCmd)).success();
     }
 
+    @PostMapping("/getRecoverTaskListVO")
+    @ApiOperation("收车任务列表")
+    public Result<RecoverTaskListVO> getRecoverTaskListVO(@RequestBody RecoverQryListCmd recoverQryListCmd) {
+        // 查询es收车中或已收车数据
+        return Result.getInstance(recoverVehicleServiceI.getRecoverListVO(recoverQryListCmd)).success();
+    }
+
 
     @PostMapping("/toCheck")
     @ApiOperation(value = "收车验车")
