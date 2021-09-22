@@ -16,5 +16,4 @@ public class ServeQryListCmd extends ListQry {
     private String orderId;
 
 
-
 }

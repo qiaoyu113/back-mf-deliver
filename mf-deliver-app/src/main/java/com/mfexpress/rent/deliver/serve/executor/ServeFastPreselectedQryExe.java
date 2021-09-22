@@ -22,6 +22,7 @@ public class ServeFastPreselectedQryExe {
         List<ServeFastPreselectedVO> serveFastPreselectedVOList = new LinkedList<>();
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         boolQueryBuilder.must(QueryBuilders.matchQuery("orderId", serveQryListCmd.getOrderId()));
+
         ServeListVO serveListVO = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), null);
         List<ServeVO> serveVOList = serveListVO.getServeVOList();
         if (serveVOList != null) {

@@ -37,7 +37,7 @@ public class ServeDeliverTaskListQryExe {
         List<ServeDeliverTaskVO> serveDeliverTaskVOList = new LinkedList<>();
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         if (StringUtils.isNotBlank(serveDeliverTaskQryCmd.getKeyword())) {
-            boolQueryBuilder.must(QueryBuilders.matchQuery("customerName", serveDeliverTaskQryCmd.getKeyword()));
+            boolQueryBuilder.must(QueryBuilders.multiMatchQuery(serveDeliverTaskQryCmd.getKeyword(),"customerName","customerPhone"));
         }
         if (serveDeliverTaskQryCmd.getTag() == 1) {
             boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverStatus").lt(DeliverEnum.DELIVER.getCode()));
