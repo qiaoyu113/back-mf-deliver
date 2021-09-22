@@ -3,6 +3,7 @@ package com.mfexpress.rent.deliver.domainapi;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeAddDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,5 +35,8 @@ public interface ServeAggregateRootApi {
 
     @PostMapping("/completed")
     Result<String> completed(@RequestParam("serveNo") String serveNo);
+
+    @PostMapping("/getServePreselectedDTO")
+    Result<List<ServePreselectedDTO>> getServePreselectedDTO(@RequestBody List<Long> orderId);
 
 }

@@ -9,6 +9,7 @@ import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeAddDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeVehicleDTO;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
@@ -115,6 +116,12 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         Serve serve = Serve.builder().status(ServeEnum.COMPLETED.getCode()).build();
         int i = serveGateway.updateServeByServeNo(serveNo, serve);
         return i > 0 ? Result.getInstance("退保完成").success() : Result.getInstance("退保失败").fail(-1, "退保失败");
+    }
+
+    @PostMapping("/getServePreselectedDTO")
+    @Override
+    public Result<List<ServePreselectedDTO>> getServePreselectedDTO(@RequestBody List<Long> orderId) {
+        return Result.getInstance(serveGateway.getServePreselectedByOrderId(orderId)).success();
     }
 
 
