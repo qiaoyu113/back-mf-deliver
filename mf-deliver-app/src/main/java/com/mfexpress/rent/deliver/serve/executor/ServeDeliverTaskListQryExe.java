@@ -14,13 +14,11 @@ import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +35,7 @@ public class ServeDeliverTaskListQryExe {
         List<ServeDeliverTaskVO> serveDeliverTaskVOList = new LinkedList<>();
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         if (StringUtils.isNotBlank(serveDeliverTaskQryCmd.getKeyword())) {
-            boolQueryBuilder.must(QueryBuilders.multiMatchQuery(serveDeliverTaskQryCmd.getKeyword(),"customerName","customerPhone"));
+            boolQueryBuilder.must(QueryBuilders.multiMatchQuery(serveDeliverTaskQryCmd.getKeyword(), "customerName", "customerPhone"));
         }
         if (serveDeliverTaskQryCmd.getTag() == 1) {
             boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverStatus").lt(DeliverEnum.DELIVER.getCode()));
@@ -45,13 +43,11 @@ public class ServeDeliverTaskListQryExe {
         } else if (serveDeliverTaskQryCmd.getTag() == 2) {
             boolQueryBuilder.must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.DELIVER.getCode()));
         }
-        List<FieldSortBuilder> fieldSortBuilderList = new LinkedList<>();
-        FieldSortBuilder timeSortBuilder = SortBuilders.fieldSort("extractVehicleTime").unmappedType("integer").order(SortOrder.ASC);
-        fieldSortBuilderList.add(timeSortBuilder);
+
         //查询所有服务单
-        Map<String, Object> map = elasticsearchTools.searchByQuerySort(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX),
+        Map<String, Object> map = elasticsearchTools.searchByQuery(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX),
                 DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), 0, 1000,
-                boolQueryBuilder, fieldSortBuilderList);
+                boolQueryBuilder);
         List<Map<String, Object>> data = (List<Map<String, Object>>) map.get("data");
         List<ServeES> serveEsList = new LinkedList<>();
         for (Map<String, Object> serveMap : data) {
@@ -72,6 +68,7 @@ public class ServeDeliverTaskListQryExe {
             serveDeliverTaskVO.setContractNo(aggMap.get(orderId).get(0).getContractNo());
             serveDeliverTaskVOList.add(serveDeliverTaskVO);
         }
+        serveDeliverTaskVOList = serveDeliverTaskVOList.stream().sorted(Comparator.comparing(ServeDeliverTaskVO::getExtractVehicleTime)).collect(Collectors.toList());
         //总条数
         int total = serveDeliverTaskVOList.size();
         BigDecimal bigDecimalTotal = new BigDecimal(total);
