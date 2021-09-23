@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.recovervehicle;
 
+import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
 import com.mfexpress.rent.deliver.recovervehicle.executor.*;
@@ -28,8 +29,8 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
 
 
     @Override
-    public List<RecoverApplyVO> getRecoverVehicleListVO(RecoverApplyQryCmd recoverApplyQryCmd) {
-        return recoverVehicleQryExe.execute(recoverApplyQryCmd);
+    public List<RecoverApplyVO> getRecoverVehicleListVO(RecoverApplyQryCmd recoverApplyQryCmd, TokenInfo tokenInfo) {
+        return recoverVehicleQryExe.execute(recoverApplyQryCmd,tokenInfo);
     }
 
     @Override
@@ -54,9 +55,9 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
 
 
     @Override
-    public RecoverTaskListVO getRecoverListVO(RecoverQryListCmd recoverQryListCmd) {
+    public RecoverTaskListVO getRecoverListVO(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo) {
 
-        return recoverQryContext.execute(recoverQryListCmd);
+        return recoverQryContext.execute(recoverQryListCmd, tokenInfo);
 
     }
 

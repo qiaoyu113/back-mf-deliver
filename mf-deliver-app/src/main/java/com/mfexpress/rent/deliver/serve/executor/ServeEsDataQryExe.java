@@ -28,7 +28,6 @@ import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Component
 public class ServeEsDataQryExe {
@@ -82,14 +81,16 @@ public class ServeEsDataQryExe {
                 serveListVO.setExtractVehicleTime(order.getDeliveryDate());
                 List<OrderCarModelVO> carModelList = new LinkedList<>();
                 List<ProductDTO> productList = order.getProductList();
-                List<Integer> modelsIdList = productList.stream().map(ProductDTO::getModelsId).collect(Collectors.toList());
-                Result<Map<Integer, String>> brandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeListById(modelsIdList);
-                Map<Integer, String> brandTypeMap = brandTypeResult.getData();
+               // List<Integer> modelsIdList = productList.stream().map(ProductDTO::getModelsId).collect(Collectors.toList());
+               // Result<Map<Integer, String>> brandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeListById(modelsIdList);
+               // Map<Integer, String> brandTypeMap = brandTypeResult.getData();
                 for (ProductDTO productDTO : productList) {
                     OrderCarModelVO orderCarModelVO = new OrderCarModelVO();
                     orderCarModelVO.setBrandId(productDTO.getBrandId());
                     orderCarModelVO.setCarModelId(productDTO.getModelsId());
-                    orderCarModelVO.setBrandModelDisplay(brandTypeMap.get(productDTO.getModelsId()));
+                    Result<String> brandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeById(productDTO.getModelsId());
+                    orderCarModelVO.setBrandModelDisplay(brandTypeResult.getData());
+                    //orderCarModelVO.setBrandModelDisplay(brandTypeMap.get(productDTO.getModelsId()));
                     orderCarModelVO.setNum(productDTO.getProductNum());
                     carModelList.add(orderCarModelVO);
                 }

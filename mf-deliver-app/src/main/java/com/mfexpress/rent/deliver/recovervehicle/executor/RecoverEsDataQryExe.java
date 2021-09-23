@@ -3,6 +3,10 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
+import com.mfexpress.common.domain.dto.SysOfficeDto;
+import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.dto.data.Page;
@@ -28,10 +32,19 @@ import java.util.Map;
 public class RecoverEsDataQryExe {
     @Resource
     private ElasticsearchTools elasticsearchTools;
+    @Resource
+    private OfficeAggregateRootApi officeAggregateRootApi;
 
     public RecoverTaskListVO getEsData(RecoverQryListCmd recoverQryListCmd, BoolQueryBuilder boolQueryBuilder
-            , List<FieldSortBuilder> fieldSortBuilderList) {
+            , List<FieldSortBuilder> fieldSortBuilderList, TokenInfo tokenInfo) {
         RecoverTaskListVO recoverTaskListVO = new RecoverTaskListVO();
+
+        Result<List<SysOfficeDto>> sysOfficeResult = officeAggregateRootApi.getOfficeCityListByRegionId(tokenInfo.getOfficeId());
+        if (sysOfficeResult.getCode() == 0 && sysOfficeResult.getData() != null) {
+            List<SysOfficeDto> sysOfficeDtoList = sysOfficeResult.getData();
+            Object[] orgIdList = sysOfficeDtoList.stream().map(SysOfficeDto::getId).toArray();
+            boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIdList));
+        }
 
         if (StringUtils.isNotBlank(recoverQryListCmd.getKeyword())) {
             boolQueryBuilder.must(QueryBuilders.matchQuery("customerName", recoverQryListCmd.getKeyword()));

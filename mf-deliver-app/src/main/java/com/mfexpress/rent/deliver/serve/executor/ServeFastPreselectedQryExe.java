@@ -3,6 +3,9 @@ package com.mfexpress.rent.deliver.serve.executor;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -22,8 +25,10 @@ public class ServeFastPreselectedQryExe {
         List<ServeFastPreselectedVO> serveFastPreselectedVOList = new LinkedList<>();
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         boolQueryBuilder.must(QueryBuilders.matchQuery("orderId", serveQryListCmd.getOrderId()));
+        FieldSortBuilder updateTimeSort = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
+        LinkedList<FieldSortBuilder> fieldSortBuilders = new LinkedList<>();
 
-        ServeListVO serveListVO = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), null);
+        ServeListVO serveListVO = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilders);
         List<ServeVO> serveVOList = serveListVO.getServeVOList();
         if (serveVOList != null) {
             Map<Integer, Map<Integer, List<ServeVO>>> aggMap = serveVOList.stream().collect(Collectors.groupingBy(ServeVO::getBrandId, Collectors.groupingBy(ServeVO::getCarModelId)));

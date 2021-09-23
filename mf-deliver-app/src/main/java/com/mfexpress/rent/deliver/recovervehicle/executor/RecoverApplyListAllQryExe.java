@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
+import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
@@ -22,13 +23,13 @@ public class RecoverApplyListAllQryExe implements RecoverQryServiceI {
 
 
     @Override
-    public RecoverTaskListVO execute(RecoverQryListCmd recoverQryListCmd) {
+    public RecoverTaskListVO execute(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverStatus").gte(DeliverEnum.IS_RECOVER.getCode()));
         FieldSortBuilder checkSortBuilder = SortBuilders.fieldSort("isCheck").order(SortOrder.ASC);
         FieldSortBuilder timeSortBuilder = SortBuilders.fieldSort("expectRecoverTime").unmappedType("integer").order(SortOrder.ASC);
         List<FieldSortBuilder> fieldSortBuilderList = Arrays.asList(checkSortBuilder, timeSortBuilder);
-        return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList);
+        return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
 
     }
 }

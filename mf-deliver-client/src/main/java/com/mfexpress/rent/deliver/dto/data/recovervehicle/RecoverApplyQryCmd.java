@@ -25,4 +25,6 @@ public class RecoverApplyQryCmd {
     private Date startDeliverTime;
     @ApiModelProperty(value = "发车时间段end")
     private Date endDeliverTime;
+
+    private Integer cityId;
 }

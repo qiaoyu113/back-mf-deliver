@@ -1,15 +1,15 @@
 package com.mfexpress.rent.deliver.mobile;
 
+import com.mfexpress.component.constants.CommonConstants;
+import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.starter.utils.TokenTools;
 import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiSort;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -26,9 +26,13 @@ public class RecoverVehicleController {
 
     @PostMapping("/getRecoverVehicleListVO")
     @ApiOperation("申请收车页选择车辆列表")
-    public Result<List<RecoverApplyVO>> getRecoverVehicleListVO(@RequestBody RecoverApplyQryCmd recoverApplyQryCmd) {
-
-        return Result.getInstance(recoverVehicleServiceI.getRecoverVehicleListVO(recoverApplyQryCmd)).success();
+    public Result<List<RecoverApplyVO>> getRecoverVehicleListVO(@RequestBody RecoverApplyQryCmd recoverApplyQryCmd,
+                                                                @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            return Result.getInstance((List<RecoverApplyVO>) null).fail(-1, "没有权限");
+        }
+        return Result.getInstance(recoverVehicleServiceI.getRecoverVehicleListVO(recoverApplyQryCmd, tokenInfo)).success();
 
     }
 
@@ -53,16 +57,26 @@ public class RecoverVehicleController {
 
     @PostMapping("/getRecoverListVO")
     @ApiOperation("收车申请列表")
-    public Result<RecoverTaskListVO> getRecoverListVO(@RequestBody RecoverQryListCmd recoverQryListCmd) {
+    public Result<RecoverTaskListVO> getRecoverListVO(@RequestBody RecoverQryListCmd recoverQryListCmd,
+                                                      @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         // 查询es收车中或已收车数据
-        return Result.getInstance(recoverVehicleServiceI.getRecoverListVO(recoverQryListCmd)).success();
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            return Result.getInstance((RecoverTaskListVO) null).fail(-1, "没有权限");
+        }
+        return Result.getInstance(recoverVehicleServiceI.getRecoverListVO(recoverQryListCmd, tokenInfo)).success();
     }
 
     @PostMapping("/getRecoverTaskListVO")
     @ApiOperation("收车任务列表")
-    public Result<RecoverTaskListVO> getRecoverTaskListVO(@RequestBody RecoverQryListCmd recoverQryListCmd) {
+    public Result<RecoverTaskListVO> getRecoverTaskListVO(@RequestBody RecoverQryListCmd recoverQryListCmd,
+                                                          @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         // 查询es收车中或已收车数据
-        return Result.getInstance(recoverVehicleServiceI.getRecoverListVO(recoverQryListCmd)).success();
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            return Result.getInstance((RecoverTaskListVO) null).fail(-1, "没有权限");
+        }
+        return Result.getInstance(recoverVehicleServiceI.getRecoverListVO(recoverQryListCmd, tokenInfo)).success();
     }
 
 

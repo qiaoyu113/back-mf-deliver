@@ -1,6 +1,10 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 
+import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
+import com.mfexpress.common.domain.dto.SysOfficeDto;
+import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
@@ -23,9 +27,18 @@ public class RecoverVehicleQryExe {
 
     @Resource
     private ElasticsearchTools elasticsearchTools;
+    @Resource
+    private OfficeAggregateRootApi officeAggregateRootApi;
 
-    public List<RecoverApplyVO> execute(RecoverApplyQryCmd recoverApplyQryCmd) {
+    public List<RecoverApplyVO> execute(RecoverApplyQryCmd recoverApplyQryCmd, TokenInfo tokenInfo) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
+        Result<List<SysOfficeDto>> sysOfficeResult = officeAggregateRootApi.getOfficeCityListByRegionId(tokenInfo.getOfficeId());
+        if (sysOfficeResult.getCode() == 0 && sysOfficeResult.getData() != null) {
+            Object[] orgIdList = sysOfficeResult.getData().stream().map(SysOfficeDto::getId).toArray();
+            boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIdList));
+        }
+
         boolQueryBuilder.must(QueryBuilders.matchQuery("customerId", recoverApplyQryCmd.getCustomerId()))
                 .must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.DELIVER.getCode()));
 

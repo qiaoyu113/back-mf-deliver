@@ -2,6 +2,10 @@ package com.mfexpress.rent.deliver.serve.executor;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
+import com.mfexpress.common.domain.dto.SysOfficeDto;
+import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
@@ -26,11 +30,19 @@ public class ServeDeliverTaskListQryExe {
 
     @Resource
     private ElasticsearchTools elasticsearchTools;
+    @Resource
+    private OfficeAggregateRootApi officeAggregateRootApi;
 
-    public ServeDeliverTaskListVO execute(ServeDeliverTaskQryCmd serveDeliverTaskQryCmd) {
+    public ServeDeliverTaskListVO execute(ServeDeliverTaskQryCmd serveDeliverTaskQryCmd, TokenInfo tokenInfo) {
         ServeDeliverTaskListVO serveDeliverTaskListVO = new ServeDeliverTaskListVO();
         List<ServeDeliverTaskVO> serveDeliverTaskVOList = new LinkedList<>();
+        Result<List<SysOfficeDto>> sysOfficeResult = officeAggregateRootApi.getOfficeCityListByRegionId(tokenInfo.getOfficeId());
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        if (sysOfficeResult.getCode() == 0 && sysOfficeResult.getData() != null) {
+            List<SysOfficeDto> sysOfficeDtoList = sysOfficeResult.getData();
+            Object[] orgIdList = sysOfficeDtoList.stream().map(SysOfficeDto::getId).toArray();
+            boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIdList));
+        }
         if (StringUtils.isNotBlank(serveDeliverTaskQryCmd.getKeyword())) {
             boolQueryBuilder.must(QueryBuilders.multiMatchQuery(serveDeliverTaskQryCmd.getKeyword(), "customerName", "customerPhone"));
         }

@@ -75,6 +75,9 @@ public class ServeES {
     @ApiModelProperty(value = "预计还车日期")
     private Date expectRecoverTime;
 
+    private Integer cityId;
+
+    private Integer orgId;
 
     private Integer saleId;
     private Integer carServiceId;
