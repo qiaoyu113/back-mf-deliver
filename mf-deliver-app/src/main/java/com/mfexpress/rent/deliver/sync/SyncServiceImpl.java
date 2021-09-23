@@ -122,9 +122,9 @@ public class SyncServiceImpl implements SyncServiceI {
             serveEs.setExtractVehicleTime(order.getDeliveryDate());
             List<OrderCarModelVO> carModelList = new LinkedList<>();
             List<ProductDTO> productList = order.getProductList();
-            List<Integer> modelsIdList = productList.stream().map(ProductDTO::getModelsId).collect(Collectors.toList());
-            Result<Map<Integer, String>> vehicleBrandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeListById(modelsIdList);
-            Map<Integer, String> brandTypeMap = vehicleBrandTypeResult.getData();
+//            List<Integer> modelsIdList = productList.stream().map(ProductDTO::getModelsId).collect(Collectors.toList());
+//            Result<Map<Integer, String>> vehicleBrandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeListById(modelsIdList);
+//            Map<Integer, String> brandTypeMap = vehicleBrandTypeResult.getData();
             for (ProductDTO productDTO : productList) {
                 OrderCarModelVO orderCarModelVO = new OrderCarModelVO();
                 orderCarModelVO.setBrandId(productDTO.getBrandId());
