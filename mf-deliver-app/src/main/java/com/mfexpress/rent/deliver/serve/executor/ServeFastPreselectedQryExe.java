@@ -24,9 +24,9 @@ public class ServeFastPreselectedQryExe {
         ServeFastPreselectedListVO serveFastPreselectedListVO = new ServeFastPreselectedListVO();
         List<ServeFastPreselectedVO> serveFastPreselectedVOList = new LinkedList<>();
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        LinkedList<FieldSortBuilder> fieldSortBuilders = new LinkedList<>();
         boolQueryBuilder.must(QueryBuilders.matchQuery("orderId", serveQryListCmd.getOrderId()));
         FieldSortBuilder updateTimeSort = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
-        LinkedList<FieldSortBuilder> fieldSortBuilders = new LinkedList<>();
         fieldSortBuilders.add(updateTimeSort);
         ServeListVO serveListVO = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilders);
         List<ServeVO> serveVOList = serveListVO.getServeVOList();

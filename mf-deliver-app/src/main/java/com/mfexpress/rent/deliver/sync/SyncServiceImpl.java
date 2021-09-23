@@ -155,8 +155,6 @@ public class SyncServiceImpl implements SyncServiceI {
             serveEs.setVehicleAge(deliverDTO.getVehicleAge());
             serveEs.setUpdateTime(deliverDTO.getUpdateTime());
 
-            //存在交付单会覆盖原有客户id
-            serveEs.setCustomerId(serveDTO.getCustomerId());
             //排序规则
             Integer sort = getSort(serveEs);
             serveEs.setSort(sort);
