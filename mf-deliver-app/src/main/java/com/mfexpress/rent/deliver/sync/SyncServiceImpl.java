@@ -72,6 +72,8 @@ public class SyncServiceImpl implements SyncServiceI {
     @Resource
     private DeliverMqCommand deliverMqCommand;
     @Resource
+    private DeliverVehicleMqCommand deliverVehicleMqCommand;
+    @Resource
     private DeliverUtils deliverUtils;
 
     @PostConstruct
@@ -82,7 +84,9 @@ public class SyncServiceImpl implements SyncServiceI {
         deliverMqCommand.setTopic(DeliverUtils.getEnvVariable(listenOrderTopic));
         deliverMqCommand.setTags(Constants.DELIVER_ORDER_TAG);
         mqTools.add(deliverMqCommand);
-
+        deliverVehicleMqCommand.setTopic(DeliverUtils.getEnvVariable(listenOrderTopic));
+        deliverVehicleMqCommand.setTags(Constants.DELIVER_VEHICLE_TAG);
+        mqTools.add(deliverVehicleMqCommand);
 
     }
 
@@ -118,13 +122,17 @@ public class SyncServiceImpl implements SyncServiceI {
             serveEs.setExtractVehicleTime(order.getDeliveryDate());
             List<OrderCarModelVO> carModelList = new LinkedList<>();
             List<ProductDTO> productList = order.getProductList();
+            List<Integer> modelsIdList = productList.stream().map(ProductDTO::getModelsId).collect(Collectors.toList());
+            // Result<Map<Integer, String>> vehicleBrandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeListById(modelsIdList);
+            // Map<Integer, String> brandTypeMap = vehicleBrandTypeResult.getData();
             for (ProductDTO productDTO : productList) {
                 OrderCarModelVO orderCarModelVO = new OrderCarModelVO();
                 orderCarModelVO.setBrandId(productDTO.getBrandId());
                 orderCarModelVO.setCarModelId(productDTO.getModelsId());
-                Result<String> modeResult = vehicleAggregateRootApi.getVehicleBrandTypeById(productDTO.getModelsId());
+                Result<String> brandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeById(productDTO.getModelsId());
+                orderCarModelVO.setBrandModelDisplay(brandTypeResult.getData());
+                //orderCarModelVO.setBrandModelDisplay(brandTypeMap.get(productDTO.getModelsId()));
                 orderCarModelVO.setNum(productDTO.getProductNum());
-                orderCarModelVO.setBrandModelDisplay(modeResult.getData());
                 carModelList.add(orderCarModelVO);
             }
             serveEs.setCarModelVOList(carModelList);
@@ -136,10 +144,17 @@ public class SyncServiceImpl implements SyncServiceI {
         if (deliverResult.getData() != null) {
             serveEs.setIsPreselected(ServeEnum.PRESELECTED.getCode());
             DeliverDTO deliverDTO = deliverResult.getData();
-            BeanUtils.copyProperties(deliverDTO, serveEs);
+            serveEs.setDeliverStatus(deliverDTO.getDeliverStatus());
+            serveEs.setIsInsurance(deliverDTO.getIsInsurance());
+            serveEs.setIsCheck(deliverDTO.getIsCheck());
+            serveEs.setIsDeduction(deliverDTO.getIsDeduction());
+            serveEs.setCarId(deliverDTO.getCarId());
+            serveEs.setCarNum(deliverDTO.getCarNum());
+            serveEs.setFrameNum(deliverDTO.getFrameNum());
+            serveEs.setMileage(deliverDTO.getMileage());
+            serveEs.setVehicleAge(deliverDTO.getVehicleAge());
+            serveEs.setUpdateTime(deliverDTO.getUpdateTime());
 
-            //存在交付单会覆盖原有客户id
-            serveEs.setCustomerId(serveDTO.getCustomerId());
             //排序规则
             Integer sort = getSort(serveEs);
             serveEs.setSort(sort);

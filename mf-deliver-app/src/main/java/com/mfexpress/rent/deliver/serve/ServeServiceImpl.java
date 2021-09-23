@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.serve;
 
+import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.serve.executor.*;
@@ -69,8 +70,8 @@ public class ServeServiceImpl implements ServeServiceI {
     }
 
     @Override
-    public ServeDeliverTaskListVO getServeDeliverTaskListVO(ServeDeliverTaskQryCmd serveDeliverTaskQryCmd) {
-        return serveDeliverTaskListQryExe.execute(serveDeliverTaskQryCmd);
+    public ServeDeliverTaskListVO getServeDeliverTaskListVO(ServeDeliverTaskQryCmd serveDeliverTaskQryCmd , TokenInfo tokenInfo) {
+        return serveDeliverTaskListQryExe.execute(serveDeliverTaskQryCmd,tokenInfo);
     }
 
 

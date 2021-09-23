@@ -142,4 +142,39 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
         return i > 0 ? Result.getInstance("处理违章完成").success() : Result.getInstance("处理违章失败").fail(-1, "处理违章失败");
     }
+
+    @Override
+    @PostMapping("/cancelSelected")
+    public Result<String> cancelSelected(@RequestParam("carId") Integer carId) {
+        Deliver deliver = deliverGateway.getDeliverByCarId(carId);
+        if (deliver != null) {
+            //设为失效
+            deliver.setStatus(ValidStatusEnum.INVALID.getCode());
+            deliverGateway.updateDeliverByServeNo(deliver.getServeNo(), deliver);
+            return Result.getInstance(deliver.getServeNo()).success();
+        }
+        return Result.getInstance("").fail(-1, "");
+    }
+
+    @Override
+    @PostMapping("/syncInsureStatus")
+    public Result<String> syncInsureStatus(@RequestParam("carId") Integer carId, @RequestParam("insureStatus") Integer insureStatus) {
+        if (insureStatus.equals(ValidStatusEnum.VALID.getCode())) {
+            //发车中交付单改为已操作、收车中交付单改为未操作
+            int i = deliverGateway.updateInsuranceStatusByCarId(carId, JudgeEnum.YES.getCode(), JudgeEnum.NO.getCode());
+        } else {
+            //发车中交付单改为未操作、收车中交付单改为已操作
+            int i = deliverGateway.updateInsuranceStatusByCarId(carId, JudgeEnum.NO.getCode(), JudgeEnum.YES.getCode());
+
+        }
+        return Result.getInstance("保险状态更新成功").success();
+    }
+
+    @Override
+    @PostMapping("/syncVehicleMileage")
+    public Result<String> syncVehicleMileage(@RequestParam("carId") Integer carId, @RequestParam("mileage") Double mileage) {
+        int i = deliverGateway.updateMileageByCarId(carId, mileage);
+
+        return Result.getInstance("").success();
+    }
 }

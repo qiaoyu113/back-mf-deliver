@@ -38,15 +38,13 @@ public class DeliverToPreselectedExe {
         List<DeliverVehicleSelectCmd> deliverVehicleSelectCmdList = deliverPreselectedCmd.getDeliverVehicleSelectCmdList();
         //车辆id list
         List<Integer> carIdList = new LinkedList<>();
+        if (serveNoList.size() != deliverVehicleSelectCmdList.size()) {
+            throw new RuntimeException("批量预选数量错误");
+        }
         for (int i = 0; i < serveNoList.size(); i++) {
 
             DeliverDTO deliverDTO = new DeliverDTO();
-            DeliverVehicleSelectCmd deliverVehicleSelectCmd;
-            try {
-                deliverVehicleSelectCmd = deliverVehicleSelectCmdList.get(i);
-            } catch (IndexOutOfBoundsException e) {
-                throw new RuntimeException("批量预选数量错误");
-            }
+            DeliverVehicleSelectCmd deliverVehicleSelectCmd = deliverVehicleSelectCmdList.get(i);
 
 
             Result<VehicleInfoDto> vehicleResult = vehicleAggregateRootApi.getVehicleInfoVOById(deliverVehicleSelectCmd.getId());

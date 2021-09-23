@@ -39,4 +39,7 @@ public interface ServeAggregateRootApi {
     @PostMapping("/getServePreselectedDTO")
     Result<List<ServePreselectedDTO>> getServePreselectedDTO(@RequestBody List<Long> orderId);
 
+    @PostMapping("/cancelSelected")
+    Result<String> cancelSelected(@RequestParam("serveNo") String serveNo);
+
 }

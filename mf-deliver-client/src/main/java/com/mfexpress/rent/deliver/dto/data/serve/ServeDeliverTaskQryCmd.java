@@ -16,4 +16,7 @@ public class ServeDeliverTaskQryCmd extends ListQry {
 
     @ApiModelProperty(value = "查询tag", example = "1：查询待发车，2：查询已完成")
     private Integer tag;
+
+    private Integer cityId;
+    private Integer orgId;
 }

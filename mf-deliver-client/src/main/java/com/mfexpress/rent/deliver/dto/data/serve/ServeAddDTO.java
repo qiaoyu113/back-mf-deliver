@@ -16,4 +16,10 @@ public class ServeAddDTO {
     private Integer customerId;
     @ApiModelProperty(value = "车辆信息")
     private List<ServeVehicleDTO> vehicleDTOList;
+
+    @ApiModelProperty(value = "城市id")
+    private Integer cityId;
+
+    @ApiModelProperty(value = "组织id")
+    private Integer orgId;
 }

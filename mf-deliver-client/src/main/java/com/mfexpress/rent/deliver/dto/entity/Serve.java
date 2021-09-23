@@ -44,6 +44,10 @@ public class Serve {
 
     private Integer updateId;
 
+    private Integer cityId;
+
+    private Integer orgId;
+
     private Date createTime;
 
     private Date updateTime;

@@ -63,6 +63,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 String serveNo = DeliverUtils.getNo(Constants.REDIS_SERVE_KEY, incr);
                 Long bizId = redisTools.getBizId(Constants.REDIS_BIZ_ID_SERVER);
                 serve.setServeId(bizId);
+                //todo 创建服务单订单传orgId
+                serve.setOrgId(7);
                 serve.setServeNo(serveNo);
                 serve.setOrderId(serveAddDTO.getOrderId());
                 serve.setCustomerId(serveAddDTO.getCustomerId());
@@ -122,6 +124,16 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @Override
     public Result<List<ServePreselectedDTO>> getServePreselectedDTO(@RequestBody List<Long> orderId) {
         return Result.getInstance(serveGateway.getServePreselectedByOrderId(orderId)).success();
+    }
+
+    @Override
+    @PostMapping("/cancelSelected")
+    public Result<String> cancelSelected(@RequestParam("serveNo") String serveNo) {
+
+        Serve serve = Serve.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
+        int i = serveGateway.updateServeByServeNo(serveNo, serve);
+
+        return i > 0 ? Result.getInstance("取消预选成功").success() : Result.getInstance("取消预选失败").fail(-1, "取消预选失败");
     }
 
 
