@@ -20,7 +20,7 @@ public class RecoverVehicleVO {
     @ApiModelProperty(value = "车辆id")
     private Integer carId;
     @ApiModelProperty(value = "车牌号")
-    private String cardNum;
+    private String carNum;
     @ApiModelProperty(value = "车型id")
     private Integer carModelId;
     @ApiModelProperty(value = "客户id")
