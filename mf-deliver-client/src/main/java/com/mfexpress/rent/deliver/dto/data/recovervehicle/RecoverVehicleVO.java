@@ -36,13 +36,13 @@ public class RecoverVehicleVO {
     @ApiModelProperty(value = "车架号")
     private String frameNum;
     @ApiModelProperty(value = "发车时间")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date deliverVehicleTime;
     @ApiModelProperty(value = "收车时间")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date recoverVehicleTime;
     @ApiModelProperty(value = "预计收车时间")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date expectRecoverTime;
     @ApiModelProperty(value = "验车状态")
     private Integer isCheck;

@@ -29,7 +29,7 @@ public class ServeVO {
     @ApiModelProperty(value = "车辆id")
     private Integer carId;
     @ApiModelProperty(value = "提车日期")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date extractVehicleTime;
     @ApiModelProperty(value = "交付单编号")
     private String deliverNo;
@@ -44,7 +44,7 @@ public class ServeVO {
     @ApiModelProperty(value = "车架号")
     private String frameNum;
     @ApiModelProperty(value = "发车日期")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date deliverVehicleTime;
     @ApiModelProperty(value = "预选状态")
     private Integer isPreselected;

@@ -19,7 +19,7 @@ public class ServeDeliverTaskVO {
     @ApiModelProperty(value = "提车公司")
     private String customerName;
     @ApiModelProperty(value = "提车时间")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date extractVehicleTime;
 
     @ApiModelProperty(value = "合同编号")
