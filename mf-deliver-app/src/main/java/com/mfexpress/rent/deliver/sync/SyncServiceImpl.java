@@ -72,6 +72,8 @@ public class SyncServiceImpl implements SyncServiceI {
     @Resource
     private DeliverMqCommand deliverMqCommand;
     @Resource
+    private DeliverVehicleMqCommand deliverVehicleMqCommand;
+    @Resource
     private DeliverUtils deliverUtils;
 
     @PostConstruct
@@ -82,6 +84,9 @@ public class SyncServiceImpl implements SyncServiceI {
         deliverMqCommand.setTopic(DeliverUtils.getEnvVariable(listenOrderTopic));
         deliverMqCommand.setTags(Constants.DELIVER_ORDER_TAG);
         mqTools.add(deliverMqCommand);
+        deliverVehicleMqCommand.setTopic(DeliverUtils.getEnvVariable(listenOrderTopic));
+        deliverVehicleMqCommand.setTags(Constants.DELIVER_VEHICLE_TAG);
+        mqTools.add(deliverVehicleMqCommand);
 
     }
 
