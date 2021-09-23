@@ -83,7 +83,6 @@ public class SyncServiceImpl implements SyncServiceI {
         deliverMqCommand.setTags(Constants.DELIVER_ORDER_TAG);
         mqTools.add(deliverMqCommand);
 
-
     }
 
     @Override
@@ -118,13 +117,15 @@ public class SyncServiceImpl implements SyncServiceI {
             serveEs.setExtractVehicleTime(order.getDeliveryDate());
             List<OrderCarModelVO> carModelList = new LinkedList<>();
             List<ProductDTO> productList = order.getProductList();
+            List<Integer> modelsIdList = productList.stream().map(ProductDTO::getModelsId).collect(Collectors.toList());
+            Result<Map<Integer, String>> vehicleBrandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeListById(modelsIdList);
+            Map<Integer, String> brandTypeMap = vehicleBrandTypeResult.getData();
             for (ProductDTO productDTO : productList) {
                 OrderCarModelVO orderCarModelVO = new OrderCarModelVO();
                 orderCarModelVO.setBrandId(productDTO.getBrandId());
                 orderCarModelVO.setCarModelId(productDTO.getModelsId());
-                Result<String> modeResult = vehicleAggregateRootApi.getVehicleBrandTypeById(productDTO.getModelsId());
+                orderCarModelVO.setBrandModelDisplay(brandTypeMap.get(productDTO.getModelsId()));
                 orderCarModelVO.setNum(productDTO.getProductNum());
-                orderCarModelVO.setBrandModelDisplay(modeResult.getData());
                 carModelList.add(orderCarModelVO);
             }
             serveEs.setCarModelVOList(carModelList);

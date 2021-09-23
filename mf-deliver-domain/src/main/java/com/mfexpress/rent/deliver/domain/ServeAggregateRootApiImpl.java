@@ -124,5 +124,15 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         return Result.getInstance(serveGateway.getServePreselectedByOrderId(orderId)).success();
     }
 
+    @Override
+    @PostMapping("/cancelSelected")
+    public Result<String> cancelSelected(@RequestParam("serveNo") String serveNo) {
+
+        Serve serve = Serve.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
+        int i = serveGateway.updateServeByServeNo(serveNo, serve);
+
+        return i > 0 ? Result.getInstance("取消预选成功").success() : Result.getInstance("取消预选失败").fail(-1, "取消预选失败");
+    }
+
 
 }
