@@ -2,8 +2,8 @@ package com.mfexpress.rent.deliver.sync;
 
 
 import com.alibaba.fastjson.JSON;
+import com.mfexpress.component.dto.mq.BaseCommand;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.command.BaseCommand;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;

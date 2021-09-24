@@ -1,7 +1,7 @@
 package com.mfexpress.rent.deliver.sync;
 
 import com.alibaba.fastjson.JSON;
-import com.mfexpress.component.starter.command.BaseCommand;
+import com.mfexpress.component.dto.mq.BaseCommand;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeAddDTO;

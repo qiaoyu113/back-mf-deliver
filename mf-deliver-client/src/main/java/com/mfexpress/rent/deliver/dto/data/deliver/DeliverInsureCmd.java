@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.dto.data.deliver;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -16,8 +17,10 @@ public class DeliverInsureCmd {
     private List<Integer> carIdList;
 
     @ApiModelProperty(value = "开始投保日期")
+    @JsonFormat(timezone = "GMT+8")
     private Date startInsureDate;
     @ApiModelProperty(value = "结束投保如期")
+    @JsonFormat(timezone = "GMT+8")
     private Date endInsureDate;
 
 
