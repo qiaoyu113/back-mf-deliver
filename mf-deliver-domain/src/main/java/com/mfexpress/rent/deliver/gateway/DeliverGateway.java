@@ -19,5 +19,7 @@ public interface DeliverGateway {
 
     int updateMileageByCarId(Integer carId,Double mileage);
 
+    List<Deliver> getDeliverDeductionByServeNoList(List<String>serveNoList);
+
 
 }

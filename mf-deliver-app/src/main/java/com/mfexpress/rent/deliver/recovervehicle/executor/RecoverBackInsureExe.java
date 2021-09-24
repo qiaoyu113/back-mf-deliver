@@ -42,11 +42,16 @@ public class RecoverBackInsureExe {
         deliverBackInsureDTO.setServeNoList(recoverBackInsureCmd.getServeNoList());
         deliverBackInsureDTO.setInsuranceRemark(recoverBackInsureCmd.getInsuranceRemark());
 
-        deliverAggregateRootApi.toBackInsure(deliverBackInsureDTO);
+        Result<List<String>> serveNoResult = deliverAggregateRootApi.toBackInsure(deliverBackInsureDTO);
         //服务单 更新已收车
         Result<String> serveResult = serveAggregateRootApi.recover(recoverBackInsureCmd.getServeNoList());
         if (serveResult.getCode() != 0) {
             return serveResult.getMsg();
+        }
+
+        //存在已经处理违章的服务单 更新服务单为已完成
+        if (serveNoResult.getData() != null && !serveNoResult.getData().isEmpty()) {
+            serveAggregateRootApi.completedList(serveNoResult.getData());
         }
 
         Result<List<RecoverVehicleDTO>> recoverResult = recoverVehicleAggregateRootApi.toBackInsure(recoverBackInsureCmd.getServeNoList());

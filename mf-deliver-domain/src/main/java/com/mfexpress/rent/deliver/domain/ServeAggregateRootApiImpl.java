@@ -117,7 +117,16 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     public Result<String> completed(@RequestParam("serveNo") String serveNo) {
         Serve serve = Serve.builder().status(ServeEnum.COMPLETED.getCode()).build();
         int i = serveGateway.updateServeByServeNo(serveNo, serve);
+        return i > 0 ? Result.getInstance("处理违章完成").success() : Result.getInstance("处理违章失败").fail(-1, "处理违章失败");
+    }
+
+    @Override
+    @PostMapping("/completedList")
+    public Result<String> completedList(@RequestBody List<String> serveNoList) {
+        Serve serve = Serve.builder().status(ServeEnum.COMPLETED.getCode()).build();
+        int i = serveGateway.updateServeByServeNoList(serveNoList, serve);
         return i > 0 ? Result.getInstance("退保完成").success() : Result.getInstance("退保失败").fail(-1, "退保失败");
+
     }
 
     @PostMapping("/getServePreselectedDTO")

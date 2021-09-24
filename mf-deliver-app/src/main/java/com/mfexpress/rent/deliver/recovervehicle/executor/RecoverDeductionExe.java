@@ -32,6 +32,10 @@ public class RecoverDeductionExe {
             return result.getMsg();
 
         }
-        return serveAggregateRootApi.completed(recoverDeductionCmd.getServeNo()).getData();
+        //返回已完成服务单编号 更新服务单已完成状态
+        if (result.getData().equals(deliverDTO.getServeNo())) {
+            return serveAggregateRootApi.completed(recoverDeductionCmd.getServeNo()).getData();
+        }
+        return "";
     }
 }

@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.deliver;
 
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.deliver.repository.DeliverMapper;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
@@ -81,6 +82,14 @@ public class DeliverGatewayImpl implements DeliverGateway {
         example.createCriteria().andEqualTo("carId", carId);
         Deliver deliver = Deliver.builder().mileage(mileage).build();
         return deliverMapper.updateByExampleSelective(deliver, example);
+    }
+
+    @Override
+    public List<Deliver> getDeliverDeductionByServeNoList(List<String> serveNoList) {
+        //查询已经处理违章的交付单
+        Example example = new Example(Deliver.class);
+        example.createCriteria().andIn("serveNo", serveNoList).andEqualTo("isDeduction", JudgeEnum.YES.getCode());
+        return deliverMapper.selectByExample(example);
     }
 
 
