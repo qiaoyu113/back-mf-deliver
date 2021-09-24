@@ -64,8 +64,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 Long bizId = redisTools.getBizId(Constants.REDIS_BIZ_ID_SERVER);
                 serve.setServeId(bizId);
                 //todo 创建服务单订单传orgId
-                serve.setOrgId(19);
+                serve.setOrgId(serveAddDTO.getOrgId());
                 serve.setServeNo(serveNo);
+                serve.setCreateId(serveAddDTO.getCreateId());
                 serve.setOrderId(serveAddDTO.getOrderId());
                 serve.setCustomerId(serveAddDTO.getCustomerId());
                 serve.setCarModelId(serveVehicleDTO.getCarModelId());
