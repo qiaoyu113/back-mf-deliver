@@ -22,7 +22,7 @@ public class ServeCompletedQryExe {
     public ServeListVO execute(ServeQryListCmd serveQryListCmd) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         boolQueryBuilder.must(QueryBuilders.matchQuery("orderId", serveQryListCmd.getOrderId()))
-                .must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.DELIVER.getCode()));
+                .must(QueryBuilders.rangeQuery("deliverStatus").gte(DeliverEnum.DELIVER.getCode()));
         List<FieldSortBuilder> fieldSortBuilderList = new LinkedList<>();
         FieldSortBuilder updateTimeSortBuilders = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
         fieldSortBuilderList.add(updateTimeSortBuilders);

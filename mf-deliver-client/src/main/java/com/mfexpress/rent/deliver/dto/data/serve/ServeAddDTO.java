@@ -20,6 +20,9 @@ public class ServeAddDTO {
     @ApiModelProperty(value = "城市id")
     private Integer cityId;
 
+    @ApiModelProperty(value = "创建人id")
+    private Integer createId;
+
     @ApiModelProperty(value = "组织id")
     private Integer orgId;
 }
