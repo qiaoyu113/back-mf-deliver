@@ -63,7 +63,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 String serveNo = DeliverUtils.getNo(Constants.REDIS_SERVE_KEY, incr);
                 Long bizId = redisTools.getBizId(Constants.REDIS_BIZ_ID_SERVER);
                 serve.setServeId(bizId);
-                //todo 创建服务单订单传orgId
+                //创建服务单订单传orgId
                 serve.setOrgId(serveAddDTO.getOrgId());
                 serve.setServeNo(serveNo);
                 serve.setCreateId(serveAddDTO.getCreateId());
@@ -75,9 +75,13 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serveList.add(serve);
             }
         }
-        serveGateway.addServeList(serveList);
+        try {
+            serveGateway.addServeList(serveList);
+        } catch (Exception e) {
+            return Result.getInstance(serveAddDTO.getOrderId().toString()).fail(-1, "服务单生成失败");
+        }
 
-        return Result.getInstance("").success();
+        return Result.getInstance("服务单生成成功").success();
     }
 
     @Override

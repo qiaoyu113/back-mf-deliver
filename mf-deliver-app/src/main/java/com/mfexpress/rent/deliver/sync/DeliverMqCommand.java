@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.sync;
 
 import com.alibaba.fastjson.JSON;
 import com.mfexpress.component.dto.mq.BaseCommand;
+import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeAddDTO;
@@ -25,7 +26,10 @@ public class DeliverMqCommand extends BaseCommand {
         //暂时使用redis 增加幂等性校验
         Object o = redisTools.get(serveAddDTO.getOrderId().toString());
         if (o == null) {
-            serveAggregateRootApi.addServe(serveAddDTO);
+            Result<String> result = serveAggregateRootApi.addServe(serveAddDTO);
+            if (result.getCode() != 0) {
+                //调用订单设置失败
+            }
         }
 
     }

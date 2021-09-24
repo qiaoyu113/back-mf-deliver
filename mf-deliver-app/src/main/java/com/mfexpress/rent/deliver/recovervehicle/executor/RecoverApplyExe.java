@@ -33,6 +33,10 @@ public class RecoverApplyExe {
         for (RecoverApplyCmd recoverApplyCmd : recoverApplyCmdList) {
             serveNoList.add(recoverApplyCmd.getServeNo());
             RecoverVehicleDTO recoverVehicleDTO = new RecoverVehicleDTO();
+            Result<RecoverVehicleDTO> recoverVehicleResult = recoverVehicleAggregateRootApi.getRecoverVehicleDtoByDeliverNo(recoverApplyCmd.getDeliverNo());
+            if (recoverVehicleResult.getData() != null) {
+                continue;
+            }
             recoverVehicleDTO.setServeNo(recoverApplyCmd.getServeNo());
             recoverVehicleDTO.setDeliverNo(recoverApplyCmd.getDeliverNo());
             recoverVehicleDTO.setCarId(recoverApplyCmd.getCarId());
