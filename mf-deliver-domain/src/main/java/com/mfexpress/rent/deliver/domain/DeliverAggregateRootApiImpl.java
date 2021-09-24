@@ -17,6 +17,7 @@ import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -123,12 +124,20 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @PostMapping("/toBackInsure")
-    public Result<String> toBackInsure(@RequestBody DeliverBackInsureDTO deliverBackInsureDTO) {
+    public Result<List<String>> toBackInsure(@RequestBody DeliverBackInsureDTO deliverBackInsureDTO) {
         Deliver deliver = Deliver.builder().isInsurance(JudgeEnum.YES.getCode())
                 .deliverStatus(DeliverEnum.RECOVER.getCode())
                 .insuranceRemark(deliverBackInsureDTO.getInsuranceRemark()).build();
         int i = deliverGateway.updateDeliverByServeNoList(deliverBackInsureDTO.getServeNoList(), deliver);
-        return i > 0 ? Result.getInstance("处理保险成功").success() : Result.getInstance("处理保险失败").fail(-1, "处理保险失败");
+        //查看是否已经处理违章
+        List<Deliver> deliverList = deliverGateway.getDeliverDeductionByServeNoList(deliverBackInsureDTO.getServeNoList());
+        List<String> serveNoList = new ArrayList<>();
+        if (deliverList != null) {
+            serveNoList = deliverList.stream().map(Deliver::getServeNo).collect(Collectors.toList());
+
+            return Result.getInstance(serveNoList).success();
+        }
+        return Result.getInstance(serveNoList).success();
     }
 
     @Override
@@ -137,9 +146,18 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         Deliver deliver = new Deliver();
         BeanUtil.copyProperties(deliverDTO, deliver);
         deliver.setIsDeduction(JudgeEnum.YES.getCode());
-        deliver.setDeliverStatus(DeliverEnum.RECOVER.getCode());
+        //设置收车中
+        deliver.setDeliverStatus(DeliverEnum.IS_RECOVER.getCode());
         int i = deliverGateway.updateDeliverByServeNo(deliver.getServeNo(), deliver);
-
+        //查看是否处理保险
+        Deliver deliver1 = deliverGateway.getDeliverByServeNo(deliver.getServeNo());
+        if (deliver1.getIsInsurance().equals(JudgeEnum.YES.getCode())) {
+            //已经处理保险更新完成状态
+            Deliver deliver2 = Deliver.builder().deliverStatus(DeliverEnum.RECOVER.getCode()).build();
+            deliverGateway.updateDeliverByServeNo(deliver1.getServeNo(), deliver2);
+            //返回已完成的服务单编号
+            return Result.getInstance(deliver.getServeNo()).success();
+        }
         return i > 0 ? Result.getInstance("处理违章完成").success() : Result.getInstance("处理违章失败").fail(-1, "处理违章失败");
     }
 
