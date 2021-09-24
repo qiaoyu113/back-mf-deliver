@@ -43,7 +43,7 @@ public class RecoverVehicleQryExe {
                 .must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.DELIVER.getCode()));
 
         if (StringUtils.isNotBlank(recoverApplyQryCmd.getContractNo())) {
-            boolQueryBuilder.must(QueryBuilders.matchQuery("contractNo", recoverApplyQryCmd.getContractNo()));
+            boolQueryBuilder.must(QueryBuilders.termQuery("contractNo.keyword", recoverApplyQryCmd.getContractNo()));
         }
         if (recoverApplyQryCmd.getCarModelId() != null && recoverApplyQryCmd.getCarModelId() != 0) {
             boolQueryBuilder.must(QueryBuilders.matchQuery("carModelId", recoverApplyQryCmd.getCarModelId()));
