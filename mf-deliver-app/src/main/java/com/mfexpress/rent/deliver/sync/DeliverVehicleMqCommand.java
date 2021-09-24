@@ -4,6 +4,7 @@ package com.mfexpress.rent.deliver.sync;
 import com.alibaba.fastjson.JSON;
 import com.mfexpress.component.dto.mq.BaseCommand;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -19,6 +20,8 @@ public class DeliverVehicleMqCommand extends BaseCommand {
     private ServeAggregateRootApi serveAggregateRootApi;
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
+    @Resource
+    private RedisTools redisTools;
 
 
     @Override
@@ -26,10 +29,11 @@ public class DeliverVehicleMqCommand extends BaseCommand {
 
         DeliverVehicleMqDTO deliverVehicleMqDTO = JSON.parseObject(body, DeliverVehicleMqDTO.class);
 
+
         //取消预选
         if (deliverVehicleMqDTO.getSelectStatus() != null && deliverVehicleMqDTO.getSelectStatus().equals(JudgeEnum.YES.getCode())) {
             Result<String> deliverResult = deliverAggregateRootApi.cancelSelected(deliverVehicleMqDTO.getCarId());
-            if (deliverResult.getCode() != 0) {
+            if (deliverResult.getCode() == 0) {
                 Result<String> serveResult = serveAggregateRootApi.cancelSelected(deliverResult.getData());
             }
         }
