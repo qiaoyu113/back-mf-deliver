@@ -42,17 +42,21 @@ public class DeliverToPreselectedExe {
             throw new RuntimeException("批量预选数量错误");
         }
         for (int i = 0; i < serveNoList.size(); i++) {
-
             DeliverDTO deliverDTO = new DeliverDTO();
+            //已经生成交付单 不能重复预选
+            deliverDTO.setServeNo(serveNoList.get(i));
+            Result<DeliverDTO> deliverResult = deliverAggregateRootApi.getDeliverByServeNo(deliverDTO.getServeNo());
+            if (deliverResult.getData() != null) {
+                continue;
+            }
             DeliverVehicleSelectCmd deliverVehicleSelectCmd = deliverVehicleSelectCmdList.get(i);
-
-
             Result<VehicleInfoDto> vehicleResult = vehicleAggregateRootApi.getVehicleInfoVOById(deliverVehicleSelectCmd.getId());
             if (vehicleResult.getCode() != 0 || vehicleResult.getData() == null) {
                 return vehicleResult.getMsg();
             }
             deliverDTO.setIsInsurance(vehicleResult.getData().getInsuranceStatus().equals(JudgeEnum.YES.getCode()) ? JudgeEnum.YES.getCode() : JudgeEnum.NO.getCode());
-            deliverDTO.setServeNo(serveNoList.get(i));
+
+
             deliverDTO.setCarId(deliverVehicleSelectCmd.getId());
             deliverDTO.setCarNum(deliverVehicleSelectCmd.getPlateNumber());
             deliverDTO.setDeliverStatus(DeliverEnum.IS_DELIVER.getCode());

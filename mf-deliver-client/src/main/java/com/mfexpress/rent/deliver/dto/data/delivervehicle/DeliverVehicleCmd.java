@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.dto.data.delivervehicle;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -22,6 +23,7 @@ public class DeliverVehicleCmd {
     private String contactsCard;
 
     @ApiModelProperty(value = "发车时间")
+    @JsonFormat(timezone = "GMT+8")
     private Date deliverVehicleTime;
     @ApiModelProperty(value = "客户id")
     private Integer customerId;

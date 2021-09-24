@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.dto.data.recovervehicle;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class RecoverVechicleCmd {
     @ApiModelProperty(value = "还车人身份证号")
     private String contractsCard;
     @ApiModelProperty(value = "收车时间")
+    @JsonFormat(timezone = "GMT+8")
     private Date recoverVehicleTime;
     @ApiModelProperty(value = "车辆停放地")
     private Integer wareHouseId;

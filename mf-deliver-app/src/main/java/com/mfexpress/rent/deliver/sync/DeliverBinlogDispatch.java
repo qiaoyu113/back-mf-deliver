@@ -1,6 +1,6 @@
 package com.mfexpress.rent.deliver.sync;
 
-import com.mfexpress.component.starter.binlog.dispatch.BinlogDispatch;
+import com.mfexpress.component.dto.cdc.binlog.dispatch.BinlogDispatch;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.Constants;
 import lombok.extern.slf4j.Slf4j;

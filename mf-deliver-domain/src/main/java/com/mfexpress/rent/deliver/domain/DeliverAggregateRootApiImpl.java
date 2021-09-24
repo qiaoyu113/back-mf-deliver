@@ -167,8 +167,8 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         Deliver deliver = deliverGateway.getDeliverByCarId(carId);
         if (deliver != null) {
             //设为失效
-            deliver.setStatus(ValidStatusEnum.INVALID.getCode());
-            deliverGateway.updateDeliverByServeNo(deliver.getServeNo(), deliver);
+            Deliver build = Deliver.builder().serveNo(deliver.getServeNo()).status(ValidStatusEnum.INVALID.getCode()).build();
+            deliverGateway.updateDeliverByServeNo(deliver.getServeNo(), build);
             return Result.getInstance(deliver.getServeNo()).success();
         }
         return Result.getInstance("").fail(-1, "");
