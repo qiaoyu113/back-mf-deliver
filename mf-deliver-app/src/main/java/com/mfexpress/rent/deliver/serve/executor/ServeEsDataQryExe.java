@@ -18,7 +18,7 @@ import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.utils.Utils;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
-import com.mfexpress.transportation.customer.dto.entity.Customer;
+import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.springframework.stereotype.Component;
@@ -74,16 +74,16 @@ public class ServeEsDataQryExe {
                 serveListVO.setOrderId(orderId);
                 serveListVO.setContractNo(order.getContractCode());
                 serveListVO.setCustomerId(order.getCustomerId());
-                Result<Customer> customerResult = customerAggregateRootApi.getCustomerById(order.getCustomerId());
+                Result<CustomerVO> customerResult = customerAggregateRootApi.getById(order.getCustomerId());
                 if (customerResult.getCode() == 0 && customerResult.getData() != null) {
                     serveListVO.setCustomerName(customerResult.getData().getName());
                 }
                 serveListVO.setExtractVehicleTime(order.getDeliveryDate());
                 List<OrderCarModelVO> carModelList = new LinkedList<>();
                 List<ProductDTO> productList = order.getProductList();
-               // List<Integer> modelsIdList = productList.stream().map(ProductDTO::getModelsId).collect(Collectors.toList());
-               // Result<Map<Integer, String>> brandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeListById(modelsIdList);
-               // Map<Integer, String> brandTypeMap = brandTypeResult.getData();
+                // List<Integer> modelsIdList = productList.stream().map(ProductDTO::getModelsId).collect(Collectors.toList());
+                // Result<Map<Integer, String>> brandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeListById(modelsIdList);
+                // Map<Integer, String> brandTypeMap = brandTypeResult.getData();
                 for (ProductDTO productDTO : productList) {
                     OrderCarModelVO orderCarModelVO = new OrderCarModelVO();
                     orderCarModelVO.setBrandId(productDTO.getBrandId());

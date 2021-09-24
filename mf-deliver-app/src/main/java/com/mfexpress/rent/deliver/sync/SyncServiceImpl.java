@@ -26,7 +26,7 @@ import com.mfexpress.rent.deliver.dto.es.ServeES;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
-import com.mfexpress.transportation.customer.dto.entity.Customer;
+import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -114,11 +114,11 @@ public class SyncServiceImpl implements SyncServiceI {
         if (orderResult.getCode() == 0 && orderResult.getData() != null) {
             OrderDTO order = orderResult.getData();
             serveEs.setContractNo(order.getContractCode());
-            Result<Customer> customerResult = customerAggregateRootApi.getCustomerById(order.getCustomerId());
+            Result<CustomerVO> customerResult = customerAggregateRootApi.getById(order.getCustomerId());
             if (customerResult.getCode() == 0 && customerResult.getData() != null) {
                 serveEs.setCustomerName(customerResult.getData().getName());
+                serveEs.setCustomerPhone(customerResult.getData().getPhone());
             }
-            serveEs.setCustomerPhone(order.getConsigneeMobile());
             serveEs.setExtractVehicleTime(order.getDeliveryDate());
             List<OrderCarModelVO> carModelList = new LinkedList<>();
             List<ProductDTO> productList = order.getProductList();
