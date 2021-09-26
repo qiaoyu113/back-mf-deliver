@@ -20,18 +20,20 @@ public class RecoverToCheckExe {
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
 
-    public String toCheck(RecoverVechicleCmd recoverVechicleCmd) {
+    public String execute(RecoverVechicleCmd recoverVechicleCmd) {
         //完善收车单信息
         RecoverVehicleDTO recoverVehicleDTO = new RecoverVehicleDTO();
-        BeanUtils.copyProperties(recoverVehicleDTO, recoverVechicleCmd);
+        BeanUtils.copyProperties(recoverVechicleCmd, recoverVehicleDTO);
 
-        Result<String> result = recoverVehicleAggregateRootApi.toCheck(recoverVehicleDTO);
-
+        Result<String> recoverResult = recoverVehicleAggregateRootApi.toCheck(recoverVehicleDTO);
+        if (recoverResult.getCode() != 0) {
+            return recoverResult.getMsg();
+        }
         //更新交付单状态未 已验车
-        deliverAggregateRootApi.toCheck(recoverVechicleCmd.getServeNo());
+        Result<String> deliverResult = deliverAggregateRootApi.toCheck(recoverVechicleCmd.getServeNo());
 
 
-        return "";
+        return deliverResult.getData();
     }
 }
 

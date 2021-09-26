@@ -11,8 +11,18 @@ import java.util.List;
 public class ServeAddDTO {
 
     @ApiModelProperty(value = "订单id")
-    private Integer orderId;
-
+    private Long orderId;
+    @ApiModelProperty(value = "客户id")
+    private Integer customerId;
     @ApiModelProperty(value = "车辆信息")
     private List<ServeVehicleDTO> vehicleDTOList;
+
+    @ApiModelProperty(value = "城市id")
+    private Integer cityId;
+
+    @ApiModelProperty(value = "创建人id")
+    private Integer createId;
+
+    @ApiModelProperty(value = "组织id")
+    private Integer orgId;
 }

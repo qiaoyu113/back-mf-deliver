@@ -7,7 +7,7 @@ import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.entity.DeliverVehicle;
 import com.mfexpress.rent.deliver.gateway.DeliverVehicleGateway;
-import com.mfexpress.rent.deliver.utils.Utils;
+import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import io.swagger.annotations.Api;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -46,17 +46,16 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
 
         if (deliverVehicleDTOList != null) {
             List<DeliverVehicle> deliverVehicleList = deliverVehicleDTOList.stream().map(deliverVehicleDTO -> {
-                long incr = redisTools.incr(Utils.getEnvVariable(Constants.REDIS_DELIVER_VEHICLE_KEY) + Utils.getDateByYYMMDD(new Date()), 1);
-                String deliverVehicleNo = Utils.getNo(Constants.REDIS_DELIVER_VEHICLE_KEY, incr);
+                long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_DELIVER_VEHICLE_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
+                String deliverVehicleNo = DeliverUtils.getNo(Constants.REDIS_DELIVER_VEHICLE_KEY, incr);
                 DeliverVehicle deliverVehicle = new DeliverVehicle();
                 BeanUtils.copyProperties(deliverVehicleDTO, deliverVehicle);
                 deliverVehicle.setDeliverVehicleNo(deliverVehicleNo);
                 return deliverVehicle;
             }).collect(Collectors.toList());
-            deliverVehicleGateway.addDeliverVehicle(deliverVehicleList);
+            int i = deliverVehicleGateway.addDeliverVehicle(deliverVehicleList);
+            return i > 0 ? Result.getInstance("发车成功").success() : Result.getInstance("发车成功").fail(-1, "发车失败");
         }
-
-
-        return Result.getInstance("").success();
+        return Result.getInstance("发车信息为空").fail(-1, "发车信息为空");
     }
 }

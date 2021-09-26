@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 
+import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
@@ -23,31 +24,34 @@ public class RecoverApplyExe {
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
 
 
-    public String applyRecover(RecoverApplyListCmd recoverApplyListCmd) {
+    public String execute(RecoverApplyListCmd recoverApplyListCmd) {
         List<RecoverApplyCmd> recoverApplyCmdList = recoverApplyListCmd.getRecoverApplyCmdList();
 
         List<String> serveNoList = new LinkedList<>();
 
         List<RecoverVehicleDTO> recoverVehicleDTOList = new LinkedList<>();
         for (RecoverApplyCmd recoverApplyCmd : recoverApplyCmdList) {
-
             serveNoList.add(recoverApplyCmd.getServeNo());
-
             RecoverVehicleDTO recoverVehicleDTO = new RecoverVehicleDTO();
+            Result<RecoverVehicleDTO> recoverVehicleResult = recoverVehicleAggregateRootApi.getRecoverVehicleDtoByDeliverNo(recoverApplyCmd.getDeliverNo());
+            if (recoverVehicleResult.getData() != null) {
+                continue;
+            }
             recoverVehicleDTO.setServeNo(recoverApplyCmd.getServeNo());
             recoverVehicleDTO.setDeliverNo(recoverApplyCmd.getDeliverNo());
-
+            recoverVehicleDTO.setCarId(recoverApplyCmd.getCarId());
             recoverVehicleDTO.setExpectRecoverTime(recoverApplyListCmd.getExpectRecoverTime());
             recoverVehicleDTO.setStatus(ValidStatusEnum.VALID.getCode());
             recoverVehicleDTOList.add(recoverVehicleDTO);
         }
-        //todo 交付单状态更新收车中
-        deliverAggregateRootApi.applyRecover(serveNoList);
-
-        //todo 生成收车单
-        recoverVehicleAggregateRootApi.addRecoverVehicle(recoverVehicleDTOList);
-
-        return "";
+        // 交付单状态更新收车中
+        Result<String> deliverResult = deliverAggregateRootApi.applyRecover(serveNoList);
+        if (deliverResult.getCode() != 0) {
+            return deliverResult.getMsg();
+        }
+        //生成收车单
+        Result<String> recoverResult = recoverVehicleAggregateRootApi.addRecoverVehicle(recoverVehicleDTOList);
+        return recoverResult.getData();
 
     }
 }

@@ -29,24 +29,24 @@ public class DeliverServiceImpl implements DeliverServiceI {
     @Override
     public String toPreselected(DeliverPreselectedCmd deliverPreselectedCmd) {
 
-        return deliverToPreselectedExe.toPreselected(deliverPreselectedCmd);
+        return deliverToPreselectedExe.execute(deliverPreselectedCmd);
     }
 
     @Override
     public String toCheck(DeliverCheckCmd deliverCheckCmd) {
 
-        return deliverToCheckExe.toCheck(deliverCheckCmd);
+        return deliverToCheckExe.execute(deliverCheckCmd);
     }
 
     @Override
     public String toReplace(DeliverReplaceCmd deliverReplaceCmd) {
 
-        return deliverToReplaceExe.toReplace(deliverReplaceCmd);
+        return deliverToReplaceExe.execute(deliverReplaceCmd);
     }
 
     @Override
     public String toInsure(DeliverInsureCmd deliverInsureCmd) {
 
-        return deliverToInsureExe.toInsure(deliverInsureCmd);
+        return deliverToInsureExe.execute(deliverInsureCmd);
     }
 }

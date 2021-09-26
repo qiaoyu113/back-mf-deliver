@@ -4,11 +4,12 @@ package com.mfexpress.rent.deliver.domain;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
+import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.entity.RecoverVehicle;
 import com.mfexpress.rent.deliver.gateway.RecoverVehicleGateway;
-import com.mfexpress.rent.deliver.utils.Utils;
+import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import io.swagger.annotations.Api;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -38,7 +39,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
             BeanUtils.copyProperties(recoverVehicle, recoverVehicleDTO);
             return Result.getInstance(recoverVehicleDTO).success();
         }
-        //todo 查询有效的收车单
+        // 查询有效的收车单
         return Result.getInstance((RecoverVehicleDTO) null).success();
     }
 
@@ -47,8 +48,8 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     public Result<String> addRecoverVehicle(@RequestBody List<RecoverVehicleDTO> recoverVehicleDTOList) {
         if (recoverVehicleDTOList != null) {
             List<RecoverVehicle> recoverVehicleList = recoverVehicleDTOList.stream().map(recoverVehicleDTO -> {
-                long incr = redisTools.incr(Utils.getEnvVariable(Constants.REDIS_RECOVER_VEHICLE_KEY) + Utils.getDateByYYMMDD(new Date()), 1);
-                String recoverVehicleNo = Utils.getNo(Constants.REDIS_RECOVER_VEHICLE_KEY, incr);
+                long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_RECOVER_VEHICLE_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
+                String recoverVehicleNo = DeliverUtils.getNo(Constants.REDIS_RECOVER_VEHICLE_KEY, incr);
                 RecoverVehicle recoverVehicle = new RecoverVehicle();
                 BeanUtils.copyProperties(recoverVehicleDTO, recoverVehicle);
                 recoverVehicle.setRecoverVehicleNo(recoverVehicleNo);
@@ -57,7 +58,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
             recoverVehicleGateway.addRecoverVehicle(recoverVehicleList);
         }
 
-        return Result.getInstance("").success();
+        return Result.getInstance("申请收车成功").success();
     }
 
     @Override
@@ -65,6 +66,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     public Result<String> cancelRecover(@RequestBody RecoverVehicleDTO recoverVehicleDTO) {
         RecoverVehicle recoverVehicle = new RecoverVehicle();
         BeanUtils.copyProperties(recoverVehicleDTO, recoverVehicle);
+        recoverVehicle.setStatus(ValidStatusEnum.INVALID.getCode());
         recoverVehicleGateway.updateRecoverVehicle(recoverVehicle);
         return Result.getInstance("").success();
     }
@@ -74,8 +76,8 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     public Result<String> toCheck(@RequestBody RecoverVehicleDTO recoverVehicleDTO) {
         RecoverVehicle recoverVehicle = new RecoverVehicle();
         BeanUtils.copyProperties(recoverVehicleDTO, recoverVehicle);
-        recoverVehicleGateway.updateRecoverVehicle(recoverVehicle);
-        return Result.getInstance("").success();
+        int i = recoverVehicleGateway.updateRecoverVehicle(recoverVehicle);
+        return i > 0 ? Result.getInstance("验车成功").success() : Result.getInstance("验车失败").fail(-1, "验车失败");
 
     }
 

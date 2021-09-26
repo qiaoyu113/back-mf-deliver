@@ -11,8 +11,8 @@ import java.util.Date;
 @ApiModel("申请收车详情页筛选信息")
 public class RecoverApplyQryCmd {
 
-    @ApiModelProperty(value = "订单编号")
-    private Integer orderId;
+    @ApiModelProperty(value = "客户id")
+    private Integer customerId;
 
     @ApiModelProperty(value = "合同编号")
     private String contractNo;
@@ -25,4 +25,6 @@ public class RecoverApplyQryCmd {
     private Date startDeliverTime;
     @ApiModelProperty(value = "发车时间段end")
     private Date endDeliverTime;
+
+    private Integer cityId;
 }

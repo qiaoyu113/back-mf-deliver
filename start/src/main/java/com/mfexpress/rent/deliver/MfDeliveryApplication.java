@@ -8,9 +8,12 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import tk.mybatis.spring.annotation.MapperScan;
 
 @SpringBootApplication(scanBasePackages = {"com.mfexpress.rent.deliver"})
-@EnableFeignClients(basePackages = {"com.mfexpress.rent.deliver.domainapi","com.mfexpress.rent.deliver.api"})
+@EnableFeignClients(basePackages = {"com.mfexpress.rent.deliver.domainapi",
+        "com.mfexpress.rent.deliver.api", "com.mfexpress.rent.vehicle.api",
+        "com.mfexpress.order.api.app","com.mfexpress.common.domain.api","com.mfexpress.transportation.customer.api"})
 @EnableDiscoveryClient
-@MapperScan(basePackages = {"com.mfexpress.rent.deliver.deliver.repository", "com.mfexpress.rent.deliver.delivervehicle.repository", "com.mfexpress.rent.deliver.serve.repository", "com.mfexpress.rent.deliver.recovervehicle.repository"})
+@MapperScan(basePackages = {"com.mfexpress.rent.deliver.deliver.repository",
+        "com.mfexpress.rent.deliver.delivervehicle.repository", "com.mfexpress.rent.deliver.serve.repository", "com.mfexpress.rent.deliver.recovervehicle.repository"})
 public class MfDeliveryApplication {
 
     public static void main(String[] args) {

@@ -12,6 +12,8 @@ public class DeliverDTO {
 
     private String deliverNo;
 
+    private Integer customerId;
+
     private String serveNo;
 
     private Integer isCheck;

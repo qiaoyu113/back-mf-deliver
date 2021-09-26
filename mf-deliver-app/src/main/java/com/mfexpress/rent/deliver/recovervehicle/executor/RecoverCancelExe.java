@@ -20,10 +20,13 @@ public class RecoverCancelExe {
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
 
 
-    public String cancelRecover(RecoverCancelCmd recoverCancelCmd) {
+    public String execute(RecoverCancelCmd recoverCancelCmd) {
 
         //交付单回退到已发车状态
         Result<String> deliverResult = deliverAggregateRootApi.cancelRecover(recoverCancelCmd.getServeNo());
+        if (deliverResult.getCode() != 0) {
+            return deliverResult.getMsg();
+        }
         //收车单设为失效 填写取消收车原因
         RecoverVehicleDTO recoverVehicleDTO = new RecoverVehicleDTO();
         BeanUtils.copyProperties(recoverCancelCmd, recoverVehicleDTO);

@@ -11,11 +11,12 @@ import lombok.Data;
 public class ServeDeliverTaskQryCmd extends ListQry {
 
     @ApiModelProperty(value = "客户名称")
-    private String customerName;
+    private String keyword;
 
-    @ApiModelProperty(value = "客户手机号")
-    private String customerPhone;
 
     @ApiModelProperty(value = "查询tag", example = "1：查询待发车，2：查询已完成")
     private Integer tag;
+
+    private Integer cityId;
+    private Integer orgId;
 }

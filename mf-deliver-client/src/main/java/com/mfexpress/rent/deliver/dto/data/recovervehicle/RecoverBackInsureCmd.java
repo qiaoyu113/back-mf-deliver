@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.dto.data.recovervehicle;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -21,8 +22,9 @@ public class RecoverBackInsureCmd {
     private Integer isInsurance;
 
     @ApiModelProperty(value = "退保时间")
+    @JsonFormat(timezone = "GMT+8")
     private Date insuranceTime;
 
-    @ApiModelProperty(value = "暂不退保原因", example = "选择原因，默认传0")
+    @ApiModelProperty(value = "暂不退保原因,默认传0")
     private Integer insuranceRemark;
 }

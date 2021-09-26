@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.dto.data.serve;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.mfexpress.rent.deliver.dto.data.ListVO;
 import com.mfexpress.rent.deliver.dto.data.OrderCarModelVO;
 import io.swagger.annotations.ApiModel;
@@ -15,8 +16,9 @@ import java.util.List;
 public class ServePreselectedListVO extends ListVO {
 
     @ApiModelProperty(value = "订单id")
-    private Integer orderId;
-
+    private String orderId;
+    @ApiModelProperty(value = "客户id")
+    private Integer customerId;
     @ApiModelProperty(value = "客户名称")
     private String customerName;
 
@@ -24,6 +26,7 @@ public class ServePreselectedListVO extends ListVO {
     private String contractNo;
 
     @ApiModelProperty(value = "提车时间")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date extractVehicleTime;
 
     @ApiModelProperty(value = "订单车型数量情况列表")

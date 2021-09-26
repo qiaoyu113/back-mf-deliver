@@ -13,6 +13,7 @@
     <artifactId>mf-deliver-client</artifactId>
     <packaging>jar</packaging>
     <dependencies>
+
         <dependency>
             <groupId>com.alibaba.cola</groupId>
             <artifactId>cola-component-dto</artifactId>
@@ -46,16 +47,12 @@
         <dependency>
             <groupId>com.mfexpress</groupId>
             <artifactId>mf-component-utils</artifactId>
-            <version>${mf.components.version}</version>
         </dependency>
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.mfexpress</groupId>
-            <artifactId>mf-component-spring-boot-starter</artifactId>
-        </dependency>
+
     </dependencies>
 
     <build>

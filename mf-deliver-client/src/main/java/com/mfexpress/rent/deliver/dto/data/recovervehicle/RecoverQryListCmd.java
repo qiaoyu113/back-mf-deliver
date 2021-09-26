@@ -11,11 +11,9 @@ import java.util.Date;
 @ApiModel("收车需求列表查询查询")
 public class RecoverQryListCmd extends ListQry {
 
-    @ApiModelProperty(value = "客户名称")
-    private String customerName;
 
-    @ApiModelProperty(value = "客户手机号")
-    private String customerPhone;
+    @ApiModelProperty(value = "客户id")
+    private String keyword;
 
     @ApiModelProperty(value = "车型id")
     private Integer carModelId;
@@ -23,14 +21,16 @@ public class RecoverQryListCmd extends ListQry {
     @ApiModelProperty(value = "品牌id")
     private Integer brandId;
 
-    @ApiModelProperty(value = "预计收车日期")
-    private Date expectRecoverTime;
-
-    @ApiModelProperty(value = "排序规则", example = "0:其它，1:收车申请全部tab,2:收车任务全部tab")
-    private Integer sortTag;
-
+    @ApiModelProperty(value = "预计收车日期start")
+    private Date expectRecoverStartTime;
+    @ApiModelProperty(value = "预计收车日期end")
+    private Date expectRecoverEndTime;
+    @ApiModelProperty(value = "列表tag 申请收车列表1全部 2待收车 3已完成；收车任务列表 4全部 5待验车 6待退保 7待处理违章 8已完成")
+    private Integer tag;
     @ApiModelProperty(value = "发车日期时间段start")
     private Date startDeliverTime;
     @ApiModelProperty(value = "发车日期时间段end")
     private Date endDeliverTime;
+
+
 }

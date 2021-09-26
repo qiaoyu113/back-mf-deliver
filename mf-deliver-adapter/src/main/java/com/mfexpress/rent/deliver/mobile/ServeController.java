@@ -1,15 +1,15 @@
 package com.mfexpress.rent.deliver.mobile;
 
+import com.mfexpress.component.constants.CommonConstants;
+import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.starter.utils.TokenTools;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiSort;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -25,6 +25,7 @@ public class ServeController {
 
 
     //====================租赁服务单生成===============//
+
     @ApiOperation("生成租赁服务单")
     @PostMapping("/addServe")
     public Result<String> addServe(@RequestBody ServeAddCmd serveAddCmd) {
@@ -35,9 +36,14 @@ public class ServeController {
 
     @PostMapping("/getServeDeliverTaskListVO")
     @ApiOperation("发车任务列表")
-    public Result<ServeDeliverTaskListVO> getServeStayDeliverTaskListVO(@RequestBody ServeDeliverTaskQryCmd serveDeliverTaskQryCmd) {
+    public Result<ServeDeliverTaskListVO> getServeStayDeliverTaskListVO(@RequestBody ServeDeliverTaskQryCmd serveDeliverTaskQryCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
 
-        return Result.getInstance(serveServiceI.getServeDeliverTaskListVO(serveDeliverTaskQryCmd));
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            //提示失败结果
+            return Result.getInstance((ServeDeliverTaskListVO) null).fail(-1, "没有权限");
+        }
+        return Result.getInstance(serveServiceI.getServeDeliverTaskListVO(serveDeliverTaskQryCmd, tokenInfo));
     }
 
 

@@ -13,14 +13,16 @@ import java.util.List;
 public class ServeES {
 
     @ApiModelProperty(value = "订单id")
-    private Integer orderId;
+    private String orderId;
     @ApiModelProperty(value = "客户名称")
     private String customerName;
     @ApiModelProperty(value = "客户手机号")
     private String customerPhone;
+    @ApiModelProperty(value = "客户id")
+    private Integer customerId;
     @ApiModelProperty(value = "合同编号")
     private String contractNo;
-    @ApiModelProperty(value = "提车时间")
+    @ApiModelProperty(value = "提车日期")
     private Date extractVehicleTime;
     @ApiModelProperty(value = "订单车型列表")
     private List<OrderCarModelVO> carModelVOList;
@@ -73,6 +75,9 @@ public class ServeES {
     @ApiModelProperty(value = "预计还车日期")
     private Date expectRecoverTime;
 
+    private Integer cityId;
+
+    private Integer orgId;
 
     private Integer saleId;
     private Integer carServiceId;

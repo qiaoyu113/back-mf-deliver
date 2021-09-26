@@ -22,13 +22,19 @@ public class RecoverDeductionExe {
     private ServeAggregateRootApi serveAggregateRootApi;
 
 
-    public String toDeduction(RecoverDeductionCmd recoverDeductionCmd) {
+    public String execute(RecoverDeductionCmd recoverDeductionCmd) {
         DeliverDTO deliverDTO = new DeliverDTO();
 
         BeanUtils.copyProperties(recoverDeductionCmd, deliverDTO);
         Result<String> result = deliverAggregateRootApi.toDeduction(deliverDTO);
-        if (result.getCode()==0){
-             serveAggregateRootApi.completed(recoverDeductionCmd.getServeNo());
+
+        if (result.getCode() != 0) {
+            return result.getMsg();
+
+        }
+        //返回已完成服务单编号 更新服务单已完成状态
+        if (result.getData().equals(deliverDTO.getServeNo())) {
+            return serveAggregateRootApi.completed(recoverDeductionCmd.getServeNo()).getData();
         }
         return "";
     }

@@ -18,7 +18,11 @@ public class Serve {
     @Id
     private Integer id;
 
-    private Integer orderId;
+    private Long orderId;
+
+    private Long serveId;
+
+    private Integer customerId;
 
     private String serveNo;
 
@@ -39,6 +43,10 @@ public class Serve {
     private Integer createId;
 
     private Integer updateId;
+
+    private Integer cityId;
+
+    private Integer orgId;
 
     private Date createTime;
 

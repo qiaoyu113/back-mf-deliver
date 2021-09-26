@@ -40,8 +40,18 @@ public interface DeliverAggregateRootApi {
     Result<String> cancelRecover(@RequestParam("serveNo") String serveNo);
 
     @PostMapping("/toBackInsure")
-    Result<String> toBackInsure(@RequestBody DeliverBackInsureDTO deliverBackInsureDTO);
+    Result<List<String>> toBackInsure(@RequestBody DeliverBackInsureDTO deliverBackInsureDTO);
 
     @PostMapping("/toDeduction")
-    Result<String>toDeduction(@RequestBody DeliverDTO deliverDTO);
+    Result<String> toDeduction(@RequestBody DeliverDTO deliverDTO);
+
+    @PostMapping("/cancelSelected")
+    Result<String> cancelSelected(@RequestParam("carId") Integer carId);
+
+    @PostMapping("/syncInsureStatus")
+    Result<String> syncInsureStatus(@RequestParam("carId") Integer carId, @RequestParam("insureStatus") Integer insureStatus);
+
+    @PostMapping("/syncVehicleMileage")
+    Result<String> syncVehicleMileage(@RequestParam("carId") Integer carId, @RequestParam("mileage") Double mileage);
+
 }

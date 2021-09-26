@@ -28,11 +28,13 @@
             <groupId>com.mfexpress.rent.deliver</groupId>
             <artifactId>mf-deliver-client</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>com.mfexpress</groupId>
+            <artifactId>mf-component-spring-boot-starter</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.mfexpress</groupId>
             <artifactId>mf-component-dto</artifactId>
-            <version>${mf.components.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.xiaoymin</groupId>

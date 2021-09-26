@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.serve;
 
+import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.serve.repository.ServeMapper;
@@ -17,17 +18,17 @@ public class ServeGatewayImpl implements ServeGateway {
 
 
     @Override
-    public void updateServeByServeNo(String serveNo, Serve serve) {
+    public int updateServeByServeNo(String serveNo, Serve serve) {
         Example example = new Example(Serve.class);
         example.createCriteria().andEqualTo("serveNo", serveNo);
-        serveMapper.updateByExampleSelective(serve, example);
+        return serveMapper.updateByExampleSelective(serve, example);
     }
 
     @Override
-    public void updateServeByServeNoList(List<String> serveNoList, Serve serve) {
+    public int updateServeByServeNoList(List<String> serveNoList, Serve serve) {
         Example example = new Example(Serve.class);
         example.createCriteria().andIn("serveNo", serveNoList);
-        serveMapper.updateByExampleSelective(serve, example);
+        return serveMapper.updateByExampleSelective(serve, example);
 
     }
 
@@ -45,5 +46,12 @@ public class ServeGatewayImpl implements ServeGateway {
 
             serveMapper.insertSelective(serve);
         }
+    }
+
+    @Override
+    public List<ServePreselectedDTO> getServePreselectedByOrderId(List<Long> orderId) {
+
+
+        return serveMapper.getServePreselectedByOrderId(orderId);
     }
 }

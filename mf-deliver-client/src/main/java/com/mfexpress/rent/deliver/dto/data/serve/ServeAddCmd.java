@@ -11,7 +11,7 @@ import java.util.List;
 public class ServeAddCmd {
 
     @ApiModelProperty(value = "订单id")
-    private Integer orderId;
+    private Long orderId;
 
     @ApiModelProperty("车辆信息")
     private List<ServeVehicleDTO> serveVehicleCmdList;

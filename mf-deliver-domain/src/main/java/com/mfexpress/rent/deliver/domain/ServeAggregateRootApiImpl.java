@@ -9,10 +9,11 @@ import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeAddDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeVehicleDTO;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
-import com.mfexpress.rent.deliver.utils.Utils;
+import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,9 +39,10 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         ServeDTO serveDTO = new ServeDTO();
         if (serve != null) {
             BeanUtil.copyProperties(serve, serveDTO);
+            return Result.getInstance(serveDTO).success();
         }
 
-        return Result.getInstance(serveDTO).success();
+        return Result.getInstance((ServeDTO) null).success();
     }
 
     @Override
@@ -55,59 +57,97 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             Integer num = serveVehicleDTO.getNum();
             for (int i = 0; i < num; i++) {
                 Serve serve = new Serve();
-                long incr = redisTools.incr(Utils.getEnvVariable(Constants.REDIS_SERVE_KEY) + Utils.getDateByYYMMDD(new Date()), 1);
-                String serveNo = Utils.getNo(Constants.REDIS_SERVE_KEY, incr);
+                long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_SERVE_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
+                //订单号放入redis
+                redisTools.set(serveAddDTO.getOrderId().toString(), serveAddDTO.getOrderId(), 10000);
+                String serveNo = DeliverUtils.getNo(Constants.REDIS_SERVE_KEY, incr);
+                Long bizId = redisTools.getBizId(Constants.REDIS_BIZ_ID_SERVER);
+                serve.setServeId(bizId);
+                //创建服务单订单传orgId
+                serve.setOrgId(serveAddDTO.getOrgId());
                 serve.setServeNo(serveNo);
+                serve.setCreateId(serveAddDTO.getCreateId());
                 serve.setOrderId(serveAddDTO.getOrderId());
+                serve.setCustomerId(serveAddDTO.getCustomerId());
                 serve.setCarModelId(serveVehicleDTO.getCarModelId());
                 serve.setBrandId(serveVehicleDTO.getBrandId());
                 serve.setLeaseModelId(serveVehicleDTO.getLeaseModelId());
                 serveList.add(serve);
             }
         }
-        serveGateway.addServeList(serveList);
+        try {
+            serveGateway.addServeList(serveList);
+        } catch (Exception e) {
+            return Result.getInstance(serveAddDTO.getOrderId().toString()).fail(-1, "服务单生成失败");
+        }
 
-        return Result.getInstance("").success();
+        return Result.getInstance("服务单生成成功").success();
     }
 
     @Override
     @PostMapping("/toPreselected")
     public Result<String> toPreselected(@RequestBody List<String> serveNoList) {
         Serve serve = Serve.builder().status(ServeEnum.PRESELECTED.getCode()).build();
-        serveGateway.updateServeByServeNoList(serveNoList, serve);
-        return Result.getInstance("").success();
+        int i = serveGateway.updateServeByServeNoList(serveNoList, serve);
+        return i > 0 ? Result.getInstance("预选成功").success() : Result.getInstance("预选失败").fail(-1, "预选失败");
+
     }
 
     @Override
     @PostMapping("/toReplace")
     public Result<String> toReplace(@RequestParam("serveNo") String serveNo) {
         Serve serve = Serve.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
-        serveGateway.updateServeByServeNo(serveNo, serve);
-        return Result.getInstance("").success();
+        int i = serveGateway.updateServeByServeNo(serveNo, serve);
+        return i > 0 ? Result.getInstance("更换成功").success() : Result.getInstance("更换失败").fail(-1, "更换失败");
     }
 
     @Override
     @PostMapping("/deliver")
     public Result<String> deliver(@RequestBody List<String> serveNoList) {
         Serve serve = Serve.builder().status(ServeEnum.DELIVER.getCode()).build();
-        serveGateway.updateServeByServeNoList(serveNoList, serve);
-        return Result.getInstance("").success();
+        int i = serveGateway.updateServeByServeNoList(serveNoList, serve);
+        return i > 0 ? Result.getInstance("发车成功").success() : Result.getInstance("发车失败").fail(-1, "发车失败");
     }
 
     @Override
     @PostMapping("/recover")
     public Result<String> recover(@RequestBody List<String> serveNoList) {
         Serve serve = Serve.builder().status(ServeEnum.RECOVER.getCode()).build();
-        serveGateway.updateServeByServeNoList(serveNoList, serve);
-        return Result.getInstance("").success();
+        int i = serveGateway.updateServeByServeNoList(serveNoList, serve);
+        return i > 0 ? Result.getInstance("收车完成").success() : Result.getInstance("收车失败").fail(-1, "收车失败");
     }
 
     @Override
     @PostMapping("/completed")
     public Result<String> completed(@RequestParam("serveNo") String serveNo) {
         Serve serve = Serve.builder().status(ServeEnum.COMPLETED.getCode()).build();
-        serveGateway.updateServeByServeNo(serveNo, serve);
-        return Result.getInstance("").success();
+        int i = serveGateway.updateServeByServeNo(serveNo, serve);
+        return i > 0 ? Result.getInstance("处理违章完成").success() : Result.getInstance("处理违章失败").fail(-1, "处理违章失败");
+    }
+
+    @Override
+    @PostMapping("/completedList")
+    public Result<String> completedList(@RequestBody List<String> serveNoList) {
+        Serve serve = Serve.builder().status(ServeEnum.COMPLETED.getCode()).build();
+        int i = serveGateway.updateServeByServeNoList(serveNoList, serve);
+        return i > 0 ? Result.getInstance("退保完成").success() : Result.getInstance("退保失败").fail(-1, "退保失败");
+
+    }
+
+    @PostMapping("/getServePreselectedDTO")
+    @Override
+    public Result<List<ServePreselectedDTO>> getServePreselectedDTO(@RequestBody List<Long> orderId) {
+        return Result.getInstance(serveGateway.getServePreselectedByOrderId(orderId)).success();
+    }
+
+    @Override
+    @PostMapping("/cancelSelected")
+    public Result<String> cancelSelected(@RequestParam("serveNo") String serveNo) {
+
+        Serve serve = Serve.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
+        int i = serveGateway.updateServeByServeNo(serveNo, serve);
+
+        return i > 0 ? Result.getInstance("取消预选成功").success() : Result.getInstance("取消预选失败").fail(-1, "取消预选失败");
     }
 
 

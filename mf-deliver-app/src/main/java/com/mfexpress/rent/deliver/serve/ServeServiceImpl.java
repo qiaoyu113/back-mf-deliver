@@ -1,9 +1,9 @@
 package com.mfexpress.rent.deliver.serve;
 
+import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
-import com.mfexpress.rent.deliver.serve.executor.ServeAddCmdExe;
-import com.mfexpress.rent.deliver.serve.executor.ServeQryCmdExe;
+import com.mfexpress.rent.deliver.serve.executor.*;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -11,62 +11,72 @@ import javax.annotation.Resource;
 @Service
 public class ServeServiceImpl implements ServeServiceI {
 
-    @Resource
-    private ServeQryCmdExe serveQryCmdExe;
+
     @Resource
     private ServeAddCmdExe serveAddCmdExe;
+    @Resource
+    private ServeDeliverTaskListQryExe serveDeliverTaskListQryExe;
+    @Resource
+    private ServeFastPreselectedQryExe serveFastPreselectedQryExe;
+    @Resource
+    private ServePreselectedQryExe servePreselectedQryExe;
+    @Resource
+    private ServeCheckQryExe serveCheckQryExe;
+    @Resource
+    private ServeInsureQryExe serveInsureQryExe;
+    @Resource
+    private ServeDeliverQryExe serveDeliverQryExe;
+    @Resource
+    private ServeCompletedQryExe serveCompletedQryExe;
+    @Resource
+    private ServeListAllQryExe serveListAllQryExe;
 
 
     @Override
     public ServeListVO getServeListVoByOrderNoAll(ServeQryListCmd serveQryListCmd) {
 
-        return serveQryCmdExe.getServeListVoByOrderNoAll(serveQryListCmd);
+        return serveListAllQryExe.execute(serveQryListCmd);
     }
 
     @Override
     public ServePreselectedListVO getServeListVoPreselected(ServeQryListCmd serveQryListCmd) {
-
-
-        return serveQryCmdExe.getServeListVoPreselected(serveQryListCmd);
+        return servePreselectedQryExe.execute(serveQryListCmd);
     }
 
     @Override
     public ServeListVO getServeListVoInsure(ServeQryListCmd serveQryListCmd) {
-        return serveQryCmdExe.getServeListVoInsure(serveQryListCmd);
+        return serveInsureQryExe.execute(serveQryListCmd);
     }
 
     @Override
     public ServeListVO getServeListVoCheck(ServeQryListCmd serveQryListCmd) {
-        return serveQryCmdExe.getServeListVoCheck(serveQryListCmd);
+        return serveCheckQryExe.execute(serveQryListCmd);
     }
 
     @Override
     public ServeListVO getServeListVoDeliver(ServeQryListCmd serveQryListCmd) {
-        return serveQryCmdExe.getServeListVoDeliver(serveQryListCmd);
+        return serveDeliverQryExe.execute(serveQryListCmd);
     }
 
     @Override
     public ServeListVO getServeListVoCompleted(ServeQryListCmd serveQryListCmd) {
-        return serveQryCmdExe.getServeListVoCompleted(serveQryListCmd);
+        return serveCompletedQryExe.execute(serveQryListCmd);
     }
 
 
     @Override
     public ServeFastPreselectedListVO getServeFastPreselectedVO(ServeQryListCmd serveQryListCmd) {
-        return serveQryCmdExe.getServeFastPreselectedVO(serveQryListCmd);
+        return serveFastPreselectedQryExe.execute(serveQryListCmd);
     }
 
     @Override
-    public ServeDeliverTaskListVO getServeDeliverTaskListVO(ServeDeliverTaskQryCmd serveDeliverTaskQryCmd) {
-
-
-        return serveQryCmdExe.getServeDeliverTaskListVO(serveDeliverTaskQryCmd);
+    public ServeDeliverTaskListVO getServeDeliverTaskListVO(ServeDeliverTaskQryCmd serveDeliverTaskQryCmd , TokenInfo tokenInfo) {
+        return serveDeliverTaskListQryExe.execute(serveDeliverTaskQryCmd,tokenInfo);
     }
-
 
 
     @Override
     public String addServe(ServeAddCmd serveAddCmd) {
-        return serveAddCmdExe.addServe(serveAddCmd);
+        return serveAddCmdExe.execute(serveAddCmd);
     }
 }

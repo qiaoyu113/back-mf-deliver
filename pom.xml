@@ -41,21 +41,23 @@
                 <spring.active>dev2local</spring.active>
             </properties>
 
+
         </profile>
         <profile>
             <id>dev2m1</id>
             <properties>
                 <spring.active>dev2m1</spring.active>
             </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
         </profile>
         <profile>
             <id>dev2m2</id>
             <properties>
                 <spring.active>dev2m2</spring.active>
             </properties>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
+
         </profile>
         <profile>
             <id>test</id>
@@ -73,16 +75,56 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>com.mfexpress</groupId>
+                <artifactId>mf-component-dto</artifactId>
+                <version>${mf.components.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mfexpress</groupId>
+                <artifactId>mf-component-exception</artifactId>
+                <version>${mf.components.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mfexpress</groupId>
+                <artifactId>mf-component-utils</artifactId>
+                <version>${mf.components.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mfexpress</groupId>
+                <artifactId>mf-component-constant</artifactId>
+                <version>${mf.components.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mfexpress</groupId>
+                <artifactId>mf-component-spring-boot-starter</artifactId>
+                <version>${mf.components.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-openfeign-core</artifactId>
                 <version>${feign.version}</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
+                <groupId>com.mfexpress</groupId>
+                <artifactId>mf-common-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mfexpress.transportation.project</groupId>
+                <artifactId>mf-customer-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
                 <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.mfexpress.rent.order</groupId>
+                <artifactId>mf-order-client</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.mfexpress.rent.deliver</groupId>
@@ -107,6 +149,12 @@
             <dependency>
                 <groupId>com.mfexpress.rent.deliver</groupId>
                 <artifactId>mf-deliver-infrastructure</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.mfexpress.rent.vehicle</groupId>
+                <artifactId>mf-vehicle-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!--COLA Components-->
@@ -211,7 +259,6 @@
                 <version>${swagger.version}</version>
             </dependency>
 
-
             <!-- 分页插件pagehelper -->
             <dependency>
                 <groupId>com.github.pagehelper</groupId>
@@ -271,33 +318,7 @@
                 <version>1.0</version>
             </dependency>
 
-            <dependency>
-                <groupId>com.mfexpress</groupId>
-                <artifactId>mf-component-dto</artifactId>
-                <version>${mf.components.version}</version>
-            </dependency>
 
-
-            <dependency>
-                <groupId>com.mfexpress</groupId>
-                <artifactId>mf-component-exception</artifactId>
-                <version>${mf.components.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.mfexpress</groupId>
-                <artifactId>mf-component-utils</artifactId>
-                <version>${mf.components.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.mfexpress</groupId>
-                <artifactId>mf-component-constant</artifactId>
-                <version>${mf.components.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.mfexpress</groupId>
-                <artifactId>mf-component-spring-boot-starter</artifactId>
-                <version>${mf.components.version}</version>
-            </dependency>
             <dependency>
                 <groupId>commons-lang</groupId>
                 <artifactId>commons-lang</artifactId>
@@ -341,6 +362,11 @@
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>3.3.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
                     <version>3.0.1</version>
                 </plugin>
@@ -355,10 +381,9 @@
                     <version>3.8.1</version>
                 </plugin>
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-deploy-plugin</artifactId>
-                    <configuration>
-                        <skip>true</skip>
-                    </configuration>
+                    <version>2.8</version>
                 </plugin>
                 <plugin>
                     <groupId>org.springframework.boot</groupId>

@@ -8,9 +8,10 @@ import java.util.Date;
 public class ServeDTO {
     private Integer id;
 
-    private Integer orderId;
+    private Long orderId;
 
     private String serveNo;
+    private Integer customerId;
 
     private Integer carModelId;
 
@@ -29,6 +30,10 @@ public class ServeDTO {
     private Integer createId;
 
     private Integer updateId;
+
+    private Integer cityId;
+
+    private Integer orgId;
 
     private Date createTime;
 

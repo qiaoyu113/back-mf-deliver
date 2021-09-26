@@ -16,6 +16,6 @@ public class DeliverVehicleServiceImpl implements DeliverVehicleServiceI {
     @Override
     public String toDeliver(DeliverVehicleCmd deliverVehicleCmd) {
 
-        return deliverVehicleExe.deliver(deliverVehicleCmd);
+        return deliverVehicleExe.execute(deliverVehicleCmd);
     }
 }

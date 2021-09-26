@@ -25,11 +25,12 @@ public class RecoverGatewayImpl implements RecoverVehicleGateway {
     }
 
     @Override
-    public void updateRecoverVehicle(RecoverVehicle recoverVehicle) {
+    public int updateRecoverVehicle(RecoverVehicle recoverVehicle) {
         Example example = new Example(RecoverVehicle.class);
         example.createCriteria().andEqualTo("serveNo", recoverVehicle.getServeNo())
                 .andEqualTo("status", ValidStatusEnum.VALID.getCode());
-        recoverVehicleMapper.updateByExampleSelective(recoverVehicle, example);
+        int i = recoverVehicleMapper.updateByExampleSelective(recoverVehicle, example);
+        return i;
     }
 
     @Override

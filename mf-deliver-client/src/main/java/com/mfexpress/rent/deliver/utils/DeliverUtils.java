@@ -12,8 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-public class Utils {
-    private static Utils utils;
+public class DeliverUtils {
+    private static DeliverUtils utils;
 
     private static final String YYYYMMDD = "yyyyMMdd";
 
@@ -46,18 +46,22 @@ public class Utils {
         if (date == null)
             return "";
         SimpleDateFormat dateFormatYYMMDD = new SimpleDateFormat(
-                Utils.YYYYMMDD);
+                DeliverUtils.YYYYMMDD);
         return dateFormatYYMMDD.format(date);
     }
 
 
     public static String getEnvVariable(String tag) {
+        if (StringUtils.isEmpty(tag)) {
+            return "";
+        }
         if (tag.equals(Constants.ES_DELIVER_INDEX)) {
             return utils.envVariable + "-" + tag;
         } else if (!StringUtils.isEmpty(utils.numMap.get(tag))) {
             return utils.envVariable + ":" + tag;
+        } else {
+            return utils.envVariable + "_" + tag;
         }
-        return "";
     }
 
 
