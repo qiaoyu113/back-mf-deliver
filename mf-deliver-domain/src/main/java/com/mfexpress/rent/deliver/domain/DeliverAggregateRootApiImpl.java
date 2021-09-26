@@ -10,6 +10,7 @@ import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverBackInsureDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleMqDTO;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
@@ -175,23 +176,45 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     }
 
     @Override
+    @PostMapping("/cancelSelectedByServeNoList")
+    public Result<List<Integer>> cancelSelectedByServeNoList(@RequestBody List<String> serveNoList) {
+        List<Deliver> deliverList = deliverGateway.getDeliverByServeNoList(serveNoList);
+
+        List<Integer> carIdList = deliverList.stream().map(Deliver::getCarId).collect(Collectors.toList());
+
+        return Result.getInstance(carIdList).success();
+    }
+
+    @Override
     @PostMapping("/syncInsureStatus")
-    public Result<String> syncInsureStatus(@RequestParam("carId") Integer carId, @RequestParam("insureStatus") Integer insureStatus) {
-        if (insureStatus.equals(ValidStatusEnum.VALID.getCode())) {
+    public Result<String> syncInsureStatus(@RequestBody List<DeliverVehicleMqDTO> deliverVehicleMqDTOList) {
+
+        List<Integer> carIdList = deliverVehicleMqDTOList.stream().map(DeliverVehicleMqDTO::getCarId).collect(Collectors.toList());
+        if (deliverVehicleMqDTOList.get(0).getInsuranceStatus().equals(ValidStatusEnum.VALID.getCode())) {
             //发车中交付单改为已操作、收车中交付单改为未操作
-            int i = deliverGateway.updateInsuranceStatusByCarId(carId, JudgeEnum.YES.getCode(), JudgeEnum.NO.getCode());
+            int i = deliverGateway.updateInsuranceStatusByCarId(carIdList, JudgeEnum.YES.getCode(), JudgeEnum.NO.getCode());
         } else {
             //发车中交付单改为未操作、收车中交付单改为已操作
-            int i = deliverGateway.updateInsuranceStatusByCarId(carId, JudgeEnum.NO.getCode(), JudgeEnum.YES.getCode());
+            int i = deliverGateway.updateInsuranceStatusByCarId(carIdList, JudgeEnum.NO.getCode(), JudgeEnum.YES.getCode());
 
         }
         return Result.getInstance("保险状态更新成功").success();
     }
 
     @Override
-    @PostMapping("/syncVehicleMileage")
-    public Result<String> syncVehicleMileage(@RequestParam("carId") Integer carId, @RequestParam("mileage") Double mileage) {
-        int i = deliverGateway.updateMileageByCarId(carId, mileage);
+    @PostMapping("/syncVehicleAgeAndMileage")
+    public Result<String> syncVehicleAgeAndMileage(@RequestBody List<DeliverVehicleMqDTO> deliverVehicleMqDTOList) {
+        for (DeliverVehicleMqDTO deliverVehicleMqDTO : deliverVehicleMqDTOList) {
+            if (deliverVehicleMqDTO.getMileage() != null) {
+                Deliver deliver = Deliver.builder().mileage(deliverVehicleMqDTO.getMileage()).build();
+                int i = deliverGateway.updateMileageAndVehicleAgeByCarId(deliverVehicleMqDTO.getCarId(), deliver);
+
+            }
+            if (deliverVehicleMqDTO.getVehicleAge() != null) {
+                Deliver deliver = Deliver.builder().mileage(deliverVehicleMqDTO.getVehicleAge()).build();
+                int i = deliverGateway.updateMileageAndVehicleAgeByCarId(deliverVehicleMqDTO.getCarId(), deliver);
+            }
+        }
 
         return Result.getInstance("").success();
     }

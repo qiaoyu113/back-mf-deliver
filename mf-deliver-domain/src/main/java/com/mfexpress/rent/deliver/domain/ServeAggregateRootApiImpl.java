@@ -150,5 +150,13 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         return i > 0 ? Result.getInstance("取消预选成功").success() : Result.getInstance("取消预选失败").fail(-1, "取消预选失败");
     }
 
+    @Override
+    @PostMapping("cancelSelectedList")
+    public Result<String> cancelSelectedList(@RequestBody List<String> serveNoList) {
+        Serve serve = Serve.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
+        serveGateway.updateServeByServeNoList(serveNoList, serve);
+        return Result.getInstance("取消预选成功").success();
+    }
+
 
 }
