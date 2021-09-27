@@ -31,16 +31,17 @@ public class ServeFastPreselectedQryExe {
         boolQueryBuilder.must(QueryBuilders.matchQuery("orderId", serveQryListCmd.getOrderId()));
         FieldSortBuilder updateTimeSort = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
         fieldSortBuilders.add(updateTimeSort);
-        ServeListVO serveListVO = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilders);
-        List<ServeVO> serveVOList = serveListVO.getServeVOList();
+        ServeListVO serveListVo1 = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilders);
+        List<ServeVO> serveVOList1 = serveListVo1.getServeVOList();
         //暂时强同步 后续处理
-        if (serveVOList != null) {
-            List<String> serveNoList = serveVOList.stream().map(ServeVO::getServeNo).collect(Collectors.toList());
+        if (serveVOList1 != null) {
+            List<String> serveNoList = serveVOList1.stream().map(ServeVO::getServeNo).collect(Collectors.toList());
             for (String serveNo : serveNoList) {
                 syncServiceI.execOne(serveNo);
             }
         }
-
+        ServeListVO serveListVO = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilders);
+        List<ServeVO> serveVOList = serveListVO.getServeVOList();
         if (serveVOList != null) {
             Map<Integer, Map<Integer, List<ServeVO>>> aggMap = serveVOList.stream().collect(Collectors.groupingBy(ServeVO::getBrandId, Collectors.groupingBy(ServeVO::getCarModelId)));
             for (Integer brandId : aggMap.keySet()) {

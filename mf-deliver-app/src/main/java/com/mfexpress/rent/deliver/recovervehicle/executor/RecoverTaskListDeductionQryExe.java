@@ -6,7 +6,6 @@ import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.recovervehicle.RecoverQryServiceI;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class RecoverTaskListDeductionQryExe implements RecoverQryServiceI {
@@ -36,14 +34,7 @@ public class RecoverTaskListDeductionQryExe implements RecoverQryServiceI {
                 .must(QueryBuilders.matchQuery("isDeduction", JudgeEnum.NO.getCode()));
         FieldSortBuilder timeSortBuilder = SortBuilders.fieldSort("recoverVehicleTime").unmappedType("integer").order(SortOrder.DESC);
         fieldSortBuilderList.add(timeSortBuilder);
-        RecoverTaskListVO recoverTaskListVO = recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
-        //暂时强同步 后续处理
-        if (recoverTaskListVO != null && recoverTaskListVO.getRecoverVehicleVOList() != null) {
-            List<String> serveNoList = recoverTaskListVO.getRecoverVehicleVOList().stream().map(RecoverVehicleVO::getServeNo).collect(Collectors.toList());
-            for (String serveNo : serveNoList) {
-                syncServiceI.execOne(serveNo);
-            }
-        }
         return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
+
     }
 }
