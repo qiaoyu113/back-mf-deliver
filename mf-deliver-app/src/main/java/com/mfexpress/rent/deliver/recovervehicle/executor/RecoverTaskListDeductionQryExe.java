@@ -37,12 +37,13 @@ public class RecoverTaskListDeductionQryExe implements RecoverQryServiceI {
         FieldSortBuilder timeSortBuilder = SortBuilders.fieldSort("recoverVehicleTime").unmappedType("integer").order(SortOrder.DESC);
         fieldSortBuilderList.add(timeSortBuilder);
         RecoverTaskListVO recoverTaskListVO = recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
+        //暂时强同步 后续处理
         if (recoverTaskListVO != null && recoverTaskListVO.getRecoverVehicleVOList() != null) {
             List<String> serveNoList = recoverTaskListVO.getRecoverVehicleVOList().stream().map(RecoverVehicleVO::getServeNo).collect(Collectors.toList());
             for (String serveNo : serveNoList) {
                 syncServiceI.execOne(serveNo);
             }
         }
-        return recoverTaskListVO;
+        return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
     }
 }

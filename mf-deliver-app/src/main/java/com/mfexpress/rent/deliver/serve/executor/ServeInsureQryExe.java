@@ -44,6 +44,6 @@ public class ServeInsureQryExe {
                 syncServiceI.execOne(serveNo);
             }
         }
-        return serveListVO;
+        return serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilderList);
     }
 }
