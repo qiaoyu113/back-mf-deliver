@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
+import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -19,6 +20,8 @@ import java.util.stream.Collectors;
 public class ServeFastPreselectedQryExe {
     @Resource
     private ServeEsDataQryExe serveEsDataQryExe;
+    @Resource
+    private SyncServiceI syncServiceI;
 
     public ServeFastPreselectedListVO execute(ServeQryListCmd serveQryListCmd) {
         ServeFastPreselectedListVO serveFastPreselectedListVO = new ServeFastPreselectedListVO();
@@ -30,6 +33,14 @@ public class ServeFastPreselectedQryExe {
         fieldSortBuilders.add(updateTimeSort);
         ServeListVO serveListVO = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilders);
         List<ServeVO> serveVOList = serveListVO.getServeVOList();
+        //暂时强同步 后续处理
+        if (serveVOList != null) {
+            List<String> serveNoList = serveVOList.stream().map(ServeVO::getServeNo).collect(Collectors.toList());
+            for (String serveNo : serveNoList) {
+                syncServiceI.execOne(serveNo);
+            }
+        }
+
         if (serveVOList != null) {
             Map<Integer, Map<Integer, List<ServeVO>>> aggMap = serveVOList.stream().collect(Collectors.groupingBy(ServeVO::getBrandId, Collectors.groupingBy(ServeVO::getCarModelId)));
             for (Integer brandId : aggMap.keySet()) {
