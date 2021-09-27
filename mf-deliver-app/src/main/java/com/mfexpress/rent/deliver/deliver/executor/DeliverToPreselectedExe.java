@@ -65,6 +65,7 @@ public class DeliverToPreselectedExe {
             deliverDTO.setMileage(deliverVehicleSelectCmd.getMileage());
             deliverDTO.setVehicleAge(deliverVehicleSelectCmd.getVehicleAge());
             deliverDTO.setCustomerId(deliverPreselectedCmd.getCustomerId());
+            deliverDTO.setCarServiceId(deliverPreselectedCmd.getCarServiceId());
             deliverList.add(deliverDTO);
             carIdList.add(deliverVehicleSelectCmd.getId());
 

@@ -26,4 +26,6 @@ public class RecoverVechicleCmd {
     private Integer wareHouseId;
     @ApiModelProperty(value = "合照")
     private String imgUrl;
+
+    private Integer carServiceId;
 }

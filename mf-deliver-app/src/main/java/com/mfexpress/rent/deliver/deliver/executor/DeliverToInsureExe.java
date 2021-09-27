@@ -4,6 +4,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.DateUtils;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverInsureCmd;
 import com.mfexpress.rent.vehicle.api.VehicleInsuranceAggregateRootApi;
 import com.mfexpress.rent.vehicle.data.dto.vehicleinsurance.VehicleInsuranceSaveListCmd;
@@ -36,8 +37,10 @@ public class DeliverToInsureExe {
         }
 
         Result<String> deliverResult = deliverAggregateRootApi.toInsure(serveNoList);
-
-
+        DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();
+        deliverCarServiceDTO.setServeNoList(serveNoList);
+        deliverCarServiceDTO.setCarServiceId(deliverInsureCmd.getCarServiceId());
+        deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
         return deliverResult.getData();
 
     }

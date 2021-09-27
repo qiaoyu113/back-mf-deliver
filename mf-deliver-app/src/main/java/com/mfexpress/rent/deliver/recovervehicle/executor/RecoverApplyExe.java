@@ -5,6 +5,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
@@ -49,6 +50,10 @@ public class RecoverApplyExe {
         if (deliverResult.getCode() != 0) {
             return deliverResult.getMsg();
         }
+        DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();
+        deliverCarServiceDTO.setServeNoList(serveNoList);
+        deliverCarServiceDTO.setCarServiceId(recoverApplyListCmd.getCarServiceId());
+        deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
         //生成收车单
         Result<String> recoverResult = recoverVehicleAggregateRootApi.addRecoverVehicle(recoverVehicleDTOList);
         return recoverResult.getData();

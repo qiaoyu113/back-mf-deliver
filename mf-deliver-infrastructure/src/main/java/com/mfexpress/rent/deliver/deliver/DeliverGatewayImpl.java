@@ -61,26 +61,25 @@ public class DeliverGatewayImpl implements DeliverGateway {
     }
 
     @Override
-    public int updateInsuranceStatusByCarId(Integer carId, Integer status1, Integer status2) {
+    public int updateInsuranceStatusByCarId(List<Integer> carId, Integer status1, Integer status2) {
         Example example = new Example(Deliver.class);
         //发车中交付单
-        example.createCriteria().andEqualTo("carId", carId).andEqualTo("deliverStatus", DeliverEnum.IS_DELIVER.getCode());
+        example.createCriteria().andIn("carId", carId).andEqualTo("deliverStatus", DeliverEnum.IS_DELIVER.getCode());
         Deliver deliver = Deliver.builder().isInsurance(status1).build();
         int i = deliverMapper.updateByExampleSelective(deliver, example);
         Example example1 = new Example(Deliver.class);
         //收车中交付单
-        example1.createCriteria().andEqualTo("carId", carId).andNotEqualTo("deliverStatus", DeliverEnum.IS_DELIVER.getCode());
+        example1.createCriteria().andIn("carId", carId).andNotEqualTo("deliverStatus", DeliverEnum.IS_DELIVER.getCode());
         Deliver deliver1 = Deliver.builder().isInsurance(status2).build();
         int j = deliverMapper.updateByExampleSelective(deliver1, example1);
         return i + j;
     }
 
     @Override
-    public int updateMileageByCarId(Integer carId, Double mileage) {
+    public int updateMileageAndVehicleAgeByCarId(Integer carId, Deliver deliver) {
 
         Example example = new Example(Deliver.class);
         example.createCriteria().andEqualTo("carId", carId);
-        Deliver deliver = Deliver.builder().mileage(mileage).build();
         return deliverMapper.updateByExampleSelective(deliver, example);
     }
 
@@ -89,6 +88,13 @@ public class DeliverGatewayImpl implements DeliverGateway {
         //查询已经处理违章的交付单
         Example example = new Example(Deliver.class);
         example.createCriteria().andIn("serveNo", serveNoList).andEqualTo("isDeduction", JudgeEnum.YES.getCode());
+        return deliverMapper.selectByExample(example);
+    }
+
+    @Override
+    public List<Deliver> getDeliverByServeNoList(List<String> serveNoList) {
+        Example example = new Example(Deliver.class);
+        example.createCriteria().andIn("serveNo", serveNoList).andEqualTo("status", ValidStatusEnum.VALID.getCode());
         return deliverMapper.selectByExample(example);
     }
 

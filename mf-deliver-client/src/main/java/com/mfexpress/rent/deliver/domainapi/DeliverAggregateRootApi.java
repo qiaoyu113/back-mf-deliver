@@ -3,7 +3,9 @@ package com.mfexpress.rent.deliver.domainapi;
 
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverBackInsureDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleMqDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -48,10 +50,17 @@ public interface DeliverAggregateRootApi {
     @PostMapping("/cancelSelected")
     Result<String> cancelSelected(@RequestParam("carId") Integer carId);
 
-    @PostMapping("/syncInsureStatus")
-    Result<String> syncInsureStatus(@RequestParam("carId") Integer carId, @RequestParam("insureStatus") Integer insureStatus);
+    @PostMapping("/cancelSelectedByServeNoList")
+    Result<List<Integer>> cancelSelectedByServeNoList(@RequestBody List<String> serveNoList);
 
-    @PostMapping("/syncVehicleMileage")
-    Result<String> syncVehicleMileage(@RequestParam("carId") Integer carId, @RequestParam("mileage") Double mileage);
+
+    @PostMapping("/syncInsureStatus")
+    Result<String> syncInsureStatus(@RequestBody List<DeliverVehicleMqDTO> deliverVehicleMqDTOList);
+
+    @PostMapping("/syncVehicleAgeAndMileage")
+    Result<String> syncVehicleAgeAndMileage(@RequestBody List<DeliverVehicleMqDTO> deliverVehicleMqDTOList);
+
+    @PostMapping("/saveCarServiceId")
+    Result<String>saveCarServiceId(@RequestBody DeliverCarServiceDTO deliverCarServiceDTO);
 
 }

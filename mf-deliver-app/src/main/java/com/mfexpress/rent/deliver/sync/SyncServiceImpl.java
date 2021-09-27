@@ -123,15 +123,15 @@ public class SyncServiceImpl implements SyncServiceI {
             List<OrderCarModelVO> carModelList = new LinkedList<>();
             List<ProductDTO> productList = order.getProductList();
             List<Integer> modelsIdList = productList.stream().map(ProductDTO::getModelsId).collect(Collectors.toList());
-//            Result<Map<Integer, String>> vehicleBrandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeListById(modelsIdList);
-//            Map<Integer, String> brandTypeMap = vehicleBrandTypeResult.getData();
+            Result<Map<Integer, String>> vehicleBrandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeListById(modelsIdList);
+            Map<Integer, String> brandTypeMap = vehicleBrandTypeResult.getData();
             for (ProductDTO productDTO : productList) {
                 OrderCarModelVO orderCarModelVO = new OrderCarModelVO();
                 orderCarModelVO.setBrandId(productDTO.getBrandId());
                 orderCarModelVO.setCarModelId(productDTO.getModelsId());
-                Result<String> brandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeById(productDTO.getModelsId());
-                orderCarModelVO.setBrandModelDisplay(brandTypeResult.getData());
-                //orderCarModelVO.setBrandModelDisplay(brandTypeMap.get(productDTO.getModelsId()));
+                //Result<String> brandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeById(productDTO.getModelsId());
+                //orderCarModelVO.setBrandModelDisplay(brandTypeResult.getData());
+                orderCarModelVO.setBrandModelDisplay(brandTypeMap.get(productDTO.getModelsId()));
                 orderCarModelVO.setNum(productDTO.getProductNum());
                 carModelList.add(orderCarModelVO);
             }
@@ -154,6 +154,7 @@ public class SyncServiceImpl implements SyncServiceI {
             serveEs.setFrameNum(deliverDTO.getFrameNum());
             serveEs.setMileage(deliverDTO.getMileage());
             serveEs.setVehicleAge(deliverDTO.getVehicleAge());
+            serveEs.setCarServiceId(deliverDTO.getCarServiceId());
             serveEs.setUpdateTime(deliverDTO.getUpdateTime());
 
             //排序规则

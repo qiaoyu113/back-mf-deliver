@@ -21,5 +21,6 @@ public class RecoverDeductionCmd {
     private BigDecimal deductionAmount;
     @ApiModelProperty(value = "代办金额")
     private BigDecimal agencyAmount;
+    private Integer carServiceId;
 
 }

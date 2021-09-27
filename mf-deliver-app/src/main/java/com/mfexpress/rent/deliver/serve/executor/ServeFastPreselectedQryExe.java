@@ -39,6 +39,7 @@ public class ServeFastPreselectedQryExe {
                     ServeFastPreselectedVO serveFastPreselectedVO = new ServeFastPreselectedVO();
                     serveFastPreselectedVO.setCarModelId(carModeId);
                     serveFastPreselectedVO.setBrandId(brandId);
+                    serveFastPreselectedVO.setCustomerId(carModelMap.get(carModeId).get(0).getCustomerId());
                     serveFastPreselectedVO.setServeVOList(carModelMap.get(carModeId));
                     serveFastPreselectedVO.setNum(carModelMap.get(carModeId).size());
                     serveFastPreselectedVO.setBrandModelDisplay(carModelMap.get(carModeId).get(0).getBrandModelDisplay());
