@@ -27,7 +27,9 @@ public class RecoverTaskListAllQryExe implements RecoverQryServiceI {
         boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverStatus").gte(DeliverEnum.IS_RECOVER.getCode()));
         FieldSortBuilder sortSortBuilder = SortBuilders.fieldSort("sort").order(SortOrder.ASC);
         FieldSortBuilder timeSortBuilder = SortBuilders.fieldSort("expectRecoverTime").unmappedType("integer").order(SortOrder.ASC);
-        List<FieldSortBuilder> fieldSortBuilderList = Arrays.asList(sortSortBuilder, timeSortBuilder);
+        FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
+
+        List<FieldSortBuilder> fieldSortBuilderList = Arrays.asList(sortSortBuilder, timeSortBuilder, updateTimeSortBuilder);
         return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
     }
 }

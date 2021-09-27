@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 
 import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
@@ -22,6 +23,8 @@ public class RecoverDeductionExe {
 
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
+    @Resource
+    private SyncServiceI syncServiceI;
 
 
     public String execute(RecoverDeductionCmd recoverDeductionCmd) {
@@ -42,6 +45,7 @@ public class RecoverDeductionExe {
         if (result.getData().equals(deliverDTO.getServeNo())) {
             return serveAggregateRootApi.completed(recoverDeductionCmd.getServeNo()).getData();
         }
+        syncServiceI.execOne(recoverDeductionCmd.getServeNo());
         return "";
     }
 }

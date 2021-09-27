@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.deliver.executor;
 
 
 import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
@@ -28,6 +29,8 @@ public class DeliverToPreselectedExe {
     private ServeAggregateRootApi serveAggregateRootApi;
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
+    @Resource
+    private SyncServiceI syncServiceI;
 
 
     public String execute(DeliverPreselectedCmd deliverPreselectedCmd) {
@@ -86,6 +89,10 @@ public class DeliverToPreselectedExe {
         Result<String> deliverResult = deliverAggregateRootApi.addDeliver(deliverList);
         if (deliverResult.getCode() != 0) {
             return deliverResult.getMsg();
+        }
+        //强同步es
+        for (String serveNo : serveNoList) {
+            syncServiceI.execOne(serveNo);
         }
 
         return deliverResult.getData();

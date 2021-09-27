@@ -31,15 +31,6 @@ public class ServeFastPreselectedQryExe {
         boolQueryBuilder.must(QueryBuilders.matchQuery("orderId", serveQryListCmd.getOrderId()));
         FieldSortBuilder updateTimeSort = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
         fieldSortBuilders.add(updateTimeSort);
-        ServeListVO serveListVo1 = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilders);
-        List<ServeVO> serveVOList1 = serveListVo1.getServeVOList();
-        //暂时强同步 后续处理
-        if (serveVOList1 != null) {
-            List<String> serveNoList = serveVOList1.stream().map(ServeVO::getServeNo).collect(Collectors.toList());
-            for (String serveNo : serveNoList) {
-                syncServiceI.execOne(serveNo);
-            }
-        }
         ServeListVO serveListVO = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilders);
         List<ServeVO> serveVOList = serveListVO.getServeVOList();
         if (serveVOList != null) {

@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
@@ -21,6 +22,9 @@ public class RecoverCancelExe {
     @Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
 
+    @Resource
+    private SyncServiceI syncServiceI;
+
 
     public String execute(RecoverCancelCmd recoverCancelCmd) {
 
@@ -37,6 +41,8 @@ public class RecoverCancelExe {
         RecoverVehicleDTO recoverVehicleDTO = new RecoverVehicleDTO();
         BeanUtils.copyProperties(recoverCancelCmd, recoverVehicleDTO);
         Result<String> recoverResult = recoverVehicleAggregateRootApi.cancelRecover(recoverVehicleDTO);
+
+        syncServiceI.execOne(recoverCancelCmd.getServeNo());
         return "";
     }
 }
