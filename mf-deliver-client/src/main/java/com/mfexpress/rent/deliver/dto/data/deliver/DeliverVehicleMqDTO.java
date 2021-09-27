@@ -15,4 +15,7 @@ public class DeliverVehicleMqDTO {
     private Double mileage;
 
     private Double vehicleAge;
+
+    private String carNum;
+
 }

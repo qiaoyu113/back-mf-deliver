@@ -3,6 +3,7 @@ package com.mfexpress.rent.deliver.domainapi;
 
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverBackInsureDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleMqDTO;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -58,5 +59,8 @@ public interface DeliverAggregateRootApi {
 
     @PostMapping("/syncVehicleAgeAndMileage")
     Result<String> syncVehicleAgeAndMileage(@RequestBody List<DeliverVehicleMqDTO> deliverVehicleMqDTOList);
+
+    @PostMapping("/saveCarServiceId")
+    Result<String>saveCarServiceId(@RequestBody DeliverCarServiceDTO deliverCarServiceDTO);
 
 }

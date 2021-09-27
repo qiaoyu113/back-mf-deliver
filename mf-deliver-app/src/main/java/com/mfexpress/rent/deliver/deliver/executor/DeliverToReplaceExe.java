@@ -69,6 +69,7 @@ public class DeliverToReplaceExe {
         deliverDTO.setFrameNum(deliverVehicleSelectCmd.get(0).getVin());
         deliverDTO.setMileage(deliverVehicleSelectCmd.get(0).getMileage());
         deliverDTO.setVehicleAge(deliverVehicleSelectCmd.get(0).getVehicleAge());
+        deliverDTO.setCarServiceId(deliverReplaceCmd.getCarServiceId());
         Result<String> result = deliverAggregateRootApi.toReplace(deliverDTO);
 
         return result.getData();

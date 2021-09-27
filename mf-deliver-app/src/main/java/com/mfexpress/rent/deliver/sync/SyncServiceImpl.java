@@ -154,6 +154,7 @@ public class SyncServiceImpl implements SyncServiceI {
             serveEs.setFrameNum(deliverDTO.getFrameNum());
             serveEs.setMileage(deliverDTO.getMileage());
             serveEs.setVehicleAge(deliverDTO.getVehicleAge());
+            serveEs.setCarServiceId(deliverDTO.getCarServiceId());
             serveEs.setUpdateTime(deliverDTO.getUpdateTime());
 
             //排序规则

@@ -20,5 +20,7 @@ public class RecoverApplyListCmd {
     @ApiModelProperty("收车信息")
     private List<RecoverApplyCmd> recoverApplyCmdList;
 
+    private Integer carServiceId;
+
 
 }

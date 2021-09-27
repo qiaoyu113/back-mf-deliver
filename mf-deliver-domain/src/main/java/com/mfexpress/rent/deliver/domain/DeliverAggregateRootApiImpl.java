@@ -9,6 +9,7 @@ import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverBackInsureDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleMqDTO;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
@@ -214,8 +215,20 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
                 Deliver deliver = Deliver.builder().mileage(deliverVehicleMqDTO.getVehicleAge()).build();
                 int i = deliverGateway.updateMileageAndVehicleAgeByCarId(deliverVehicleMqDTO.getCarId(), deliver);
             }
+            if (deliverVehicleMqDTO.getCarNum() != null) {
+                Deliver deliver = Deliver.builder().carNum(deliverVehicleMqDTO.getCarNum()).build();
+                int i = deliverGateway.updateMileageAndVehicleAgeByCarId(deliverVehicleMqDTO.getCarId(), deliver);
+            }
         }
 
+        return Result.getInstance("").success();
+    }
+
+    @Override
+    @PostMapping("/saveCarServiceId")
+    public Result<String> saveCarServiceId(@RequestBody DeliverCarServiceDTO deliverCarServiceDTO) {
+        Deliver deliver = Deliver.builder().carServiceId(deliverCarServiceDTO.getCarServiceId()).build();
+        deliverGateway.updateDeliverByServeNoList(deliverCarServiceDTO.getServeNoList(), deliver);
         return Result.getInstance("").success();
     }
 }

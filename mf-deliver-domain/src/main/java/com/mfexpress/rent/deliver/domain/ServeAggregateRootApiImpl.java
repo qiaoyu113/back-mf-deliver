@@ -7,10 +7,7 @@ import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeAddDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
@@ -65,6 +62,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setServeId(bizId);
                 //创建服务单订单传orgId
                 serve.setOrgId(serveAddDTO.getOrgId());
+                serve.setSaleId(serveAddDTO.getSaleId());
                 serve.setServeNo(serveNo);
                 serve.setCreateId(serveAddDTO.getCreateId());
                 serve.setOrderId(serveAddDTO.getOrderId());
@@ -151,12 +149,14 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     }
 
     @Override
-    @PostMapping("cancelSelectedList")
+    @PostMapping("/cancelSelectedList")
     public Result<String> cancelSelectedList(@RequestBody List<String> serveNoList) {
         Serve serve = Serve.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
         serveGateway.updateServeByServeNoList(serveNoList, serve);
         return Result.getInstance("取消预选成功").success();
     }
+
+
 
 
 }

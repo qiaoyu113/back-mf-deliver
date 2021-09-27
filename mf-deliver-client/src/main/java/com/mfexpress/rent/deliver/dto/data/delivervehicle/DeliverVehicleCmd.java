@@ -28,4 +28,6 @@ public class DeliverVehicleCmd {
     @ApiModelProperty(value = "客户id")
     private Integer customerId;
 
+    private Integer carServiceId;
+
 }

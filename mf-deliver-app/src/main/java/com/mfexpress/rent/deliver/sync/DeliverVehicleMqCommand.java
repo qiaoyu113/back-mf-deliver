@@ -44,7 +44,7 @@ public class DeliverVehicleMqCommand extends BaseCommand {
             Result<String> syncInsureResult = deliverAggregateRootApi.syncInsureStatus(deliverVehicleMqDTOList);
         }
 
-        if (deliverVehicleMqDTOList.get(0).getMileage() != null || deliverVehicleMqDTOList.get(0).getVehicleAge() != null) {
+        if (deliverVehicleMqDTOList.get(0).getMileage() != null || deliverVehicleMqDTOList.get(0).getVehicleAge() != null || deliverVehicleMqDTOList.get(0).getCarNum() != null) {
             Result<String> syncMileageResult = deliverAggregateRootApi.syncVehicleAgeAndMileage(deliverVehicleMqDTOList);
         }
 

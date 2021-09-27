@@ -38,19 +38,29 @@ public class RecoverVehicleController {
 
     @PostMapping("/applyRecover")
     @ApiOperation("申请收车提交")
-    public Result<String> applyRecover(@RequestBody RecoverApplyListCmd recoverApplyListCmd) {
+    public Result<String> applyRecover(@RequestBody RecoverApplyListCmd recoverApplyListCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         // 收车单创建 对应交付单状态更新为收车中
-
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            //提示失败结果
+            return Result.getInstance((String) null).fail(-1, "没有权限");
+        }
+        recoverApplyListCmd.setCarServiceId(tokenInfo.getId());
         return Result.getInstance(recoverVehicleServiceI.applyRecover(recoverApplyListCmd)).success();
     }
 
 
     @PostMapping("/cancelRecover")
     @ApiOperation("取消收车")
-    public Result<String> cancelRecover(@RequestBody RecoverCancelCmd recoverCancelCmd) {
-
+    public Result<String> cancelRecover(@RequestBody RecoverCancelCmd recoverCancelCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        // 收车单创建 对应交付单状态更新为收车中
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            //提示失败结果
+            return Result.getInstance((String) null).fail(-1, "没有权限");
+        }
         //交付单状态修改为已发车 将收车单设为失效
-
+        recoverCancelCmd.setCarServiceId(tokenInfo.getId());
         return Result.getInstance(recoverVehicleServiceI.cancelRecover(recoverCancelCmd)).success();
 
     }
@@ -82,7 +92,14 @@ public class RecoverVehicleController {
 
     @PostMapping("/toCheck")
     @ApiOperation(value = "收车验车")
-    public Result<String> toCheck(@RequestBody RecoverVechicleCmd recoverVechicleCmd) {
+    public Result<String> toCheck(@RequestBody RecoverVechicleCmd recoverVechicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            //提示失败结果
+            return Result.getInstance((String) null).fail(-1, "没有权限");
+        }
+        recoverVechicleCmd.setCarServiceId(tokenInfo.getId());
         //交付单更新待验车状态 完善收车单还车人合照信息
         return Result.getInstance(recoverVehicleServiceI.toCheck(recoverVechicleCmd)).success();
 
@@ -90,17 +107,27 @@ public class RecoverVehicleController {
 
     @PostMapping("/toBackInsure")
     @ApiOperation(value = "收车退保")
-    public Result<String> toBackInsure(@RequestBody RecoverBackInsureCmd recoverBackInsureCmd) {
-
+    public Result<String> toBackInsure(@RequestBody RecoverBackInsureCmd recoverBackInsureCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            //提示失败结果
+            return Result.getInstance((String) null).fail(-1, "没有权限");
+        }
         //交付单更新保险状态  更新车辆保险状态
-
+        recoverBackInsureCmd.setCarServiceId(tokenInfo.getId());
         return Result.getInstance(recoverVehicleServiceI.toBackInsure(recoverBackInsureCmd)).success();
     }
 
     @PostMapping("/toDeduction")
     @ApiOperation(value = "收车处理违章")
-    public Result<String> toDeduction(@RequestBody RecoverDeductionCmd recoverDeductionCmd) {
+    public Result<String> toDeduction(@RequestBody RecoverDeductionCmd recoverDeductionCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
 
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            //提示失败结果
+            return Result.getInstance((String) null).fail(-1, "没有权限");
+        }
+        recoverDeductionCmd.setCarServiceId(tokenInfo.getId());
         // 服务单 交付单状态更新已收车  交付单处理违章状态更新  车辆租赁状态更新未租赁
 
         return Result.getInstance(recoverVehicleServiceI.toDeduction(recoverDeductionCmd));
