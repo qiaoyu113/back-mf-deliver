@@ -91,7 +91,7 @@ public class SyncServiceImpl implements SyncServiceI {
     }
 
     @Override
-    public void execOne(String serveNo, String table, String type) {
+    public void execOne(String serveNo) {
         ServeES serveEs = new ServeES();
         Result<ServeDTO> serveResult = serveAggregateRootApi.getServeDtoByServeNo(serveNo);
         if (serveResult.getData() == null) {
