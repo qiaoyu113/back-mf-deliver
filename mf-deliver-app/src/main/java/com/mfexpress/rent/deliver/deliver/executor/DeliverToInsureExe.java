@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.deliver.executor;
 
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.DateUtils;
+import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
@@ -20,6 +21,8 @@ public class DeliverToInsureExe {
     private DeliverAggregateRootApi deliverAggregateRootApi;
     @Resource
     private VehicleInsuranceAggregateRootApi vehicleInsuranceAggregateRootApi;
+    @Resource
+    private SyncServiceI syncServiceI;
 
 
     public String execute(DeliverInsureCmd deliverInsureCmd) {
@@ -41,6 +44,11 @@ public class DeliverToInsureExe {
         deliverCarServiceDTO.setServeNoList(serveNoList);
         deliverCarServiceDTO.setCarServiceId(deliverInsureCmd.getCarServiceId());
         deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
+
+        for (String serveNo : serveNoList) {
+            syncServiceI.execOne(serveNo);
+        }
+
         return deliverResult.getData();
 
     }

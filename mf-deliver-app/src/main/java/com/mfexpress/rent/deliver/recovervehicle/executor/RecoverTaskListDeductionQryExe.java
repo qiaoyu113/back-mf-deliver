@@ -33,7 +33,9 @@ public class RecoverTaskListDeductionQryExe implements RecoverQryServiceI {
                 .must(QueryBuilders.matchQuery("isCheck", JudgeEnum.YES.getCode()))
                 .must(QueryBuilders.matchQuery("isDeduction", JudgeEnum.NO.getCode()));
         FieldSortBuilder timeSortBuilder = SortBuilders.fieldSort("recoverVehicleTime").unmappedType("integer").order(SortOrder.DESC);
+        FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
         fieldSortBuilderList.add(timeSortBuilder);
+        fieldSortBuilderList.add(updateTimeSortBuilder);
         return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
 
     }

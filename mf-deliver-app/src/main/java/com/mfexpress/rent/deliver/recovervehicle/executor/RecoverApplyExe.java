@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 
 import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
@@ -23,6 +24,8 @@ public class RecoverApplyExe {
     private DeliverAggregateRootApi deliverAggregateRootApi;
     @Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
+    @Resource
+    private SyncServiceI syncServiceI;
 
 
     public String execute(RecoverApplyListCmd recoverApplyListCmd) {
@@ -56,6 +59,10 @@ public class RecoverApplyExe {
         deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
         //生成收车单
         Result<String> recoverResult = recoverVehicleAggregateRootApi.addRecoverVehicle(recoverVehicleDTOList);
+
+        for (String seveNo : serveNoList) {
+            syncServiceI.execOne(seveNo);
+        }
         return recoverResult.getData();
 
     }
