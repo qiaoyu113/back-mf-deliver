@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
+import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -20,6 +21,8 @@ public class ServePreselectedQryExe {
 
     @Resource
     private ServeEsDataQryExe serveEsDataQryExe;
+    @Resource
+    private SyncServiceI syncServiceI;
 
     public ServePreselectedListVO execute(ServeQryListCmd serveQryListCmd) {
         //待预选数据   暂时手动处理聚合车型
@@ -31,8 +34,15 @@ public class ServePreselectedQryExe {
         FieldSortBuilder updateTimeSortBuilders = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
         List<FieldSortBuilder> fieldSortBuilderList = new LinkedList<>();
         fieldSortBuilderList.add(updateTimeSortBuilders);
+        ServeListVO serveListVO1 = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilderList);
+        // 暂时强同步 后续处理
+        if (serveListVO1 != null && serveListVO1.getServeVOList() != null) {
+            List<String> serveNoList = serveListVO1.getServeVOList().stream().map(ServeVO::getServeNo).collect(Collectors.toList());
+            for (String serveNo : serveNoList) {
+                syncServiceI.execOne(serveNo);
+            }
+        }
         ServeListVO serveListVO = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilderList);
-
         List<ServeVO> serveVOList = serveListVO.getServeVOList();
         //车型聚合数据
         if (serveVOList != null) {

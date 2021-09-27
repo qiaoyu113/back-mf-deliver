@@ -1,11 +1,13 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
 
+import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeListVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeQryListCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeVO;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -16,11 +18,14 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class ServeInsureQryExe {
     @Resource
     private ServeEsDataQryExe serveEsDataQryExe;
+    @Resource
+    private SyncServiceI syncServiceI;
 
     public ServeListVO execute(ServeQryListCmd serveQryListCmd) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -31,6 +36,14 @@ public class ServeInsureQryExe {
         List<FieldSortBuilder> fieldSortBuilderList = new LinkedList<>();
         FieldSortBuilder updateTimeSortBuilders = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
         fieldSortBuilderList.add(updateTimeSortBuilders);
+
+        ServeListVO serveListVO = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilderList);
+        if (serveListVO != null && serveListVO.getServeVOList() != null) {
+            List<String> serveNoList = serveListVO.getServeVOList().stream().map(ServeVO::getServeNo).collect(Collectors.toList());
+            for (String serveNo : serveNoList) {
+                syncServiceI.execOne(serveNo);
+            }
+        }
         return serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilderList);
     }
 }
