@@ -50,13 +50,13 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         if (vehicleDTOList == null) {
             return Result.getInstance("").fail(-1, "车辆信息为空");
         }
+        //订单号放入redis
+        redisTools.set(serveAddDTO.getOrderId().toString(), serveAddDTO.getOrderId(), 10000);
         for (ServeVehicleDTO serveVehicleDTO : vehicleDTOList) {
             Integer num = serveVehicleDTO.getNum();
             for (int i = 0; i < num; i++) {
                 Serve serve = new Serve();
                 long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_SERVE_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
-                //订单号放入redis
-                redisTools.set(serveAddDTO.getOrderId().toString(), serveAddDTO.getOrderId(), 10000);
                 String serveNo = DeliverUtils.getNo(Constants.REDIS_SERVE_KEY, incr);
                 Long bizId = redisTools.getBizId(Constants.REDIS_BIZ_ID_SERVER);
                 serve.setServeId(bizId);
@@ -155,8 +155,6 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         serveGateway.updateServeByServeNoList(serveNoList, serve);
         return Result.getInstance("取消预选成功").success();
     }
-
-
 
 
 }
