@@ -13,6 +13,9 @@ public class ServeFastPreselectedVO {
     @ApiModelProperty(value = "品牌id")
     private Integer brandId;
 
+    @ApiModelProperty(value = "客户id")
+    private Integer customerId;
+
     @ApiModelProperty(value = "品牌车型描述")
     private String brandModelDisplay;
     @ApiModelProperty(value = "数量")

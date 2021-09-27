@@ -8,4 +8,6 @@ public class DeliverCheckCmd {
 
     @ApiModelProperty(value = "服务单编号")
     private String serveNo;
+
+    private Integer carServiceId;
 }

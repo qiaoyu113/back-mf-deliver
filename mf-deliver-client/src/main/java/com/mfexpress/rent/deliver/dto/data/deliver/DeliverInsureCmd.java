@@ -23,5 +23,7 @@ public class DeliverInsureCmd {
     @JsonFormat(timezone = "GMT+8")
     private Date endInsureDate;
 
+    private Integer carServiceId;
+
 
 }

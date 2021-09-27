@@ -25,4 +25,6 @@ public class ServeAddDTO {
 
     @ApiModelProperty(value = "组织id")
     private Integer orgId;
+    @ApiModelProperty(value = "销售id")
+    private Integer saleId;
 }

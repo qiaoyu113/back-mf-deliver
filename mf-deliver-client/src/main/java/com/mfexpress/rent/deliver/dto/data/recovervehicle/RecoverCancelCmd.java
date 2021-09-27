@@ -17,4 +17,6 @@ public class RecoverCancelCmd {
 
     @ApiModelProperty(value = "取消收车原因id")
     private String cancelRemark;
+
+    private Integer carServiceId;
 }

@@ -8,12 +8,14 @@ import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverBackInsureDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.VehicleInsuranceAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidInsuranceStatusEnum;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
+import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import com.mfexpress.rent.vehicle.data.dto.vehicleinsurance.VehicleInsuranceSaveListCmd;
 import org.springframework.stereotype.Component;
@@ -60,7 +62,8 @@ public class RecoverBackInsureExe {
         VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
         vehicleSaveCmd.setId(recoverBackInsureCmd.getCarIdList());
         vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.UNCHECKED.getCode());
-        vehicleSaveCmd.setStockStatus(recoverVehicleDTOList.get(0).getWareHouseId());
+        vehicleSaveCmd.setStockStatus(ValidStockStatusEnum.IN.getCode());
+        vehicleSaveCmd.setWarehouseId(recoverVehicleDTOList.get(0).getWareHouseId());
 
 
         vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
@@ -72,6 +75,10 @@ public class RecoverBackInsureExe {
             vehicleInsuranceSaveListCmd.setEndTime(DateUtils.format(recoverBackInsureCmd.getInsuranceTime(), "yyyy-MM-dd"));
             vehicleInsuranceAggregateRootApi.saveVehicleInsuranceById(vehicleInsuranceSaveListCmd);
         }
+        DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();
+        deliverCarServiceDTO.setServeNoList(recoverBackInsureCmd.getServeNoList());
+        deliverCarServiceDTO.setCarServiceId(recoverBackInsureCmd.getCarServiceId());
+        deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
         return "";
 
     }

@@ -18,4 +18,6 @@ public class DeliverPreselectedCmd {
     @ApiModelProperty(value = "预选车辆列表")
     private List<DeliverVehicleSelectCmd> deliverVehicleSelectCmdList;
 
+    private Integer carServiceId;
+
 }

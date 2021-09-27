@@ -27,4 +27,6 @@ public class RecoverBackInsureCmd {
 
     @ApiModelProperty(value = "暂不退保原因,默认传0")
     private Integer insuranceRemark;
+
+    private Integer carServiceId;
 }

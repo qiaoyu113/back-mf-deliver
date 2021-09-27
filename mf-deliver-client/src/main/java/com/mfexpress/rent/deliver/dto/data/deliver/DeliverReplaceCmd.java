@@ -14,5 +14,7 @@ public class DeliverReplaceCmd {
     @ApiModelProperty(value = "更换车辆信息")
     private List<DeliverVehicleSelectCmd> deliverVehicleSelectCmd;
 
+    private Integer carServiceId;
+
 
 }

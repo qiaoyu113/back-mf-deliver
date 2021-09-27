@@ -45,4 +45,9 @@ public interface ServeAggregateRootApi {
     @PostMapping("/cancelSelected")
     Result<String> cancelSelected(@RequestParam("serveNo") String serveNo);
 
+    @PostMapping("/cancelSelectedList")
+    Result<String> cancelSelectedList(@RequestBody List<String> serveNoList);
+
+
+
 }

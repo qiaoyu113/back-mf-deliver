@@ -12,6 +12,7 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleMqDTO;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @Component
 public class DeliverVehicleMqCommand extends BaseCommand {
@@ -27,23 +28,26 @@ public class DeliverVehicleMqCommand extends BaseCommand {
     @Override
     public void execute(String body) {
 
-        DeliverVehicleMqDTO deliverVehicleMqDTO = JSON.parseObject(body, DeliverVehicleMqDTO.class);
 
-
+        List<DeliverVehicleMqDTO> deliverVehicleMqDTOList = JSON.parseArray(body, DeliverVehicleMqDTO.class);
+        if (deliverVehicleMqDTOList == null || deliverVehicleMqDTOList.isEmpty()) {
+            return;
+        }
         //取消预选
-        if (deliverVehicleMqDTO.getSelectStatus() != null && deliverVehicleMqDTO.getSelectStatus().equals(JudgeEnum.YES.getCode())) {
-            Result<String> deliverResult = deliverAggregateRootApi.cancelSelected(deliverVehicleMqDTO.getCarId());
+        if (deliverVehicleMqDTOList.get(0).getSelectStatus() != null && deliverVehicleMqDTOList.get(0).getSelectStatus().equals(JudgeEnum.YES.getCode())) {
+            Result<String> deliverResult = deliverAggregateRootApi.cancelSelected(deliverVehicleMqDTOList.get(0).getCarId());
             if (deliverResult.getCode() == 0) {
                 Result<String> serveResult = serveAggregateRootApi.cancelSelected(deliverResult.getData());
             }
         }
-        if (deliverVehicleMqDTO.getInsuranceStatus() != null) {
-            Result<String> syncInsureResult = deliverAggregateRootApi.syncInsureStatus(deliverVehicleMqDTO.getCarId(), deliverVehicleMqDTO.getInsuranceStatus());
+        if (deliverVehicleMqDTOList.get(0).getInsuranceStatus() != null) {
+            Result<String> syncInsureResult = deliverAggregateRootApi.syncInsureStatus(deliverVehicleMqDTOList);
         }
 
-        if (deliverVehicleMqDTO.getMileage() != null) {
-            Result<String> syncMileageResult = deliverAggregateRootApi.syncVehicleMileage(deliverVehicleMqDTO.getCarId(), deliverVehicleMqDTO.getMileage());
+        if (deliverVehicleMqDTOList.get(0).getMileage() != null || deliverVehicleMqDTOList.get(0).getVehicleAge() != null || deliverVehicleMqDTOList.get(0).getCarNum() != null) {
+            Result<String> syncMileageResult = deliverAggregateRootApi.syncVehicleAgeAndMileage(deliverVehicleMqDTOList);
         }
+
 
     }
 }

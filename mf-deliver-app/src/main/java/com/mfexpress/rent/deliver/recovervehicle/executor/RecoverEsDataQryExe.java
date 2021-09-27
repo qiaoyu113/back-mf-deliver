@@ -47,7 +47,7 @@ public class RecoverEsDataQryExe {
         }
 
         if (StringUtils.isNotBlank(recoverQryListCmd.getKeyword())) {
-            boolQueryBuilder.must(QueryBuilders.multiMatchQuery(recoverQryListCmd.getKeyword(),"customerName","customerPhone" ));
+            boolQueryBuilder.must(QueryBuilders.multiMatchQuery(recoverQryListCmd.getKeyword(), "customerName", "customerPhone"));
         }
         if (recoverQryListCmd.getCarModelId() != null && recoverQryListCmd.getCarModelId() != 0) {
             boolQueryBuilder.must(QueryBuilders.matchQuery("carModelId", recoverQryListCmd.getCarModelId()));

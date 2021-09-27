@@ -4,6 +4,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleCmd;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleImgCmd;
@@ -68,6 +69,10 @@ public class DeliverVehicleExe {
         if (deliverResult.getCode() != 0) {
             return deliverResult.getMsg();
         }
+        DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();
+        deliverCarServiceDTO.setCarServiceId(deliverVehicleCmd.getCarServiceId());
+        deliverCarServiceDTO.setServeNoList(serveNoList);
+        deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
         Result<String> deliverVehicleResult = deliverVehicleAggregateRootApi.addDeliverVehicle(deliverVehicleDTOList);
         return deliverVehicleResult.getData();
     }
