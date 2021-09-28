@@ -29,7 +29,10 @@ public class RecoverTaskListCheckQryExe implements RecoverQryServiceI {
         boolQueryBuilder.must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.IS_RECOVER.getCode()))
                 .must(QueryBuilders.matchQuery("isCheck", JudgeEnum.NO.getCode()));
         FieldSortBuilder timeSortBuilder = SortBuilders.fieldSort("expectRecoverTime").unmappedType("integer").order(SortOrder.ASC);
+        FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
+
         fieldSortBuilderList.add(timeSortBuilder);
+        fieldSortBuilderList.add(updateTimeSortBuilder);
         return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
     }
 }

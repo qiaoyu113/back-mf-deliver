@@ -3,6 +3,7 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.DateUtils;
+import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
@@ -36,6 +37,8 @@ public class RecoverBackInsureExe {
     private VehicleAggregateRootApi vehicleAggregateRootApi;
     @Resource
     private VehicleInsuranceAggregateRootApi vehicleInsuranceAggregateRootApi;
+    @Resource
+    private SyncServiceI syncServiceI;
 
 
     public String execute(RecoverBackInsureCmd recoverBackInsureCmd) {
@@ -79,6 +82,9 @@ public class RecoverBackInsureExe {
         deliverCarServiceDTO.setServeNoList(recoverBackInsureCmd.getServeNoList());
         deliverCarServiceDTO.setCarServiceId(recoverBackInsureCmd.getCarServiceId());
         deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
+        for (String serveNo : recoverBackInsureCmd.getServeNoList()) {
+            syncServiceI.execOne(serveNo);
+        }
         return "";
 
     }

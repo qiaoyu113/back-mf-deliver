@@ -34,14 +34,6 @@ public class ServePreselectedQryExe {
         FieldSortBuilder updateTimeSortBuilders = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
         List<FieldSortBuilder> fieldSortBuilderList = new LinkedList<>();
         fieldSortBuilderList.add(updateTimeSortBuilders);
-        ServeListVO serveListVO1 = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilderList);
-        // 暂时强同步 后续处理
-        if (serveListVO1 != null && serveListVO1.getServeVOList() != null) {
-            List<String> serveNoList = serveListVO1.getServeVOList().stream().map(ServeVO::getServeNo).collect(Collectors.toList());
-            for (String serveNo : serveNoList) {
-                syncServiceI.execOne(serveNo);
-            }
-        }
         ServeListVO serveListVO = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilderList);
         List<ServeVO> serveVOList = serveListVO.getServeVOList();
         //车型聚合数据

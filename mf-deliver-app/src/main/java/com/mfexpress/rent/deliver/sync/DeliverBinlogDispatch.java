@@ -33,11 +33,13 @@ public class DeliverBinlogDispatch extends BinlogDispatch {
         if (database.equals(Constants.BINLOG_MQ_DELIVER_DATA_BASE_NAME)) {
             if (table.equals(Constants.BINLOG_MQ_DELIVER_TABLE) || table.equals(Constants.BINLOG_MQ_SERVE_TABLE) ||
                     table.equals(Constants.BINLOG_MQ_DELIVER_VEHICLE_TABLE) || table.equals(Constants.BINLOG_MQ_RECOVER_VEHICLE_TABLE)) {
+
                 for (Map<String, String> item : data) {
                     serviceI.execOne(item.get("serve_no"));
                 }
             }
         }
+        long end = System.currentTimeMillis();
 
         log.info("invoker finish");
     }

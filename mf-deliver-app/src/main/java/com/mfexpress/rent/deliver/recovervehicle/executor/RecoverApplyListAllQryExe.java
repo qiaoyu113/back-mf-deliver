@@ -5,7 +5,6 @@ import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.recovervehicle.RecoverQryServiceI;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class RecoverApplyListAllQryExe implements RecoverQryServiceI {
@@ -33,15 +31,8 @@ public class RecoverApplyListAllQryExe implements RecoverQryServiceI {
         boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverStatus").gte(DeliverEnum.IS_RECOVER.getCode()));
         FieldSortBuilder checkSortBuilder = SortBuilders.fieldSort("isCheck").order(SortOrder.ASC);
         FieldSortBuilder timeSortBuilder = SortBuilders.fieldSort("expectRecoverTime").unmappedType("integer").order(SortOrder.ASC);
-        List<FieldSortBuilder> fieldSortBuilderList = Arrays.asList(checkSortBuilder, timeSortBuilder);
-        RecoverTaskListVO recoverTaskListVO = recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
-        //暂时强同步 后续处理
-        if (recoverTaskListVO != null && recoverTaskListVO.getRecoverVehicleVOList() != null) {
-            List<String> serveNoList = recoverTaskListVO.getRecoverVehicleVOList().stream().map(RecoverVehicleVO::getServeNo).collect(Collectors.toList());
-            for (String serveNo : serveNoList) {
-                syncServiceI.execOne(serveNo);
-            }
-        }
+        FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.ASC);
+        List<FieldSortBuilder> fieldSortBuilderList = Arrays.asList(checkSortBuilder, timeSortBuilder, updateTimeSortBuilder);
         return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
     }
 }

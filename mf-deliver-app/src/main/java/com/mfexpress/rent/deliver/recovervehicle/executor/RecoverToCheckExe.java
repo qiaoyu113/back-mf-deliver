@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 
 import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
@@ -21,6 +22,8 @@ public class RecoverToCheckExe {
 
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
+    @Resource
+    private SyncServiceI syncServiceI;
 
     public String execute(RecoverVechicleCmd recoverVechicleCmd) {
         //完善收车单信息
@@ -37,6 +40,8 @@ public class RecoverToCheckExe {
         deliverCarServiceDTO.setCarServiceId(recoverVechicleCmd.getCarServiceId());
         deliverCarServiceDTO.setServeNoList(Arrays.asList(recoverVechicleCmd.getServeNo()));
         deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
+        //同步
+        syncServiceI.execOne(recoverVechicleCmd.getServeNo());
         return deliverResult.getData();
     }
 }
