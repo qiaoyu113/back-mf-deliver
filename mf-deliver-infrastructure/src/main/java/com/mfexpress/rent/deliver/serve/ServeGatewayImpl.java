@@ -42,10 +42,7 @@ public class ServeGatewayImpl implements ServeGateway {
 
     @Override
     public void addServeList(List<Serve> serveList) {
-        for (Serve serve : serveList) {
-
-            serveMapper.insertSelective(serve);
-        }
+        serveMapper.insertList(serveList);
     }
 
     @Override

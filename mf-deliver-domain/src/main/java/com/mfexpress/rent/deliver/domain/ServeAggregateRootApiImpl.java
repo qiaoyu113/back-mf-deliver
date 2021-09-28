@@ -70,6 +70,13 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setCarModelId(serveVehicleDTO.getCarModelId());
                 serve.setBrandId(serveVehicleDTO.getBrandId());
                 serve.setLeaseModelId(serveVehicleDTO.getLeaseModelId());
+                serve.setCreateTime(new Date());
+                serve.setUpdateTime(new Date());
+                serve.setCarServiceId(0);
+                serve.setCityId(0);
+                serve.setUpdateId(0);
+                serve.setStatus(ServeEnum.NOT_PRESELECTED.getCode());
+                serve.setRemark("");
                 serveList.add(serve);
             }
         }
