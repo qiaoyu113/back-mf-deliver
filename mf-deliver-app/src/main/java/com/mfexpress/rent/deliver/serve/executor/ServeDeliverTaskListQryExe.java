@@ -50,7 +50,7 @@ public class ServeDeliverTaskListQryExe {
             boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverStatus").lt(DeliverEnum.DELIVER.getCode()));
 
         } else if (serveDeliverTaskQryCmd.getTag() == 2) {
-            boolQueryBuilder.must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.DELIVER.getCode()));
+            boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverStatus").gte(DeliverEnum.DELIVER.getCode()));
         }
 
         //查询所有服务单
