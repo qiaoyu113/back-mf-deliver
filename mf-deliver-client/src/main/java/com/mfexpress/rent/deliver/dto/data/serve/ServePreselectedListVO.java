@@ -26,7 +26,7 @@ public class ServePreselectedListVO extends ListVO {
     private String contractNo;
 
     @ApiModelProperty(value = "提车时间")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date extractVehicleTime;
 
     @ApiModelProperty(value = "订单车型数量情况列表")
