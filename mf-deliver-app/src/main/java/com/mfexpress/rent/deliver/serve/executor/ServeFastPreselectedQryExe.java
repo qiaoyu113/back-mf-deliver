@@ -1,6 +1,5 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
-import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -20,8 +19,6 @@ import java.util.stream.Collectors;
 public class ServeFastPreselectedQryExe {
     @Resource
     private ServeEsDataQryExe serveEsDataQryExe;
-    @Resource
-    private SyncServiceI syncServiceI;
 
     public ServeFastPreselectedListVO execute(ServeQryListCmd serveQryListCmd) {
         ServeFastPreselectedListVO serveFastPreselectedListVO = new ServeFastPreselectedListVO();
