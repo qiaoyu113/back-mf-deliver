@@ -129,8 +129,6 @@ public class SyncServiceImpl implements SyncServiceI {
                 OrderCarModelVO orderCarModelVO = new OrderCarModelVO();
                 orderCarModelVO.setBrandId(productDTO.getBrandId());
                 orderCarModelVO.setCarModelId(productDTO.getModelsId());
-                //Result<String> brandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeById(productDTO.getModelsId());
-                //orderCarModelVO.setBrandModelDisplay(brandTypeResult.getData());
                 orderCarModelVO.setBrandModelDisplay(brandTypeMap.get(productDTO.getModelsId()));
                 orderCarModelVO.setNum(productDTO.getProductNum());
                 carModelList.add(orderCarModelVO);
@@ -202,11 +200,11 @@ public class SyncServiceImpl implements SyncServiceI {
                 && serveEs.getIsCheck().equals(JudgeEnum.NO.getCode())) {
             //收车中 待验车
             sort = DeliverSortEnum.ONE.getSort();
-        } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
+        } else if (serveEs.getDeliverStatus() >= DeliverEnum.IS_RECOVER.getCode() && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
                 && recoverFlag) {
             //收车中  待退保、待处理违章
             sort = DeliverSortEnum.TWO.getSort();
-        } else if (serveEs.getDeliverStatus().equals(ServeEnum.COMPLETED.getCode())) {
+        } else if (serveEs.getServeStatus().equals(ServeEnum.COMPLETED.getCode())) {
             //已完成
             sort = DeliverSortEnum.THREE.getSort();
         }
