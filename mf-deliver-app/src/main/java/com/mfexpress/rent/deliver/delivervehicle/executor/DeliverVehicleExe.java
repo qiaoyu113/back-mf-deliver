@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.delivervehicle.executor;
 
 import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -29,6 +30,8 @@ public class DeliverVehicleExe {
     private ServeAggregateRootApi serveAggregateRootApi;
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
+    @Resource
+    private SyncServiceI syncServiceI;
 
     public String execute(DeliverVehicleCmd deliverVehicleCmd) {
         //生成发车单 交付单状态更新已发车 初始化操作状态  服务单状态更新为已发车  调用车辆服务为租赁状态
@@ -74,6 +77,11 @@ public class DeliverVehicleExe {
         deliverCarServiceDTO.setServeNoList(serveNoList);
         deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
         Result<String> deliverVehicleResult = deliverVehicleAggregateRootApi.addDeliverVehicle(deliverVehicleDTOList);
+
+        for (String serveNo : serveNoList) {
+            syncServiceI.execOne(serveNo);
+        }
+
         return deliverVehicleResult.getData();
     }
 }
