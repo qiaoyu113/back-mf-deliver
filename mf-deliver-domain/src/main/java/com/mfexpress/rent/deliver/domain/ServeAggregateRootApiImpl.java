@@ -163,5 +163,12 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         return Result.getInstance("取消预选成功").success();
     }
 
+    @Override
+    @PostMapping("/getServeNoListAll")
+    public Result<List<String>> getServeNoListAll() {
+        List<String> serveNoListAll = serveGateway.getServeNoListAll();
+        return Result.getInstance(serveNoListAll);
+    }
+
 
 }
