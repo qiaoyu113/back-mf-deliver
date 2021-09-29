@@ -13,6 +13,7 @@
     <artifactId>mf-deliver-app</artifactId>
     <packaging>jar</packaging>
     <dependencies>
+
         <dependency>
             <groupId>com.mfexpress</groupId>
             <artifactId>mf-common-client</artifactId>

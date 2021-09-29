@@ -19,6 +19,7 @@ public class DeliverBinlogDispatch extends BinlogDispatch {
 
     @Override
     public void invoker(String database, String table, String type, List<Map<String, String>> data) {
+        long start = System.currentTimeMillis();
         log.info("database:" + database + " table:" + table + " type:" + type);
 
         if (type.equals("QUERY") || type.equals("DELETE")) {
@@ -40,6 +41,10 @@ public class DeliverBinlogDispatch extends BinlogDispatch {
             }
         }
         long end = System.currentTimeMillis();
+
+        System.out.println("开始时间=================================" + start);
+        System.out.println("结束时间=================================" + end);
+        System.out.println(end - start);
 
         log.info("invoker finish");
     }

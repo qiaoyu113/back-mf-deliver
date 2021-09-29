@@ -27,6 +27,7 @@ import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class SyncServiceImpl implements SyncServiceI {
 
     @Resource
@@ -179,6 +181,7 @@ public class SyncServiceImpl implements SyncServiceI {
             serveEs.setIsDeduction(0);
             serveEs.setSort(DeliverSortEnum.TWO.getSort());
         }
+        log.info("key:==========================" + serveNo + "value:=====================" + serveEs.toString());
         elasticsearchTools.saveByEntity(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), serveNo, serveEs);
 
     }
