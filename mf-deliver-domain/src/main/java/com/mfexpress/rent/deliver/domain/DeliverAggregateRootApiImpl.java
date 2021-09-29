@@ -16,6 +16,7 @@ import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/domain/deliver/v3/deliver")
 @Api(tags = "domain-交付--1.2交付单聚合")
+@Slf4j
 public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Resource
@@ -131,6 +133,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
                 .deliverStatus(DeliverEnum.RECOVER.getCode())
                 .insuranceRemark(deliverBackInsureDTO.getInsuranceRemark()).build();
         int i = deliverGateway.updateDeliverByServeNoList(deliverBackInsureDTO.getServeNoList(), deliver);
+        log.info("key:==================" + deliverBackInsureDTO.getServeNoList() + "value:===================" + deliver.toString());
         //查看是否已经处理违章
         List<Deliver> deliverList = deliverGateway.getDeliverDeductionByServeNoList(deliverBackInsureDTO.getServeNoList());
         List<String> serveNoList = new ArrayList<>();
