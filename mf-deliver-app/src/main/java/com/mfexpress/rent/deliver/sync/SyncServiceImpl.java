@@ -90,6 +90,7 @@ public class SyncServiceImpl implements SyncServiceI {
 
     }
 
+
     @Override
     public void execOne(String serveNo) {
         ServeES serveEs = new ServeES();
@@ -180,6 +181,17 @@ public class SyncServiceImpl implements SyncServiceI {
         }
         elasticsearchTools.saveByEntity(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), serveNo, serveEs);
 
+    }
+
+    @Override
+    public void execAll() {
+        Result<List<String>> serveNoResult = serveAggregateRootApi.getServeNoListAll();
+        if (serveNoResult.getData() != null) {
+            List<String> serveNoList = serveNoResult.getData();
+            for (String serveNo : serveNoList) {
+                execOne(serveNo);
+            }
+        }
     }
 
     private Integer getSort(ServeES serveEs) {

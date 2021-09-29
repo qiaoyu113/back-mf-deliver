@@ -17,6 +17,7 @@ public interface ServeGateway {
     void addServeList(List<Serve> serveList);
 
     List<ServePreselectedDTO> getServePreselectedByOrderId(List<Long> orderId);
+    List<String> getServeNoListAll();
 
 
 }

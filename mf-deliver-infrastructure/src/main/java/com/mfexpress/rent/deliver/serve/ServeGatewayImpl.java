@@ -9,6 +9,7 @@ import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class ServeGatewayImpl implements ServeGateway {
@@ -50,5 +51,11 @@ public class ServeGatewayImpl implements ServeGateway {
 
 
         return serveMapper.getServePreselectedByOrderId(orderId);
+    }
+
+    @Override
+    public List<String> getServeNoListAll() {
+
+        return serveMapper.selectAll().stream().map(Serve::getServeNo).collect(Collectors.toList());
     }
 }
