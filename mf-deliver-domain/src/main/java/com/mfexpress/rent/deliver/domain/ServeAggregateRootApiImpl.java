@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.domain;
 
 
 import cn.hutool.core.bean.BeanUtil;
+import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
@@ -31,6 +32,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Override
     @PostMapping("/getServeDtoByServeNo")
+    @PrintParam
     public Result<ServeDTO> getServeDtoByServeNo(@RequestParam("serveNo") String serveNo) {
         Serve serve = serveGateway.getServeByServeNo(serveNo);
         ServeDTO serveDTO = new ServeDTO();
@@ -44,6 +46,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Override
     @PostMapping("/addServe")
+    @PrintParam
     public Result<String> addServe(@RequestBody ServeAddDTO serveAddDTO) {
         List<Serve> serveList = new LinkedList<>();
         List<ServeVehicleDTO> vehicleDTOList = serveAddDTO.getVehicleDTOList();
@@ -91,6 +94,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Override
     @PostMapping("/toPreselected")
+    @PrintParam
     public Result<String> toPreselected(@RequestBody List<String> serveNoList) {
         Serve serve = Serve.builder().status(ServeEnum.PRESELECTED.getCode()).build();
         int i = serveGateway.updateServeByServeNoList(serveNoList, serve);
@@ -100,6 +104,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Override
     @PostMapping("/toReplace")
+    @PrintParam
     public Result<String> toReplace(@RequestParam("serveNo") String serveNo) {
         Serve serve = Serve.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
         int i = serveGateway.updateServeByServeNo(serveNo, serve);
@@ -108,6 +113,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Override
     @PostMapping("/deliver")
+    @PrintParam
     public Result<String> deliver(@RequestBody List<String> serveNoList) {
         Serve serve = Serve.builder().status(ServeEnum.DELIVER.getCode()).build();
         int i = serveGateway.updateServeByServeNoList(serveNoList, serve);
@@ -116,6 +122,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Override
     @PostMapping("/recover")
+    @PrintParam
     public Result<String> recover(@RequestBody List<String> serveNoList) {
         Serve serve = Serve.builder().status(ServeEnum.RECOVER.getCode()).build();
         int i = serveGateway.updateServeByServeNoList(serveNoList, serve);
@@ -124,6 +131,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Override
     @PostMapping("/completed")
+    @PrintParam
     public Result<String> completed(@RequestParam("serveNo") String serveNo) {
         Serve serve = Serve.builder().status(ServeEnum.COMPLETED.getCode()).build();
         int i = serveGateway.updateServeByServeNo(serveNo, serve);
@@ -132,6 +140,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Override
     @PostMapping("/completedList")
+    @PrintParam
     public Result<String> completedList(@RequestBody List<String> serveNoList) {
         Serve serve = Serve.builder().status(ServeEnum.COMPLETED.getCode()).build();
         int i = serveGateway.updateServeByServeNoList(serveNoList, serve);
@@ -141,12 +150,14 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @PostMapping("/getServePreselectedDTO")
     @Override
+    @PrintParam
     public Result<List<ServePreselectedDTO>> getServePreselectedDTO(@RequestBody List<Long> orderId) {
         return Result.getInstance(serveGateway.getServePreselectedByOrderId(orderId)).success();
     }
 
     @Override
     @PostMapping("/cancelSelected")
+    @PrintParam
     public Result<String> cancelSelected(@RequestParam("serveNo") String serveNo) {
 
         Serve serve = Serve.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
@@ -157,6 +168,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Override
     @PostMapping("/cancelSelectedList")
+    @PrintParam
     public Result<String> cancelSelectedList(@RequestBody List<String> serveNoList) {
         Serve serve = Serve.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
         serveGateway.updateServeByServeNoList(serveNoList, serve);
@@ -165,6 +177,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Override
     @PostMapping("/getServeNoListAll")
+    @PrintParam
     public Result<List<String>> getServeNoListAll() {
         List<String> serveNoListAll = serveGateway.getServeNoListAll();
         return Result.getInstance(serveNoListAll);

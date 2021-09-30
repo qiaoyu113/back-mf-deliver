@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.mobile;
 
 import com.mfexpress.component.constants.CommonConstants;
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.TokenTools;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
@@ -28,6 +29,7 @@ public class ServeController {
 
     @ApiOperation("生成租赁服务单")
     @PostMapping("/addServe")
+    @PrintParam
     public Result<String> addServe(@RequestBody ServeAddCmd serveAddCmd) {
 
         return Result.getInstance(serveServiceI.addServe(serveAddCmd));
@@ -36,6 +38,7 @@ public class ServeController {
 
     @PostMapping("/getServeDeliverTaskListVO")
     @ApiOperation("发车任务列表")
+    @PrintParam
     public Result<ServeDeliverTaskListVO> getServeStayDeliverTaskListVO(@RequestBody ServeDeliverTaskQryCmd serveDeliverTaskQryCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
 
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
@@ -49,6 +52,7 @@ public class ServeController {
 
     @PostMapping("/getServeFastPreselectedVO")
     @ApiOperation("订单快速预选页")
+    @PrintParam
     public Result<ServeFastPreselectedListVO> getServeFastPreselectedVO(@RequestBody ServeQryListCmd serveQryListCmd) {
 
         return Result.getInstance(serveServiceI.getServeFastPreselectedVO(serveQryListCmd)).success();
@@ -69,6 +73,7 @@ public class ServeController {
     @Valid
     @PostMapping("/getServeListVoPreselected")
     @ApiOperation("发车操作待预选列表")
+    @PrintParam
     public Result<ServePreselectedListVO> getServeListVoPreselected(@RequestBody ServeQryListCmd serveQryListCmd) {
 
         return Result.getInstance(serveServiceI.getServeListVoPreselected(serveQryListCmd)).success();
@@ -86,6 +91,7 @@ public class ServeController {
     @Valid
     @PostMapping("/getServeListVoCheck")
     @ApiOperation("发车操作待验车列表")
+    @PrintParam
     public Result<ServeListVO> getServeListVoCheck(@RequestBody ServeQryListCmd serveQryListCmd) {
 
         return Result.getInstance(serveServiceI.getServeListVoCheck(serveQryListCmd)).success();
@@ -94,6 +100,7 @@ public class ServeController {
     @Valid
     @PostMapping("/getServeListVoDeliver")
     @ApiOperation("发车操作待发车列表")
+    @PrintParam
     public Result<ServeListVO> getServeListVoDeliver(@RequestBody ServeQryListCmd serveQryListCmd) {
 
         return Result.getInstance(serveServiceI.getServeListVoDeliver(serveQryListCmd)).success();
@@ -102,6 +109,7 @@ public class ServeController {
     @Valid
     @PostMapping("/getServeListVoCompleted")
     @ApiOperation("发车操作已完成列表")
+    @PrintParam
     public Result<ServeListVO> getServeListVoCompleted(@RequestBody ServeQryListCmd serveQryListCmd) {
         return Result.getInstance(serveServiceI.getServeListVoCompleted(serveQryListCmd)).success();
     }

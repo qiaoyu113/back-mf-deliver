@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.domain;
 
 
+import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
@@ -32,6 +33,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
 
     @Override
     @PostMapping("/getRecoverVehicleDtoByDeliverNo")
+    @PrintParam
     public Result<RecoverVehicleDTO> getRecoverVehicleDtoByDeliverNo(@RequestParam("deliverNo") String deliverNo) {
         RecoverVehicle recoverVehicle = recoverVehicleGateway.getRecoverVehicleByDeliverNo(deliverNo);
         RecoverVehicleDTO recoverVehicleDTO = new RecoverVehicleDTO();
@@ -45,6 +47,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
 
     @Override
     @PostMapping("/addRecoverVehicle")
+    @PrintParam
     public Result<String> addRecoverVehicle(@RequestBody List<RecoverVehicleDTO> recoverVehicleDTOList) {
         if (recoverVehicleDTOList != null) {
             List<RecoverVehicle> recoverVehicleList = recoverVehicleDTOList.stream().map(recoverVehicleDTO -> {
@@ -63,6 +66,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
 
     @Override
     @PostMapping("/cancelRecover")
+    @PrintParam
     public Result<String> cancelRecover(@RequestBody RecoverVehicleDTO recoverVehicleDTO) {
         RecoverVehicle recoverVehicle = new RecoverVehicle();
         BeanUtils.copyProperties(recoverVehicleDTO, recoverVehicle);
@@ -73,6 +77,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
 
     @Override
     @PostMapping("/toCheck")
+    @PrintParam
     public Result<String> toCheck(@RequestBody RecoverVehicleDTO recoverVehicleDTO) {
         RecoverVehicle recoverVehicle = new RecoverVehicle();
         BeanUtils.copyProperties(recoverVehicleDTO, recoverVehicle);
@@ -83,6 +88,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
 
     @Override
     @PostMapping("/toBackInsure")
+    @PrintParam
     public Result<List<RecoverVehicleDTO>> toBackInsure(@RequestBody List<String> serveNoList) {
         List<RecoverVehicle> recoverVehicleList = recoverVehicleGateway.selectRecoverByServeNoList(serveNoList);
         List<RecoverVehicleDTO> recoverVehicleDTOList = new LinkedList<>();

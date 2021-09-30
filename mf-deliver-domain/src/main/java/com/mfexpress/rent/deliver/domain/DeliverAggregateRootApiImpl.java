@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.domain;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
@@ -41,6 +42,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @PostMapping("/getDeliverByServeNo")
+    @PrintParam
     public Result<DeliverDTO> getDeliverByServeNo(@RequestParam("serveNo") String serveNo) {
         DeliverDTO deliverDTO = new DeliverDTO();
         Deliver deliver = deliverGateway.getDeliverByServeNo(serveNo);
@@ -53,6 +55,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @PostMapping("/addDeliver")
+    @PrintParam
     public Result<String> addDeliver(@RequestBody List<DeliverDTO> list) {
         List<Deliver> deliverList = list.stream().map(deliverDTO -> {
             long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_DELIVER_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
@@ -70,6 +73,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @PostMapping("/toCheck")
+    @PrintParam
     public Result<String> toCheck(@RequestParam("serveNo") String serveNo) {
         Deliver deliver = Deliver.builder().isCheck(JudgeEnum.YES.getCode()).build();
         int i = deliverGateway.updateDeliverByServeNo(serveNo, deliver);
@@ -91,6 +95,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @PostMapping("/toInsure")
+    @PrintParam
     public Result<String> toInsure(@RequestBody List<String> serveNoList) {
         Deliver deliver = Deliver.builder().isInsurance(JudgeEnum.YES.getCode()).build();
         int i = deliverGateway.updateDeliverByServeNoList(serveNoList, deliver);
@@ -99,6 +104,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @PostMapping("/toDeliver")
+    @PrintParam
     public Result<String> toDeliver(@RequestBody List<String> serveNoList) {
         Deliver deliver = Deliver.builder()
                 .deliverStatus(DeliverEnum.DELIVER.getCode())
@@ -111,6 +117,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @PostMapping("/applyRecover")
+    @PrintParam
     public Result<String> applyRecover(@RequestBody List<String> serveNoList) {
         Deliver deliver = Deliver.builder().deliverStatus(DeliverEnum.IS_RECOVER.getCode()).build();
         int i = deliverGateway.updateDeliverByServeNoList(serveNoList, deliver);
@@ -120,6 +127,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @PostMapping("/cancelRecover")
+    @PrintParam
     public Result<String> cancelRecover(@RequestParam("serveNo") String serveNo) {
         Deliver deliver = Deliver.builder().deliverStatus(DeliverEnum.DELIVER.getCode()).build();
         int i = deliverGateway.updateDeliverByServeNo(serveNo, deliver);
@@ -128,6 +136,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @PostMapping("/toBackInsure")
+    @PrintParam
     public Result<List<String>> toBackInsure(@RequestBody DeliverBackInsureDTO deliverBackInsureDTO) {
         Deliver deliver = Deliver.builder().isInsurance(JudgeEnum.YES.getCode())
                 .deliverStatus(DeliverEnum.RECOVER.getCode())
@@ -147,6 +156,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @PostMapping("/toDeduction")
+    @PrintParam
     public Result<String> toDeduction(@RequestBody DeliverDTO deliverDTO) {
         Deliver deliver = new Deliver();
         BeanUtil.copyProperties(deliverDTO, deliver);
@@ -168,6 +178,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @PostMapping("/cancelSelected")
+    @PrintParam
     public Result<String> cancelSelected(@RequestParam("carId") Integer carId) {
         Deliver deliver = deliverGateway.getDeliverByCarId(carId);
         if (deliver != null) {
@@ -181,6 +192,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @PostMapping("/cancelSelectedByServeNoList")
+    @PrintParam
     public Result<List<Integer>> cancelSelectedByServeNoList(@RequestBody List<String> serveNoList) {
         List<Deliver> deliverList = deliverGateway.getDeliverByServeNoList(serveNoList);
 
@@ -191,6 +203,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @PostMapping("/syncInsureStatus")
+    @PrintParam
     public Result<String> syncInsureStatus(@RequestBody List<DeliverVehicleMqDTO> deliverVehicleMqDTOList) {
 
         List<Integer> carIdList = deliverVehicleMqDTOList.stream().map(DeliverVehicleMqDTO::getCarId).collect(Collectors.toList());
@@ -207,6 +220,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @PostMapping("/syncVehicleAgeAndMileage")
+    @PrintParam
     public Result<String> syncVehicleAgeAndMileage(@RequestBody List<DeliverVehicleMqDTO> deliverVehicleMqDTOList) {
         for (DeliverVehicleMqDTO deliverVehicleMqDTO : deliverVehicleMqDTOList) {
             if (deliverVehicleMqDTO.getMileage() != null) {
@@ -229,6 +243,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @PostMapping("/saveCarServiceId")
+    @PrintParam
     public Result<String> saveCarServiceId(@RequestBody DeliverCarServiceDTO deliverCarServiceDTO) {
         Deliver deliver = Deliver.builder().carServiceId(deliverCarServiceDTO.getCarServiceId()).build();
         deliverGateway.updateDeliverByServeNoList(deliverCarServiceDTO.getServeNoList(), deliver);

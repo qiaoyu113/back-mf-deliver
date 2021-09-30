@@ -50,8 +50,7 @@ public interface ServeAggregateRootApi {
 
 
     @PostMapping("/getServeNoListAll")
-    Result<List<String>>getServeNoListAll();
-
+    Result<List<String>> getServeNoListAll();
 
 
 }
