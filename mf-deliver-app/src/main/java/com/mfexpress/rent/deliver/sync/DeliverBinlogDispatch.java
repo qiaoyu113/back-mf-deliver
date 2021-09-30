@@ -36,10 +36,9 @@ public class DeliverBinlogDispatch extends BinlogDispatch {
                     table.equals(Constants.BINLOG_MQ_DELIVER_VEHICLE_TABLE) || table.equals(Constants.BINLOG_MQ_RECOVER_VEHICLE_TABLE)) {
 
                 for (Map<String, String> item : data) {
-                    long start = System.currentTimeMillis();
+
                     serviceI.execOne(item.get("serve_no"));
-                    long end = System.currentTimeMillis();
-                    log.info("serviceI.execOne:" + item.get("serve_no" + "，用时：" + (end - start)));
+
 
                 }
             }
