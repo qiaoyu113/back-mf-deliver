@@ -1,49 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
 
-    <!--定义参数,后面可以通过${APP_NAME}使用-->
-    <property name="APP_NAME" value="start" />
-    <property name="LOG_PATH" value="${user.home}/${APP_NAME}/logs" />
-    <property name="LOG_FILE" value="${LOG_PATH}/application.log" />
+    <property name="APP_NAME" value="start"/>
+    <property name="LOG_PATH" value="${user.home}/${APP_NAME}/logs"/>
+    <springProperty scope="context" name="env" source="spring.profiles.active"/>
 
-    <appender name="APPLICATION"
-        class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <!--定义日志输出的路径-->
-        <file>${LOG_FILE}</file>
-        <encoder>
-            <pattern>${FILE_LOG_PATTERN}</pattern>
+    <!-- 控制台 执行日志记录 -->
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
         </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxHistory>7</maxHistory>
-            <maxFileSize>50MB</maxFileSize>
-            <totalSizeCap>20GB</totalSizeCap>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.TraceIdPatternLogbackLayout">
+                <pattern>%red([%d{yyyy-MM-dd HH:mm:ss.SSS}])
+                    %green(%X{applicationName:-0}).%boldMagenta(stdout).%highlight(%level)
+                    #tid:%green(%replace(%tid){'[(TID:)|(N/A)|\s]?', ''}) #traceId:%X{traceId:-0} host:%X{localIp:-0}
+                    from:%X{from:-0} uri:%boldMagenta(%X{uri:-0}) clientIp:%yellow(%X{clientIp:-0})
+                    rpcId:%X{nextRequestSeq:-0} userId:%green(%X{userId:-0}) totalTime:%X{totalTime:-0}
+                    asyncTime:%X{asyncTime:-0} file:%X{file:-0} line:0 %boldMagenta(msg):%cyan(%msg%n)
+                </pattern>
+            </layout>
+            <charset>utf-8</charset>
+        </encoder>
+    </appender>
+
+
+    <!-- 执行日志记录 -->
+    <appender name="OUTPUT_FILE_STDOUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/app/application.%d{yyyy-MM-dd}.log</fileNamePattern>
         </rollingPolicy>
-    </appender>
-
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
-            <charset>utf8</charset>
+        <append>true</append>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.TraceIdPatternLogbackLayout">
+                <if condition='property("env").contains("dev")'>
+                    <then>
+                        <pattern>%red([%d{yyyy-MM-dd HH:mm:ss.SSS}]) %green(%X{applicationName:-0}).%highlight(%level)
+                            #tid:%green(%replace(%tid){'[(TID:)|(N/A)|\s]?', ''}) #traceId:%yellow(%X{traceId:-0})
+                            host:%boldMagenta(%X{localIp:-0}) from:%yellow(%X{from:-0}) uri:%boldMagenta(%X{uri:-0})
+                            clientIp:%yellow(%X{clientIp:-0}) rpcId:%yellow(%X{nextRequestSeq:-0})
+                            userId:%green(%X{userId:-0}) %cyan(%msg%n)
+                        </pattern>
+                    </then>
+                    <else>
+                        <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %X{applicationName:-0}.%level
+                            #tid:%replace(%tid){'[(TID:)|(N/A)|\s]?', ''} #traceId:%X{traceId:-0} host:%X{localIp:-0}
+                            from:%X{from:-0} uri:%X{uri:-0} clientIp:%X{clientIp:-0} rpcId:%X{nextRequestSeq:-0}
+                            userId:%X{userId:-0} %msg%n
+                        </pattern>
+                    </else>
+                </if>
+            </layout>
+            <charset>utf-8</charset>
         </encoder>
     </appender>
 
-    <!--rootLogger是默认的logger-->
-    <root level="INFO">
-        <!--定义了两个appender，日志会通过往这两个appender里面写-->
-        <appender-ref ref="CONSOLE" />
-        <appender-ref ref="APPLICATION" />
+    <!-- SQL 执行日志记录 -->
+    <appender name="OUTPUT_FILE_SQL" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/sql/sql.%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <append>true</append>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.TraceIdPatternLogbackLayout">
+                <if condition='property("env").contains("dev")'>
+                    <then>
+                        <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %X{applicationName:-0}.sql.%level
+                            #tid:%replace(%tid){'[(TID:)|(N/A)|\s]?', ''} #traceId:%X{traceId:-0} host:%X{localIp:-0}
+                            from:%X{from:-0} uri:%X{uri:-0} clientIp:%X{clientIp:-0} rpcId:%X{nextRequestSeq:-0}
+                            userId:%X{userId:-0} time:%X{sqlCost:-0} %msg%n
+                        </pattern>
+                    </then>
+                    <else>
+                        <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %X{applicationName:-0}.sql.%level
+                            #tid:%replace(%tid){'[(TID:)|(N/A)|\s]?', ''} #traceId:%X{traceId:-0} host:%X{localIp:-0}
+                            from:%X{from:-0} uri:%X{uri:-0} clientIp:%X{clientIp:-0} rpcId:%X{nextRequestSeq:-0}
+                            userId:%X{userId:-0} time:%X{sqlCost:-0} %msg%n
+                        </pattern>
+                    </else>
+                </if>
+            </layout>
+            <charset>utf-8</charset>
+        </encoder>
+    </appender>
+
+
+    <!-- Request 执行日志记录 -->
+    <appender name="OUTPUT_FILE_REQUEST" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/request/request.%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <append>true</append>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.TraceIdPatternLogbackLayout">
+                <if condition='property("env").contains("dev")'>
+                    <then>
+                        <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %X{applicationName:-0}.request.%level
+                            #tid:%replace(%tid){'[(TID:)|(N/A)|\s]?', ''} #traceId:%X{traceId:-0} host:%X{localIp:-0}
+                            from:%X{from:-0} uri:%X{uri:-0} clientIp:%X{clientIp:-0} rpcId:%X{nextRequestSeq:-0}
+                            userId:%X{userId:-0} totalTime:%X{requestCost} asyncTime:0 dbCount:0 dbTime:0 memPeakUsage:0
+                            requestParams:%X{paramJson} %msg %n
+                        </pattern>
+                    </then>
+                    <else>
+                        <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %X{applicationName:-0}.request.%level
+                            #tid:%replace(%tid){'[(TID:)|(N/A)|\s]?', ''} #traceId:%X{traceId:-0} host:%X{localIp:-0}
+                            from:%X{from:-0} uri:%X{uri:-0} clientIp:%X{clientIp:-0} rpcId:%X{nextRequestSeq:-0}
+                            userId:%X{userId:-0} totalTime:%X{requestCost} asyncTime:0 dbCount:0 dbTime:0 memPeakUsage:0
+                            requestParams:%X{paramJson} %msg %n
+                        </pattern>
+                    </else>
+                </if>
+            </layout>
+            <charset>utf-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Request 执行日志记录 -->
+    <appender name="OUTPUT_FILE_EXCEPTION" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/error/error.%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <append>true</append>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.TraceIdPatternLogbackLayout">
+                <if condition='property("env").contains("dev")'>
+                    <then>
+                        <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %X{applicationName:-0}.error.%level
+                            #tid:%replace(%tid){'[(TID:)|(N/A)|\s]?', ''} #traceId:%X{traceId:-0} host:%X{localIp:-0}
+                            from:%X{from:-0} uri:%X{uri:-0} clientIp:%X{clientIp:-0} rpcId:%X{nextRequestSeq:-0}
+                            userId:%X{userId:-0} totalTime:%X{totalTime:-0} asyncTime:%X{asyncTime:-0} file:%X{file:-0}
+                            line:0 error:%msg %n
+                        </pattern>
+                    </then>
+                    <else>
+                        <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %X{applicationName:-0}.error.%level
+                            #tid:%replace(%tid){'[(TID:)|(N/A)|\s]?', ''} #traceId:%X{traceId:-0} host:%X{localIp:-0}
+                            from:%X{from:-0} uri:%X{uri:-0} clientIp:%X{clientIp:-0} rpcId:%X{nextRequestSeq:-0}
+                            userId:%X{userId:-0} totalTime:%X{totalTime:-0} asyncTime:%X{asyncTime:-0} file:%X{file:-0}
+                            line:0 error:%msg %n
+                        </pattern>
+                    </else>
+                </if>
+            </layout>
+            <charset>utf-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 异步输出 -->
+    <appender name="ASYNC_OUTPUT_FILE_STDOUT" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
+        <queueSize>1024</queueSize>
+        <!-- 添加附加的appender,最多只能添加一个 -->
+        <appender-ref ref="OUTPUT_FILE_STDOUT"/>
+    </appender>
+
+    <!-- 异步输出 -->
+    <appender name="ASYNC_OUTPUT_FILE_SQL" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
+        <queueSize>512</queueSize>
+        <!-- 添加附加的appender,最多只能添加一个 -->
+        <appender-ref ref="OUTPUT_FILE_SQL"/>
+    </appender>
+
+    <!-- 异步输出 -->
+    <appender name="ASYNC_OUTPUT_FILE_REQUEST" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
+        <queueSize>256</queueSize>
+        <!-- 添加附加的appender,最多只能添加一个 -->
+        <appender-ref ref="OUTPUT_FILE_REQUEST"/>
+    </appender>
+
+    <!-- 异步输出 -->
+    <appender name="ASYNC_OUTPUT_FILE_EXCEPTION" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
+        <queueSize>512</queueSize>
+        <!-- 添加附加的appender,最多只能添加一个 -->
+        <appender-ref ref="OUTPUT_FILE_EXCEPTION"/>
+    </appender>
+
+
+    <logger name="org.springframework" level="WARN"/>
+
+    <logger name="request" level="info" additivity="false">
+        <!-- this only enable in d2 -->
+        <if condition='property("env").contains("dev")'>
+            <then>
+                <appender-ref ref="ASYNC_OUTPUT_FILE_REQUEST"/>
+            </then>
+            <then>
+                <appender-ref ref="stdout"/>
+            </then>
+            <else>
+                <appender-ref ref="stdout"/>
+            </else>
+        </if>
+    </logger>
+
+    <logger name="sql" level="info" additivity="false">
+        <!-- this only enable in dev -->
+        <if condition='property("env").contains("dev")'>
+            <then>
+                <appender-ref ref="ASYNC_OUTPUT_FILE_SQL"/>
+            </then>
+            <then>
+                <appender-ref ref="stdout"/>
+            </then>
+            <else>
+                <appender-ref ref="stdout"/>
+            </else>
+        </if>
+    </logger>
+
+    <logger name="exception" level="info" additivity="false">
+        <appender-ref ref="ASYNC_OUTPUT_FILE_EXCEPTION"/>
+    </logger>
+
+    <!--    yangxg - 配置到 nacos config中-->
+    <!--    <logger name="com.mfexpress" level="DEBUG"/>-->
+    <!--    <logger name="com.firmiana" level="DEBUG"/>-->
+
+
+    <root level="info">
+        <appender-ref ref="ASYNC_OUTPUT_FILE_STDOUT"/>
+        <!-- this only enable in dev -->
+        <if condition='property("env").contains("dev")'>
+            <then>
+                <appender-ref ref="stdout"/>
+            </then>
+            <else>
+                <appender-ref ref="stdout"/>
+            </else>
+        </if>
     </root>
 
-    <!--应用日志-->
-    <!--这个logger没有指定appender，它会继承root节点中定义的那些appender-->
-    <logger name="com.mfexpress.rent.deliver" level="DEBUG"/>
-
-    <!--数据库日志-->
-    <!--由于这个logger自动继承了root的appender，root中已经有stdout的appender了，自己这边又引入了stdout的appender-->
-    <!--如果没有设置 additivity="false" ,就会导致一条日志在控制台输出两次的情况-->
-    <!--additivity表示要不要使用rootLogger配置的appender进行输出-->
-    <logger name="com.apache.ibatis" level="TRACE" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-    </logger>
 </configuration>

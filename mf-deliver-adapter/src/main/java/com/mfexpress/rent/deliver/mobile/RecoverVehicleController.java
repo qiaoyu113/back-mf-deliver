@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.mobile;
 
 import com.mfexpress.component.constants.CommonConstants;
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.TokenTools;
 import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
@@ -26,6 +27,7 @@ public class RecoverVehicleController {
 
     @PostMapping("/getRecoverVehicleListVO")
     @ApiOperation("申请收车页选择车辆列表")
+    @PrintParam
     public Result<List<RecoverApplyVO>> getRecoverVehicleListVO(@RequestBody RecoverApplyQryCmd recoverApplyQryCmd,
                                                                 @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
@@ -38,6 +40,7 @@ public class RecoverVehicleController {
 
     @PostMapping("/applyRecover")
     @ApiOperation("申请收车提交")
+    @PrintParam
     public Result<String> applyRecover(@RequestBody RecoverApplyListCmd recoverApplyListCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         // 收车单创建 对应交付单状态更新为收车中
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
@@ -52,6 +55,7 @@ public class RecoverVehicleController {
 
     @PostMapping("/cancelRecover")
     @ApiOperation("取消收车")
+    @PrintParam
     public Result<String> cancelRecover(@RequestBody RecoverCancelCmd recoverCancelCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         // 收车单创建 对应交付单状态更新为收车中
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
@@ -67,6 +71,7 @@ public class RecoverVehicleController {
 
     @PostMapping("/getRecoverListVO")
     @ApiOperation("收车申请列表")
+    @PrintParam
     public Result<RecoverTaskListVO> getRecoverListVO(@RequestBody RecoverQryListCmd recoverQryListCmd,
                                                       @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         // 查询es收车中或已收车数据
@@ -79,6 +84,7 @@ public class RecoverVehicleController {
 
     @PostMapping("/getRecoverTaskListVO")
     @ApiOperation("收车任务列表")
+    @PrintParam
     public Result<RecoverTaskListVO> getRecoverTaskListVO(@RequestBody RecoverQryListCmd recoverQryListCmd,
                                                           @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         // 查询es收车中或已收车数据
@@ -92,6 +98,7 @@ public class RecoverVehicleController {
 
     @PostMapping("/toCheck")
     @ApiOperation(value = "收车验车")
+    @PrintParam
     public Result<String> toCheck(@RequestBody RecoverVechicleCmd recoverVechicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
 
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
@@ -107,6 +114,7 @@ public class RecoverVehicleController {
 
     @PostMapping("/toBackInsure")
     @ApiOperation(value = "收车退保")
+    @PrintParam
     public Result<String> toBackInsure(@RequestBody RecoverBackInsureCmd recoverBackInsureCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
@@ -120,6 +128,7 @@ public class RecoverVehicleController {
 
     @PostMapping("/toDeduction")
     @ApiOperation(value = "收车处理违章")
+    @PrintParam
     public Result<String> toDeduction(@RequestBody RecoverDeductionCmd recoverDeductionCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
 
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);

@@ -34,15 +34,22 @@ public class ServeDeliverTaskListQryExe {
     private OfficeAggregateRootApi officeAggregateRootApi;
 
     public ServeDeliverTaskListVO execute(ServeDeliverTaskQryCmd serveDeliverTaskQryCmd, TokenInfo tokenInfo) {
+
         ServeDeliverTaskListVO serveDeliverTaskListVO = new ServeDeliverTaskListVO();
-        List<ServeDeliverTaskVO> serveDeliverTaskVOList = new LinkedList<>();
-        Result<List<SysOfficeDto>> sysOfficeResult = officeAggregateRootApi.getOfficeCityListByRegionId(tokenInfo.getOfficeId());
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        if (sysOfficeResult.getCode() == 0 && sysOfficeResult.getData() != null) {
-            List<SysOfficeDto> sysOfficeDtoList = sysOfficeResult.getData();
-            Object[] orgIdList = sysOfficeDtoList.stream().map(SysOfficeDto::getId).toArray();
-            boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIdList));
+        List<ServeDeliverTaskVO> serveDeliverTaskVOList = new LinkedList<>();
+        try {
+
+            Result<List<SysOfficeDto>> sysOfficeResult = officeAggregateRootApi.getOfficeCityListByRegionId(tokenInfo.getOfficeId());
+            if (sysOfficeResult.getCode() == 0 && sysOfficeResult.getData() != null) {
+                List<SysOfficeDto> sysOfficeDtoList = sysOfficeResult.getData();
+                Object[] orgIdList = sysOfficeDtoList.stream().map(SysOfficeDto::getId).toArray();
+                boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIdList));
+            }
+        } catch (Exception e) {
+            boolQueryBuilder.must(QueryBuilders.termQuery("orgId", tokenInfo.getOfficeId()));
         }
+
         if (StringUtils.isNotBlank(serveDeliverTaskQryCmd.getKeyword())) {
             boolQueryBuilder.must(QueryBuilders.multiMatchQuery(serveDeliverTaskQryCmd.getKeyword(), "customerName", "customerPhone"));
         }

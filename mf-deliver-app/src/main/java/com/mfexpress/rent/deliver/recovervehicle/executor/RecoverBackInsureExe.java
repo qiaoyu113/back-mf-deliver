@@ -58,15 +58,18 @@ public class RecoverBackInsureExe {
         if (serveNoResult.getData() != null && !serveNoResult.getData().isEmpty()) {
             serveAggregateRootApi.completedList(serveNoResult.getData());
         }
-
-        Result<List<RecoverVehicleDTO>> recoverResult = recoverVehicleAggregateRootApi.toBackInsure(recoverBackInsureCmd.getServeNoList());
         //车辆库存列表
-        List<RecoverVehicleDTO> recoverVehicleDTOList = recoverResult.getData();
+
         VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
         vehicleSaveCmd.setId(recoverBackInsureCmd.getCarIdList());
         vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.UNCHECKED.getCode());
         vehicleSaveCmd.setStockStatus(ValidStockStatusEnum.IN.getCode());
-        vehicleSaveCmd.setWarehouseId(recoverVehicleDTOList.get(0).getWareHouseId());
+
+        Result<List<RecoverVehicleDTO>> recoverResult = recoverVehicleAggregateRootApi.toBackInsure(recoverBackInsureCmd.getServeNoList());
+        if (recoverResult.getData() != null) {
+            List<RecoverVehicleDTO> recoverVehicleDTOList = recoverResult.getData();
+            vehicleSaveCmd.setWarehouseId(recoverVehicleDTOList.get(0).getWareHouseId());
+        }
 
 
         vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
