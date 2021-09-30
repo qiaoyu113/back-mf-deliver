@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.mobile;
 
 import com.mfexpress.component.constants.CommonConstants;
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.TokenTools;
 import com.mfexpress.rent.deliver.api.DeliverServiceI;
@@ -28,6 +29,7 @@ public class DeliverController {
 
     @PostMapping("/toPreselected")
     @ApiOperation("预选车辆")
+    @PrintParam
     public Result<String> toPreselected(@RequestBody DeliverPreselectedCmd deliverPreselectedCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
 
         //组合生成交付单、交付单状态未1发车中 服务单状态更新未已预选
@@ -44,6 +46,7 @@ public class DeliverController {
 
     @PostMapping("/toCheck")
     @ApiOperation("验车")
+    @PrintParam
     public Result<String> toCheck(@RequestBody DeliverCheckCmd deliverCheckCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         // 交付单更新验车状态
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
@@ -57,6 +60,7 @@ public class DeliverController {
 
     @PostMapping("/toReplace")
     @ApiOperation("更换车辆")
+    @PrintParam
     public Result<String> toReplace(@RequestBody DeliverReplaceCmd deliverReplaceCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         // 当前交付单设未失效  新生成收付单 服务单初始化预选状态 调用车辆服务更新为未预选
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
@@ -71,6 +75,7 @@ public class DeliverController {
 
     @PostMapping("/toInsure")
     @ApiOperation("投保")
+    @PrintParam
     public Result<String> toInsure(@RequestBody DeliverInsureCmd deliverInsureCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
 
         //更新交付单投保状态  调用车辆更新车辆状态为已投保

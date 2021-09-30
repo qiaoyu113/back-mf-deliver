@@ -231,18 +231,26 @@ public class SyncServiceImpl implements SyncServiceI {
     private Map<String, DictDataDTO> getDictDataDtoMapByDictType(String dictType) {
         DictTypeDTO dictTypeDTO = new DictTypeDTO();
         dictTypeDTO.setDictType(dictType);
-        List<DictDataDTO> dictDataDTOList = dictAggregateRootApi.getDictByType(dictTypeDTO);
-        if (dictDataDTOList == null || dictDataDTOList.isEmpty()) {
-            return new HashMap<>(16);
+        Result<List<DictDataDTO>> dictDataResult = dictAggregateRootApi.getDictDataByType(dictTypeDTO);
+        if (dictDataResult.getCode() == 0) {
+            List<DictDataDTO> dictDataDTOList = dictDataResult.getData();
+            if (dictDataDTOList == null || dictDataDTOList.isEmpty()) {
+                return new HashMap<>(16);
+            }
+            Map<String, DictDataDTO> dictDataDTOMap = dictDataDTOList.stream().collect(Collectors.toMap(DictDataDTO::getDictValue, Function.identity(), (key1, key2) -> key1));
+            return dictDataDTOMap;
         }
-        Map<String, DictDataDTO> dictDataDTOMap = dictDataDTOList.stream().collect(Collectors.toMap(DictDataDTO::getDictValue, Function.identity(), (key1, key2) -> key1));
-        return dictDataDTOMap;
+        return null;
     }
 
     /**
      * 字典值
      */
     private String getDictDataDtoLabelByValue(Map<String, DictDataDTO> dictDataDtoMap, String value) {
+        if (dictDataDtoMap == null) {
+            return "";
+        }
+
         DictDataDTO dictDataDTO = dictDataDtoMap.get(value);
         if (dictDataDTO != null) {
             return dictDataDTO.getDictLabel();

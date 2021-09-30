@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.domain;
 
+import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
@@ -30,6 +31,7 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
 
     @Override
     @PostMapping("/getDeliverVehicleDto")
+    @PrintParam
     public Result<DeliverVehicleDTO> getDeliverVehicleDto(@RequestParam("deliverNo") String deliverNo) {
         DeliverVehicle deliverVehicle = deliverVehicleGateway.getDeliverVehicleByDeliverNo(deliverNo);
         DeliverVehicleDTO deliverVehicleDTO = new DeliverVehicleDTO();
@@ -42,6 +44,7 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
 
     @Override
     @PostMapping("/addDeliverVehicle")
+    @PrintParam
     public Result<String> addDeliverVehicle(@RequestBody List<DeliverVehicleDTO> deliverVehicleDTOList) {
 
         if (deliverVehicleDTOList != null) {

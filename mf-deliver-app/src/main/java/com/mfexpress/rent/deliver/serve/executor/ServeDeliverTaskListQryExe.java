@@ -34,7 +34,9 @@ public class ServeDeliverTaskListQryExe {
     private OfficeAggregateRootApi officeAggregateRootApi;
 
     public ServeDeliverTaskListVO execute(ServeDeliverTaskQryCmd serveDeliverTaskQryCmd, TokenInfo tokenInfo) {
+
         ServeDeliverTaskListVO serveDeliverTaskListVO = new ServeDeliverTaskListVO();
+
         List<ServeDeliverTaskVO> serveDeliverTaskVOList = new LinkedList<>();
         Result<List<SysOfficeDto>> sysOfficeResult = officeAggregateRootApi.getOfficeCityListByRegionId(tokenInfo.getOfficeId());
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
