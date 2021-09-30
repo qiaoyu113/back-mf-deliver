@@ -10,6 +10,7 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiSort;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -19,6 +20,7 @@ import java.util.List;
 @RequestMapping("/api/deliver/v3/recovervehicle")
 @Api(tags = "api--交付--1.4收车", value = "RecoverVehicleController")
 @ApiSort(4)
+@Slf4j
 public class RecoverVehicleController {
 
     @Resource
@@ -116,6 +118,7 @@ public class RecoverVehicleController {
     @ApiOperation(value = "收车退保")
     @PrintParam
     public Result<String> toBackInsure(@RequestBody RecoverBackInsureCmd recoverBackInsureCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        long start = System.currentTimeMillis();
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果
@@ -123,7 +126,10 @@ public class RecoverVehicleController {
         }
         //交付单更新保险状态  更新车辆保险状态
         recoverBackInsureCmd.setCarServiceId(tokenInfo.getId());
-        return Result.getInstance(recoverVehicleServiceI.toBackInsure(recoverBackInsureCmd)).success();
+        String s = recoverVehicleServiceI.toBackInsure(recoverBackInsureCmd);
+        long end = System.currentTimeMillis();
+        log.info("toBackInsure:" + recoverBackInsureCmd.getServeNoList().get(0) + "，用时" + (end - start));
+        return Result.getInstance(s).success();
     }
 
     @PostMapping("/toDeduction")
