@@ -30,10 +30,10 @@
             <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.TraceIdPatternLogbackLayout">
                 <if condition='property("env").contains("dev")'>
                     <then>
-                        <pattern>%red([%d{yyyy-MM-dd HH:mm:ss.SSS}]) %green(%X{applicationName:-0}).%highlight(%level) #tid:%green(%replace(%tid){'[(TID:)|(N/A)|\s]?', ''}) #traceId:%yellow(%X{traceId:-0}) host:%boldMagenta(%X{localIp:-0}) from:%yellow(%X{from:-0}) uri:%boldMagenta(%X{uri:-0}) clientIp:%yellow(%X{clientIp:-0}) rpcId:%yellow(%X{nextRequestSeq:-0}) userId:%green(%X{userId:-0}) %cyan(%msg%n)</pattern>
+                        <pattern>%red([%d{yyyy-MM-dd HH:mm:ss.SSS}]) %green(%X{applicationName:-0}).app.%highlight(%level) #tid:%green(%replace(%tid){'[(TID:)|(N/A)|\s]?', ''}) #traceId:%yellow(%X{traceId:-0}) host:%boldMagenta(%X{localIp:-0}) from:%yellow(%X{from:-0}) uri:%boldMagenta(%X{uri:-0}) clientIp:%yellow(%X{clientIp:-0}) rpcId:%yellow(%X{nextRequestSeq:-0}) userId:%green(%X{userId:-0}) %cyan(%msg%n)</pattern>
                     </then>
                     <else>
-                        <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %X{applicationName:-0}.%level #tid:%replace(%tid){'[(TID:)|(N/A)|\s]?', ''} #traceId:%X{traceId:-0} host:%X{localIp:-0} from:%X{from:-0} uri:%X{uri:-0} clientIp:%X{clientIp:-0} rpcId:%X{nextRequestSeq:-0} userId:%X{userId:-0} %msg%n</pattern>
+                        <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %X{applicationName:-0}.app.%level #tid:%replace(%tid){'[(TID:)|(N/A)|\s]?', ''} #traceId:%X{traceId:-0} host:%X{localIp:-0} from:%X{from:-0} uri:%X{uri:-0} clientIp:%X{clientIp:-0} rpcId:%X{nextRequestSeq:-0} userId:%X{userId:-0} %msg%n</pattern>
                     </else>
                 </if>
             </layout>
@@ -51,7 +51,7 @@
             <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.TraceIdPatternLogbackLayout">
                 <if condition='property("env").contains("dev")'>
                     <then>
-                        <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %X{applicationName:-0}.sql.%level #tid:%replace(%tid){'[(TID:)|(N/A)|\s]?', ''} #traceId:%X{traceId:-0} host:%X{localIp:-0} from:%X{from:-0} uri:%X{uri:-0} clientIp:%X{clientIp:-0} rpcId:%X{nextRequestSeq:-0} userId:%X{userId:-0} time:%X{sqlCost:-0} %msg%n</pattern>
+                        <pattern>%red([%d{yyyy-MM-dd HH:mm:ss.SSS}]) %green(%X{applicationName:-0}).sql.%highlight(%level) #tid:%green(%replace(%tid){'[(TID:)|(N/A)|\s]?', ''}) #traceId:%yellow(%X{traceId:-0}) host:%boldMagenta(%X{localIp:-0}) from:%yellow(%X{from:-0}) uri:%boldMagenta(%X{uri:-0}) clientIp:%yellow(%X{clientIp:-0}) rpcId:%yellow(%X{nextRequestSeq:-0}) userId:%green(%X{userId:-0}) %cyan(%msg%n)</pattern>
                     </then>
                     <else>
                         <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %X{applicationName:-0}.sql.%level #tid:%replace(%tid){'[(TID:)|(N/A)|\s]?', ''} #traceId:%X{traceId:-0} host:%X{localIp:-0} from:%X{from:-0} uri:%X{uri:-0} clientIp:%X{clientIp:-0} rpcId:%X{nextRequestSeq:-0} userId:%X{userId:-0} time:%X{sqlCost:-0} %msg%n</pattern>
@@ -73,7 +73,7 @@
             <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.TraceIdPatternLogbackLayout">
                 <if condition='property("env").contains("dev")'>
                     <then>
-                        <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %X{applicationName:-0}.request.%level #tid:%replace(%tid){'[(TID:)|(N/A)|\s]?', ''} #traceId:%X{traceId:-0} host:%X{localIp:-0} from:%X{from:-0} uri:%X{uri:-0} clientIp:%X{clientIp:-0} rpcId:%X{nextRequestSeq:-0} userId:%X{userId:-0} totalTime:%X{requestCost} asyncTime:0 dbCount:0 dbTime:0 memPeakUsage:0 requestParams:%X{paramJson} %msg %n</pattern>
+                        <pattern>%red([%d{yyyy-MM-dd HH:mm:ss.SSS}]) %green(%X{applicationName:-0}).request.%highlight(%level) #tid:%green(%replace(%tid){'[(TID:)|(N/A)|\s]?', ''}) #traceId:%yellow(%X{traceId:-0}) host:%boldMagenta(%X{localIp:-0}) from:%yellow(%X{from:-0}) uri:%boldMagenta(%X{uri:-0}) clientIp:%yellow(%X{clientIp:-0}) rpcId:%yellow(%X{nextRequestSeq:-0}) userId:%green(%X{userId:-0}) %cyan(%msg%n)</pattern>
                     </then>
                     <else>
                         <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %X{applicationName:-0}.request.%level #tid:%replace(%tid){'[(TID:)|(N/A)|\s]?', ''} #traceId:%X{traceId:-0} host:%X{localIp:-0} from:%X{from:-0} uri:%X{uri:-0} clientIp:%X{clientIp:-0} rpcId:%X{nextRequestSeq:-0} userId:%X{userId:-0} totalTime:%X{requestCost} asyncTime:0 dbCount:0 dbTime:0 memPeakUsage:0 requestParams:%X{paramJson} %msg %n</pattern>
@@ -94,7 +94,7 @@
             <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.TraceIdPatternLogbackLayout">
                 <if condition='property("env").contains("dev")'>
                     <then>
-                        <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %X{applicationName:-0}.error.%level #tid:%replace(%tid){'[(TID:)|(N/A)|\s]?', ''} #traceId:%X{traceId:-0} host:%X{localIp:-0} from:%X{from:-0} uri:%X{uri:-0} clientIp:%X{clientIp:-0} rpcId:%X{nextRequestSeq:-0} userId:%X{userId:-0} totalTime:%X{totalTime:-0} asyncTime:%X{asyncTime:-0} file:%X{file:-0} line:0 error:%msg %n</pattern>
+                        <pattern>%red([%d{yyyy-MM-dd HH:mm:ss.SSS}]) %green(%X{applicationName:-0}).error.%highlight(%level) #tid:%green(%replace(%tid){'[(TID:)|(N/A)|\s]?', ''}) #traceId:%yellow(%X{traceId:-0}) host:%boldMagenta(%X{localIp:-0}) from:%yellow(%X{from:-0}) uri:%boldMagenta(%X{uri:-0}) clientIp:%yellow(%X{clientIp:-0}) rpcId:%yellow(%X{nextRequestSeq:-0}) userId:%green(%X{userId:-0}) %cyan(%msg%n)</pattern>
                     </then>
                     <else>
                         <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %X{applicationName:-0}.error.%level #tid:%replace(%tid){'[(TID:)|(N/A)|\s]?', ''} #traceId:%X{traceId:-0} host:%X{localIp:-0} from:%X{from:-0} uri:%X{uri:-0} clientIp:%X{clientIp:-0} rpcId:%X{nextRequestSeq:-0} userId:%X{userId:-0} totalTime:%X{totalTime:-0} asyncTime:%X{asyncTime:-0} file:%X{file:-0} line:0 error:%msg %n</pattern>
@@ -151,37 +151,52 @@
 
     <logger name="request" level="info" additivity="false">
         <!-- this only enable in d2 -->
-        <if condition='property("env").contains("dev")'>
+        <if condition='property("env").contains("prod")'>
             <then>
                 <appender-ref ref="ASYNC_OUTPUT_FILE_REQUEST"/>
             </then>
+            <else>
+                <appender-ref ref="stdout"/>
+            </else>
         </if>
     </logger>
 
     <logger name="sql" level="info" additivity="false">
         <!-- this only enable in dev -->
-        <if condition='property("env").contains("dev")'>
+        <if condition='property("env").contains("prod")'>
             <then>
                 <appender-ref ref="ASYNC_OUTPUT_FILE_SQL"/>
             </then>
+            <else>
+                <appender-ref ref="stdout"/>
+            </else>
         </if>
     </logger>
 
     <logger name="exception" level="info" additivity="false">
-        <appender-ref ref="ASYNC_OUTPUT_FILE_EXCEPTION" />
+        <if condition='property("env").contains("prod")'>
+            <then>
+                <appender-ref ref="ASYNC_OUTPUT_FILE_EXCEPTION"/>
+            </then>
+            <else>
+                <appender-ref ref="stdout"/>
+            </else>
+        </if>
     </logger>
 
-    <!--    <logger name="com.mfexpress" level="DEBUG"/>-->
-    <!--    <logger name="com.firmiana" level="DEBUG"/>-->
+<!--    yangxg - 配置到 nacos config中-->
+<!--    <logger name="com.mfexpress" level="DEBUG"/>-->
+<!--    <logger name="com.firmiana" level="DEBUG"/>-->
 
 
     <root level="info">
-        <appender-ref ref="ASYNC_OUTPUT_FILE_STDOUT"/>
-        <!-- this only enable in dev -->
-        <if condition='property("env").contains("dev")'>
+        <if condition='property("env").contains("prod")'>
             <then>
-                <appender-ref ref="stdout"/>
+                <appender-ref ref="ASYNC_OUTPUT_FILE_STDOUT"/>
             </then>
+            <else>
+                <appender-ref ref="stdout"/>
+            </else>
         </if>
     </root>
 
