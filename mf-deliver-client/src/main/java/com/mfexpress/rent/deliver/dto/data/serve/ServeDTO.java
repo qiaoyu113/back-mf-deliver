@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.dto.data.serve;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
@@ -34,6 +35,7 @@ public class ServeDTO {
     private Integer cityId;
 
     private Integer orgId;
+    private BigDecimal rent;
 
     private Date createTime;
 

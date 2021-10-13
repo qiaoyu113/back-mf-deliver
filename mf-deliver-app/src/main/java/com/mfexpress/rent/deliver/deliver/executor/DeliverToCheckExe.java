@@ -20,7 +20,7 @@ public class DeliverToCheckExe {
 
 
     public String execute(DeliverCheckCmd deliverCheckCmd) {
-        Result<String> result = deliverAggregateRootApi.toCheck(deliverCheckCmd.getServeNo());
+        Result<Integer> result = deliverAggregateRootApi.toCheck(deliverCheckCmd.getServeNo());
 
         DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();
         deliverCarServiceDTO.setServeNoList(Arrays.asList(deliverCheckCmd.getServeNo()));
@@ -31,7 +31,7 @@ public class DeliverToCheckExe {
         syncServiceI.execOne(deliverCheckCmd.getServeNo());
 
 
-        return result.getData();
+        return result.getMsg();
     }
 }
 

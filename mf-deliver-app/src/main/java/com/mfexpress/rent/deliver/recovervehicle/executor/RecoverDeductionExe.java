@@ -37,15 +37,17 @@ public class RecoverDeductionExe {
             return result.getMsg();
 
         }
+        Result<String> serveResult = serveAggregateRootApi.completed(recoverDeductionCmd.getServeNo());
+        if (serveResult.getCode() != 0) {
+            return serveResult.getMsg();
+        }
+
         DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();
         deliverCarServiceDTO.setServeNoList(Arrays.asList(recoverDeductionCmd.getServeNo()));
         deliverCarServiceDTO.setCarServiceId(recoverDeductionCmd.getCarServiceId());
         deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
-        //返回已完成服务单编号 更新服务单已完成状态
-        if (result.getData().equals(deliverDTO.getServeNo())) {
-            return serveAggregateRootApi.completed(recoverDeductionCmd.getServeNo()).getData();
-        }
         syncServiceI.execOne(recoverDeductionCmd.getServeNo());
-        return "";
+
+        return serveResult.getData();
     }
 }

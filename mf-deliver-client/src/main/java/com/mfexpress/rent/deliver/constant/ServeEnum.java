@@ -5,7 +5,8 @@ public enum ServeEnum {
     PRESELECTED(1, "已预选"),
     DELIVER(2, "已发车"),
     RECOVER(3, "已收车"),
-    COMPLETED(4, "已完成");
+    COMPLETED(4, "已完成"),
+    REPAIR(5, "维修中");
 
 
     private Integer code;

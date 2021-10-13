@@ -13,6 +13,8 @@ import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
 import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
+import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -30,6 +32,8 @@ public class DeliverVehicleExe {
     private ServeAggregateRootApi serveAggregateRootApi;
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
+    @Resource
+    private CustomerAggregateRootApi customerAggregateRootApi;
     @Resource
     private SyncServiceI syncServiceI;
 
@@ -58,6 +62,10 @@ public class DeliverVehicleExe {
         vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.LEASE.getCode());
         vehicleSaveCmd.setId(carIdList);
         vehicleSaveCmd.setCustomerId(deliverVehicleCmd.getCustomerId());
+        Result<CustomerVO> customerResult = customerAggregateRootApi.getById(deliverVehicleCmd.getCustomerId());
+        if (customerResult.getData() != null) {
+            vehicleSaveCmd.setAddress(customerResult.getData().getName());
+        }
         Result<String> vehicleResult = vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
         if (vehicleResult.getCode() != 0) {
             return vehicleResult.getMsg();

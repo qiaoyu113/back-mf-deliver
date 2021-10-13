@@ -38,7 +38,7 @@ public class RecoverVehicleQryExe {
             Object[] orgIdList = sysOfficeResult.getData().stream().map(SysOfficeDto::getId).toArray();
             boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIdList));
         }
-
+        //boolQueryBuilder.mustNot(QueryBuilders.matchQuery("serveStatus"))
         boolQueryBuilder.must(QueryBuilders.matchQuery("customerId", recoverApplyQryCmd.getCustomerId()))
                 .must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.DELIVER.getCode()));
 

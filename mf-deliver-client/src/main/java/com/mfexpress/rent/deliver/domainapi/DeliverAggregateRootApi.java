@@ -24,7 +24,7 @@ public interface DeliverAggregateRootApi {
     Result<String> addDeliver(@RequestBody List<DeliverDTO> list);
 
     @PostMapping("/toCheck")
-    Result<String> toCheck(@RequestParam("serveNo") String serveNo);
+    Result<Integer> toCheck(@RequestParam("serveNo") String serveNo);
 
     @PostMapping("/toReplace")
     Result<String> toReplace(@RequestBody DeliverDTO deliverDTO);
@@ -42,7 +42,7 @@ public interface DeliverAggregateRootApi {
     Result<String> cancelRecover(@RequestParam("serveNo") String serveNo);
 
     @PostMapping("/toBackInsure")
-    Result<List<String>> toBackInsure(@RequestBody DeliverBackInsureDTO deliverBackInsureDTO);
+    Result<String> toBackInsure(@RequestBody DeliverBackInsureDTO deliverBackInsureDTO);
 
     @PostMapping("/toDeduction")
     Result<String> toDeduction(@RequestBody DeliverDTO deliverDTO);

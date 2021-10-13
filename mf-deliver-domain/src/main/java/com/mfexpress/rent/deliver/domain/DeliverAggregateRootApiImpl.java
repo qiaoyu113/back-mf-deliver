@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -74,10 +73,15 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @Override
     @PostMapping("/toCheck")
     @PrintParam
-    public Result<String> toCheck(@RequestParam("serveNo") String serveNo) {
-        Deliver deliver = Deliver.builder().isCheck(JudgeEnum.YES.getCode()).build();
+    public Result<Integer> toCheck(@RequestParam("serveNo") String serveNo) {
+        //2021-10-13修改 收车验车时交付单变更为已收车
+        Deliver deliver = deliverGateway.getDeliverByServeNo(serveNo);
+        deliver.setIsCheck(JudgeEnum.YES.getCode());
+        if (deliver.getStatus().equals(DeliverEnum.IS_RECOVER.getCode())) {
+            deliver.setStatus(DeliverEnum.RECOVER.getCode());
+        }
         int i = deliverGateway.updateDeliverByServeNo(serveNo, deliver);
-        return i > 0 ? Result.getInstance("验车成功").success() : Result.getInstance("验车失败").fail(-1, "验车失败");
+        return i > 0 ? Result.getInstance(deliver.getCarId()).success() : Result.getInstance(0).fail(-1, "验车失败");
     }
 
     @Override
@@ -137,21 +141,22 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @Override
     @PostMapping("/toBackInsure")
     @PrintParam
-    public Result<List<String>> toBackInsure(@RequestBody DeliverBackInsureDTO deliverBackInsureDTO) {
+    public Result<String> toBackInsure(@RequestBody DeliverBackInsureDTO deliverBackInsureDTO) {
         Deliver deliver = Deliver.builder().isInsurance(JudgeEnum.YES.getCode())
-                .deliverStatus(DeliverEnum.RECOVER.getCode())
                 .insuranceRemark(deliverBackInsureDTO.getInsuranceRemark()).build();
         int i = deliverGateway.updateDeliverByServeNoList(deliverBackInsureDTO.getServeNoList(), deliver);
-        log.info("key:==================" + deliverBackInsureDTO.getServeNoList() + "value:===================" + deliver.toString());
-        //查看是否已经处理违章
+
+        //修改 退保之后在处理才能处理违章
+      /*  //查看是否已经处理违章
         List<Deliver> deliverList = deliverGateway.getDeliverDeductionByServeNoList(deliverBackInsureDTO.getServeNoList());
         List<String> serveNoList = new ArrayList<>();
         if (deliverList != null) {
             serveNoList = deliverList.stream().map(Deliver::getServeNo).collect(Collectors.toList());
 
             return Result.getInstance(serveNoList).success();
-        }
-        return Result.getInstance(serveNoList).success();
+        }*/
+        return i > 0 ? Result.getInstance("退保成功").success() : Result.getInstance("退保失败").fail(-1, "退保失败");
+
     }
 
     @Override
@@ -161,10 +166,9 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         Deliver deliver = new Deliver();
         BeanUtil.copyProperties(deliverDTO, deliver);
         deliver.setIsDeduction(JudgeEnum.YES.getCode());
-        //设置收车中
-        deliver.setDeliverStatus(DeliverEnum.IS_RECOVER.getCode());
         int i = deliverGateway.updateDeliverByServeNo(deliver.getServeNo(), deliver);
-        //查看是否处理保险
+
+/*        //查看是否处理保险
         Deliver deliver1 = deliverGateway.getDeliverByServeNo(deliver.getServeNo());
         if (deliver1.getIsInsurance().equals(JudgeEnum.YES.getCode())) {
             //已经处理保险更新完成状态
@@ -172,7 +176,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
             deliverGateway.updateDeliverByServeNo(deliver1.getServeNo(), deliver2);
             //返回已完成的服务单编号
             return Result.getInstance(deliver.getServeNo()).success();
-        }
+        }*/
         return i > 0 ? Result.getInstance("处理违章完成").success() : Result.getInstance("处理违章失败").fail(-1, "处理违章失败");
     }
 
@@ -195,9 +199,9 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PrintParam
     public Result<List<Integer>> cancelSelectedByServeNoList(@RequestBody List<String> serveNoList) {
         List<Deliver> deliverList = deliverGateway.getDeliverByServeNoList(serveNoList);
-
+        Deliver deliver = Deliver.builder().status(ValidStatusEnum.INVALID.getCode()).build();
+        deliverGateway.updateDeliverByServeNoList(serveNoList, deliver);
         List<Integer> carIdList = deliverList.stream().map(Deliver::getCarId).collect(Collectors.toList());
-
         return Result.getInstance(carIdList).success();
     }
 
