@@ -19,6 +19,8 @@ import javax.annotation.Resource;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RestController
@@ -102,5 +104,14 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         }
 
         return Result.getInstance(recoverVehicleDTOList).success();
+    }
+
+    @Override
+    @PostMapping("getRecoverVehicleByServeNo")
+    public Result<Map<String, RecoverVehicle>> getRecoverVehicleByServeNo(@RequestBody List<String> serveNoList) {
+        List<RecoverVehicle> recoverVehicleList = recoverVehicleGateway.selectRecoverByServeNoList(serveNoList);
+        Map<String, RecoverVehicle> map = recoverVehicleList.stream().collect(Collectors.toMap(RecoverVehicle::getServeNo, Function.identity()));
+
+        return Result.getInstance(map).success();
     }
 }

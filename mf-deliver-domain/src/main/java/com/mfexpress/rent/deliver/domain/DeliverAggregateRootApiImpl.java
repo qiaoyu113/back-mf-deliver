@@ -18,12 +18,15 @@ import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RestController
@@ -252,5 +255,29 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         Deliver deliver = Deliver.builder().carServiceId(deliverCarServiceDTO.getCarServiceId()).build();
         deliverGateway.updateDeliverByServeNoList(deliverCarServiceDTO.getServeNoList(), deliver);
         return Result.getInstance("").success();
+    }
+
+    @Override
+    @PostMapping("/getDeliverByServeNoList")
+    public Result<Map<String, Deliver>> getDeliverByServeNoList(List<String> serveNoList) {
+        List<Deliver> deliverList = deliverGateway.getDeliverByServeNoList(serveNoList);
+        Map<String, Deliver> map = deliverList.stream().collect(Collectors.toMap(Deliver::getServeNo, Function.identity()));
+        return Result.getInstance(map).success();
+    }
+
+    @Override
+    @PostMapping("/getDeduct")
+    public Result<List<DeliverDTO>> getDeduct(@RequestBody List<String> serveNoList) {
+        List<Deliver> deliverList = deliverGateway.getDeliverByDeductStatus(serveNoList);
+        if (deliverList != null) {
+            List<DeliverDTO> deliverDTOList = deliverList.stream().map(deliver -> {
+                DeliverDTO deliverDTO = new DeliverDTO();
+                BeanUtils.copyProperties(deliver, deliverDTO);
+                return deliverDTO;
+            }).collect(Collectors.toList());
+            return Result.getInstance(deliverDTOList).success();
+        }
+        return Result.getInstance((List<DeliverDTO>) null).success();
+
     }
 }

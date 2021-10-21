@@ -6,12 +6,14 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverBackInsureDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleMqDTO;
+import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
+import java.util.Map;
 
 @FeignClient(name = "mf-deliver", path = "/domain/deliver/v3/deliver", contextId = "mf-deliver-aggregate-root-api")
 public interface DeliverAggregateRootApi {
@@ -63,6 +65,11 @@ public interface DeliverAggregateRootApi {
     @PostMapping("/saveCarServiceId")
     Result<String> saveCarServiceId(@RequestBody DeliverCarServiceDTO deliverCarServiceDTO);
 
+    @PostMapping("/getDeliverByServeNoList")
+    Result<Map<String, Deliver>> getDeliverByServeNoList(@RequestBody List<String> serveNoList);
+
+    @PostMapping("/getDeduct")
+    Result<List<DeliverDTO>> getDeduct(@RequestBody List<String> serveNoList);
 
 
 }

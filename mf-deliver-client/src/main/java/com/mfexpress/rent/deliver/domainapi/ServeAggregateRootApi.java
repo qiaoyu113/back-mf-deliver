@@ -1,15 +1,20 @@
 package com.mfexpress.rent.deliver.domainapi;
 
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeAddDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDailyDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
+import com.mfexpress.rent.deliver.dto.entity.Serve;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
+import java.util.Map;
 
 @FeignClient(name = "mf-deliver", path = "/domain/deliver/v3/serve", contextId = "mf-deliver-serve-aggregate-root-api")
 public interface ServeAggregateRootApi {
@@ -52,5 +57,13 @@ public interface ServeAggregateRootApi {
     @PostMapping("/getServeNoListAll")
     Result<List<String>> getServeNoListAll();
 
+    @PostMapping("/getServeDailyDTO")
+    Result<PagePagination<ServeDailyDTO>> getServeDailyDTO(@RequestBody ListQry listQry);
+
+    @PostMapping("/getServeMapByServeNoList")
+    Result<Map<String, Serve>> getServeMapByServeNoList(@RequestBody List<String> serveNoList);
+
+    @PostMapping("/getCycleServe")
+    Result<PagePagination<ServeDTO>>getCycleServe(@RequestBody ListQry listQry);
 
 }

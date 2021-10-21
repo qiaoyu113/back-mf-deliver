@@ -1,18 +1,28 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 
+import cn.hutool.core.date.DateUtil;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.charge.api.DeductAggrgateRootApi;
+import com.mfexpress.rent.charge.constant.BusinessChargeTypeEnum;
+import com.mfexpress.rent.charge.dto.data.deduct.DeductDTO;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 @Component
 public class RecoverDeductionExe {
@@ -23,6 +33,8 @@ public class RecoverDeductionExe {
 
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
+    @Resource
+    private DeductAggrgateRootApi deductAggrgateRootApi;
     @Resource
     private SyncServiceI syncServiceI;
 
@@ -40,6 +52,45 @@ public class RecoverDeductionExe {
         Result<String> serveResult = serveAggregateRootApi.completed(recoverDeductionCmd.getServeNo());
         if (serveResult.getCode() != 0) {
             return serveResult.getMsg();
+        }
+        //生成消分代办金额扣罚项
+        List<DeductDTO> deductDTOList = new LinkedList<>();
+        Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(recoverDeductionCmd.getServeNo());
+        Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(recoverDeductionCmd.getServeNo());
+        if (serveDTOResult.getData() != null && deliverDTOResult.getData() != null) {
+            ServeDTO serveDTO = serveDTOResult.getData();
+            DeliverDTO deliverDTO1 = deliverDTOResult.getData();
+
+            if (!recoverDeductionCmd.getDeductionAmount().equals(BigDecimal.ZERO)) {
+                DeductDTO deductDTO = new DeductDTO();
+                deductDTO.setServeNo(recoverDeductionCmd.getServeNo());
+                deductDTO.setCustomerId(serveDTO.getCustomerId());
+                deductDTO.setOrderId(serveDTO.getOrderId());
+                deductDTO.setStatus(JudgeEnum.NO.getCode());
+                deductDTO.setDeductPoints(recoverDeductionCmd.getViolationPoints());
+                deductDTO.setCreateDate(DateUtil.formatDate(new Date()));
+                deductDTO.setCarNum(deliverDTO1.getCarNum());
+                deductDTO.setFrameNum(deliverDTO1.getFrameNum());
+                deductDTO.setType(BusinessChargeTypeEnum.DEDUCT_ELIMINATE.getCode());
+                deductDTO.setAmount(recoverDeductionCmd.getDeductionAmount());
+                deductDTOList.add(deductDTO);
+            }
+            if (!recoverDeductionCmd.getAgencyAmount().equals(BigDecimal.ZERO)) {
+                DeductDTO deductDTO = new DeductDTO();
+                deductDTO.setServeNo(recoverDeductionCmd.getServeNo());
+                deductDTO.setCustomerId(serveDTO.getCustomerId());
+                deductDTO.setOrderId(serveDTO.getOrderId());
+                deductDTO.setStatus(JudgeEnum.NO.getCode());
+                deductDTO.setDeductPoints(recoverDeductionCmd.getViolationPoints());
+                deductDTO.setCreateDate(DateUtil.formatDate(new Date()));
+                deductDTO.setCarNum(deliverDTO1.getCarNum());
+                deductDTO.setFrameNum(deliverDTO1.getFrameNum());
+                deductDTO.setType(BusinessChargeTypeEnum.DEDUCT_AGENCY.getCode());
+                deductDTO.setAmount(recoverDeductionCmd.getAgencyAmount());
+                deductDTOList.add(deductDTO);
+
+            }
+            deductAggrgateRootApi.createDeduct(deductDTOList);
         }
 
         DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();

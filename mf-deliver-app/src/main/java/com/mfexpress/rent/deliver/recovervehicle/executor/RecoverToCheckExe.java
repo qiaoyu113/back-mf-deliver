@@ -1,14 +1,19 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 
+import cn.hutool.core.date.DateUtil;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.charge.api.DailyAggregateRootApi;
+import com.mfexpress.rent.charge.dto.data.daily.DailyDTO;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
@@ -20,6 +25,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 @Component
 public class RecoverToCheckExe {
@@ -37,6 +44,8 @@ public class RecoverToCheckExe {
     private WarehouseAggregateRootApi warehouseAggregateRootApi;
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
+    @Resource
+    private DailyAggregateRootApi dailyAggregateRootApi;
 
     public String execute(RecoverVechicleCmd recoverVechicleCmd) {
         //完善收车单信息
@@ -67,10 +76,26 @@ public class RecoverToCheckExe {
         if (serveResult.getCode() != 0) {
             return serveResult.getMsg();
         }
+
         DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();
         deliverCarServiceDTO.setCarServiceId(recoverVechicleCmd.getCarServiceId());
         deliverCarServiceDTO.setServeNoList(Arrays.asList(recoverVechicleCmd.getServeNo()));
         deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
+
+        //生成收车租赁日报
+        Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(recoverVechicleCmd.getServeNo());
+        if (serveDTOResult.getData() != null) {
+            List<DailyDTO> dailyDTOList = new LinkedList<>();
+            ServeDTO serveDTO = serveDTOResult.getData();
+            DailyDTO dailyDTO = new DailyDTO();
+            dailyDTO.setCustomerId(serveDTO.getCustomerId());
+            dailyDTO.setStatus(JudgeEnum.YES.getCode());
+            dailyDTO.setRentDate(DateUtil.format(recoverVechicleCmd.getRecoverVehicleTime(), "yyyy-MM-dd"));
+            dailyDTO.setServeNo(recoverVechicleCmd.getServeNo());
+            dailyDTO.setDelFlag(JudgeEnum.NO.getCode());
+            dailyDTOList.add(dailyDTO);
+            dailyAggregateRootApi.createDaily(dailyDTOList);
+        }
 
         //同步
         syncServiceI.execOne(recoverVechicleCmd.getServeNo());

@@ -8,6 +8,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
+import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyQryCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyVO;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
@@ -38,7 +39,7 @@ public class RecoverVehicleQryExe {
             Object[] orgIdList = sysOfficeResult.getData().stream().map(SysOfficeDto::getId).toArray();
             boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIdList));
         }
-        //boolQueryBuilder.mustNot(QueryBuilders.matchQuery("serveStatus"))
+        boolQueryBuilder.mustNot(QueryBuilders.matchQuery("serveStatus", ServeEnum.REPAIR.getCode()));
         boolQueryBuilder.must(QueryBuilders.matchQuery("customerId", recoverApplyQryCmd.getCustomerId()))
                 .must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.DELIVER.getCode()));
 

@@ -19,5 +19,9 @@ public interface ServeGateway {
     List<ServePreselectedDTO> getServePreselectedByOrderId(List<Long> orderId);
     List<String> getServeNoListAll();
 
+    List<Serve>getServeByStatus();
+    List<Serve>getCycleServe();
+    List<Serve> getServeByServeNoList(List<String> serveNoList);
+
 
 }

@@ -2,23 +2,30 @@ package com.mfexpress.rent.deliver.domain;
 
 
 import cn.hutool.core.bean.BeanUtil;
+import com.github.pagehelper.PageHelper;
 import com.mfexpress.component.log.PrintParam;
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import io.swagger.annotations.Api;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/domain/deliver/v3/serve")
@@ -182,6 +189,68 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     public Result<List<String>> getServeNoListAll() {
         List<String> serveNoListAll = serveGateway.getServeNoListAll();
         return Result.getInstance(serveNoListAll);
+    }
+
+    @Override
+    @PostMapping("/getServeDailyDTO")
+    public Result<PagePagination<ServeDailyDTO>> getServeDailyDTO(@RequestBody ListQry listQry) {
+        try {
+            PageHelper.clearPage();
+            if (listQry.getLimit() == 0) {
+                PageHelper.startPage(1, listQry.getLimit());
+            }
+            PageHelper.startPage(listQry.getPage(), listQry.getLimit());
+            //查询当前状态为已发车或维修中
+
+            List<Serve> serveList = serveGateway.getServeByStatus();
+            if (serveList != null) {
+                List<ServeDailyDTO> serveDailyDTOList = serveList.stream().map(serve -> {
+                    ServeDailyDTO serveDailyDTO = new ServeDailyDTO();
+                    serveDailyDTO.setServeNo(serve.getServeNo());
+                    serveDailyDTO.setCustomerId(serve.getCustomerId());
+                    return serveDailyDTO;
+                }).collect(Collectors.toList());
+                return Result.getInstance(PagePagination.getInstance(serveDailyDTOList)).success();
+            }
+            return Result.getInstance((PagePagination<ServeDailyDTO>) null).fail(-1, "");
+        } catch (Exception e) {
+            return Result.getInstance((PagePagination<ServeDailyDTO>) null).fail(-1, "");
+        }
+    }
+
+    @Override
+    @PostMapping("/getServeMapByServeNoList")
+    public Result<Map<String, Serve>> getServeMapByServeNoList(@RequestBody List<String> serveNoList) {
+        List<Serve> serveList = serveGateway.getServeByServeNoList(serveNoList);
+        Map<String, Serve> map = serveList.stream().collect(Collectors.toMap(Serve::getServeNo, Function.identity()));
+        return Result.getInstance(map).success();
+    }
+
+    @Override
+    @PostMapping("/getCycleServe")
+    public Result<PagePagination<ServeDTO>> getCycleServe(@RequestBody ListQry listQry) {
+        try {
+            PageHelper.clearPage();
+            if (listQry.getLimit() == 0) {
+                PageHelper.startPage(1, listQry.getLimit());
+            }
+            PageHelper.startPage(listQry.getPage(), listQry.getLimit());
+            //查询当前状态为已发车或维修中
+
+            List<Serve> serveList = serveGateway.getCycleServe();
+            if (serveList != null) {
+                List<ServeDTO> serveDailyDTOList = serveList.stream().map(serve -> {
+                    ServeDTO serveDTO = new ServeDTO();
+                    BeanUtils.copyProperties(serve, serveDTO);
+                    return serveDTO;
+                }).collect(Collectors.toList());
+                return Result.getInstance(PagePagination.getInstance(serveDailyDTOList)).success();
+            }
+            return Result.getInstance((PagePagination<ServeDTO>) null).fail(-1, "");
+        } catch (Exception e) {
+            return Result.getInstance((PagePagination<ServeDTO>) null).fail(-1, "");
+        }
+
     }
 
 

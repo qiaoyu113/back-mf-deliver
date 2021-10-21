@@ -23,5 +23,8 @@ public interface DeliverGateway {
 
     List<Deliver> getDeliverByServeNoList(List<String> serveNoList);
 
+    List<Deliver>getDeliverByDeductStatus(List<String>serveNoList);
+
+
 
 }
