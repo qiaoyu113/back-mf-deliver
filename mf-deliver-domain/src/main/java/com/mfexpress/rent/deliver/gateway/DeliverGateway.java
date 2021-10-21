@@ -13,7 +13,7 @@ public interface DeliverGateway {
 
     Deliver getDeliverByServeNo(String serveNo);
 
-    Deliver getDeliverByCarId(Integer carId);
+    Deliver getDeliverByCarIdAndDeliverStatus(Integer carId, Integer deliverStatus);
 
     int updateInsuranceStatusByCarId(List<Integer> carId, Integer status1, Integer status2);
 
@@ -22,6 +22,5 @@ public interface DeliverGateway {
     List<Deliver> getDeliverDeductionByServeNoList(List<String> serveNoList);
 
     List<Deliver> getDeliverByServeNoList(List<String> serveNoList);
-
 
 }

@@ -16,6 +16,7 @@ import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -184,5 +185,76 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         return Result.getInstance(serveNoListAll);
     }
 
+    /* luzheng add */
+    @Override
+    @PostMapping("/toRepair")
+    @PrintParam
+    public Result<String> toRepair(@RequestParam("serveNo") String serveNo) {
+        Serve serve = serveGateway.getServeByServeNo(serveNo);
+        if(null == serve){
+            return Result.getInstance("").fail(-1, "服务单不存在");
+        }
+        if(!ServeEnum.DELIVER.getCode().equals(serve.getStatus())){
+            return Result.getInstance("").fail(-1, "服务单状态异常");
+        }
+        Serve serveToUpdate = new Serve();
+        serveToUpdate.setStatus(ServeEnum.REPAIR.getCode());
+        int i = serveGateway.updateServeByServeNo(serveNo, serveToUpdate);
+        return i > 0 ? Result.getInstance("修改成功").success() : Result.getInstance("修改失败").fail(-1, "修改失败");
+    }
+
+    @Override
+    @PostMapping("/cancelOrCompleteRepair")
+    @PrintParam
+    public Result<String> cancelOrCompleteRepair(@RequestParam("serveNo") String serveNo) {
+        Serve serve = serveGateway.getServeByServeNo(serveNo);
+        if(null == serve){
+            return Result.getInstance("").fail(-1, "服务单不存在");
+        }
+        if(!ServeEnum.REPAIR.getCode().equals(serve.getStatus())){
+            return Result.getInstance("").fail(-1, "服务单状态异常");
+        }
+        Serve serveToUpdate = new Serve();
+        serveToUpdate.setStatus(ServeEnum.DELIVER.getCode());
+        int i = serveGateway.updateServeByServeNo(serveNo, serveToUpdate);
+        return i > 0 ? Result.getInstance("修改成功").success() : Result.getInstance("修改失败").fail(-1, "修改失败");
+    }
+
+    @Override
+    @PostMapping("/addServeForReplaceVehicle")
+    @PrintParam
+    public Result<String> addServeForReplaceVehicle(@RequestBody ServeReplaceVehicleAddDTO serveAddDTO) {
+
+        String serveNo = serveAddDTO.getServeNo();
+        Serve serve = serveGateway.getServeByServeNo(serveNo);
+        if(null == serve){
+            return Result.getInstance("").fail(-1, "原服务单不存在");
+        }
+        if(!ServeEnum.REPAIR.getCode().equals(serve.getStatus())){
+            return Result.getInstance("").fail(-1, "原服务单状态异常");
+        }
+
+        Long newServeId = redisTools.getBizId(Constants.REDIS_BIZ_ID_SERVER);
+        long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_SERVE_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
+        String newServeNo = DeliverUtils.getNo(Constants.REDIS_SERVE_KEY, incr);
+
+        serve.setCarModelId(serveAddDTO.getModelsId());
+        serve.setBrandId(serveAddDTO.getBrandId());
+        serve.setCreateId(serveAddDTO.getCreatorId());
+        serve.setUpdateId(serveAddDTO.getCreatorId());
+        serve.setServeId(newServeId);
+        serve.setServeNo(newServeNo);
+        serve.setCreateTime(new Date());
+        serve.setUpdateTime(new Date());
+        serve.setId(null);
+
+        try {
+            serveGateway.addServeList(Collections.singletonList(serve));
+        } catch (Exception e) {
+            return Result.getInstance(serveAddDTO.getServeNo()).fail(-1, "替换车服务单生成失败");
+        }
+
+        return Result.getInstance(newServeNo).success();
+    }
 
 }

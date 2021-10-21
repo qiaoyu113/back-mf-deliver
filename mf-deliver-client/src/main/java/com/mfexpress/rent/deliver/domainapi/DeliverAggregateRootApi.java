@@ -63,6 +63,8 @@ public interface DeliverAggregateRootApi {
     @PostMapping("/saveCarServiceId")
     Result<String> saveCarServiceId(@RequestBody DeliverCarServiceDTO deliverCarServiceDTO);
 
-
+    /* luzheng add 根据车辆id查询其所属服务单id */
+    @PostMapping("/getDeliveredDeliverDTOByCarId")
+    Result<DeliverDTO> getDeliveredDeliverDTOByCarId(@RequestParam("carId") Integer carId);
 
 }

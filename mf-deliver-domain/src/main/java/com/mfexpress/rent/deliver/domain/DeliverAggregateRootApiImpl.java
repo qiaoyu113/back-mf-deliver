@@ -18,6 +18,7 @@ import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -184,7 +185,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/cancelSelected")
     @PrintParam
     public Result<String> cancelSelected(@RequestParam("carId") Integer carId) {
-        Deliver deliver = deliverGateway.getDeliverByCarId(carId);
+        Deliver deliver = deliverGateway.getDeliverByCarIdAndDeliverStatus(carId, DeliverEnum.IS_DELIVER.getCode());
         if (deliver != null) {
             //设为失效
             Deliver build = Deliver.builder().status(ValidStatusEnum.INVALID.getCode()).build();
@@ -252,5 +253,18 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         Deliver deliver = Deliver.builder().carServiceId(deliverCarServiceDTO.getCarServiceId()).build();
         deliverGateway.updateDeliverByServeNoList(deliverCarServiceDTO.getServeNoList(), deliver);
         return Result.getInstance("").success();
+    }
+
+    /* luzheng add */
+    @Override
+    @PostMapping("/getDeliveredDeliverDTOByCarId")
+    public Result<DeliverDTO> getDeliveredDeliverDTOByCarId(@RequestParam("carId") Integer carId) {
+        Deliver deliver = deliverGateway.getDeliverByCarIdAndDeliverStatus(carId, DeliverEnum.DELIVER.getCode());
+        if (null == deliver) {
+            return Result.getInstance((DeliverDTO) null).success();
+        }
+        DeliverDTO deliverDTO = new DeliverDTO();
+        BeanUtils.copyProperties(deliver, deliverDTO);
+        return Result.getInstance(deliverDTO).success();
     }
 }

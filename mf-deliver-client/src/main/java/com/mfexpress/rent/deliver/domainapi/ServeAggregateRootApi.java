@@ -4,6 +4,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeAddDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeReplaceVehicleAddDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -48,9 +49,16 @@ public interface ServeAggregateRootApi {
     @PostMapping("/cancelSelectedList")
     Result<String> cancelSelectedList(@RequestBody List<String> serveNoList);
 
-
     @PostMapping("/getServeNoListAll")
     Result<List<String>> getServeNoListAll();
 
+    @PostMapping("/toRepair")
+    Result<String> toRepair(@RequestParam("serveNo") String serveNo);
+
+    @PostMapping("/cancelOrCompleteRepair")
+    Result<String> cancelOrCompleteRepair(@RequestParam("serveNo") String serveNo);
+
+    @PostMapping("/addServeForReplaceVehicle")
+    Result<String> addServeForReplaceVehicle(@RequestBody ServeReplaceVehicleAddDTO serveAddDTO);
 
 }
