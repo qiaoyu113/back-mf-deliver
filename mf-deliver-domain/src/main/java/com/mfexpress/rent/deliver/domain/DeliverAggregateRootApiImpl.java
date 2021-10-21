@@ -26,7 +26,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RestController
@@ -187,7 +186,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/cancelSelected")
     @PrintParam
     public Result<String> cancelSelected(@RequestParam("carId") Integer carId) {
-        Deliver deliver = deliverGateway.getDeliverByCarId(carId);
+        Deliver deliver = deliverGateway.getDeliverByCarIdAndDeliverStatus(carId, DeliverEnum.IS_DELIVER.getCode());
         if (deliver != null) {
             //设为失效
             Deliver build = Deliver.builder().status(ValidStatusEnum.INVALID.getCode()).build();
@@ -279,5 +278,18 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         }
         return Result.getInstance((List<DeliverDTO>) null).success();
 
+    }
+
+    /* luzheng add */
+    @Override
+    @PostMapping("/getDeliveredDeliverDTOByCarId")
+    public Result<DeliverDTO> getDeliveredDeliverDTOByCarId(@RequestParam("carId") Integer carId) {
+        Deliver deliver = deliverGateway.getDeliverByCarIdAndDeliverStatus(carId, DeliverEnum.DELIVER.getCode());
+        if (null == deliver) {
+            return Result.getInstance((DeliverDTO) null).success();
+        }
+        DeliverDTO deliverDTO = new DeliverDTO();
+        BeanUtils.copyProperties(deliver, deliverDTO);
+        return Result.getInstance(deliverDTO).success();
     }
 }

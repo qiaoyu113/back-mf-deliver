@@ -65,5 +65,13 @@ public interface ServeAggregateRootApi {
 
     @PostMapping("/getCycleServe")
     Result<PagePagination<ServeDTO>>getCycleServe(@RequestBody ListQry listQry);
+    @PostMapping("/toRepair")
+    Result<String> toRepair(@RequestParam("serveNo") String serveNo);
+
+    @PostMapping("/cancelOrCompleteRepair")
+    Result<String> cancelOrCompleteRepair(@RequestParam("serveNo") String serveNo);
+
+    @PostMapping("/addServeForReplaceVehicle")
+    Result<String> addServeForReplaceVehicle(@RequestBody ServeReplaceVehicleAddDTO serveAddDTO);
 
 }

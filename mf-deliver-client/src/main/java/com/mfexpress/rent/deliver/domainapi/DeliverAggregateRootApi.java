@@ -71,5 +71,8 @@ public interface DeliverAggregateRootApi {
     @PostMapping("/getDeduct")
     Result<List<DeliverDTO>> getDeduct(@RequestBody List<String> serveNoList);
 
+    /* luzheng add 根据车辆id查询其所属服务单id */
+    @PostMapping("/getDeliveredDeliverDTOByCarId")
+    Result<DeliverDTO> getDeliveredDeliverDTOByCarId(@RequestParam("carId") Integer carId);
 
 }
