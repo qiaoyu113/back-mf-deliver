@@ -4,6 +4,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 @ApiModel("车辆信息")
 public class ServeVehicleDTO {
@@ -15,4 +17,6 @@ public class ServeVehicleDTO {
     private Integer leaseModelId;
     @ApiModelProperty(value = "数量")
     private Integer num;
+    @ApiModelProperty(value = "月租金")
+    private BigDecimal rent;
 }
