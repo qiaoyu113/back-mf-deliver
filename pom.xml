@@ -116,8 +116,8 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.mfexpress.rent.charge</groupId>
-                <artifactId>mf-rent-charge-client</artifactId>
+                <groupId>com.mfexpress.billing.rentcharge</groupId>
+                <artifactId>mf-billing-rentcharge-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
