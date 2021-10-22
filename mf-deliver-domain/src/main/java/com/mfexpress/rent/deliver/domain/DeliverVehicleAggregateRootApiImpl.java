@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RestController
@@ -60,5 +62,13 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
             return i > 0 ? Result.getInstance("发车成功").success() : Result.getInstance("发车成功").fail(-1, "发车失败");
         }
         return Result.getInstance("发车信息为空").fail(-1, "发车信息为空");
+    }
+
+    @Override
+    @PostMapping("getDeliverVehicleByServeNo")
+    public Result<Map<String, DeliverVehicle>> getDeliverVehicleByServeNo(@RequestBody List<String> serveNoList) {
+        List<DeliverVehicle> deliverVehicleList = deliverVehicleGateway.getDeliverVehicleByServeNo(serveNoList);
+        Map<String, DeliverVehicle> map = deliverVehicleList.stream().collect(Collectors.toMap(DeliverVehicle::getServeNo, Function.identity()));
+        return Result.getInstance(map).success();
     }
 }

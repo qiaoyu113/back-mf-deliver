@@ -80,6 +80,7 @@ public class SyncServiceImpl implements SyncServiceI {
 
     @PostConstruct
     public void init() {
+
         DeliverBinlogDispatch deliverBinlogDispatch = new DeliverBinlogDispatch();
         deliverBinlogDispatch.setServiceI(this);
         mqTools.addBinlogCommand(listenBinlogTopic, deliverBinlogDispatch);

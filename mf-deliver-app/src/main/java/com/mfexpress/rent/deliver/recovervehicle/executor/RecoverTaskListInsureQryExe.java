@@ -1,7 +1,6 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import com.mfexpress.component.dto.TokenInfo;
-import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
@@ -22,8 +21,7 @@ import java.util.List;
 public class RecoverTaskListInsureQryExe implements RecoverQryServiceI {
     @Resource
     private RecoverEsDataQryExe recoverEsDataQryExe;
-    @Resource
-    private SyncServiceI syncServiceI;
+
 
     @Override
     public RecoverTaskListVO execute(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo) {

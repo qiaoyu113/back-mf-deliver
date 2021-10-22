@@ -21,4 +21,5 @@ public interface ServeMapper extends BaseMapper<Serve> {
             " GROUP BY order_id"
             + "</script>")
     List<ServePreselectedDTO> getServePreselectedByOrderId(@Param("orderIdList") List<Long> orderIdList);
+
 }
