@@ -7,6 +7,7 @@ import com.mfexpress.rent.deliver.deliver.repository.DeliverMapper;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import org.springframework.stereotype.Component;
+import tk.mybatis.mapper.entity.Condition;
 import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
@@ -53,10 +54,10 @@ public class DeliverGatewayImpl implements DeliverGateway {
     }
 
     @Override
-    public Deliver getDeliverByCarId(Integer carId) {
+    public Deliver getDeliverByCarIdAndDeliverStatus(Integer carId, Integer deliverStatus) {
         Example example = new Example(Deliver.class);
         example.createCriteria().andEqualTo("carId", carId).andEqualTo("status", ValidStatusEnum.VALID.getCode())
-                .andEqualTo("deliverStatus", DeliverEnum.IS_DELIVER.getCode());
+                .andEqualTo("deliverStatus", deliverStatus);
         return deliverMapper.selectOneByExample(example);
     }
 
@@ -95,6 +96,17 @@ public class DeliverGatewayImpl implements DeliverGateway {
     public List<Deliver> getDeliverByServeNoList(List<String> serveNoList) {
         Example example = new Example(Deliver.class);
         example.createCriteria().andIn("serveNo", serveNoList).andEqualTo("status", ValidStatusEnum.VALID.getCode());
+        return deliverMapper.selectByExample(example);
+    }
+
+    @Override
+    public List<Deliver> getDeliverByDeductStatus(List<String> serveNoList) {
+        Example example = new Example(Deliver.class);
+        if (serveNoList != null && serveNoList.size() > 0) {
+            example.createCriteria().andNotIn("serveNo", serveNoList).andEqualTo("isDeduction", JudgeEnum.YES.getCode()).andEqualTo("status", ValidStatusEnum.VALID.getCode());
+        } else {
+            example.createCriteria().andEqualTo("isDeduction", JudgeEnum.YES.getCode()).andEqualTo("status", ValidStatusEnum.VALID.getCode());
+        }
         return deliverMapper.selectByExample(example);
     }
 

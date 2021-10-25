@@ -6,12 +6,14 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverBackInsureDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleMqDTO;
+import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
+import java.util.Map;
 
 @FeignClient(name = "mf-deliver", path = "/domain/deliver/v3/deliver", contextId = "mf-deliver-aggregate-root-api")
 public interface DeliverAggregateRootApi {
@@ -24,7 +26,7 @@ public interface DeliverAggregateRootApi {
     Result<String> addDeliver(@RequestBody List<DeliverDTO> list);
 
     @PostMapping("/toCheck")
-    Result<String> toCheck(@RequestParam("serveNo") String serveNo);
+    Result<Integer> toCheck(@RequestParam("serveNo") String serveNo);
 
     @PostMapping("/toReplace")
     Result<String> toReplace(@RequestBody DeliverDTO deliverDTO);
@@ -42,7 +44,7 @@ public interface DeliverAggregateRootApi {
     Result<String> cancelRecover(@RequestParam("serveNo") String serveNo);
 
     @PostMapping("/toBackInsure")
-    Result<List<String>> toBackInsure(@RequestBody DeliverBackInsureDTO deliverBackInsureDTO);
+    Result<String> toBackInsure(@RequestBody DeliverBackInsureDTO deliverBackInsureDTO);
 
     @PostMapping("/toDeduction")
     Result<String> toDeduction(@RequestBody DeliverDTO deliverDTO);
@@ -63,6 +65,14 @@ public interface DeliverAggregateRootApi {
     @PostMapping("/saveCarServiceId")
     Result<String> saveCarServiceId(@RequestBody DeliverCarServiceDTO deliverCarServiceDTO);
 
+    @PostMapping("/getDeliverByServeNoList")
+    Result<Map<String, Deliver>> getDeliverByServeNoList(@RequestBody List<String> serveNoList);
 
+    @PostMapping("/getDeduct")
+    Result<List<DeliverDTO>> getDeduct(@RequestBody List<String> serveNoList);
+
+    /* luzheng add 根据车辆id查询其所属服务单id */
+    @PostMapping("/getDeliveredDeliverDTOByCarId")
+    Result<DeliverDTO> getDeliveredDeliverDTOByCarId(@RequestParam("carId") Integer carId);
 
 }

@@ -6,35 +6,21 @@ import com.mfexpress.component.utils.util.DateUtils;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverBackInsureDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureCmd;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
-import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.VehicleInsuranceAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidInsuranceStatusEnum;
-import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
-import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
-import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import com.mfexpress.rent.vehicle.data.dto.vehicleinsurance.VehicleInsuranceSaveListCmd;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 @Component
 public class RecoverBackInsureExe {
 
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
-    @Resource
-    private ServeAggregateRootApi serveAggregateRootApi;
-    @Resource
-    private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
-    @Resource
-    private VehicleAggregateRootApi vehicleAggregateRootApi;
     @Resource
     private VehicleInsuranceAggregateRootApi vehicleInsuranceAggregateRootApi;
     @Resource
@@ -47,32 +33,8 @@ public class RecoverBackInsureExe {
         deliverBackInsureDTO.setServeNoList(recoverBackInsureCmd.getServeNoList());
         deliverBackInsureDTO.setInsuranceRemark(recoverBackInsureCmd.getInsuranceRemark());
 
-        Result<List<String>> serveNoResult = deliverAggregateRootApi.toBackInsure(deliverBackInsureDTO);
-        //服务单 更新已收车
-        Result<String> serveResult = serveAggregateRootApi.recover(recoverBackInsureCmd.getServeNoList());
-        if (serveResult.getCode() != 0) {
-            return serveResult.getMsg();
-        }
+        Result<String> serveNoResult = deliverAggregateRootApi.toBackInsure(deliverBackInsureDTO);
 
-        //存在已经处理违章的服务单 更新服务单为已完成
-        if (serveNoResult.getData() != null && !serveNoResult.getData().isEmpty()) {
-            serveAggregateRootApi.completedList(serveNoResult.getData());
-        }
-        //车辆库存列表
-
-        VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
-        vehicleSaveCmd.setId(recoverBackInsureCmd.getCarIdList());
-        vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.UNCHECKED.getCode());
-        vehicleSaveCmd.setStockStatus(ValidStockStatusEnum.IN.getCode());
-
-        Result<List<RecoverVehicleDTO>> recoverResult = recoverVehicleAggregateRootApi.toBackInsure(recoverBackInsureCmd.getServeNoList());
-        if (recoverResult.getData() != null) {
-            List<RecoverVehicleDTO> recoverVehicleDTOList = recoverResult.getData();
-            vehicleSaveCmd.setWarehouseId(recoverVehicleDTOList.get(0).getWareHouseId());
-        }
-
-
-        vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
         if (recoverBackInsureCmd.getIsInsurance().equals(JudgeEnum.YES.getCode())) {
             // 调用车辆退保 更新车辆退保状态 退保时间 更新车辆未预选状态 库存地
             VehicleInsuranceSaveListCmd vehicleInsuranceSaveListCmd = new VehicleInsuranceSaveListCmd();
@@ -88,7 +50,7 @@ public class RecoverBackInsureExe {
         for (String serveNo : recoverBackInsureCmd.getServeNoList()) {
             syncServiceI.execOne(serveNo);
         }
-        return "";
+        return serveNoResult.getData();
 
     }
 }

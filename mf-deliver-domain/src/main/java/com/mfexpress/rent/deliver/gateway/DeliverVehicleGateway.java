@@ -9,4 +9,5 @@ public interface DeliverVehicleGateway {
     int addDeliverVehicle(List<DeliverVehicle> deliverVehicleList);
 
     DeliverVehicle getDeliverVehicleByDeliverNo(String deliverNo);
+    List<DeliverVehicle>getDeliverVehicleByServeNo(List<String>serveNoList);
 }

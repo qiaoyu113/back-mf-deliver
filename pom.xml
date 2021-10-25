@@ -66,6 +66,12 @@
             </properties>
         </profile>
         <profile>
+            <id>pre</id>
+            <properties>
+                <spring.active>pre</spring.active>
+            </properties>
+        </profile>
+        <profile>
             <id>prod</id>
             <properties>
                 <spring.active>prod</spring.active>
@@ -113,6 +119,11 @@
             <dependency>
                 <groupId>com.mfexpress.transportation.project</groupId>
                 <artifactId>mf-customer-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mfexpress.billing.rentcharge</groupId>
+                <artifactId>mf-billing-rentcharge-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

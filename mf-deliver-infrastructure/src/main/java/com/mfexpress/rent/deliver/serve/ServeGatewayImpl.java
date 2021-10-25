@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.serve;
 
+import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
@@ -57,5 +58,30 @@ public class ServeGatewayImpl implements ServeGateway {
     public List<String> getServeNoListAll() {
 
         return serveMapper.selectAll().stream().map(Serve::getServeNo).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Serve> getServeByStatus() {
+        Example example = new Example(Serve.class);
+        example.createCriteria().orEqualTo("status", ServeEnum.DELIVER.getCode()).orEqualTo("status", ServeEnum.REPAIR.getCode());
+        return serveMapper.selectByExample(example);
+
+
+    }
+
+    @Override
+    public List<Serve> getCycleServe() {
+        Example example = new Example(Serve.class);
+        example.createCriteria().andGreaterThanOrEqualTo("status", ServeEnum.DELIVER.getCode());
+        return serveMapper.selectByExample(example);
+
+
+    }
+
+    @Override
+    public List<Serve> getServeByServeNoList(List<String> serveNoList) {
+        Example example = new Example(Serve.class);
+        example.createCriteria().andIn("serveNo", serveNoList);
+        return serveMapper.selectByExample(example);
     }
 }

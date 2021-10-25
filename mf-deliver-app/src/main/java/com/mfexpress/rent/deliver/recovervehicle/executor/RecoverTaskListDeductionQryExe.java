@@ -1,7 +1,6 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import com.mfexpress.component.dto.TokenInfo;
-import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
@@ -22,8 +21,6 @@ import java.util.List;
 public class RecoverTaskListDeductionQryExe implements RecoverQryServiceI {
     @Resource
     private RecoverEsDataQryExe recoverEsDataQryExe;
-    @Resource
-    private SyncServiceI syncServiceI;
 
     @Override
     public RecoverTaskListVO execute(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo) {
@@ -31,6 +28,7 @@ public class RecoverTaskListDeductionQryExe implements RecoverQryServiceI {
         List<FieldSortBuilder> fieldSortBuilderList = new LinkedList<>();
         boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverStatus").gte(DeliverEnum.IS_RECOVER.getCode()))
                 .must(QueryBuilders.matchQuery("isCheck", JudgeEnum.YES.getCode()))
+                .must(QueryBuilders.matchQuery("isInsurance", JudgeEnum.YES.getCode()))
                 .must(QueryBuilders.matchQuery("isDeduction", JudgeEnum.NO.getCode()));
         FieldSortBuilder timeSortBuilder = SortBuilders.fieldSort("recoverVehicleTime").unmappedType("integer").order(SortOrder.DESC);
         FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);

@@ -2,23 +2,27 @@ package com.mfexpress.rent.deliver.domain;
 
 
 import cn.hutool.core.bean.BeanUtil;
+import com.github.pagehelper.PageHelper;
 import com.mfexpress.component.log.PrintParam;
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import io.swagger.annotations.Api;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/domain/deliver/v3/serve")
@@ -80,6 +84,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setUpdateId(0);
                 serve.setStatus(ServeEnum.NOT_PRESELECTED.getCode());
                 serve.setRemark("");
+                serve.setRent(serveVehicleDTO.getRent());
                 serveList.add(serve);
             }
         }
@@ -183,5 +188,139 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         return Result.getInstance(serveNoListAll);
     }
 
+    @Override
+    @PostMapping("/getServeDailyDTO")
+    public Result<PagePagination<ServeDailyDTO>> getServeDailyDTO(@RequestBody ListQry listQry) {
+        try {
+            PageHelper.clearPage();
+            if (listQry.getLimit() == 0) {
+                PageHelper.startPage(1, listQry.getLimit());
+            }
+            PageHelper.startPage(listQry.getPage(), listQry.getLimit());
+            //查询当前状态为已发车或维修中
+
+            List<Serve> serveList = serveGateway.getServeByStatus();
+            if (serveList != null) {
+                List<ServeDailyDTO> serveDailyDTOList = serveList.stream().map(serve -> {
+                    ServeDailyDTO serveDailyDTO = new ServeDailyDTO();
+                    serveDailyDTO.setServeNo(serve.getServeNo());
+                    serveDailyDTO.setCustomerId(serve.getCustomerId());
+                    return serveDailyDTO;
+                }).collect(Collectors.toList());
+                return Result.getInstance(PagePagination.getInstance(serveDailyDTOList)).success();
+            }
+            return Result.getInstance((PagePagination<ServeDailyDTO>) null).fail(-1, "");
+        } catch (Exception e) {
+            return Result.getInstance((PagePagination<ServeDailyDTO>) null).fail(-1, "");
+        }
+    }
+
+    @Override
+    @PostMapping("/getServeMapByServeNoList")
+    public Result<Map<String, Serve>> getServeMapByServeNoList(@RequestBody List<String> serveNoList) {
+        List<Serve> serveList = serveGateway.getServeByServeNoList(serveNoList);
+        Map<String, Serve> map = serveList.stream().collect(Collectors.toMap(Serve::getServeNo, Function.identity()));
+        return Result.getInstance(map).success();
+    }
+
+    @Override
+    @PostMapping("/getCycleServe")
+    public Result<PagePagination<ServeDTO>> getCycleServe(@RequestBody ListQry listQry) {
+        try {
+            PageHelper.clearPage();
+            if (listQry.getLimit() == 0) {
+                PageHelper.startPage(1, listQry.getLimit());
+            }
+            PageHelper.startPage(listQry.getPage(), listQry.getLimit());
+            //查询当前状态为已发车或维修中
+
+            List<Serve> serveList = serveGateway.getCycleServe();
+            if (serveList != null) {
+                List<ServeDTO> serveDailyDTOList = serveList.stream().map(serve -> {
+                    ServeDTO serveDTO = new ServeDTO();
+                    BeanUtils.copyProperties(serve, serveDTO);
+                    return serveDTO;
+                }).collect(Collectors.toList());
+                return Result.getInstance(PagePagination.getInstance(serveDailyDTOList)).success();
+            }
+            return Result.getInstance((PagePagination<ServeDTO>) null).fail(-1, "");
+        } catch (Exception e) {
+            return Result.getInstance((PagePagination<ServeDTO>) null).fail(-1, "");
+        }
+
+    }
+
+    /* luzheng add */
+    @Override
+    @PostMapping("/toRepair")
+    @PrintParam
+    public Result<String> toRepair(@RequestParam("serveNo") String serveNo) {
+        Serve serve = serveGateway.getServeByServeNo(serveNo);
+        if(null == serve){
+            return Result.getInstance("").fail(-1, "服务单不存在");
+        }
+        if(!ServeEnum.DELIVER.getCode().equals(serve.getStatus())){
+            return Result.getInstance("").fail(-1, "服务单状态异常");
+        }
+        Serve serveToUpdate = new Serve();
+        serveToUpdate.setStatus(ServeEnum.REPAIR.getCode());
+        int i = serveGateway.updateServeByServeNo(serveNo, serveToUpdate);
+        return i > 0 ? Result.getInstance("修改成功").success() : Result.getInstance("修改失败").fail(-1, "修改失败");
+    }
+
+    @Override
+    @PostMapping("/cancelOrCompleteRepair")
+    @PrintParam
+    public Result<String> cancelOrCompleteRepair(@RequestParam("serveNo") String serveNo) {
+        Serve serve = serveGateway.getServeByServeNo(serveNo);
+        if(null == serve){
+            return Result.getInstance("").fail(-1, "服务单不存在");
+        }
+        if(!ServeEnum.REPAIR.getCode().equals(serve.getStatus())){
+            return Result.getInstance("").fail(-1, "服务单状态异常");
+        }
+        Serve serveToUpdate = new Serve();
+        serveToUpdate.setStatus(ServeEnum.DELIVER.getCode());
+        int i = serveGateway.updateServeByServeNo(serveNo, serveToUpdate);
+        return i > 0 ? Result.getInstance("修改成功").success() : Result.getInstance("修改失败").fail(-1, "修改失败");
+    }
+
+    @Override
+    @PostMapping("/addServeForReplaceVehicle")
+    @PrintParam
+    public Result<String> addServeForReplaceVehicle(@RequestBody ServeReplaceVehicleAddDTO serveAddDTO) {
+
+        String serveNo = serveAddDTO.getServeNo();
+        Serve serve = serveGateway.getServeByServeNo(serveNo);
+        if(null == serve){
+            return Result.getInstance("").fail(-1, "原服务单不存在");
+        }
+        if(!ServeEnum.REPAIR.getCode().equals(serve.getStatus())){
+            return Result.getInstance("").fail(-1, "原服务单状态异常");
+        }
+
+        Long newServeId = redisTools.getBizId(Constants.REDIS_BIZ_ID_SERVER);
+        long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_SERVE_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
+        String newServeNo = DeliverUtils.getNo(Constants.REDIS_SERVE_KEY, incr);
+
+        serve.setStatus(ServeEnum.NOT_PRESELECTED.getCode());
+        serve.setCarModelId(serveAddDTO.getModelsId());
+        serve.setBrandId(serveAddDTO.getBrandId());
+        serve.setCreateId(serveAddDTO.getCreatorId());
+        serve.setUpdateId(serveAddDTO.getCreatorId());
+        serve.setServeId(newServeId);
+        serve.setServeNo(newServeNo);
+        serve.setCreateTime(new Date());
+        serve.setUpdateTime(new Date());
+        serve.setId(null);
+
+        try {
+            serveGateway.addServeList(Collections.singletonList(serve));
+        } catch (Exception e) {
+            return Result.getInstance(serveAddDTO.getServeNo()).fail(-1, "替换车服务单生成失败");
+        }
+
+        return Result.getInstance(newServeNo).success();
+    }
 
 }

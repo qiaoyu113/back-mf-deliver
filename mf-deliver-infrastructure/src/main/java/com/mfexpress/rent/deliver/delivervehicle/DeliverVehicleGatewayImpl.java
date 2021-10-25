@@ -33,4 +33,12 @@ public class DeliverVehicleGatewayImpl implements DeliverVehicleGateway {
         example.createCriteria().andEqualTo("deliverNo", deliverNo);
         return deliverVehicleMapper.selectOneByExample(example);
     }
+
+    @Override
+    public List<DeliverVehicle> getDeliverVehicleByServeNo(List<String> serveNoList) {
+        Example example = new Example(DeliverVehicle.class);
+        example.createCriteria().andIn("serveNo", serveNoList);
+
+        return deliverVehicleMapper.selectByExample(example);
+    }
 }
