@@ -8,6 +8,7 @@ import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -18,7 +19,6 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
-import com.mfexpress.rent.vehicle.constant.UsageStatusEnum;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
 import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInfoDto;
@@ -68,9 +68,13 @@ public class RecoverToCheckExe {
             log.error("不存在车辆，服务单号，{}" + recoverVechicleCmd.getServeNo());
             return ResultErrorEnum.DATA_NOT_FOUND.getName();
         }
-        VehicleInfoDto vehicleInfoDto = vehicleDtoResult.getData();
-        if (vehicleInfoDto.getStatus().equals(UsageStatusEnum.MAINTAINING.getCode())) {
-            return "该车辆在维修中不允许收车";
+        Result<ServeDTO> serveDTOResult1 = serveAggregateRootApi.getServeDtoByServeNo(recoverVechicleCmd.getServeNo());
+        if (serveDTOResult1.getCode() != 0) {
+            return "服务单不存在";
+        }
+        ServeDTO serve = serveDTOResult1.getData();
+        if (serve.getStatus().equals(ServeEnum.REPAIR.getCode())) {
+            return "服务单维修中不允许收车";
         }
         Result<String> recoverResult = recoverVehicleAggregateRootApi.toCheck(recoverVehicleDTO);
         if (recoverResult.getCode() != 0) {
