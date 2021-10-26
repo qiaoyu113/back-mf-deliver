@@ -3,6 +3,7 @@ package com.mfexpress.rent.deliver.domain;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.github.pagehelper.PageHelper;
+import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
@@ -16,6 +17,7 @@ import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/domain/deliver/v3/serve")
 @Api(tags = "domain--交付--1.1租赁服务单聚合")
+@Slf4j
 public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Resource
@@ -55,7 +58,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         List<Serve> serveList = new LinkedList<>();
         List<ServeVehicleDTO> vehicleDTOList = serveAddDTO.getVehicleDTOList();
         if (vehicleDTOList == null) {
-            return Result.getInstance("").fail(-1, "车辆信息为空");
+            return Result.getInstance(ResultErrorEnum.VILAD_ERROR.getName()).fail(ResultErrorEnum.VILAD_ERROR.getCode(), "车辆信息为空");
         }
         //订单号放入redis
         redisTools.set(serveAddDTO.getOrderId().toString(), serveAddDTO.getOrderId(), 10000);
@@ -91,7 +94,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         try {
             serveGateway.addServeList(serveList);
         } catch (Exception e) {
-            return Result.getInstance(serveAddDTO.getOrderId().toString()).fail(-1, "服务单生成失败");
+            return Result.getInstance(serveAddDTO.getOrderId().toString()).fail(ResultErrorEnum.CREATE_ERROR.getCode(), ResultErrorEnum.CREATE_ERROR.getName());
         }
 
         return Result.getInstance("服务单生成成功").success();
@@ -102,8 +105,13 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     public Result<String> toPreselected(@RequestBody List<String> serveNoList) {
         Serve serve = Serve.builder().status(ServeEnum.PRESELECTED.getCode()).build();
-        int i = serveGateway.updateServeByServeNoList(serveNoList, serve);
-        return i > 0 ? Result.getInstance("预选成功").success() : Result.getInstance("预选失败").fail(-1, "预选失败");
+        try {
+            serveGateway.updateServeByServeNoList(serveNoList, serve);
+            return Result.getInstance("预选成功").success();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return Result.getInstance(ResultErrorEnum.UPDATE_ERROR.getName()).fail(ResultErrorEnum.UPDATE_ERROR.getCode(), "预选失败");
+        }
 
     }
 
@@ -256,10 +264,10 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     public Result<String> toRepair(@RequestParam("serveNo") String serveNo) {
         Serve serve = serveGateway.getServeByServeNo(serveNo);
-        if(null == serve){
+        if (null == serve) {
             return Result.getInstance("").fail(-1, "服务单不存在");
         }
-        if(!ServeEnum.DELIVER.getCode().equals(serve.getStatus())){
+        if (!ServeEnum.DELIVER.getCode().equals(serve.getStatus())) {
             return Result.getInstance("").fail(-1, "服务单状态异常");
         }
         Serve serveToUpdate = new Serve();
@@ -273,10 +281,10 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     public Result<String> cancelOrCompleteRepair(@RequestParam("serveNo") String serveNo) {
         Serve serve = serveGateway.getServeByServeNo(serveNo);
-        if(null == serve){
+        if (null == serve) {
             return Result.getInstance("").fail(-1, "服务单不存在");
         }
-        if(!ServeEnum.REPAIR.getCode().equals(serve.getStatus())){
+        if (!ServeEnum.REPAIR.getCode().equals(serve.getStatus())) {
             return Result.getInstance("").fail(-1, "服务单状态异常");
         }
         Serve serveToUpdate = new Serve();
@@ -292,10 +300,10 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
         String serveNo = serveAddDTO.getServeNo();
         Serve serve = serveGateway.getServeByServeNo(serveNo);
-        if(null == serve){
+        if (null == serve) {
             return Result.getInstance("").fail(-1, "原服务单不存在");
         }
-        if(!ServeEnum.REPAIR.getCode().equals(serve.getStatus())){
+        if (!ServeEnum.REPAIR.getCode().equals(serve.getStatus())) {
             return Result.getInstance("").fail(-1, "原服务单状态异常");
         }
 

@@ -4,6 +4,7 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 import cn.hutool.core.date.DateUtil;
 import com.mfexpress.billing.rentcharge.api.DailyAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.daily.DailyDTO;
+import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
@@ -11,15 +12,19 @@ import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
+import com.mfexpress.rent.vehicle.constant.UsageStatusEnum;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
 import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
+import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInfoDto;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import com.mfexpress.rent.vehicle.data.dto.warehouse.WarehouseDto;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
@@ -29,6 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 @Component
+@Slf4j
 public class RecoverToCheckExe {
 
     @Resource
@@ -51,7 +57,21 @@ public class RecoverToCheckExe {
         //完善收车单信息
         RecoverVehicleDTO recoverVehicleDTO = new RecoverVehicleDTO();
         BeanUtils.copyProperties(recoverVechicleCmd, recoverVehicleDTO);
-
+        Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(recoverVechicleCmd.getServeNo());
+        if (deliverDTOResult.getData() == null) {
+            log.error("不存在交付单，服务单号，{}" + recoverVechicleCmd.getServeNo());
+            return ResultErrorEnum.DATA_NOT_FOUND.getName();
+        }
+        DeliverDTO deliverDTO = deliverDTOResult.getData();
+        Result<VehicleInfoDto> vehicleDtoResult = vehicleAggregateRootApi.getVehicleInfoVOById(deliverDTO.getCarId());
+        if (vehicleDtoResult == null) {
+            log.error("不存在车辆，服务单号，{}" + recoverVechicleCmd.getServeNo());
+            return ResultErrorEnum.DATA_NOT_FOUND.getName();
+        }
+        VehicleInfoDto vehicleInfoDto = vehicleDtoResult.getData();
+        if (vehicleInfoDto.getStatus().equals(UsageStatusEnum.MAINTAINING.getCode())) {
+            return "该车辆在维修中不允许收车";
+        }
         Result<String> recoverResult = recoverVehicleAggregateRootApi.toCheck(recoverVehicleDTO);
         if (recoverResult.getCode() != 0) {
             return recoverResult.getMsg();

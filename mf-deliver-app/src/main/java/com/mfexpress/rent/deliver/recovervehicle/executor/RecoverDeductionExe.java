@@ -55,44 +55,45 @@ public class RecoverDeductionExe {
         }
         //生成消分代办金额扣罚项
         List<DeductDTO> deductDTOList = new LinkedList<>();
-        Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(recoverDeductionCmd.getServeNo());
-        Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(recoverDeductionCmd.getServeNo());
-        if (serveDTOResult.getData() != null && deliverDTOResult.getData() != null) {
-            ServeDTO serveDTO = serveDTOResult.getData();
-            DeliverDTO deliverDTO1 = deliverDTOResult.getData();
+        if (recoverDeductionCmd.getDeductionHandel().equals(3)) {
+            Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(recoverDeductionCmd.getServeNo());
+            Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(recoverDeductionCmd.getServeNo());
+            if (serveDTOResult.getData() != null && deliverDTOResult.getData() != null) {
+                ServeDTO serveDTO = serveDTOResult.getData();
+                DeliverDTO deliverDTO1 = deliverDTOResult.getData();
 
-            if (!recoverDeductionCmd.getDeductionAmount().equals(BigDecimal.ZERO)) {
-                DeductDTO deductDTO = new DeductDTO();
-                deductDTO.setServeNo(recoverDeductionCmd.getServeNo());
-                deductDTO.setCustomerId(serveDTO.getCustomerId());
-                deductDTO.setOrderId(serveDTO.getOrderId());
-                deductDTO.setStatus(JudgeEnum.NO.getCode());
-                deductDTO.setDeductPoints(recoverDeductionCmd.getViolationPoints());
-                deductDTO.setCreateDate(DateUtil.formatDate(new Date()));
-                deductDTO.setCarNum(deliverDTO1.getCarNum());
-                deductDTO.setFrameNum(deliverDTO1.getFrameNum());
-                deductDTO.setType(BusinessChargeTypeEnum.DEDUCT_ELIMINATE.getCode());
-                deductDTO.setAmount(recoverDeductionCmd.getDeductionAmount());
-                deductDTOList.add(deductDTO);
-            }
-            if (!recoverDeductionCmd.getAgencyAmount().equals(BigDecimal.ZERO)) {
-                DeductDTO deductDTO = new DeductDTO();
-                deductDTO.setServeNo(recoverDeductionCmd.getServeNo());
-                deductDTO.setCustomerId(serveDTO.getCustomerId());
-                deductDTO.setOrderId(serveDTO.getOrderId());
-                deductDTO.setStatus(JudgeEnum.NO.getCode());
-                deductDTO.setDeductPoints(recoverDeductionCmd.getViolationPoints());
-                deductDTO.setCreateDate(DateUtil.formatDate(new Date()));
-                deductDTO.setCarNum(deliverDTO1.getCarNum());
-                deductDTO.setFrameNum(deliverDTO1.getFrameNum());
-                deductDTO.setType(BusinessChargeTypeEnum.DEDUCT_AGENCY.getCode());
-                deductDTO.setAmount(recoverDeductionCmd.getAgencyAmount());
-                deductDTOList.add(deductDTO);
+                if (!recoverDeductionCmd.getDeductionAmount().equals(BigDecimal.ZERO)) {
+                    DeductDTO deductDTO = new DeductDTO();
+                    deductDTO.setServeNo(recoverDeductionCmd.getServeNo());
+                    deductDTO.setCustomerId(serveDTO.getCustomerId());
+                    deductDTO.setOrderId(serveDTO.getOrderId());
+                    deductDTO.setStatus(JudgeEnum.NO.getCode());
+                    deductDTO.setDeductPoints(recoverDeductionCmd.getViolationPoints());
+                    deductDTO.setCreateDate(DateUtil.formatDate(new Date()));
+                    deductDTO.setCarNum(deliverDTO1.getCarNum());
+                    deductDTO.setFrameNum(deliverDTO1.getFrameNum());
+                    deductDTO.setType(BusinessChargeTypeEnum.DEDUCT_ELIMINATE.getCode());
+                    deductDTO.setAmount(recoverDeductionCmd.getDeductionAmount());
+                    deductDTOList.add(deductDTO);
+                }
+                if (!recoverDeductionCmd.getAgencyAmount().equals(BigDecimal.ZERO)) {
+                    DeductDTO deductDTO = new DeductDTO();
+                    deductDTO.setServeNo(recoverDeductionCmd.getServeNo());
+                    deductDTO.setCustomerId(serveDTO.getCustomerId());
+                    deductDTO.setOrderId(serveDTO.getOrderId());
+                    deductDTO.setStatus(JudgeEnum.NO.getCode());
+                    deductDTO.setDeductPoints(recoverDeductionCmd.getViolationPoints());
+                    deductDTO.setCreateDate(DateUtil.formatDate(new Date()));
+                    deductDTO.setCarNum(deliverDTO1.getCarNum());
+                    deductDTO.setFrameNum(deliverDTO1.getFrameNum());
+                    deductDTO.setType(BusinessChargeTypeEnum.DEDUCT_AGENCY.getCode());
+                    deductDTO.setAmount(recoverDeductionCmd.getAgencyAmount());
+                    deductDTOList.add(deductDTO);
 
+                }
+                deductAggrgateRootApi.createDeduct(deductDTOList);
             }
-            deductAggrgateRootApi.createDeduct(deductDTOList);
         }
-
         DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();
         deliverCarServiceDTO.setServeNoList(Arrays.asList(recoverDeductionCmd.getServeNo()));
         deliverCarServiceDTO.setCarServiceId(recoverDeductionCmd.getCarServiceId());
