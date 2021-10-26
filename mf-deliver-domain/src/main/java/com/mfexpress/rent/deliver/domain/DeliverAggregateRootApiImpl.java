@@ -80,7 +80,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         //2021-10-13修改 收车验车时交付单变更为已收车
         Deliver deliver = deliverGateway.getDeliverByServeNo(serveNo);
         deliver.setIsCheck(JudgeEnum.YES.getCode());
-        if (deliver.getStatus().equals(DeliverEnum.IS_RECOVER.getCode())) {
+        if (deliver.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())) {
             deliver.setStatus(DeliverEnum.RECOVER.getCode());
         }
         int i = deliverGateway.updateDeliverByServeNo(serveNo, deliver);
