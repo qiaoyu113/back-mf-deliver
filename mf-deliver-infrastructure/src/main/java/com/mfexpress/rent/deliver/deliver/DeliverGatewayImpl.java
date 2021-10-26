@@ -54,10 +54,10 @@ public class DeliverGatewayImpl implements DeliverGateway {
     }
 
     @Override
-    public Deliver getDeliverByCarIdAndDeliverStatus(Integer carId, Integer deliverStatus) {
+    public Deliver getDeliverByCarIdAndDeliverStatus(Integer carId, List<Integer> deliverStatus) {
         Example example = new Example(Deliver.class);
         example.createCriteria().andEqualTo("carId", carId).andEqualTo("status", ValidStatusEnum.VALID.getCode())
-                .andEqualTo("deliverStatus", deliverStatus);
+                .andIn("deliverStatus", deliverStatus);
         return deliverMapper.selectOneByExample(example);
     }
 
