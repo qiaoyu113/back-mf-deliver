@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.mobile;
 
 import com.mfexpress.component.constants.CommonConstants;
+import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
@@ -37,7 +38,7 @@ public class DeliverController {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果
-            return Result.getInstance((String) null).fail(-1, "没有权限");
+            return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         deliverPreselectedCmd.setCarServiceId(tokenInfo.getId());
 
@@ -52,7 +53,7 @@ public class DeliverController {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果
-            return Result.getInstance((String) null).fail(-1, "没有权限");
+            return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         deliverCheckCmd.setCarServiceId(tokenInfo.getId());
         return Result.getInstance(deliverServiceI.toCheck(deliverCheckCmd)).success();
@@ -66,7 +67,7 @@ public class DeliverController {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果
-            return Result.getInstance((String) null).fail(-1, "没有权限");
+            return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         deliverReplaceCmd.setCarServiceId(tokenInfo.getId());
         return Result.getInstance(deliverServiceI.toReplace(deliverReplaceCmd)).success();
@@ -82,7 +83,7 @@ public class DeliverController {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果
-            return Result.getInstance((String) null).fail(-1, "没有权限");
+            return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         deliverInsureCmd.setCarServiceId(tokenInfo.getId());
         return Result.getInstance(deliverServiceI.toInsure(deliverInsureCmd)).success();

@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.mobile;
 
 import com.mfexpress.component.constants.CommonConstants;
+import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
@@ -44,7 +45,7 @@ public class ServeController {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果
-            return Result.getInstance((ServeDeliverTaskListVO) null).fail(-1, "没有权限");
+            return Result.getInstance((ServeDeliverTaskListVO) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         return Result.getInstance(serveServiceI.getServeDeliverTaskListVO(serveDeliverTaskQryCmd, tokenInfo));
     }

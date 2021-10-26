@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.mobile;
 
 import com.mfexpress.component.constants.CommonConstants;
+import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
@@ -32,7 +33,7 @@ public class RecoverVehicleController {
                                                                 @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
-            return Result.getInstance((List<RecoverApplyVO>) null).fail(-1, "没有权限");
+            return Result.getInstance((List<RecoverApplyVO>) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         return Result.getInstance(recoverVehicleServiceI.getRecoverVehicleListVO(recoverApplyQryCmd, tokenInfo)).success();
 
@@ -46,7 +47,7 @@ public class RecoverVehicleController {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果
-            return Result.getInstance((String) null).fail(-1, "没有权限");
+            return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         recoverApplyListCmd.setCarServiceId(tokenInfo.getId());
         return Result.getInstance(recoverVehicleServiceI.applyRecover(recoverApplyListCmd)).success();
@@ -61,7 +62,7 @@ public class RecoverVehicleController {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果
-            return Result.getInstance((String) null).fail(-1, "没有权限");
+            return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         //交付单状态修改为已发车 将收车单设为失效
         recoverCancelCmd.setCarServiceId(tokenInfo.getId());
@@ -77,7 +78,7 @@ public class RecoverVehicleController {
         // 查询es收车中或已收车数据
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
-            return Result.getInstance((RecoverTaskListVO) null).fail(-1, "没有权限");
+            return Result.getInstance((RecoverTaskListVO) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         return Result.getInstance(recoverVehicleServiceI.getRecoverListVO(recoverQryListCmd, tokenInfo)).success();
     }
@@ -90,7 +91,7 @@ public class RecoverVehicleController {
         // 查询es收车中或已收车数据
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
-            return Result.getInstance((RecoverTaskListVO) null).fail(-1, "没有权限");
+            return Result.getInstance((RecoverTaskListVO) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         return Result.getInstance(recoverVehicleServiceI.getRecoverListVO(recoverQryListCmd, tokenInfo)).success();
     }
@@ -104,7 +105,7 @@ public class RecoverVehicleController {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果
-            return Result.getInstance((String) null).fail(-1, "没有权限");
+            return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         recoverVechicleCmd.setCarServiceId(tokenInfo.getId());
         //交付单更新待验车状态 完善收车单还车人合照信息
@@ -119,7 +120,7 @@ public class RecoverVehicleController {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果
-            return Result.getInstance((String) null).fail(-1, "没有权限");
+            return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         //交付单更新保险状态  更新车辆保险状态
         recoverBackInsureCmd.setCarServiceId(tokenInfo.getId());
@@ -134,7 +135,7 @@ public class RecoverVehicleController {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果
-            return Result.getInstance((String) null).fail(-1, "没有权限");
+            return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         recoverDeductionCmd.setCarServiceId(tokenInfo.getId());
         // 服务单 交付单状态更新已收车  交付单处理违章状态更新  车辆租赁状态更新未租赁
