@@ -81,7 +81,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         Deliver deliver = deliverGateway.getDeliverByServeNo(serveNo);
         deliver.setIsCheck(JudgeEnum.YES.getCode());
         if (deliver.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())) {
-            deliver.setStatus(DeliverEnum.RECOVER.getCode());
+            deliver.setDeliverStatus(DeliverEnum.RECOVER.getCode());
         }
         int i = deliverGateway.updateDeliverByServeNo(serveNo, deliver);
         return i > 0 ? Result.getInstance(deliver.getCarId()).success() : Result.getInstance(0).fail(-1, "验车失败");
