@@ -313,6 +313,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         serve.setCreateTime(new Date());
         serve.setUpdateTime(new Date());
         serve.setId(null);
+        // 替换车申请的服务单 其月租金应为0
+        serve.setRent(null);
 
         try {
             serveGateway.addServeList(Collections.singletonList(serve));
