@@ -38,9 +38,6 @@ public interface ServeAggregateRootApi {
     @PostMapping("/completed")
     Result<String> completed(@RequestParam("serveNo") String serveNo);
 
-    @PostMapping("/completedList")
-    Result<String> completedList(@RequestBody List<String> serveNoList);
-
     @PostMapping("/getServePreselectedDTO")
     Result<List<ServePreselectedDTO>> getServePreselectedDTO(@RequestBody List<Long> orderId);
 
