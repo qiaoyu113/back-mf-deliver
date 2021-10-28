@@ -149,8 +149,13 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     public Result<String> recover(@RequestBody List<String> serveNoList) {
         Serve serve = Serve.builder().status(ServeEnum.RECOVER.getCode()).build();
-        int i = serveGateway.updateServeByServeNoList(serveNoList, serve);
-        return i > 0 ? Result.getInstance("收车完成").success() : Result.getInstance("收车失败").fail(-1, "收车失败");
+        try {
+            serveGateway.updateServeByServeNoList(serveNoList, serve);
+            return Result.getInstance("收车完成").success();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return Result.getInstance("收车失败").fail(ResultErrorEnum.UPDATE_ERROR.getCode(), "收车失败");
+        }
     }
 
     @Override
@@ -158,19 +163,15 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     public Result<String> completed(@RequestParam("serveNo") String serveNo) {
         Serve serve = Serve.builder().status(ServeEnum.COMPLETED.getCode()).build();
-        int i = serveGateway.updateServeByServeNo(serveNo, serve);
-        return i > 0 ? Result.getInstance("处理违章完成").success() : Result.getInstance("处理违章失败").fail(-1, "处理违章失败");
+        try {
+            serveGateway.updateServeByServeNo(serveNo, serve);
+            return Result.getInstance("处理违章完成").success();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return Result.getInstance("处理违章失败").fail(ResultErrorEnum.UPDATE_ERROR.getCode(), "处理违章失败");
+        }
     }
 
-    @Override
-    @PostMapping("/completedList")
-    @PrintParam
-    public Result<String> completedList(@RequestBody List<String> serveNoList) {
-        Serve serve = Serve.builder().status(ServeEnum.COMPLETED.getCode()).build();
-        int i = serveGateway.updateServeByServeNoList(serveNoList, serve);
-        return i > 0 ? Result.getInstance("退保完成").success() : Result.getInstance("退保失败").fail(-1, "退保失败");
-
-    }
 
     @PostMapping("/getServePreselectedDTO")
     @Override
@@ -185,9 +186,13 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     public Result<String> cancelSelected(@RequestParam("serveNo") String serveNo) {
 
         Serve serve = Serve.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
-        int i = serveGateway.updateServeByServeNo(serveNo, serve);
-
-        return i > 0 ? Result.getInstance("取消预选成功").success() : Result.getInstance("取消预选失败").fail(-1, "取消预选失败");
+        try {
+            serveGateway.updateServeByServeNo(serveNo, serve);
+            return Result.getInstance("取消预选成功").success();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return Result.getInstance("取消预选失败").fail(ResultErrorEnum.UPDATE_ERROR.getCode(), "取消预选失败");
+        }
     }
 
     @Override
@@ -195,8 +200,15 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     public Result<String> cancelSelectedList(@RequestBody List<String> serveNoList) {
         Serve serve = Serve.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
-        serveGateway.updateServeByServeNoList(serveNoList, serve);
-        return Result.getInstance("取消预选成功").success();
+        try {
+            serveGateway.updateServeByServeNoList(serveNoList, serve);
+            return Result.getInstance("取消预选成功").success();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return Result.getInstance("取消预选失败").fail(ResultErrorEnum.UPDATE_ERROR.getCode(), "取消预选失败");
+        }
+
+
     }
 
     @Override
@@ -217,7 +229,6 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             }
             PageHelper.startPage(listQry.getPage(), listQry.getLimit());
             //查询当前状态为已发车或维修中
-
             List<Serve> serveList = serveGateway.getServeByStatus();
             if (serveList != null) {
                 List<ServeDailyDTO> serveDailyDTOList = serveList.stream().map(serve -> {
@@ -226,11 +237,16 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                     serveDailyDTO.setCustomerId(serve.getCustomerId());
                     return serveDailyDTO;
                 }).collect(Collectors.toList());
-                return Result.getInstance(PagePagination.getInstance(serveDailyDTOList)).success();
+                PagePagination<Serve> pagePagination1 = PagePagination.getInstance(serveList);
+                PagePagination<ServeDailyDTO> pagePagination = new PagePagination<>();
+                BeanUtils.copyProperties(pagePagination1, pagePagination);
+                pagePagination.setList(serveDailyDTOList);
+                return Result.getInstance(pagePagination).success();
             }
-            return Result.getInstance((PagePagination<ServeDailyDTO>) null).fail(-1, "");
+            return Result.getInstance((PagePagination<ServeDailyDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         } catch (Exception e) {
-            return Result.getInstance((PagePagination<ServeDailyDTO>) null).fail(-1, "");
+            log.error(e.getMessage());
+            return Result.getInstance((PagePagination<ServeDailyDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
     }
 
@@ -266,7 +282,11 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                     BeanUtils.copyProperties(serve, serveDTO);
                     return serveDTO;
                 }).collect(Collectors.toList());
-                return Result.getInstance(PagePagination.getInstance(serveDailyDTOList)).success();
+                PagePagination<Serve> pagePagination = PagePagination.getInstance(serveList);
+                PagePagination<ServeDTO> pagePagination1 = new PagePagination<>();
+                BeanUtils.copyProperties(pagePagination, pagePagination1);
+                pagePagination1.setList(serveDailyDTOList);
+                return Result.getInstance(pagePagination1).success();
             }
             return Result.getInstance((PagePagination<ServeDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.UPDATE_ERROR.getName());
         } catch (Exception e) {
