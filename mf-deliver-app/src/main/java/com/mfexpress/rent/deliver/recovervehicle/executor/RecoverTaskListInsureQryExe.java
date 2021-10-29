@@ -27,7 +27,7 @@ public class RecoverTaskListInsureQryExe implements RecoverQryServiceI {
     public RecoverTaskListVO execute(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         List<FieldSortBuilder> fieldSortBuilderList = new LinkedList<>();
-        boolQueryBuilder.must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.IS_RECOVER.getCode()))
+        boolQueryBuilder.must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.RECOVER.getCode()))
                 .must(QueryBuilders.matchQuery("isCheck", JudgeEnum.YES.getCode()))
                 .must(QueryBuilders.matchQuery("isInsurance", JudgeEnum.NO.getCode()));
         FieldSortBuilder timeSortBuilder = SortBuilders.fieldSort("recoverVehicleTime").unmappedType("integer").order(SortOrder.DESC);
