@@ -1,8 +1,8 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 
+import cn.hutool.core.date.DateUtil;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.utils.util.DateUtils;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
@@ -12,6 +12,7 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureCmd;
 import com.mfexpress.rent.vehicle.api.VehicleInsuranceAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidInsuranceStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicleinsurance.VehicleInsuranceSaveListCmd;
+import com.mfexpress.rent.vehicle.exception.CommonException;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -33,14 +34,17 @@ public class RecoverBackInsureExe {
         deliverBackInsureDTO.setServeNoList(recoverBackInsureCmd.getServeNoList());
         deliverBackInsureDTO.setInsuranceRemark(recoverBackInsureCmd.getInsuranceRemark());
 
-        Result<String> serveNoResult = deliverAggregateRootApi.toBackInsure(deliverBackInsureDTO);
-
+        Result<String> deliverResult = deliverAggregateRootApi.toBackInsure(deliverBackInsureDTO);
+        if (deliverResult.getCode() != 0) {
+            throw new CommonException(deliverResult.getCode(), deliverResult.getMsg());
+        }
         if (recoverBackInsureCmd.getIsInsurance().equals(JudgeEnum.YES.getCode())) {
             // 调用车辆退保 更新车辆退保状态 退保时间 更新车辆未预选状态 库存地
             VehicleInsuranceSaveListCmd vehicleInsuranceSaveListCmd = new VehicleInsuranceSaveListCmd();
             vehicleInsuranceSaveListCmd.setId(recoverBackInsureCmd.getCarIdList());
             vehicleInsuranceSaveListCmd.setInsuranceStatus(ValidInsuranceStatusEnum.INVALID.getCode());
-            vehicleInsuranceSaveListCmd.setEndTime(DateUtils.format(recoverBackInsureCmd.getInsuranceTime(), "yyyy-MM-dd"));
+            vehicleInsuranceSaveListCmd.setEndTime(DateUtil.formatDate(recoverBackInsureCmd.getInsuranceTime()));
+            vehicleInsuranceSaveListCmd.setStartTime("");
             vehicleInsuranceAggregateRootApi.saveVehicleInsuranceById(vehicleInsuranceSaveListCmd);
         }
         DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();
@@ -50,7 +54,7 @@ public class RecoverBackInsureExe {
         for (String serveNo : recoverBackInsureCmd.getServeNoList()) {
             syncServiceI.execOne(serveNo);
         }
-        return serveNoResult.getData();
+        return deliverResult.getData();
 
     }
 }
