@@ -34,6 +34,8 @@ public class ServeVO {
     @ApiModelProperty(value = "交付单编号")
     private String deliverNo;
 
+    @ApiModelProperty(value = "替换车标识")
+    private Integer replaceFlag;
 
     @ApiModelProperty(value = "品牌id")
     private Integer brandId;

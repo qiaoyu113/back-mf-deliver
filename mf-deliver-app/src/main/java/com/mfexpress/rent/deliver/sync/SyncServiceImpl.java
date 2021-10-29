@@ -182,7 +182,6 @@ public class SyncServiceImpl implements SyncServiceI {
             serveEs.setIsDeduction(0);
             serveEs.setSort(DeliverSortEnum.TWO.getSort());
         }
-        log.info("key:==========================" + serveNo + "value:=====================" + serveEs.toString());
         elasticsearchTools.saveByEntity(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), serveNo, serveEs);
 
     }
