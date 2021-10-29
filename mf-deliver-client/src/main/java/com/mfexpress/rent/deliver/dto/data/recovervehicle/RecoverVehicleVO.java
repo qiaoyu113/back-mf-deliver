@@ -52,6 +52,8 @@ public class RecoverVehicleVO {
     private Integer isDeduction;
     @ApiModelProperty(value = "交付状态")
     private Integer deliverStatus;
+    @ApiModelProperty(value = "替换车标识")
+    private Integer replaceFlag;
 
 
 }

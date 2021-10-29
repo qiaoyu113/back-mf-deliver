@@ -9,6 +9,7 @@ import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
@@ -86,6 +87,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setCarServiceId(0);
                 serve.setCityId(0);
                 serve.setUpdateId(0);
+                serve.setReplaceFlag(JudgeEnum.NO.getCode());
                 serve.setStatus(ServeEnum.NOT_PRESELECTED.getCode());
                 serve.setRemark("");
                 serve.setRent(serveVehicleDTO.getRent());
@@ -224,7 +226,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     public Result<PagePagination<ServeDailyDTO>> getServeDailyDTO(@RequestBody ListQry listQry) {
         try {
             PageHelper.clearPage();
-            if (listQry.getLimit() == 0) {
+            if (listQry.getPage() == 0) {
                 PageHelper.startPage(1, listQry.getLimit());
             }
             PageHelper.startPage(listQry.getPage(), listQry.getLimit());
@@ -270,7 +272,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     public Result<PagePagination<ServeDTO>> getCycleServe(@RequestBody ListQry listQry) {
         try {
             PageHelper.clearPage();
-            if (listQry.getLimit() == 0) {
+            if (listQry.getPage() == 0) {
                 PageHelper.startPage(1, listQry.getLimit());
             }
             PageHelper.startPage(listQry.getPage(), listQry.getLimit());
@@ -369,6 +371,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         serve.setServeNo(newServeNo);
         serve.setCreateTime(new Date());
         serve.setUpdateTime(new Date());
+        serve.setReplaceFlag(JudgeEnum.YES.getCode());
         // 替换车申请的服务单 其月租金应为0
         serve.setRent(BigDecimal.ZERO);
 

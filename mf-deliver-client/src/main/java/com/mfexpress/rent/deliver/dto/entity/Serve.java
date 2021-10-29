@@ -55,5 +55,7 @@ public class Serve {
 
     private Date updateTime;
 
+    private Integer replaceFlag;
+
 
 }
