@@ -22,10 +22,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -80,8 +77,8 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         //2021-10-13修改 收车验车时交付单变更为已收车
         Deliver deliver = deliverGateway.getDeliverByServeNo(serveNo);
         deliver.setIsCheck(JudgeEnum.YES.getCode());
-        if (deliver.getStatus().equals(DeliverEnum.IS_RECOVER.getCode())) {
-            deliver.setStatus(DeliverEnum.RECOVER.getCode());
+        if (deliver.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())) {
+            deliver.setDeliverStatus(DeliverEnum.RECOVER.getCode());
         }
         int i = deliverGateway.updateDeliverByServeNo(serveNo, deliver);
         return i > 0 ? Result.getInstance(deliver.getCarId()).success() : Result.getInstance(0).fail(-1, "验车失败");
@@ -187,7 +184,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/cancelSelected")
     @PrintParam
     public Result<String> cancelSelected(@RequestParam("carId") Integer carId) {
-        Deliver deliver = deliverGateway.getDeliverByCarIdAndDeliverStatus(carId, DeliverEnum.IS_DELIVER.getCode());
+        Deliver deliver = deliverGateway.getDeliverByCarIdAndDeliverStatus(carId, Collections.singletonList(DeliverEnum.IS_DELIVER.getCode()));
         if (deliver != null) {
             //设为失效
             Deliver build = Deliver.builder().status(ValidStatusEnum.INVALID.getCode()).build();
@@ -285,7 +282,8 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @Override
     @PostMapping("/getDeliveredDeliverDTOByCarId")
     public Result<DeliverDTO> getDeliveredDeliverDTOByCarId(@RequestParam("carId") Integer carId) {
-        Deliver deliver = deliverGateway.getDeliverByCarIdAndDeliverStatus(carId, DeliverEnum.DELIVER.getCode());
+        // 状态为已发车和收车中的交车单所属的车辆都可以被维修
+        Deliver deliver = deliverGateway.getDeliverByCarIdAndDeliverStatus(carId, Arrays.asList(DeliverEnum.DELIVER.getCode(), DeliverEnum.IS_RECOVER.getCode()));
         if (null == deliver) {
             return Result.getInstance((DeliverDTO) null).success();
         }

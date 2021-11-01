@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.mobile;
 
 import com.mfexpress.component.constants.CommonConstants;
+import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
@@ -31,7 +32,7 @@ public class DeliverVehicleController {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果
-            return Result.getInstance((String) null).fail(-1, "没有权限");
+            return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         deliverVehicleCmd.setCarServiceId(tokenInfo.getId());
         return Result.getInstance(deliverVehicleServiceI.toDeliver(deliverVehicleCmd)).success();

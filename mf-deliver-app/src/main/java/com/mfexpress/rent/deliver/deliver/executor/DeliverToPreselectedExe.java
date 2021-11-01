@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.deliver.executor;
 
 
+import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
@@ -15,6 +16,7 @@ import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInfoDto;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -22,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 @Component
+@Slf4j
 public class DeliverToPreselectedExe {
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
@@ -42,7 +45,8 @@ public class DeliverToPreselectedExe {
         //车辆id list
         List<Integer> carIdList = new LinkedList<>();
         if (serveNoList.size() != deliverVehicleSelectCmdList.size()) {
-            throw new RuntimeException("批量预选数量错误");
+            log.error("服务单选中数量与预选车辆数量不符");
+            return ResultErrorEnum.VILAD_ERROR.getName();
         }
         for (int i = 0; i < serveNoList.size(); i++) {
             DeliverDTO deliverDTO = new DeliverDTO();

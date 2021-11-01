@@ -25,6 +25,8 @@ public class ServeDTO {
 
     private Integer status;
 
+    private Integer replaceFlag;
+
     private Integer carServiceId;
 
     private Integer saleId;
