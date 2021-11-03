@@ -20,7 +20,7 @@ public interface ServeGateway {
     List<String> getServeNoListAll();
 
     List<Serve>getServeByStatus();
-    List<Serve>getCycleServe();
+    List<Serve>getCycleServe(List<Integer> customerIdList);
     List<Serve> getServeByServeNoList(List<String> serveNoList);
 
 
