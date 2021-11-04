@@ -70,9 +70,16 @@ public class ServeGatewayImpl implements ServeGateway {
     }
 
     @Override
-    public List<Serve> getCycleServe() {
+    public List<Serve> getCycleServe(List<Integer> customerIdList) {
         Example example = new Example(Serve.class);
-        example.createCriteria().andGreaterThanOrEqualTo("status", ServeEnum.DELIVER.getCode());
+        if (customerIdList != null && customerIdList.size() > 0) {
+            example.createCriteria().andGreaterThanOrEqualTo("status", ServeEnum.DELIVER.getCode()).andIn("customerId", customerIdList);
+        } else {
+            example.createCriteria().andGreaterThanOrEqualTo("status", ServeEnum.DELIVER.getCode());
+
+        }
+
+
         return serveMapper.selectByExample(example);
 
 

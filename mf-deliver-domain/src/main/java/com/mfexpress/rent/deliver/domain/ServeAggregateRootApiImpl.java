@@ -269,15 +269,17 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Override
     @PostMapping("/getCycleServe")
-    public Result<PagePagination<ServeDTO>> getCycleServe(@RequestBody ListQry listQry) {
+    public Result<PagePagination<ServeDTO>> getCycleServe(@RequestBody ServeCycleQryCmd serveCycleQryCmd) {
+
+
         try {
             PageHelper.clearPage();
-            if (listQry.getPage() == 0) {
-                PageHelper.startPage(1, listQry.getLimit());
+            if (serveCycleQryCmd.getPage() == 0) {
+                PageHelper.startPage(1, serveCycleQryCmd.getLimit());
             }
-            PageHelper.startPage(listQry.getPage(), listQry.getLimit());
+            PageHelper.startPage(serveCycleQryCmd.getPage(), serveCycleQryCmd.getLimit());
             //查询当前状态为已发车或维修中
-            List<Serve> serveList = serveGateway.getCycleServe();
+            List<Serve> serveList = serveGateway.getCycleServe(serveCycleQryCmd.getCustomerIdList());
             if (serveList != null) {
                 List<ServeDTO> serveDailyDTOList = serveList.stream().map(serve -> {
                     ServeDTO serveDTO = new ServeDTO();
