@@ -14,11 +14,11 @@ public class RecoverVechicleCmd {
     @ApiModelProperty(value = "服务单编号")
     private String serveNo;
     @ApiModelProperty(value = "还车人姓名")
-    private String contractsName;
+    private String contactsName;
     @ApiModelProperty(value = "还车人手机号")
-    private String contractsPhone;
+    private String contactsPhone;
     @ApiModelProperty(value = "还车人身份证号")
-    private String contractsCard;
+    private String contactsCard;
     @ApiModelProperty(value = "收车时间")
     @JsonFormat(timezone = "GMT+8")
     private Date recoverVehicleTime;
