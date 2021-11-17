@@ -25,5 +25,7 @@ public interface ServeServiceI {
 
     String addServe(ServeAddCmd serveAddCmd);
 
+    ServeDeliverDetailVO getServeDeliverDetail(ServeQryCmd cmd);
 
+    ServeRecoverDetailVO getServeRecoverDetail(ServeQryCmd cmd);
 }

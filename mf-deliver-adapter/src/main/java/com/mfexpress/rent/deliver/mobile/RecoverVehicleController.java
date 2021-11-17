@@ -11,6 +11,7 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiSort;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -142,5 +143,43 @@ public class RecoverVehicleController {
 
         return Result.getInstance(recoverVehicleServiceI.toDeduction(recoverDeductionCmd));
     }
+
+    // ---------------------luzheng add start----------------------------
+
+    @PostMapping("/cacheCheckInfo")
+    @ApiOperation(value = "收车验车信息暂存")
+    @PrintParam
+    public Result<String> cacheCheckInfo(@RequestBody RecoverVechicleCmd recoverVechicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+        }
+        // 以serverNo为key
+        recoverVechicleCmd.setCarServiceId(tokenInfo.getId());
+        return Result.getInstance(recoverVehicleServiceI.cacheCheckInfo(recoverVechicleCmd)).success();
+    }
+
+    // 获取收车验车信息暂存
+    @PostMapping("/getCachedCheckInfo")
+    @ApiOperation(value = "获取暂存的收车验车信息")
+    @PrintParam
+    public Result<RecoverVehicleVO> getCachedCheckInfo(@RequestBody RecoverVechicleCmd recoverVechicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            return Result.getInstance((RecoverVehicleVO) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+        }
+        recoverVechicleCmd.setCarServiceId(tokenInfo.getId());
+        return Result.getInstance(recoverVehicleServiceI.getCachedCheckInfo(recoverVechicleCmd)).success();
+    }
+
+    // 收车申请详情页
+    @PostMapping("/getRecoverDetail")
+    @ApiOperation(value = "获取收车申请详情信息")
+    @PrintParam
+    public Result<RecoverDetailVO> getRecoverDetail(@RequestBody @Validated RecoverDetailQryCmd cmd){
+        return Result.getInstance(recoverVehicleServiceI.getRecoverDetail(cmd)).success();
+    }
+
+    // ---------------------luzheng add end----------------------------
 
 }

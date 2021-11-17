@@ -58,4 +58,28 @@ public class RecoverVehicleVO {
     private Integer serveStatus;
 
 
+    @ApiModelProperty(value = "还车人姓名")
+    private String contactsName;
+
+    @ApiModelProperty(value = "还车人手机号")
+    private String contactsPhone;
+
+    @ApiModelProperty(value = "还车人身份证号")
+    private String contactsCard;
+
+    @ApiModelProperty(value = "车损费")
+    private Double damageFee;
+
+    @ApiModelProperty(value = "路边停车费")
+    private Double parkFee;
+
+    @ApiModelProperty(value = "车辆停放地id")
+    private Integer wareHouseId;
+
+    @ApiModelProperty(value = "车辆停放地名称")
+    private String wareHouseDisplay;
+
+    @ApiModelProperty(value = "合照")
+    private String imgUrl;
+
 }

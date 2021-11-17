@@ -28,4 +28,11 @@ public class RecoverVechicleCmd {
     private String imgUrl;
 
     private Integer carServiceId;
+
+    @ApiModelProperty(value = "车损费")
+    private Double damageFee;
+
+    @ApiModelProperty(value = "路边停车费")
+    private Double parkFee;
+
 }
