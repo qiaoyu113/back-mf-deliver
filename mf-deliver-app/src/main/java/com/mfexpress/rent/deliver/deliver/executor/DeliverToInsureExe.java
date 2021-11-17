@@ -12,6 +12,7 @@ import com.mfexpress.rent.vehicle.data.dto.vehicleinsurance.VehicleInsuranceSave
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 
 @Component
@@ -39,7 +40,8 @@ public class DeliverToInsureExe {
             return vehicleResult.getMsg();
         }
 
-        Result<String> deliverResult = deliverAggregateRootApi.toInsure(serveNoList);
+        Date insuranceStartTime = deliverInsureCmd.getStartInsureDate();
+        Result<String> deliverResult = deliverAggregateRootApi.toInsure(deliverInsureCmd);
         DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();
         deliverCarServiceDTO.setServeNoList(serveNoList);
         deliverCarServiceDTO.setCarServiceId(deliverInsureCmd.getCarServiceId());

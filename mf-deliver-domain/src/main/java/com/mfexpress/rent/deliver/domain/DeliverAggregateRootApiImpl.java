@@ -9,10 +9,7 @@ import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverBackInsureDTO;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleMqDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.*;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
@@ -100,9 +97,12 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @Override
     @PostMapping("/toInsure")
     @PrintParam
-    public Result<String> toInsure(@RequestBody List<String> serveNoList) {
-        Deliver deliver = Deliver.builder().isInsurance(JudgeEnum.YES.getCode()).build();
-        int i = deliverGateway.updateDeliverByServeNoList(serveNoList, deliver);
+    public Result<String> toInsure(@RequestBody DeliverInsureCmd cmd) {
+        Deliver deliver = Deliver.builder()
+                .isInsurance(JudgeEnum.YES.getCode())
+                .insuranceStartTime(cmd.getStartInsureDate())
+                .build();
+        int i = deliverGateway.updateDeliverByServeNoList(cmd.getServeNoList(), deliver);
         return i > 0 ? Result.getInstance("投保成功").success() : Result.getInstance("投保失败").fail(-1, "投保失败");
     }
 
@@ -143,7 +143,9 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PrintParam
     public Result<String> toBackInsure(@RequestBody DeliverBackInsureDTO deliverBackInsureDTO) {
         Deliver deliver = Deliver.builder().isInsurance(JudgeEnum.YES.getCode())
-                .insuranceRemark(deliverBackInsureDTO.getInsuranceRemark()).build();
+                .insuranceRemark(deliverBackInsureDTO.getInsuranceRemark())
+                .insuranceEndTime(deliverBackInsureDTO.getInsuranceTime())
+                .build();
         int i = deliverGateway.updateDeliverByServeNoList(deliverBackInsureDTO.getServeNoList(), deliver);
 
         //修改 退保之后在处理才能处理违章

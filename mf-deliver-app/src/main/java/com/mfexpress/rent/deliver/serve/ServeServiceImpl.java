@@ -31,6 +31,11 @@ public class ServeServiceImpl implements ServeServiceI {
     @Resource
     private ServeListAllQryExe serveListAllQryExe;
 
+    @Resource
+    private ServeDeliverDetailQryExe serveDeliverDetailQryExe;
+
+    @Resource
+    private ServeRecoverDetailQryExe serveRecoverDetailQryExe;
 
     @Override
     public ServeListVO getServeListVoByOrderNoAll(ServeQryListCmd serveQryListCmd) {
@@ -79,4 +84,15 @@ public class ServeServiceImpl implements ServeServiceI {
     public String addServe(ServeAddCmd serveAddCmd) {
         return serveAddCmdExe.execute(serveAddCmd);
     }
+
+    @Override
+    public ServeDeliverDetailVO getServeDeliverDetail(ServeQryCmd cmd) {
+        return serveDeliverDetailQryExe.execute(cmd);
+    }
+
+    @Override
+    public ServeRecoverDetailVO getServeRecoverDetail(ServeQryCmd cmd) {
+        return serveRecoverDetailQryExe.execute(cmd);
+    }
+
 }

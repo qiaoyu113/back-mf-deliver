@@ -27,6 +27,14 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     @Resource
     private RecoverDeductionExe recoverDeductionExe;
 
+    @Resource
+    private RecoverVehicleCheckInfoCacheExe checkInfoCacheExe;
+
+    @Resource
+    private RecoverVehicleCheckInfoQryExe checkInfoQryExe;
+
+    @Resource
+    private RecoverVehicleDetailQryExe recoverVehicleDetailQryExe;
 
     @Override
     public List<RecoverApplyVO> getRecoverVehicleListVO(RecoverApplyQryCmd recoverApplyQryCmd, TokenInfo tokenInfo) {
@@ -65,5 +73,20 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     public String toDeduction(RecoverDeductionCmd recoverDeductionCmd) {
 
         return recoverDeductionExe.execute(recoverDeductionCmd);
+    }
+
+    @Override
+    public String cacheCheckInfo(RecoverVechicleCmd cmd) {
+        return checkInfoCacheExe.execute(cmd);
+    }
+
+    @Override
+    public RecoverVehicleVO getCachedCheckInfo(RecoverVechicleCmd cmd) {
+        return checkInfoQryExe.execute(cmd);
+    }
+
+    @Override
+    public RecoverDetailVO getRecoverDetail(RecoverDetailQryCmd cmd) {
+        return recoverVehicleDetailQryExe.execute(cmd);
     }
 }

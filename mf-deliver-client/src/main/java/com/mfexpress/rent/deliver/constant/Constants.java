@@ -22,4 +22,6 @@ public class Constants {
     public static final String DELIVER_ORDER_TOPIC = "dev2m1_event";
     public static final String DELIVER_ORDER_TAG = "order_payment_finish";
     public static final String DELIVER_VEHICLE_TAG = "vehicle_update";
+
+    public static final String RECOVER_VEHICLE_CHECK_INFO_CACHE_KEY = "recoverVehicleCheckInfoCache";
 }

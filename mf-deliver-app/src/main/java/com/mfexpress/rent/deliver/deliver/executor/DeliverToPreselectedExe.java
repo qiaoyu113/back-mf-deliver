@@ -12,10 +12,13 @@ import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverPreselectedCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleSelectCmd;
+import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.rent.vehicle.api.VehicleInsuranceAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInfoDto;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
+import com.mfexpress.rent.vehicle.data.dto.vehicleinsurance.VehicleInsuranceDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +37,9 @@ public class DeliverToPreselectedExe {
     private VehicleAggregateRootApi vehicleAggregateRootApi;
     @Resource
     private SyncServiceI syncServiceI;
+
+    @Resource
+    private VehicleInsuranceAggregateRootApi vehicleInsuranceAggregateRootApi;
 
 
     public String execute(DeliverPreselectedCmd deliverPreselectedCmd) {
@@ -61,8 +67,15 @@ public class DeliverToPreselectedExe {
             if (vehicleResult.getCode() != 0 || vehicleResult.getData() == null) {
                 return vehicleResult.getMsg();
             }
-            deliverDTO.setIsInsurance(vehicleResult.getData().getInsuranceStatus().equals(JudgeEnum.YES.getCode()) ? JudgeEnum.YES.getCode() : JudgeEnum.NO.getCode());
-
+            VehicleInfoDto vehicleInfoDto = vehicleResult.getData();
+            if(JudgeEnum.YES.getCode().equals(vehicleInfoDto.getInsuranceStatus())){
+                deliverDTO.setIsInsurance(JudgeEnum.YES.getCode());
+                Result<VehicleInsuranceDto> vehicleInsuranceDtoResult = vehicleInsuranceAggregateRootApi.getVehicleInsuranceById(deliverVehicleSelectCmd.getId());
+                if(vehicleInsuranceDtoResult.getCode() != 0 || null == vehicleInsuranceDtoResult.getData()){
+                    return vehicleInsuranceDtoResult.getMsg();
+                }
+                deliverDTO.setInsuranceStartTime(DeliverUtils.getYYYYMMDDByString(vehicleInsuranceDtoResult.getData().getStartTime()));
+            }
 
             deliverDTO.setCarId(deliverVehicleSelectCmd.getId());
             deliverDTO.setCarNum(deliverVehicleSelectCmd.getPlateNumber());

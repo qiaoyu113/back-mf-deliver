@@ -57,4 +57,9 @@ public class DeliverDTO {
     private BigDecimal deductionAmount;
 
     private BigDecimal agencyAmount;
+
+    private Date insuranceStartTime;
+
+    private Date insuranceEndTime;
+
 }

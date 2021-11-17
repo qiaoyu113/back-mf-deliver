@@ -44,4 +44,9 @@ public class RecoverVehicleDTO {
     private String cancelRemark;
     private Integer wareHouseId;
     private Integer carId;
+
+    private Double damageFee;
+
+    private Double parkFee;
+
 }
