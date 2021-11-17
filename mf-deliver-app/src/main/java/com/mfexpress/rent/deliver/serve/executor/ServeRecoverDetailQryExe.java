@@ -130,10 +130,12 @@ public class ServeRecoverDetailQryExe {
         if(null != deliverDTO.getInsuranceEndTime()){
             // 正常退保 补全退保时间
             vehicleInsuranceVO.setIsInsurance(JudgeEnum.YES.getCode());
+            vehicleInsuranceVO.setIsInsuranceDisplay(JudgeEnum.YES.getName());
             vehicleInsuranceVO.setEndTime(deliverDTO.getInsuranceEndTime());
         }else{
             // 暂不退保 补全原因
             vehicleInsuranceVO.setIsInsurance(JudgeEnum.NO.getCode());
+            vehicleInsuranceVO.setIsInsuranceDisplay(JudgeEnum.NO.getName());
             vehicleInsuranceVO.setInsuranceRemark(deliverDTO.getInsuranceRemark());
         }
         return vehicleInsuranceVO;
