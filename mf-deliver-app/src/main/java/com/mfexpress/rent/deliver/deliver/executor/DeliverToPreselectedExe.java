@@ -71,10 +71,9 @@ public class DeliverToPreselectedExe {
             if(JudgeEnum.YES.getCode().equals(vehicleInfoDto.getInsuranceStatus())){
                 deliverDTO.setIsInsurance(JudgeEnum.YES.getCode());
                 Result<VehicleInsuranceDto> vehicleInsuranceDtoResult = vehicleInsuranceAggregateRootApi.getVehicleInsuranceById(deliverVehicleSelectCmd.getId());
-                if(vehicleInsuranceDtoResult.getCode() != 0 || null == vehicleInsuranceDtoResult.getData()){
-                    return vehicleInsuranceDtoResult.getMsg();
+                if(null != vehicleInsuranceDtoResult.getData()){
+                    deliverDTO.setInsuranceStartTime(DeliverUtils.getYYYYMMDDByString(vehicleInsuranceDtoResult.getData().getStartTime()));
                 }
-                deliverDTO.setInsuranceStartTime(DeliverUtils.getYYYYMMDDByString(vehicleInsuranceDtoResult.getData().getStartTime()));
             }
 
             deliverDTO.setCarId(deliverVehicleSelectCmd.getId());

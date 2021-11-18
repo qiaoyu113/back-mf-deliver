@@ -16,6 +16,9 @@ public class VehicleInsuranceVO {
     @ApiModelProperty(value = "是否退保,只在查看收车单详情时展示")
     private Integer isInsurance;
 
+    @ApiModelProperty(value = "是否退保含义")
+    private String isInsuranceDisplay;
+
     @ApiModelProperty(value = "退保时间,只在查看收车单详情时展示")
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date endTime;
