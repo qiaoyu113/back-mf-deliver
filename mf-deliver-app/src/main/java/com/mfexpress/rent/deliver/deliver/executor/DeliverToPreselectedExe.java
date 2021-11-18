@@ -12,6 +12,7 @@ import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverPreselectedCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleSelectCmd;
+import com.mfexpress.rent.deliver.exception.CommonException;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.VehicleInsuranceAggregateRootApi;
@@ -52,7 +53,7 @@ public class DeliverToPreselectedExe {
         List<Integer> carIdList = new LinkedList<>();
         if (serveNoList.size() != deliverVehicleSelectCmdList.size()) {
             log.error("服务单选中数量与预选车辆数量不符");
-            return ResultErrorEnum.VILAD_ERROR.getName();
+            throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), ResultErrorEnum.VILAD_ERROR.getName());
         }
         for (int i = 0; i < serveNoList.size(); i++) {
             DeliverDTO deliverDTO = new DeliverDTO();
@@ -65,7 +66,7 @@ public class DeliverToPreselectedExe {
             DeliverVehicleSelectCmd deliverVehicleSelectCmd = deliverVehicleSelectCmdList.get(i);
             Result<VehicleInfoDto> vehicleResult = vehicleAggregateRootApi.getVehicleInfoVOById(deliverVehicleSelectCmd.getId());
             if (vehicleResult.getCode() != 0 || vehicleResult.getData() == null) {
-                return vehicleResult.getMsg();
+                throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), vehicleResult.getMsg());
             }
             VehicleInfoDto vehicleInfoDto = vehicleResult.getData();
             if(JudgeEnum.YES.getCode().equals(vehicleInfoDto.getInsuranceStatus())){
@@ -95,16 +96,16 @@ public class DeliverToPreselectedExe {
         vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.CHECKED.getCode());
         Result<String> vehicleResult = vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
         if (vehicleResult.getCode() != 0) {
-            return vehicleResult.getMsg();
+            throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), vehicleResult.getMsg());
         }
 
         Result<String> serveResult = serveAggregateRootApi.toPreselected(serveNoList);
         if (serveResult.getCode() != 0) {
-            return serveResult.getMsg();
+            throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), serveResult.getMsg());
         }
         Result<String> deliverResult = deliverAggregateRootApi.addDeliver(deliverList);
         if (deliverResult.getCode() != 0) {
-            return deliverResult.getMsg();
+            throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), deliverResult.getMsg());
         }
         //强同步es
         for (String serveNo : serveNoList) {
