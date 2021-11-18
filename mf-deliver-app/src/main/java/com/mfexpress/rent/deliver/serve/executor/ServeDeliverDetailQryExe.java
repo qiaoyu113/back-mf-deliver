@@ -1,10 +1,14 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
+import com.mfexpress.common.domain.api.DictAggregateRootApi;
+import com.mfexpress.common.domain.dto.DictDataDTO;
+import com.mfexpress.common.domain.dto.DictTypeDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
+import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
@@ -23,6 +27,11 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class ServeDeliverDetailQryExe {
@@ -44,6 +53,9 @@ public class ServeDeliverDetailQryExe {
 
     @Resource
     private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
+
+    @Resource
+    private DictAggregateRootApi dictAggregateRootApi;
 
     public ServeDeliverDetailVO execute(ServeQryCmd cmd) {
         String serveNo = cmd.getServeNo();
@@ -141,7 +153,40 @@ public class ServeDeliverDetailQryExe {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "客户信息查询失败");
         }
         orderVO.setCustomerName(customerResult.getData().getName());
+
+        if (JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {
+            orderVO.setPurposeDisplay("替换");
+        } else {
+            orderVO.setPurposeDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.DELIVER_LEASE_MODE), serveDTO.getLeaseModelId().toString()));
+        }
         return orderVO;
+    }
+
+    private Map<String, DictDataDTO> getDictDataDtoMapByDictType(String dictType) {
+        DictTypeDTO dictTypeDTO = new DictTypeDTO();
+        dictTypeDTO.setDictType(dictType);
+        Result<List<DictDataDTO>> dictDataResult = dictAggregateRootApi.getDictDataByType(dictTypeDTO);
+        if (dictDataResult.getCode() == 0) {
+            List<DictDataDTO> dictDataDTOList = dictDataResult.getData();
+            if (dictDataDTOList == null || dictDataDTOList.isEmpty()) {
+                return new HashMap<>(16);
+            }
+            Map<String, DictDataDTO> dictDataDTOMap = dictDataDTOList.stream().collect(Collectors.toMap(DictDataDTO::getDictValue, Function.identity(), (key1, key2) -> key1));
+            return dictDataDTOMap;
+        }
+        return null;
+    }
+
+    private String getDictDataDtoLabelByValue(Map<String, DictDataDTO> dictDataDtoMap, String value) {
+        if (dictDataDtoMap == null) {
+            return "";
+        }
+
+        DictDataDTO dictDataDTO = dictDataDtoMap.get(value);
+        if (dictDataDTO != null) {
+            return dictDataDTO.getDictLabel();
+        }
+        return "";
     }
 
 }
