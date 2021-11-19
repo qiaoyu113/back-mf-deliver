@@ -141,7 +141,7 @@ public class ServeRecoverDetailQryExe {
 
     public VehicleInsuranceVO getVehicleInsuranceVO(DeliverDTO deliverDTO){
         VehicleInsuranceVO vehicleInsuranceVO = new VehicleInsuranceVO();
-        if(null != deliverDTO.getInsuranceEndTime()){
+        if(0 == deliverDTO.getInsuranceRemark()){
             // 正常退保 补全退保时间
             vehicleInsuranceVO.setIsInsurance(JudgeEnum.YES.getCode());
             vehicleInsuranceVO.setIsInsuranceDisplay(JudgeEnum.YES.getName());
