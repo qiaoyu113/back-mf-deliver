@@ -24,6 +24,8 @@ public class DeliverUtils {
 
     private static final SimpleDateFormat string_to_date_format_yyyy_MM_dd = new SimpleDateFormat(DeliverUtils.yyyy_MM_dd);
 
+    private static final SimpleDateFormat yyyyMMddHHmmss = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
     @Value("${spring.profiles}")
     private String envVariable;
 
@@ -69,6 +71,24 @@ public class DeliverUtils {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static Date stringToDateYyyyMMddHHmmss(String date) {
+        if (StringUtils.isEmpty(date))
+            return null;
+        try {
+            return yyyyMMddHHmmss.parse(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static String dateToStringYyyyMMddHHmmss(Date date) {
+        if (date == null){
+            return "";
+        }
+        return yyyyMMddHHmmss.format(date);
     }
 
 

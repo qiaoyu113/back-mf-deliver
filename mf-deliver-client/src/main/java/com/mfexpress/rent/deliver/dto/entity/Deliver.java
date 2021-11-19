@@ -67,8 +67,8 @@ public class Deliver {
 
     private BigDecimal agencyAmount;
 
-    private Date insuranceStartTime;
+    private String insuranceStartTime;
 
-    private Date insuranceEndTime;
+    private String insuranceEndTime;
 
 }
