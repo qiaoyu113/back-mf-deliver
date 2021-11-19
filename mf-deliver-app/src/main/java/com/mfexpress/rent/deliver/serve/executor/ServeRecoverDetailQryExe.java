@@ -1,10 +1,14 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
+import com.mfexpress.common.domain.api.DictAggregateRootApi;
+import com.mfexpress.common.domain.dto.DictDataDTO;
+import com.mfexpress.common.domain.dto.DictTypeDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
+import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
@@ -28,6 +32,11 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class ServeRecoverDetailQryExe {
@@ -55,6 +64,9 @@ public class ServeRecoverDetailQryExe {
 
     @Resource
     private WarehouseAggregateRootApi warehouseAggregateRootApi;
+
+    @Resource
+    private DictAggregateRootApi dictAggregateRootApi;
 
     public ServeRecoverDetailVO execute(ServeQryCmd cmd) {
         String serveNo = cmd.getServeNo();
@@ -122,6 +134,8 @@ public class ServeRecoverDetailQryExe {
     public ViolationInfoVO getViolationInfoVO(DeliverDTO deliverDTO){
         ViolationInfoVO violationInfoVO = new ViolationInfoVO();
         BeanUtils.copyProperties(deliverDTO, violationInfoVO);
+        violationInfoVO.setDeductionHandle(deliverDTO.getDeductionHandel());
+        violationInfoVO.setDeductionHandleDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.TRAFFIC_PECCANCY_DEALING_METHOD), deliverDTO.getDeductionHandel().toString()));
         return violationInfoVO;
     }
 
@@ -137,6 +151,7 @@ public class ServeRecoverDetailQryExe {
             vehicleInsuranceVO.setIsInsurance(JudgeEnum.NO.getCode());
             vehicleInsuranceVO.setIsInsuranceDisplay(JudgeEnum.NO.getName());
             vehicleInsuranceVO.setInsuranceRemark(deliverDTO.getInsuranceRemark());
+            vehicleInsuranceVO.setInsuranceRemarkDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.REASONS_FOR_NOT_INSURANCE_RETURN), deliverDTO.getInsuranceRemark().toString()));
         }
         return vehicleInsuranceVO;
     }
@@ -193,6 +208,33 @@ public class ServeRecoverDetailQryExe {
         }
         orderVO.setCustomerName(customerResult.getData().getName());
         return orderVO;
+    }
+
+    private Map<String, DictDataDTO> getDictDataDtoMapByDictType(String dictType) {
+        DictTypeDTO dictTypeDTO = new DictTypeDTO();
+        dictTypeDTO.setDictType(dictType);
+        Result<List<DictDataDTO>> dictDataResult = dictAggregateRootApi.getDictDataByType(dictTypeDTO);
+        if (dictDataResult.getCode() == 0) {
+            List<DictDataDTO> dictDataDTOList = dictDataResult.getData();
+            if (dictDataDTOList == null || dictDataDTOList.isEmpty()) {
+                return new HashMap<>(16);
+            }
+            Map<String, DictDataDTO> dictDataDTOMap = dictDataDTOList.stream().collect(Collectors.toMap(DictDataDTO::getDictValue, Function.identity(), (key1, key2) -> key1));
+            return dictDataDTOMap;
+        }
+        return null;
+    }
+
+    private String getDictDataDtoLabelByValue(Map<String, DictDataDTO> dictDataDtoMap, String value) {
+        if (dictDataDtoMap == null) {
+            return "";
+        }
+
+        DictDataDTO dictDataDTO = dictDataDtoMap.get(value);
+        if (dictDataDTO != null) {
+            return dictDataDTO.getDictLabel();
+        }
+        return "";
     }
 
 }

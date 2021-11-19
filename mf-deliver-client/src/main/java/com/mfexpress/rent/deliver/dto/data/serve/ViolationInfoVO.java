@@ -11,6 +11,9 @@ public class ViolationInfoVO {
     @ApiModelProperty(value = "处理方式")
     private Integer deductionHandle;
 
+    @ApiModelProperty(value = "处理方式含义")
+    private String deductionHandleDisplay;
+
     @ApiModelProperty(value = "违章分数")
     private Integer violationPoints;
 

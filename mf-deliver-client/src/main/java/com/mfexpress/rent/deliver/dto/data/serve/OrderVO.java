@@ -19,4 +19,7 @@ public class OrderVO {
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date deliveryDate;
 
+    @ApiModelProperty(value = "租赁方式")
+    private String purposeDisplay;
+
 }

@@ -25,4 +25,7 @@ public class VehicleInsuranceVO {
 
     @ApiModelProperty(value = "暂不退保原因,只在查看收车单详情时展示")
     private Integer insuranceRemark;
+
+    @ApiModelProperty(value = "暂不退保原因含义,只在查看收车单详情时展示")
+    private String insuranceRemarkDisplay;
 }
