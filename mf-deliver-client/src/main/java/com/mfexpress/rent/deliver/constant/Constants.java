@@ -13,6 +13,8 @@ public class Constants {
     public static final Integer REDIS_BIZ_ID_SERVER = 122;
     public static final Integer REDIS_BIZ_ID_DELIVER = 123;
     public static final String DELIVER_LEASE_MODE = "lease_mode";
+    public static final String TRAFFIC_PECCANCY_DEALING_METHOD = "traffic_peccancy_dealing_method";
+    public static final String REASONS_FOR_NOT_INSURANCE_RETURN = "reasons_for_not_insurance_return";
 
     public static final String ES_DELIVER_INDEX = "deliver";
     public static final String REDIS_DELIVER_KEY = "mf:deliver";
