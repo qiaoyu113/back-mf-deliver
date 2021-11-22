@@ -8,19 +8,23 @@ import com.mfexpress.billing.rentcharge.dto.data.VehicleDamage.CreateVehicleDama
 import com.mfexpress.billing.rentcharge.dto.data.daily.DailyDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.exception.CommonException;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
@@ -34,6 +38,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Component
@@ -58,6 +64,9 @@ public class RecoverToCheckExe {
 
     @Resource
     private VehicleDamageAggregateRootApi vehicleDamageAggregateRootApi;
+
+    @Resource
+    private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
 
     @Resource
     private RedisTools redisTools;
@@ -85,6 +94,17 @@ public class RecoverToCheckExe {
         if (serve.getStatus().equals(ServeEnum.REPAIR.getCode())) {
             return "服务单维修中不允许收车";
         }
+
+        //收车验车时 收车日期不能早于发车日期
+        Result<DeliverVehicleDTO> deliverVehicleDTOResult = deliverVehicleAggregateRootApi.getDeliverVehicleDto(deliverDTO.getDeliverNo());
+        if(!ResultStatusEnum.SUCCESSED.getCode().equals(deliverVehicleDTOResult.getCode()) || null == deliverVehicleDTOResult.getData()){
+            throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "发车单查询失败");
+        }
+        Date deliverVehicleTime = deliverVehicleDTOResult.getData().getDeliverVehicleTime();
+        if(!deliverVehicleTime.before(recoverVechicleCmd.getRecoverVehicleTime())){
+            throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "收车日期不能早于发车日期");
+        }
+
         Result<String> recoverResult = recoverVehicleAggregateRootApi.toCheck(recoverVehicleDTO);
         if (recoverResult.getCode() != 0) {
             return recoverResult.getMsg();
