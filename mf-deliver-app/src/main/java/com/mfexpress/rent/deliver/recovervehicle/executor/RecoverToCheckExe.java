@@ -71,6 +71,14 @@ public class RecoverToCheckExe {
     @Resource
     private RedisTools redisTools;
 
+    public static void main(String[] args) throws ParseException {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date parse = simpleDateFormat.parse("2020-11-22 00:00:00");
+        Date parse1 = simpleDateFormat.parse("2020-11-22 00:00:00");
+        System.out.println(parse.equals(parse1));
+        System.out.println(!parse.before(parse1));
+    }
+
     public String execute(RecoverVechicleCmd recoverVechicleCmd) {
         //完善收车单信息
         RecoverVehicleDTO recoverVehicleDTO = new RecoverVehicleDTO();
@@ -96,13 +104,16 @@ public class RecoverToCheckExe {
         }
 
         //收车验车时 收车日期不能早于发车日期
+        // 2020-11-23 00:00:00.before(2021-11-20 00:00:00)
         Result<DeliverVehicleDTO> deliverVehicleDTOResult = deliverVehicleAggregateRootApi.getDeliverVehicleDto(deliverDTO.getDeliverNo());
         if(!ResultStatusEnum.SUCCESSED.getCode().equals(deliverVehicleDTOResult.getCode()) || null == deliverVehicleDTOResult.getData()){
             throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "发车单查询失败");
         }
         Date deliverVehicleTime = deliverVehicleDTOResult.getData().getDeliverVehicleTime();
-        if(!deliverVehicleTime.before(recoverVechicleCmd.getRecoverVehicleTime())){
-            throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "收车日期不能早于发车日期");
+        if(!deliverVehicleTime.equals(recoverVechicleCmd.getRecoverVehicleTime())){
+            if(!deliverVehicleTime.before(recoverVechicleCmd.getRecoverVehicleTime())){
+                throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "收车日期不能早于发车日期");
+            }
         }
 
         Result<String> recoverResult = recoverVehicleAggregateRootApi.toCheck(recoverVehicleDTO);
