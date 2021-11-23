@@ -33,6 +33,7 @@ public class RecoverBackInsureExe {
         DeliverBackInsureDTO deliverBackInsureDTO = new DeliverBackInsureDTO();
         deliverBackInsureDTO.setServeNoList(recoverBackInsureCmd.getServeNoList());
         deliverBackInsureDTO.setInsuranceRemark(recoverBackInsureCmd.getInsuranceRemark());
+        deliverBackInsureDTO.setInsuranceTime(recoverBackInsureCmd.getInsuranceTime());
 
         Result<String> deliverResult = deliverAggregateRootApi.toBackInsure(deliverBackInsureDTO);
         if (deliverResult.getCode() != 0) {

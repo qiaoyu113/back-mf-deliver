@@ -58,4 +58,8 @@ public class RecoverVehicle {
 
     private Integer carId;
 
+    private Double damageFee;
+
+    private Double parkFee;
+
 }

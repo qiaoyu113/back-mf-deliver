@@ -9,16 +9,14 @@ import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverBackInsureDTO;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleMqDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.*;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -46,6 +44,12 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         DeliverDTO deliverDTO = new DeliverDTO();
         Deliver deliver = deliverGateway.getDeliverByServeNo(serveNo);
         if (deliver != null) {
+            if(StringUtils.isEmpty(deliver.getInsuranceStartTime())){
+                deliver.setInsuranceStartTime(null);
+            }
+            if(StringUtils.isEmpty(deliver.getInsuranceEndTime())){
+                deliver.setInsuranceEndTime(null);
+            }
             BeanUtil.copyProperties(deliver, deliverDTO);
             return Result.getInstance(deliverDTO).success();
         }
@@ -100,9 +104,12 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @Override
     @PostMapping("/toInsure")
     @PrintParam
-    public Result<String> toInsure(@RequestBody List<String> serveNoList) {
-        Deliver deliver = Deliver.builder().isInsurance(JudgeEnum.YES.getCode()).build();
-        int i = deliverGateway.updateDeliverByServeNoList(serveNoList, deliver);
+    public Result<String> toInsure(@RequestBody DeliverInsureCmd cmd) {
+        Deliver deliver = Deliver.builder()
+                .isInsurance(JudgeEnum.YES.getCode())
+                .insuranceStartTime(DeliverUtils.dateToStringYyyyMMddHHmmss(cmd.getStartInsureDate()))
+                .build();
+        int i = deliverGateway.updateDeliverByServeNoList(cmd.getServeNoList(), deliver);
         return i > 0 ? Result.getInstance("投保成功").success() : Result.getInstance("投保失败").fail(-1, "投保失败");
     }
 
@@ -143,7 +150,9 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PrintParam
     public Result<String> toBackInsure(@RequestBody DeliverBackInsureDTO deliverBackInsureDTO) {
         Deliver deliver = Deliver.builder().isInsurance(JudgeEnum.YES.getCode())
-                .insuranceRemark(deliverBackInsureDTO.getInsuranceRemark()).build();
+                .insuranceRemark(deliverBackInsureDTO.getInsuranceRemark())
+                .insuranceEndTime(DeliverUtils.dateToStringYyyyMMddHHmmss(deliverBackInsureDTO.getInsuranceTime()))
+                .build();
         int i = deliverGateway.updateDeliverByServeNoList(deliverBackInsureDTO.getServeNoList(), deliver);
 
         //修改 退保之后在处理才能处理违章
@@ -269,6 +278,12 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         if (deliverList != null) {
             List<DeliverDTO> deliverDTOList = deliverList.stream().map(deliver -> {
                 DeliverDTO deliverDTO = new DeliverDTO();
+                if(StringUtils.isEmpty(deliver.getInsuranceStartTime())){
+                    deliver.setInsuranceStartTime(null);
+                }
+                if(StringUtils.isEmpty(deliver.getInsuranceEndTime())){
+                    deliver.setInsuranceEndTime(null);
+                }
                 BeanUtils.copyProperties(deliver, deliverDTO);
                 return deliverDTO;
             }).collect(Collectors.toList());
@@ -288,6 +303,12 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
             return Result.getInstance((DeliverDTO) null).success();
         }
         DeliverDTO deliverDTO = new DeliverDTO();
+        if(StringUtils.isEmpty(deliver.getInsuranceStartTime())){
+            deliver.setInsuranceStartTime(null);
+        }
+        if(StringUtils.isEmpty(deliver.getInsuranceEndTime())){
+            deliver.setInsuranceEndTime(null);
+        }
         BeanUtils.copyProperties(deliver, deliverDTO);
         return Result.getInstance(deliverDTO).success();
     }

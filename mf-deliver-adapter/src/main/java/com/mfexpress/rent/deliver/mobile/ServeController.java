@@ -11,6 +11,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiSort;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -115,5 +116,18 @@ public class ServeController {
         return Result.getInstance(serveServiceI.getServeListVoCompleted(serveQryListCmd)).success();
     }
 
+    @PostMapping("/getServeDeliverDetail")
+    @ApiOperation("发车服务单详情查询")
+    @PrintParam
+    public Result<ServeDeliverDetailVO> getServeDeliverDetail(@RequestBody @Validated ServeQryCmd cmd) {
+        return Result.getInstance(serveServiceI.getServeDeliverDetail(cmd)).success();
+    }
+
+    @PostMapping("/getServeRecoverDetail")
+    @ApiOperation("收车服务单详情查询")
+    @PrintParam
+    public Result<ServeRecoverDetailVO> getServeRecoverDetail(@RequestBody @Validated ServeQryCmd cmd) {
+        return Result.getInstance(serveServiceI.getServeRecoverDetail(cmd)).success();
+    }
 
 }

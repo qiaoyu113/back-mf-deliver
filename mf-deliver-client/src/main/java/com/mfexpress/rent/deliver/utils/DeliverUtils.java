@@ -1,11 +1,14 @@
 package com.mfexpress.rent.deliver.utils;
 
+import com.mfexpress.component.constants.ResultErrorEnum;
+import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.constant.Constants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -17,8 +20,17 @@ public class DeliverUtils {
 
     private static final String YYYYMMDD = "yyyyMMdd";
 
+    private static final String yyyy_MM_dd = "yyyy-MM-dd";
+
+    private static final SimpleDateFormat string_to_date_format_yyyy_MM_dd = new SimpleDateFormat(DeliverUtils.yyyy_MM_dd);
+
+    private static final SimpleDateFormat yyyyMMddHHmmss = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
     @Value("${spring.profiles}")
     private String envVariable;
+
+    @Value("${spring.application.name}")
+    private String applicationName;
 
     private Map<String, String> numMap = new HashMap<>();
 
@@ -50,6 +62,35 @@ public class DeliverUtils {
         return dateFormatYYMMDD.format(date);
     }
 
+    public static Date getYYYYMMDDByString(String date) {
+        if (StringUtils.isEmpty(date))
+            return null;
+        try {
+            return string_to_date_format_yyyy_MM_dd.parse(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Date stringToDateYyyyMMddHHmmss(String date) {
+        if (StringUtils.isEmpty(date))
+            return null;
+        try {
+            return yyyyMMddHHmmss.parse(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static String dateToStringYyyyMMddHHmmss(Date date) {
+        if (date == null){
+            return "";
+        }
+        return yyyyMMddHHmmss.format(date);
+    }
+
 
     public static String getEnvVariable(String tag) {
         if (StringUtils.isEmpty(tag)) {
@@ -64,5 +105,19 @@ public class DeliverUtils {
         }
     }
 
+    /**
+     * 以固定前缀，:为分隔符，拼装缓存key
+     */
+    public static String concatCacheKey(String... parts){
+        String result = utils.envVariable.concat(":").concat(utils.applicationName);
+        for (String part: parts) {
+            result = result.concat(":").concat(part);
+        }
+        return result;
+    }
+
+    public static boolean resultDataCheck(Result<?> result) {
+        return ResultErrorEnum.SUCCESSED.getCode() == result.getCode() && null != result.getData();
+    }
 
 }

@@ -22,5 +22,9 @@ public interface RecoverVehicleServiceI {
 
     RecoverTaskListVO getRecoverListVO(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo);
 
+    String cacheCheckInfo(RecoverVechicleCmd recoverVechicleCmd);
 
+    RecoverVehicleVO getCachedCheckInfo(RecoverVechicleCmd recoverVechicleCmd);
+
+    RecoverDetailVO getRecoverDetail(RecoverDetailQryCmd cmd);
 }

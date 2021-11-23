@@ -2,10 +2,7 @@ package com.mfexpress.rent.deliver.domainapi;
 
 
 import com.mfexpress.component.response.Result;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverBackInsureDTO;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleMqDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.*;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,7 +29,7 @@ public interface DeliverAggregateRootApi {
     Result<String> toReplace(@RequestBody DeliverDTO deliverDTO);
 
     @PostMapping("/toInsure")
-    Result<String> toInsure(@RequestBody List<String> serveNoList);
+    Result<String> toInsure(@RequestBody DeliverInsureCmd cmd);
 
     @PostMapping("/toDeliver")
     Result<String> toDeliver(@RequestBody List<String> serveNoList);
