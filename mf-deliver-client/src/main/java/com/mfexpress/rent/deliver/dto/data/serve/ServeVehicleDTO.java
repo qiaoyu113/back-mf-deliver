@@ -19,4 +19,7 @@ public class ServeVehicleDTO {
     private Integer num;
     @ApiModelProperty(value = "月租金")
     private BigDecimal rent;
+
+    @ApiModelProperty(value = "月租金")
+    private Integer goodsId;
 }

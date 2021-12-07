@@ -67,6 +67,9 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
             Long bizId = redisTools.getBizId(Constants.REDIS_BIZ_ID_DELIVER);
             deliver.setDeliverId(bizId);
             deliver.setDeliverNo(DeliverUtils.getNo(Constants.REDIS_DELIVER_KEY, incr));
+            if(null != deliverDTO.getInsuranceStartTime()){
+                deliver.setInsuranceStartTime(DeliverUtils.dateToStringYyyyMMddHHmmss(deliverDTO.getInsuranceStartTime()));
+            }
             return deliver;
         }).collect(Collectors.toList());
         int i = deliverGateway.addDeliver(deliverList);
