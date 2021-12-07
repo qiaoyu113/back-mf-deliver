@@ -91,6 +91,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setStatus(ServeEnum.NOT_PRESELECTED.getCode());
                 serve.setRemark("");
                 serve.setRent(serveVehicleDTO.getRent());
+                serve.setGoodsId(serveVehicleDTO.getGoodsId());
                 serveList.add(serve);
             }
         }
