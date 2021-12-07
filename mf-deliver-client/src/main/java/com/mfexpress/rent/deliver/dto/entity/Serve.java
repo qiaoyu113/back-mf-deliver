@@ -57,5 +57,6 @@ public class Serve {
 
     private Integer replaceFlag;
 
+    private Integer goodsId;
 
 }

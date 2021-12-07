@@ -38,8 +38,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Component
@@ -70,14 +68,6 @@ public class RecoverToCheckExe {
 
     @Resource
     private RedisTools redisTools;
-
-    public static void main(String[] args) throws ParseException {
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date parse = simpleDateFormat.parse("2020-11-22 00:00:00");
-        Date parse1 = simpleDateFormat.parse("2020-11-22 00:00:00");
-        System.out.println(parse.equals(parse1));
-        System.out.println(!parse.before(parse1));
-    }
 
     public String execute(RecoverVechicleCmd recoverVechicleCmd) {
         //完善收车单信息
