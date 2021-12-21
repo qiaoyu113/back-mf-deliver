@@ -1,17 +1,18 @@
-package com.mfexpress.rent.deliver.sync;
+package com.mfexpress.rent.deliver.consumer.sync;
 
 
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.common.domain.dto.DictDataDTO;
 import com.mfexpress.common.domain.dto.DictTypeDTO;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.utils.ElasticsearchTools;
-import com.mfexpress.component.starter.utils.MqTools;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
+import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogRelation;
+import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogTableFullName;
+import com.mfexpress.component.starter.tools.es.ElasticsearchTools;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.data.ProductDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
-import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
@@ -29,10 +30,9 @@ import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -43,10 +43,11 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class SyncServiceImpl implements SyncServiceI {
+@MFMqBinlogRelation
+public class SyncServiceImpl implements EsSyncHandlerI {
 
-    @Resource
-    private MqTools mqTools;
+    /*@Resource
+    private MqTools mqTools;*/
 
     @Resource
     private ElasticsearchTools elasticsearchTools;
@@ -67,7 +68,7 @@ public class SyncServiceImpl implements SyncServiceI {
     @Resource
     private DictAggregateRootApi dictAggregateRootApi;
 
-    @Value("${rocketmq.listenBinlogTopic}")
+    /*@Value("${rocketmq.listenBinlogTopic}")
     private String listenBinlogTopic;
     @Value("${rocketmq.listenOrderTopic}")
     private String listenOrderTopic;
@@ -76,9 +77,9 @@ public class SyncServiceImpl implements SyncServiceI {
     @Resource
     private DeliverVehicleMqCommand deliverVehicleMqCommand;
     @Resource
-    private DeliverUtils deliverUtils;
+    private DeliverUtils deliverUtils;*/
 
-    @PostConstruct
+    /*@PostConstruct
     public void init() {
 
         DeliverBinlogDispatch deliverBinlogDispatch = new DeliverBinlogDispatch();
@@ -91,15 +92,20 @@ public class SyncServiceImpl implements SyncServiceI {
         deliverVehicleMqCommand.setTags(Constants.DELIVER_VEHICLE_TAG);
         mqTools.add(deliverVehicleMqCommand);
 
-    }
+    }*/
 
 
     @Override
-    public void execOne(String serveNo) {
+    @MFMqBinlogTableFullName({"mf-deliver.deliver", "mf-deliver.serve", "mf-deliver.deliver_vehicle", "mf-deliver.recover_vehicle"})
+    public boolean execOne(Map<String, String> data) {
         ServeES serveEs = new ServeES();
+        String serveNo = data.get("serve_no");
+        if(StringUtils.isEmpty(serveNo)){
+            return false;
+        }
         Result<ServeDTO> serveResult = serveAggregateRootApi.getServeDtoByServeNo(serveNo);
         if (serveResult.getData() == null) {
-            return;
+            return false;
         }
         ServeDTO serveDTO = serveResult.getData();
         BeanUtils.copyProperties(serveDTO, serveEs);
@@ -158,6 +164,9 @@ public class SyncServiceImpl implements SyncServiceI {
             serveEs.setVehicleAge(deliverDTO.getVehicleAge());
             serveEs.setCarServiceId(deliverDTO.getCarServiceId());
             serveEs.setUpdateTime(deliverDTO.getUpdateTime());
+            serveEs.setDeliverContractStatus(deliverDTO.getDeliverContractStatus());
+            serveEs.setRecoverContractStatus(deliverDTO.getRecoverContractStatus());
+            serveEs.setRecoverAbnormalFlag(deliverDTO.getRecoverAbnormalFlag());
 
             //排序规则
             Integer sort = getSort(serveEs);
@@ -184,17 +193,25 @@ public class SyncServiceImpl implements SyncServiceI {
         }
         elasticsearchTools.saveByEntity(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), serveNo, serveEs);
 
+        return true;
     }
 
     @Override
-    public void execAll() {
+    public boolean execAll() {
         Result<List<String>> serveNoResult = serveAggregateRootApi.getServeNoListAll();
+        boolean flag = true;
         if (serveNoResult.getData() != null) {
             List<String> serveNoList = serveNoResult.getData();
+            Map<String, String> data = new HashMap<>();
             for (String serveNo : serveNoList) {
-                execOne(serveNo);
+                data.put("serve_no", serveNo);
+                boolean isSuccess = execOne(data);
+                if(!isSuccess){
+                    flag = false;
+                }
             }
         }
+        return flag;
     }
 
     private Integer getSort(ServeES serveEs) {

@@ -1,10 +1,12 @@
-package com.mfexpress.rent.deliver.sync;
+package com.mfexpress.rent.deliver.consumer.common;
 
 
 import com.alibaba.fastjson.JSON;
-import com.mfexpress.component.dto.mq.BaseCommand;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.utils.RedisTools;
+import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessClass;
+import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessMethod;
+import com.mfexpress.component.starter.tools.redis.RedisTools;
+import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -15,19 +17,18 @@ import javax.annotation.Resource;
 import java.util.List;
 
 @Component
-public class DeliverVehicleMqCommand extends BaseCommand {
+@MFMqCommonProcessClass(topicKey = "rocketmq.listenEventTopic")
+public class DeliverVehicleMqCommand {
 
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
-    @Resource
-    private RedisTools redisTools;
+    /*@Resource
+    private RedisTools redisTools;*/
 
-
-    @Override
+    @MFMqCommonProcessMethod(tag = Constants.DELIVER_VEHICLE_TAG)
     public void execute(String body) {
-
 
         List<DeliverVehicleMqDTO> deliverVehicleMqDTOList = JSON.parseArray(body, DeliverVehicleMqDTO.class);
         if (deliverVehicleMqDTOList == null || deliverVehicleMqDTOList.isEmpty()) {

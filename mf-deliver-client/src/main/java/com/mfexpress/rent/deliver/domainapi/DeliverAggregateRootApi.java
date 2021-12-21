@@ -5,6 +5,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.deliver.*;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,7 +24,7 @@ public interface DeliverAggregateRootApi {
     Result<String> addDeliver(@RequestBody List<DeliverDTO> list);
 
     @PostMapping("/toCheck")
-    Result<Integer> toCheck(@RequestParam("serveNo") String serveNo);
+    Result<Integer> toCheck(@RequestParam("serveNo") String serveNo, @RequestParam("operatorId") Integer operatorId);
 
     @PostMapping("/toReplace")
     Result<String> toReplace(@RequestBody DeliverDTO deliverDTO);
@@ -72,4 +73,12 @@ public interface DeliverAggregateRootApi {
     @PostMapping("/getDeliveredDeliverDTOByCarId")
     Result<DeliverDTO> getDeliveredDeliverDTOByCarId(@RequestParam("carId") Integer carId);
 
+    @PostMapping("/contractSigning")
+    Result<Integer> contractSigning(@RequestBody @Validated DeliverContractSingingCmd cmd);
+
+    @PostMapping("/makeNoSignByDeliverNo")
+    Result<Integer> makeNoSignByDeliverNo(@RequestParam("deliverNos") String deliverNos, @RequestParam("deliverType") Integer deliverType);
+
+    @PostMapping("/getDeliverByDeliverNo")
+    Result<DeliverDTO> getDeliverByDeliverNo(@RequestParam("deliverNo") String deliverNo);
 }

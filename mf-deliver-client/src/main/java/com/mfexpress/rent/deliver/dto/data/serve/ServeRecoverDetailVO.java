@@ -1,5 +1,7 @@
 package com.mfexpress.rent.deliver.dto.data.serve;
 
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.ElecHandoverDocVO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -27,5 +29,14 @@ public class ServeRecoverDetailVO {
 
     @ApiModelProperty(value = "收车单信息")
     private RecoverVehicleVO recoverVehicleVO;
+
+    @ApiModelProperty(value = "电子交接单信息")
+    private ElecHandoverDocVO elecHandoverDocVO;
+
+    /*@ApiModelProperty(value = "异常收车信息")
+    private RecoverAbnormalVO recoverAbnormalVO;*/
+
+    @ApiModelProperty(value = "异常收车标志位，1：是，0否。")
+    private Integer recoverAbnormalFlag;
 
 }

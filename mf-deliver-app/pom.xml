@@ -19,7 +19,7 @@
             <artifactId>mf-common-client</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.mfexpress.transportation.project</groupId>
+            <groupId>com.mfexpress.transportation.customer</groupId>
             <artifactId>mf-customer-client</artifactId>
         </dependency>
         <dependency>

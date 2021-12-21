@@ -2,8 +2,9 @@ package com.mfexpress.rent.deliver.deliver.executor;
 
 
 import com.mfexpress.component.constants.ResultErrorEnum;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.rent.deliver.api.SyncServiceI;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
@@ -12,7 +13,6 @@ import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverPreselectedCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleSelectCmd;
-import com.mfexpress.rent.deliver.exception.CommonException;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.VehicleInsuranceAggregateRootApi;
@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class DeliverToPreselectedExe {
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
     @Resource
-    private SyncServiceI syncServiceI;
+    private EsSyncHandlerI syncServiceI;
 
     @Resource
     private VehicleInsuranceAggregateRootApi vehicleInsuranceAggregateRootApi;
@@ -108,8 +109,10 @@ public class DeliverToPreselectedExe {
             throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), deliverResult.getMsg());
         }
         //强同步es
+        HashMap<String, String> map = new HashMap<>();
         for (String serveNo : serveNoList) {
-            syncServiceI.execOne(serveNo);
+            map.put("serve_no", serveNo);
+            syncServiceI.execOne(map);
         }
 
         return deliverResult.getData();

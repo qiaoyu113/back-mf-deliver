@@ -1,7 +1,7 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import com.mfexpress.component.response.Result;
-import com.mfexpress.rent.deliver.api.SyncServiceI;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class RecoverCancelExe {
@@ -23,7 +25,7 @@ public class RecoverCancelExe {
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
 
     @Resource
-    private SyncServiceI syncServiceI;
+    private EsSyncHandlerI syncServiceI;
 
 
     public String execute(RecoverCancelCmd recoverCancelCmd) {
@@ -42,7 +44,9 @@ public class RecoverCancelExe {
         BeanUtils.copyProperties(recoverCancelCmd, recoverVehicleDTO);
         Result<String> recoverResult = recoverVehicleAggregateRootApi.cancelRecover(recoverVehicleDTO);
 
-        syncServiceI.execOne(recoverCancelCmd.getServeNo());
+        Map<String, String> map = new HashMap<>();
+        map.put("serve_no", recoverCancelCmd.getServeNo());
+        syncServiceI.execOne(map);
         return "";
     }
 }

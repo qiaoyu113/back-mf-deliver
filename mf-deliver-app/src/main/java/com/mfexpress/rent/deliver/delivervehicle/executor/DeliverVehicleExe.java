@@ -4,7 +4,7 @@ import cn.hutool.core.date.DateUtil;
 import com.mfexpress.billing.rentcharge.api.DailyAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.daily.DailyDTO;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.rent.deliver.api.SyncServiceI;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
@@ -22,6 +22,7 @@ import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -41,7 +42,7 @@ public class DeliverVehicleExe {
     @Resource
     private DailyAggregateRootApi dailyAggregateRootApi;
     @Resource
-    private SyncServiceI syncServiceI;
+    private EsSyncHandlerI syncServiceI;
 
     public String execute(DeliverVehicleCmd deliverVehicleCmd) {
         //生成发车单 交付单状态更新已发车 初始化操作状态  服务单状态更新为已发车  调用车辆服务为租赁状态
@@ -102,10 +103,11 @@ public class DeliverVehicleExe {
         //生成发车租赁日报
         dailyAggregateRootApi.createDaily(dailyDTOList);
 
+        HashMap<String, String> map = new HashMap<>();
         for (String serveNo : serveNoList) {
-            syncServiceI.execOne(serveNo);
+            map.put("serve_no", serveNo);
+            syncServiceI.execOne(map);
         }
-
 
         return deliverVehicleResult.getData();
     }

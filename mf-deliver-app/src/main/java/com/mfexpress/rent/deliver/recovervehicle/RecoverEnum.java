@@ -8,7 +8,11 @@ public enum RecoverEnum {
     TASK_LIST_CHECK(5, "recoverTaskListCheck"),
     TASK_LIST_INSURE(6, "recoverTaskListInsure"),
     TASK_LIST_DEDUCTION(7, "recoverTaskListDeduction"),
-    TASK_LIST_COMPLETED(8, "recoverTaskListCompleted");
+    TASK_LIST_COMPLETED(8, "recoverTaskListCompleted"),
+    // 代收
+    TASK_LIST_WAIT_RECOVER(20, "recoverTaskListWaitRecover"),
+    // 待签
+    TASK_LIST_WAIT_SIGN(21, "recoverTaskListWaitSign");
 
     private Integer tag;
 

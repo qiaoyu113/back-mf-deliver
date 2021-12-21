@@ -1,6 +1,5 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
-import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -21,8 +20,8 @@ public class ServePreselectedQryExe {
 
     @Resource
     private ServeEsDataQryExe serveEsDataQryExe;
-    @Resource
-    private SyncServiceI syncServiceI;
+    /*@Resource
+    private SyncServiceI syncServiceI;*/
 
     public ServePreselectedListVO execute(ServeQryListCmd serveQryListCmd) {
         //待预选数据   暂时手动处理聚合车型

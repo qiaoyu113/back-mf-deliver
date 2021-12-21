@@ -20,7 +20,7 @@ import javax.annotation.Resource;
 
 @RestController
 @RequestMapping("/api/deliver/v3/deliver")
-@Api(tags = "api--交付--1.2交付单收发车操作", value = "DeliverController")
+@Api(tags = "api--交付--1.4交付单收发车操作", value = "DeliverController")
 @ApiSort(2)
 public class DeliverController {
 

@@ -13,6 +13,10 @@ public class RecoverVehicleVO {
 
     @ApiModelProperty(value = "租赁服务单编号")
     private String serveNo;
+
+    @ApiModelProperty(value = "交付单编号")
+    private String deliverNo;
+
     @ApiModelProperty(value = "客户姓名")
     private String customerName;
     @ApiModelProperty(value = "合同编号")
@@ -81,5 +85,17 @@ public class RecoverVehicleVO {
 
     @ApiModelProperty(value = "合照")
     private String imgUrl;
+
+    @ApiModelProperty(value = "电子合同id")
+    private Long elecContractId;
+
+    @ApiModelProperty(value = "电子合同状态，1:生成中，2:已生成/签署中，3:已完成，4:失败")
+    private Integer elecContractStatus;
+
+    @ApiModelProperty(value = "电子合同失败原因，1：作废，2：过期，3其他")
+    private Integer elecContractFailureReason;
+
+    @ApiModelProperty(value = "收车类型描述，正常收车或异常收车")
+    private String recoverTypeDisplay;
 
 }

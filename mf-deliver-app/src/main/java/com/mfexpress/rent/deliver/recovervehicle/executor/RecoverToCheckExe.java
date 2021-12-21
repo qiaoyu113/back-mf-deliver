@@ -7,10 +7,11 @@ import com.mfexpress.billing.rentcharge.api.VehicleDamageAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.VehicleDamage.CreateVehicleDamageCmd;
 import com.mfexpress.billing.rentcharge.dto.data.daily.DailyDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.response.ResultStatusEnum;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.utils.RedisTools;
-import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
@@ -24,7 +25,6 @@ import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.exception.CommonException;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
@@ -50,7 +50,7 @@ public class RecoverToCheckExe {
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
     @Resource
-    private SyncServiceI syncServiceI;
+    private EsSyncHandlerI syncServiceI;
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
     @Resource
@@ -71,7 +71,7 @@ public class RecoverToCheckExe {
 
     public String execute(RecoverVechicleCmd recoverVechicleCmd) {
         //完善收车单信息
-        RecoverVehicleDTO recoverVehicleDTO = new RecoverVehicleDTO();
+        /*RecoverVehicleDTO recoverVehicleDTO = new RecoverVehicleDTO();
         BeanUtils.copyProperties(recoverVechicleCmd, recoverVehicleDTO);
         Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(recoverVechicleCmd.getServeNo());
         if (deliverDTOResult.getData() == null) {
@@ -176,8 +176,12 @@ public class RecoverToCheckExe {
         }
 
         //同步
-        syncServiceI.execOne(recoverVechicleCmd.getServeNo());
-        return deliverResult.getMsg();
+        Map<String, String> map = new HashMap<>();
+        map.put("serve_no", recoverVechicleCmd.getServeNo());
+        syncServiceI.execOne(map);
+        return deliverResult.getMsg();*/
+        return null;
     }
+
 }
 

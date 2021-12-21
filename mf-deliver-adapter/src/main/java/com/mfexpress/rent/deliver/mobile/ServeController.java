@@ -19,7 +19,7 @@ import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/deliver/v3/serve")
-@Api(tags = "api--交付--1.1租赁服务单", value = "ServeController")
+@Api(tags = "api--交付--1.4租赁服务单", value = "ServeController")
 @ApiSort(1)
 public class ServeController {
 
