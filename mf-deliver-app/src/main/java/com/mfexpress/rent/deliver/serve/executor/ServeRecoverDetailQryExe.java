@@ -1,24 +1,25 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
+import cn.hutool.json.JSONUtil;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.common.domain.dto.DictDataDTO;
 import com.mfexpress.common.domain.dto.DictTypeDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.DeliverEnum;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
-import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.constant.*;
+import com.mfexpress.rent.deliver.domainapi.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleVO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecDocDTO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.ElecHandoverDocVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
@@ -68,6 +69,9 @@ public class ServeRecoverDetailQryExe {
     @Resource
     private DictAggregateRootApi dictAggregateRootApi;
 
+    @Resource
+    private ElecHandoverContractAggregateRootApi contractAggregateRootApi;
+
     public ServeRecoverDetailVO execute(ServeQryCmd cmd) {
         String serveNo = cmd.getServeNo();
         // 数据查询----start
@@ -103,10 +107,27 @@ public class ServeRecoverDetailQryExe {
             serveRecoverDetailVO.setOrderVO(getOrderVO(serveDTO));
             serveRecoverDetailVO.setVehicleVO(getVehicleVO(serveDTO, deliverDTO, recoverVehicleDTO));
             if(JudgeEnum.YES.getCode().equals(deliverDTO.getIsCheck())){
-                // serve的status属性为3，deliver的deliver_status属性为4，is_check属性为1，状态为待退保
-                // 待退保需补充验车信息和收车单信息
+                // serve的status属性为3，deliver的deliver_status属性为4，is_check属性为1，状态为待收车
+                // 待收车需补充验车信息
                 serveRecoverDetailVO.setVehicleValidationVO(getVehicleValidationVO());
+            }
+            if(DeliverContractStatusEnum.SIGNING.getCode() == deliverDTO.getRecoverContractStatus()){
+                // serve的status属性为3，deliver的deliver_status属性为4，recover_contract_status 属性为1，状态为签署中
+                // 需补充收车单信息
+                // 从合同中取出收车单信息
+                serveRecoverDetailVO.setRecoverVehicleVO(getRecoverVehicleVOFromContract(deliverDTO));
+            }
+            if(DeliverContractStatusEnum.COMPLETED.getCode() == deliverDTO.getRecoverContractStatus()){
+                // serve的status属性为3，deliver的deliver_status属性为4，recover_contract_status 属性为1，状态为待退保
+                // 需补充收车单信息
                 serveRecoverDetailVO.setRecoverVehicleVO(getRecoverVehicleVO(recoverVehicleDTO));
+                if(RecoverVehicleType.NORMAL.getCode() == deliverDTO.getRecoverAbnormalFlag()){
+                    // 正常收车补充电子交接单信息
+                    serveRecoverDetailVO.setElecHandoverDocVO(getElecHandoverDocVO(deliverDTO));
+                }else{
+                    // 异常收车设置异常收车标志位为真
+                    serveRecoverDetailVO.setRecoverAbnormalFlag(RecoverVehicleType.ABNORMAL.getCode());
+                }
             }
             if(JudgeEnum.YES.getCode().equals(deliverDTO.getIsInsurance())){
                 // serve的status属性为3，deliver的deliver_status属性为4，is_insurance属性为1，状态为待处理违章
@@ -129,6 +150,38 @@ public class ServeRecoverDetailQryExe {
         // 数据拼装----end
 
         return serveRecoverDetailVO;
+    }
+
+    private ElecHandoverDocVO getElecHandoverDocVO(DeliverDTO deliverDTO) {
+        Result<ElecDocDTO> docDTOResult = contractAggregateRootApi.getDocDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.RECOVER.getCode());
+        ElecDocDTO docDTO = ResultDataUtils.getInstance(docDTOResult).getDataOrException();
+        ElecHandoverDocVO elecHandoverDocVO = new ElecHandoverDocVO();
+        elecHandoverDocVO.setFileUrl(docDTO.getFileUrl());
+        return elecHandoverDocVO;
+    }
+
+    private RecoverVehicleVO getRecoverVehicleVOFromContract(DeliverDTO deliverDTO) {
+        Result<ElecContractDTO> contractDTOSResult = contractAggregateRootApi.getContractDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.RECOVER.getCode());
+        ElecContractDTO contractDTO = ResultDataUtils.getInstance(contractDTOSResult).getDataOrException();
+
+        RecoverVehicleVO recoverVehicleVO = new RecoverVehicleVO();
+        BeanUtils.copyProperties(contractDTO, recoverVehicleVO);
+        recoverVehicleVO.setDamageFee(contractDTO.getRecoverDamageFee());
+        recoverVehicleVO.setParkFee(contractDTO.getRecoverParkFee());
+        recoverVehicleVO.setElecContractId(contractDTO.getContractId());
+        recoverVehicleVO.setElecContractStatus(contractDTO.getStatus());
+        recoverVehicleVO.setElecContractFailureReason(contractDTO.getFailureReason());
+        recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.getEnumValue(deliverDTO.getRecoverAbnormalFlag()));
+        Result<WarehouseDto> wareHouseResult = warehouseAggregateRootApi.getWarehouseById(contractDTO.getRecoverWareHouseId());
+        if (wareHouseResult.getData() != null) {
+            recoverVehicleVO.setWareHouseDisplay(wareHouseResult.getData().getName());
+        }
+        List<DeliverImgInfo> deliverImgInfos = JSONUtil.toList(contractDTO.getPlateNumberWithImgs(), DeliverImgInfo.class);
+        if(deliverImgInfos.isEmpty()){
+            return null;
+        }
+        recoverVehicleVO.setImgUrl(deliverImgInfos.get(0).getImgUrl());
+        return recoverVehicleVO;
     }
 
     public ViolationInfoVO getViolationInfoVO(DeliverDTO deliverDTO){

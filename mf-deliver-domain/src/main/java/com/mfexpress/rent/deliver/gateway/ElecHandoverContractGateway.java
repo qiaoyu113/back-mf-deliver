@@ -23,4 +23,6 @@ public interface ElecHandoverContractGateway {
     List<ElectronicHandoverContractPO> getContractDTOSByDeliverNosAndDeliverType(List<String> deliverNos, int deliverType);
 
     ElectronicHandoverContractPO getContractByForeignNo(String foreignNo);
+
+    ElectronicHandoverContractPO getContractDTOByDeliverNoAndDeliverType(String deliverNo, Integer deliverType);
 }

@@ -111,4 +111,14 @@ public class ElecHandoverContractGatewayImpl implements ElecHandoverContractGate
                 .build(), ElectronicHandoverContractPO.class);
         return contractMapper.selectOneByExample(example);
     }
+
+    @Override
+    public ElectronicHandoverContractPO getContractDTOByDeliverNoAndDeliverType(String deliverNo, Integer deliverType) {
+        Example example = new Example(ElectronicHandoverContractPO.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andLike("deliverNos", deliverNo);
+        criteria.andEqualTo("deliverType", deliverType);
+        criteria.andNotEqualTo("status", ElecHandoverContractStatus.FAIL.getCode());
+        return contractMapper.selectOneByExample(example);
+    }
 }

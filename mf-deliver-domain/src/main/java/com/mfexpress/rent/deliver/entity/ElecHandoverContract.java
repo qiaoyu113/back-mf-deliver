@@ -239,7 +239,7 @@ public class ElecHandoverContract {
     public void signing() {
         ElectronicHandoverContractPO contractPOToUpdate = new ElectronicHandoverContractPO();
         contractPOToUpdate.setContractId(contractId);
-        contractPOToUpdate.setContractForeignNo(contractForeignNo);
+        //contractPOToUpdate.setContractForeignNo(contractForeignNo);
         contractPOToUpdate.setStatus(status);
         contractPOToUpdate.setSendSmsDate(FormatUtil.ymdHmsFormatDateToString(new Date()));
         elecHandoverContractGateway.updateContractByContractId(contractPOToUpdate);

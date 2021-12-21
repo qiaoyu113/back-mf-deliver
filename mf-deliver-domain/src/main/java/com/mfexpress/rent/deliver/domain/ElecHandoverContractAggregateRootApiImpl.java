@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.domain;
 
 import com.mfexpress.component.constants.ResultErrorEnum;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
@@ -11,6 +12,7 @@ import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.*;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecDocDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.po.ElectronicHandoverContractPO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.po.ElectronicHandoverDocPO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.qry.ContractListQry;
@@ -23,6 +25,7 @@ import io.swagger.annotations.Api;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -259,6 +262,34 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
         }
 
         return Result.getInstance(0).success();
+    }
+
+    @Override
+    @PostMapping("/getContractDTOByDeliverNoAndDeliverType")
+    @PrintParam
+    public Result<ElecContractDTO> getContractDTOByDeliverNoAndDeliverType(@RequestParam("deliverNo") String deliverNo, @RequestParam("deliverType") Integer deliverType) {
+        if (StringUtils.isEmpty(deliverNo) || null == deliverType) {
+            return Result.getInstance((ElecContractDTO)null).fail(-1, "参数不可为空");
+        }
+        ElectronicHandoverContractPO contractPO =  contractGateway.getContractDTOByDeliverNoAndDeliverType(deliverNo, deliverType);
+        ElecContractDTO contractDTO = new ElecContractDTO();
+        BeanUtils.copyProperties(contractPO, contractDTO);
+        contractDTO.setDeliverVehicleTime(FormatUtil.ymdHmsFormatStringToDate(contractPO.getDeliverVehicleTime()));
+        contractDTO.setRecoverVehicleTime(FormatUtil.ymdHmsFormatStringToDate(contractPO.getRecoverVehicleTime()));
+        return Result.getInstance(contractDTO).success();
+    }
+
+    @Override
+    @PostMapping("/getDocDTOByDeliverNoAndDeliverType")
+    @PrintParam
+    public Result<ElecDocDTO> getDocDTOByDeliverNoAndDeliverType(@RequestParam("deliverNo") String deliverNo, @RequestParam("deliverType") Integer deliverType) {
+        if (StringUtils.isEmpty(deliverNo) || null == deliverType) {
+            return Result.getInstance((ElecDocDTO)null).fail(-1, "参数不可为空");
+        }
+        ElectronicHandoverDocPO docPO = docGateway.getDocByDeliverNoAndDeliverType(deliverNo, deliverType);
+        ElecDocDTO elecDocDTO = new ElecDocDTO();
+        BeanUtils.copyProperties(docPO, elecDocDTO);
+        return Result.getInstance(elecDocDTO).success();
     }
 
 }

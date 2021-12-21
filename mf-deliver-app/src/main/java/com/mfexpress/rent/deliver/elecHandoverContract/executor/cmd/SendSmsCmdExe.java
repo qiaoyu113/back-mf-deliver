@@ -2,9 +2,12 @@ package com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd;
 
 import com.mfexpress.common.domain.api.ContractAggregateRootApi;
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.dto.contract.ContractOperateDTO;
+import com.mfexpress.component.enums.contract.ContractModeEnum;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
+import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.SendSmsCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
@@ -26,7 +29,10 @@ public class SendSmsCmdExe {
         Result<ElecContractDTO> contractDTOResult = contractAggregateRootApi.getContractDTOByContractId(cmd.getContractId());
         ElecContractDTO contractDTO = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
 
-        Result<Boolean> sendResult = foreignContractAggregateRootApi.sendMsg(contractDTO.getContractForeignNo());
+        ContractOperateDTO contractOperateDTO = new ContractOperateDTO();
+        contractOperateDTO.setContractId(Long.valueOf(contractDTO.getContractForeignNo()));
+        contractOperateDTO.setContractType(ContractModeEnum.DELIVER.getName());
+        Result<Boolean> sendResult = foreignContractAggregateRootApi.sendMsg(contractOperateDTO);
         ResultValidUtils.checkResultException(sendResult);
 
         // 合同中短信相关的数据需要更新

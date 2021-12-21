@@ -1,6 +1,5 @@
 package com.mfexpress.rent.deliver.elecHandoverContract.executor.qry;
 
-import cn.hutool.json.JSONUtil;
 import com.mfexpress.common.domain.api.ContractAggregateRootApi;
 import com.mfexpress.common.domain.dto.contract.ContractRecordDTO;
 import com.mfexpress.common.domain.dto.contract.constant.enums.ContractRecordEnum;
@@ -116,7 +115,7 @@ public class ContractOperationRecordQryExe {
         recordVOS.add(sendSmsRecord);
 
         ContractOperateDTO contractOperateDTO = new ContractOperateDTO();
-        contractOperateDTO.setModeType(ContractModeEnum.DELIVER.getName());
+        contractOperateDTO.setType(ContractModeEnum.DELIVER.getName());
         contractOperateDTO.setContractId(Long.valueOf(elecContractDTO.getContractForeignNo()));
         Result<Boolean> customerAuthResult = foreignContractAggregateRootApi.checkAuth(contractOperateDTO);
         Boolean customerAuthFlag = ResultDataUtils.getInstance(customerAuthResult).getDataOrException();

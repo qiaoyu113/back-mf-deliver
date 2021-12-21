@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.elecHandoverDoc;
 
 import com.google.common.collect.ImmutableMap;
 import com.mfexpress.component.utils.util.MyBatisUtils;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.po.ElectronicHandoverDocPO;
 import com.mfexpress.rent.deliver.elecHandoverDoc.repository.ElecHandoverDocMapper;
 import com.mfexpress.rent.deliver.gateway.ElecHandoverDocGateway;
@@ -43,6 +44,16 @@ public class ElecHandoverDocGatewayImpl implements ElecHandoverDocGateway {
                 .put("id", docId)
                 .build(), ElectronicHandoverDocPO.class);
         return docMapper.updateByExampleSelective(docPO, example);
+    }
+
+    @Override
+    public ElectronicHandoverDocPO getDocByDeliverNoAndDeliverType(String deliverNo, Integer deliverType) {
+        Example example = MyBatisUtils.createEqualExampleByMap(ImmutableMap.<String, Object>builder()
+                .put("deliverNo", deliverNo)
+                .put("deliverType", deliverType)
+                .put("validStatus", JudgeEnum.YES.getCode())
+                .build(), ElectronicHandoverDocPO.class);
+        return docMapper.selectOneByExample(example);
     }
 
 }

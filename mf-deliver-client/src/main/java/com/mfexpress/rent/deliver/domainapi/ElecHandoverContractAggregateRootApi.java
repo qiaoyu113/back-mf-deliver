@@ -5,6 +5,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.*;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecDocDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.qry.ContractListQry;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.qry.ContractQry;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -56,4 +57,10 @@ public interface ElecHandoverContractAggregateRootApi {
 
     @PostMapping("/incrSendSmsCount")
     Result<Integer> incrSendSmsCount(@RequestParam("contractId") Long contractId);
+
+    @PostMapping("/getContractDTOByDeliverNoAndDeliverType")
+    Result<ElecContractDTO> getContractDTOByDeliverNoAndDeliverType(@RequestParam("deliverNo") String deliverNo, @RequestParam("deliverType") Integer deliverType);
+
+    @PostMapping("/getDocDTOByDeliverNoAndDeliverType")
+    Result<ElecDocDTO> getDocDTOByDeliverNoAndDeliverType(@RequestParam("deliverNo") String deliverNo, @RequestParam("deliverType") Integer deliverType);
 }
