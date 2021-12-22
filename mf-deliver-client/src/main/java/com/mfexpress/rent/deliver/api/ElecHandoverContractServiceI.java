@@ -10,9 +10,9 @@ import java.util.List;
 
 public interface ElecHandoverContractServiceI {
 
-    Long createDeliverContract(CreateDeliverContractCmd cmd, TokenInfo tokenInfo);
+    String createDeliverContract(CreateDeliverContractCmd cmd, TokenInfo tokenInfo);
 
-    Long createRecoverContract(CreateRecoverContractFrontCmd cmd, TokenInfo tokenInfo);
+    String createRecoverContract(CreateRecoverContractFrontCmd cmd, TokenInfo tokenInfo);
 
     DeliverContractListVO getDeliverContractList(ContractListQry qry, TokenInfo tokenInfo);
 

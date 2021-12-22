@@ -96,7 +96,7 @@ public class ContractListQryExe {
         List<ElecContractDTO> elecContractDTOS = pagePagination.getList();
         List<ElecContractWithServesVO> contractWithServesVOS = elecContractDTOS.stream().map(contractDTO -> {
             ElecContractWithServesVO contractWithServesVO = new ElecContractWithServesVO();
-            contractWithServesVO.setElecContractId(contractDTO.getContractId());
+            contractWithServesVO.setElecContractId(contractDTO.getContractId().toString());
             contractWithServesVO.setElecContractNo(contractDTO.getContractForeignNo());
             contractWithServesVO.setElecContractStatus(contractDTO.getStatus());
             contractWithServesVO.setElecContractFailureReason(contractDTO.getFailureReason());

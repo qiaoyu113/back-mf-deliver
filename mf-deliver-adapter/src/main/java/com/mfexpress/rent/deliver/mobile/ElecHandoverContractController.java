@@ -35,7 +35,7 @@ public class ElecHandoverContractController {
     @ApiOperation(value = "发车-生成电子交接合同_" + project_version)
     @PostMapping("/createDeliverContract")
     @PrintParam
-    public Result<Long> createDeliverContract(@RequestBody @Validated CreateDeliverContractCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+    public Result<String> createDeliverContract(@RequestBody @Validated CreateDeliverContractCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (null == tokenInfo || null == tokenInfo.getOfficeId() || null == tokenInfo.getId()) {
             throw new CommonException(ResultErrorEnum.LOGIN_OVERDUE.getCode(), ResultErrorEnum.LOGIN_OVERDUE.getName());
@@ -46,7 +46,7 @@ public class ElecHandoverContractController {
     @ApiOperation(value = "收车-生成电子交接合同_" + project_version)
     @PostMapping("/createRecoverContract")
     @PrintParam
-    public Result<Long> createRecoverContract(@RequestBody @Validated CreateRecoverContractFrontCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+    public Result<String> createRecoverContract(@RequestBody @Validated CreateRecoverContractFrontCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (null == tokenInfo || null == tokenInfo.getOfficeId() || null == tokenInfo.getId()) {
             throw new CommonException(ResultErrorEnum.LOGIN_OVERDUE.getCode(), ResultErrorEnum.LOGIN_OVERDUE.getName());

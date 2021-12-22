@@ -50,7 +50,7 @@ public class ContractRecoverQryExe {
         ElecContractDTO contractDTO = contractDTOResult.getData();
 
         ElecRecoverContractVO contractVO = new ElecRecoverContractVO();
-        contractVO.setElecContractId(contractDTO.getContractId());
+        contractVO.setElecContractId(contractDTO.getContractId().toString());
         contractVO.setElecContractNo(contractDTO.getContractForeignNo());
         contractVO.setElecContractStatus(contractDTO.getStatus());
         contractVO.setElecContractFailureReason(contractDTO.getFailureReason());

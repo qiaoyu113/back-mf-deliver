@@ -6,6 +6,7 @@ import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.dto.contract.ContractDocumentInfoDTO;
 import com.mfexpress.component.dto.contract.ContractDocumentDTO;
 import com.mfexpress.component.dto.contract.ContractDocumentInfoDTO;
+import com.mfexpress.component.enums.contract.ContractModeEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.contract.MFContractTools;
@@ -87,7 +88,7 @@ public class CreateRecoverContractCmdExe {
 
     public Map<Integer, String> vehicleTypeMap;
 
-    public Long execute(CreateRecoverContractFrontCmd cmd, TokenInfo tokenInfo) {
+    public String execute(CreateRecoverContractFrontCmd cmd, TokenInfo tokenInfo) {
         // 初始化字典数据
         initDictData();
 
@@ -132,12 +133,13 @@ public class CreateRecoverContractCmdExe {
         // 什么时候改变交付单的状态，调用完契约锁域后，免得失败后还得改回来
         makeDeliverContractSigning(Collections.singletonList(recoverInfo.getServeNo()), DeliverTypeEnum.RECOVER.getCode());
 
-        return contractIdWithDocIds.getContractId();
+        return contractIdWithDocIds.getContractId().toString();
     }
 
     private Result createElecContract(CreateRecoverContractFrontCmd cmd, ContractIdWithDocIds contractIdWithDocIds, List<ContractDocumentInfoDTO> docInfos) {
         // 再调用契约锁域创建合同
         docInfos.forEach(docInfo -> {
+            docInfo.setType(DeliverTypeEnum.RECOVER.getCode());
             docInfo.setElecDocId(contractIdWithDocIds.getDeliverNoWithDocId().get(docInfo.getDeliverNo()));
         });
         ContractDocumentDTO contractDocumentDTO = new ContractDocumentDTO();
@@ -145,6 +147,7 @@ public class CreateRecoverContractCmdExe {
         contractDocumentDTO.setUserName(cmd.getRecoverInfo().getContactsName());
         contractDocumentDTO.setPhone(cmd.getRecoverInfo().getContactsPhone());
         contractDocumentDTO.setDocumentInfoDTOList(docInfos);
+        contractDocumentDTO.setType(ContractModeEnum.DELIVER.getName());
 
         return contractTools.create(contractDocumentDTO);
     }
@@ -172,8 +175,9 @@ public class CreateRecoverContractCmdExe {
 
         ReviewOrderQry qry = new ReviewOrderQry();
         qry.setId(serveDTO.getOrderId().toString());
-        Result<OrderDTO> orderInfo = orderAggregateRootApi.getOrderInfo(qry);
-        docInfo.setOrderContactsPhone(orderInfo.getData().getConsigneeMobile());
+        Result<OrderDTO> orderDTOResult = orderAggregateRootApi.getOrderInfo(qry);
+        OrderDTO orderDTO = ResultDataUtils.getInstance(orderDTOResult).getDataOrException();
+        docInfo.setOrderContactsPhone(orderDTO.getConsigneeMobile());
 
         Result<VehicleInfoDto> vehicleInfoDtoResult = vehicleAggregateRootApi.getVehicleInfoVOById(deliverDTO.getCarId());
         if(ResultErrorEnum.SUCCESSED.getCode() != vehicleInfoDtoResult.getCode() || null == vehicleInfoDtoResult.getData()){
@@ -188,7 +192,7 @@ public class CreateRecoverContractCmdExe {
         docInfo.setVin(vehicleInfoDto.getVin());
 
         cmd.getRecoverInfo().setCarNum(vehicleInfoDto.getPlateNumber());
-        cmd.setOrderId(orderInfo.getData().getOrderId());
+        cmd.setOrderId(orderDTO.getOrderId());
 
         // 验车信息补充
         // 问题和图片需要验证一下copy过去了没有

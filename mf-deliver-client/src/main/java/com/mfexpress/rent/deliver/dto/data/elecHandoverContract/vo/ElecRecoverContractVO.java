@@ -12,7 +12,7 @@ import java.util.List;
 public class ElecRecoverContractVO {
 
     @ApiModelProperty(value = "电子交接合同全局id")
-    private Long elecContractId;
+    private String elecContractId;
 
     @ApiModelProperty(value = "电子交接合同对应的契约锁合同编号")
     private String elecContractNo;

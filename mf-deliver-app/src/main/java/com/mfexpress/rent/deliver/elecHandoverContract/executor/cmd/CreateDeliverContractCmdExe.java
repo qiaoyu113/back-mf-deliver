@@ -10,6 +10,7 @@ import com.mfexpress.component.enums.contract.ContractModeEnum;
 import com.mfexpress.component.enums.contract.ContractTypeEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.tools.contract.MFContractTools;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
@@ -82,7 +83,10 @@ public class CreateDeliverContractCmdExe {
     @Resource
     private MFContractTools contractTools;
 
-    public Long execute(CreateDeliverContractCmd cmd, TokenInfo tokenInfo) {
+    @Resource
+    private EsSyncHandlerI syncServiceI;
+
+    public String execute(CreateDeliverContractCmd cmd, TokenInfo tokenInfo) {
         // 初始化字典数据
         initDictData();
 
@@ -126,7 +130,12 @@ public class CreateDeliverContractCmdExe {
         // 什么时候改变交付单的状态，调用完契约锁域后，免得失败后还得改回来
         makeDeliverContractSigning(serveNos, DeliverTypeEnum.DELIVER.getCode());
 
-        return contractIdWithDocIds.getContractId();
+        HashMap<String, String> map = new HashMap<>();
+        for (String serveNo : serveNos) {
+            map.put("serve_no", serveNo);
+            syncServiceI.execOne(map);
+        }
+        return contractIdWithDocIds.getContractId().toString();
     }
 
     // 收集各种数据去创建电子交接单对象
@@ -180,6 +189,7 @@ public class CreateDeliverContractCmdExe {
     // 调用契约锁域创建合同
     private Result<Boolean> createElecContract(CreateDeliverContractCmd cmd, ContractIdWithDocIds contractIdWithDocIds, List<ContractDocumentInfoDTO> docInfos) {
         docInfos.forEach(docInfo -> {
+            docInfo.setType(DeliverTypeEnum.DELIVER.getCode());
             docInfo.setElecDocId(contractIdWithDocIds.getDeliverNoWithDocId().get(docInfo.getDeliverNo()));
         });
 

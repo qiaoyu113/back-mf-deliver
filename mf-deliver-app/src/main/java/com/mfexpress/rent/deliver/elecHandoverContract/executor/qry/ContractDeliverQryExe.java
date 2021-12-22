@@ -45,7 +45,7 @@ public class ContractDeliverQryExe {
         ElecContractDTO contractDTO = contractDTOResult.getData();
 
         ElecDeliverContractVO contractVO = new ElecDeliverContractVO();
-        contractVO.setElecContractId(contractDTO.getContractId());
+        contractVO.setElecContractId(contractDTO.getContractId().toString());
         contractVO.setElecContractNo(contractDTO.getContractForeignNo());
         contractVO.setElecContractStatus(contractDTO.getStatus());
         contractVO.setElecContractFailureReason(contractDTO.getFailureReason());

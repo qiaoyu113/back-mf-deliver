@@ -87,7 +87,7 @@ public class RecoverVehicleVO {
     private String imgUrl;
 
     @ApiModelProperty(value = "电子合同id")
-    private Long elecContractId;
+    private String elecContractId;
 
     @ApiModelProperty(value = "电子合同状态，1:生成中，2:已生成/签署中，3:已完成，4:失败")
     private Integer elecContractStatus;
@@ -97,5 +97,11 @@ public class RecoverVehicleVO {
 
     @ApiModelProperty(value = "收车类型描述，正常收车或异常收车")
     private String recoverTypeDisplay;
+
+    @ApiModelProperty(value = "异常收车标志位")
+    private Integer recoverAbnormalFlag;
+
+    @ApiModelProperty(value = "收车电子合同签署状态")
+    private Integer recoverContractStatus;
 
 }

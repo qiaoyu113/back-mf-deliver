@@ -47,12 +47,12 @@ public class ElecHandoverContractServiceImpl implements ElecHandoverContractServ
     private ContractOperationRecordQryExe operationRecordQryExe;
 
     @Override
-    public Long createDeliverContract(CreateDeliverContractCmd cmd, TokenInfo tokenInfo) {
+    public String createDeliverContract(CreateDeliverContractCmd cmd, TokenInfo tokenInfo) {
         return createDeliverContractCmdExe.execute(cmd, tokenInfo);
     }
 
     @Override
-    public Long createRecoverContract(CreateRecoverContractFrontCmd cmd, TokenInfo tokenInfo) {
+    public String createRecoverContract(CreateRecoverContractFrontCmd cmd, TokenInfo tokenInfo) {
         return createRecoverContractCmdExe.execute(cmd,tokenInfo);
     }
 

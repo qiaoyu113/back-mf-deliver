@@ -69,7 +69,7 @@ public class recoverTaskListWaitSignQryExe implements RecoverQryServiceI {
                 String deliverNo = recoverVehicleVO.getDeliverNo();
                 ElecContractDTO elecContractDTO = contractDTOMap.get(JSONUtil.toJsonStr(Collections.singletonList(deliverNo)));
                 if(null != elecContractDTO){
-                    recoverVehicleVO.setElecContractId(elecContractDTO.getContractId());
+                    recoverVehicleVO.setElecContractId(elecContractDTO.getContractId().toString());
                     recoverVehicleVO.setElecContractStatus(elecContractDTO.getStatus());
                     recoverVehicleVO.setElecContractFailureReason(elecContractDTO.getFailureReason());
                 }

@@ -168,7 +168,7 @@ public class ServeRecoverDetailQryExe {
         BeanUtils.copyProperties(contractDTO, recoverVehicleVO);
         recoverVehicleVO.setDamageFee(contractDTO.getRecoverDamageFee());
         recoverVehicleVO.setParkFee(contractDTO.getRecoverParkFee());
-        recoverVehicleVO.setElecContractId(contractDTO.getContractId());
+        recoverVehicleVO.setElecContractId(contractDTO.getContractId().toString());
         recoverVehicleVO.setElecContractStatus(contractDTO.getStatus());
         recoverVehicleVO.setElecContractFailureReason(contractDTO.getFailureReason());
         recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.getEnumValue(deliverDTO.getRecoverAbnormalFlag()));
