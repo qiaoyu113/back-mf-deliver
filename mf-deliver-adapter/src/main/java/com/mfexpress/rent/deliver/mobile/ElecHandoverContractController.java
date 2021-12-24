@@ -18,7 +18,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 // elec 是 electric/electronic 的缩写
 @RestController
@@ -108,7 +107,7 @@ public class ElecHandoverContractController {
     @ApiOperation(value = "电子合同操作记录查询_" + project_version)
     @PostMapping("/getContractOperationRecord")
     @PrintParam
-    public Result<List<ElecContractOperationRecordVO>> getContractOperationRecord(@RequestBody @Validated ContractQry qry, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+    public Result<ElecContractOperationRecordWithSmsInfoVO> getContractOperationRecord(@RequestBody @Validated ContractQry qry, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (null == tokenInfo || null == tokenInfo.getOfficeId() || null == tokenInfo.getId()) {
             throw new CommonException(ResultErrorEnum.LOGIN_OVERDUE.getCode(), ResultErrorEnum.LOGIN_OVERDUE.getName());
@@ -142,14 +141,14 @@ public class ElecHandoverContractController {
 
     // 用户确认合同过期
     @ApiOperation(value = "用户确认合同过期_" + project_version)
-    @PostMapping("/confirmExpireContract")
+    @PostMapping("/confirmFail")
     @PrintParam
-    public Result<Integer> confirmExpireContract(@RequestBody @Validated ConfirmExpireContractCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+    public Result<Integer> confirmFail(@RequestBody @Validated ConfirmFailCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (null == tokenInfo || null == tokenInfo.getOfficeId() || null == tokenInfo.getId()) {
             throw new CommonException(ResultErrorEnum.LOGIN_OVERDUE.getCode(), ResultErrorEnum.LOGIN_OVERDUE.getName());
         }
-        return Result.getInstance(elecHandoverContractServiceI.confirmExpireContract(cmd, tokenInfo)).success();
+        return Result.getInstance(elecHandoverContractServiceI.confirmFail(cmd, tokenInfo)).success();
     }
 
 }

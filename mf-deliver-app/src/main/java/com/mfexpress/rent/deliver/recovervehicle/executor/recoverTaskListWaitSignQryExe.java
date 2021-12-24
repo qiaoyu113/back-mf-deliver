@@ -19,10 +19,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -41,7 +38,7 @@ public class recoverTaskListWaitSignQryExe implements RecoverQryServiceI {
         //      serve.serverStatus:2 已发车，
         //      deliver.deliverStatus：3 收车中，
         //      deliver.isCheck：1 已验车，
-        //      deliver.recover_contract_status：1 电子合同签署中
+        //      deliver.recover_contract_status：1 电子合同生成中和 2 电子合同签署中
         //      deliver.is_insurance 0 是否退保未操作
         //      deliver.is_deduction 0 未进行处理违章操作
         // 2. 排序规则：“最近一次数据更新时间”倒序
@@ -50,7 +47,7 @@ public class recoverTaskListWaitSignQryExe implements RecoverQryServiceI {
         boolQueryBuilder.must(QueryBuilders.rangeQuery("serveStatus").gte(ServeEnum.DELIVER.getCode()))
                 .must(QueryBuilders.rangeQuery("deliverStatus").gte(DeliverEnum.IS_RECOVER.getCode()))
                 .must(QueryBuilders.matchQuery("isCheck", JudgeEnum.YES.getCode()))
-                .must(QueryBuilders.matchQuery("recoverContractStatus", DeliverContractStatusEnum.SIGNING.getCode()))
+                .must(QueryBuilders.termsQuery("recoverContractStatus", Arrays.asList(DeliverContractStatusEnum.GENERATING.getCode(), DeliverContractStatusEnum.SIGNING.getCode())))
                 .must(QueryBuilders.matchQuery("isInsurance", JudgeEnum.NO.getCode()))
                 .must(QueryBuilders.matchQuery("isDeduction", JudgeEnum.NO.getCode()));
         // es 中的 updateTime 指的是 deliver 的 updateTime

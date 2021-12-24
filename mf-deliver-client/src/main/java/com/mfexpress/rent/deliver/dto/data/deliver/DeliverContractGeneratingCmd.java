@@ -8,9 +8,9 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
-@ApiModel(value = "DeliverContractSingingCmd 改变交付单合同签署状态为签署中的命令")
+@ApiModel(value = "DeliverContractSingingCmd 改变交付单合同签署状态为生成中的命令")
 @Data
-public class DeliverContractSingingCmd {
+public class DeliverContractGeneratingCmd {
 
     @ApiModelProperty(value = "交付单编号", required = true)
     @NotEmpty(message = "服务编号不能为空")

@@ -3,8 +3,9 @@ package com.mfexpress.rent.deliver.constant;
 public enum DeliverContractStatusEnum {
 
     NOSIGN(0, "未签署"),
-    SIGNING(1, "签署中"),
-    COMPLETED(2, "已完成");
+    GENERATING(1, "生成中"),
+    SIGNING(2, "签署中"),
+    COMPLETED(3, "已完成");
 
     private int code;
     private String name;

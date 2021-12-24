@@ -17,6 +17,8 @@ public class CancelContractCmd extends BaseCmd {
     @NotNull(message = "合同id不能为空")
     private Long contractId;
 
+    @ApiModelProperty(value = "取消原因", required = true)
+    @NotNull(message = "取消原因不能为空")
     private Integer failureReason;
 
 }

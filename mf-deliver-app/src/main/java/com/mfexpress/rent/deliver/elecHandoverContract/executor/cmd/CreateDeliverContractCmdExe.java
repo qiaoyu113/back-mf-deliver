@@ -7,11 +7,11 @@ import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.dto.contract.ContractDocumentDTO;
 import com.mfexpress.component.dto.contract.ContractDocumentInfoDTO;
 import com.mfexpress.component.enums.contract.ContractModeEnum;
-import com.mfexpress.component.enums.contract.ContractTypeEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.tools.contract.MFContractTools;
+import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
@@ -20,7 +20,8 @@ import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSingingCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateDeliverContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
@@ -128,7 +129,16 @@ public class CreateDeliverContractCmdExe {
         }
 
         // 什么时候改变交付单的状态，调用完契约锁域后，免得失败后还得改回来
-        makeDeliverContractSigning(serveNos, DeliverTypeEnum.DELIVER.getCode());
+        try{
+            makeDeliverContractGenerating(serveNos, DeliverTypeEnum.DELIVER.getCode());
+        }catch (Exception e){
+            // 操作交付单失败，合同应置为无效
+            CancelContractCmd cancelContractCmd = new CancelContractCmd();
+            cancelContractCmd.setContractId(contractIdWithDocIds.getContractId());
+            cancelContractCmd.setFailureReason(ContractFailureReasonEnum.OTHER.getCode());
+            contractAggregateRootApi.cancelContract(cancelContractCmd);
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "创建电子交接单失败");
+        }
 
         HashMap<String, String> map = new HashMap<>();
         for (String serveNo : serveNos) {
@@ -219,16 +229,6 @@ public class CreateDeliverContractCmdExe {
         }
     }
 
-    private Map<Integer, Customer> getCustomerMap(Map<String, Serve> serveMap) {
-        List<Integer> customerId = serveMap.values().stream().map(Serve::getCustomerId).collect(Collectors.toList());
-        Result<List<Customer>> customersResult = customerAggregateRootApi.getCustomerByIdList(customerId);
-        if(ResultErrorEnum.SUCCESSED.getCode() != customersResult.getCode() || null == customersResult.getData()){
-            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "客户查询失败");
-        }
-        List<Customer> customers = customersResult.getData();
-        return customers.stream().collect(Collectors.toMap(Customer::getId, Function.identity(), (v1, v2) -> v1));
-    }
-
     private ContractIdWithDocIds createContractWithDocInLocal(CreateDeliverContractCmd cmd, TokenInfo tokenInfo, Integer orgId, Long orderId) {
         cmd.setOperatorId(tokenInfo.getId());
         cmd.setDeliverType(DeliverTypeEnum.DELIVER.getCode());
@@ -243,11 +243,22 @@ public class CreateDeliverContractCmdExe {
         return createContractResult.getData();
     }
 
-    private void makeDeliverContractSigning(List<String> serveNos, int type) {
-        DeliverContractSingingCmd cmd = new DeliverContractSingingCmd();
+    private Map<Integer, Customer> getCustomerMap(Map<String, Serve> serveMap) {
+        List<Integer> customerId = serveMap.values().stream().map(Serve::getCustomerId).collect(Collectors.toList());
+        Result<List<Customer>> customersResult = customerAggregateRootApi.getCustomerByIdList(customerId);
+        if(ResultErrorEnum.SUCCESSED.getCode() != customersResult.getCode() || null == customersResult.getData()){
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "客户查询失败");
+        }
+        List<Customer> customers = customersResult.getData();
+        return customers.stream().collect(Collectors.toMap(Customer::getId, Function.identity(), (v1, v2) -> v1));
+    }
+
+    private void makeDeliverContractGenerating(List<String> serveNos, int type) {
+        DeliverContractGeneratingCmd cmd = new DeliverContractGeneratingCmd();
         cmd.setServeNos(serveNos);
         cmd.setDeliverType(type);
-        deliverAggregateRootApi.contractSigning(cmd);
+        Result<Integer> result = deliverAggregateRootApi.contractGenerating(cmd);
+        ResultValidUtils.checkResultException(result);
     }
 
     private void makeContractInvalid(Long contractId) {

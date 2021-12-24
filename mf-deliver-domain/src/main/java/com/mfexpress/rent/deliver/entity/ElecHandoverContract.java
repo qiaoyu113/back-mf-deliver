@@ -143,7 +143,7 @@ public class ElecHandoverContract {
     }
 
     // 用户确认合同过期命令的初始化
-    public void init(ConfirmExpireContractCmd cmd){
+    public void init(ConfirmFailCmd cmd){
         this.contractId = cmd.getContractId();
         this.isShow = JudgeEnum.NO.getCode();
         this.updaterId = cmd.getOperatorId();
@@ -182,7 +182,7 @@ public class ElecHandoverContract {
             po.setRecoverWareHouseId(recoverInfo.getWareHouseId());
         }
 
-        contractId = redisTools.getBizId(157);
+        contractId = redisTools.getBizId(125);
         po.setContractId(contractId);
         return po;
     }
@@ -241,17 +241,7 @@ public class ElecHandoverContract {
         contractPOToUpdate.setContractId(contractId);
         //contractPOToUpdate.setContractForeignNo(contractForeignNo);
         contractPOToUpdate.setStatus(status);
-        contractPOToUpdate.setSendSmsDate(FormatUtil.ymdHmsFormatDateToString(new Date()));
         elecHandoverContractGateway.updateContractByContractId(contractPOToUpdate);
-        // 交付单也需改为生成中
-        List<String> deliverNos = JSONUtil.toList(contractPO.getDeliverNos(), String.class);
-        Deliver deliverToUpdate = new Deliver();
-        if (DeliverTypeEnum.DELIVER.getCode() == contractPO.getDeliverType()) {
-            deliverToUpdate.setDeliverContractStatus(DeliverContractStatusEnum.SIGNING.getCode());
-        } else if (DeliverTypeEnum.RECOVER.getCode() == contractPO.getDeliverType()) {
-            deliverToUpdate.setRecoverContractStatus(DeliverContractStatusEnum.SIGNING.getCode());
-        }
-        deliverGateway.updateDeliverByDeliverNos(deliverNos, deliverToUpdate);
     }
 
     // 接收到合同签署完成命令后的检查操作
@@ -311,16 +301,12 @@ public class ElecHandoverContract {
         ElectronicHandoverContractPO contractPOToUpdate = new ElectronicHandoverContractPO();
         contractPOToUpdate.setContractForeignNo(contractForeignNo);
         contractPOToUpdate.setStatus(status);
-        elecHandoverContractGateway.updateContractByContractForeignNo(contractPOToUpdate);
-        // 交付单也需改为原始状态
-        List<String> deliverNos = JSONUtil.toList(contractPO.getDeliverNos(), String.class);
-        Deliver deliverToUpdate = new Deliver();
-        if (DeliverTypeEnum.DELIVER.getCode() == contractPO.getDeliverType()) {
-            deliverToUpdate.setDeliverContractStatus(DeliverContractStatusEnum.NOSIGN.getCode());
-        } else if (DeliverTypeEnum.RECOVER.getCode() == contractPO.getDeliverType()) {
-            deliverToUpdate.setRecoverContractStatus(DeliverContractStatusEnum.NOSIGN.getCode());
+        contractPOToUpdate.setFailureReason(failureReason);
+        // 失败原因为过期或者创建失败，合同仍需展示
+        if(ContractFailureReasonEnum.CREATE_FAIL.getCode() == failureReason || ContractFailureReasonEnum.OVERDUE.getCode() == failureReason){
+            contractPOToUpdate.setIsShow(JudgeEnum.YES.getCode());
         }
-        deliverGateway.updateDeliverByDeliverNos(deliverNos, deliverToUpdate);
+        elecHandoverContractGateway.updateContractByContractForeignNo(contractPOToUpdate);
         // 电子交接单也需置为失效状态
         ElectronicHandoverDocPO docPO = new ElectronicHandoverDocPO();
         docPO.setContractId(contractPO.getContractId());
@@ -329,23 +315,23 @@ public class ElecHandoverContract {
     }
 
     // 接收到确认合同过期命令后的检查操作
-    public void confirmExpireContractCheck() {
+    public void confirmFailContractCheck() {
         ElectronicHandoverContractPO contractQryPO = new ElectronicHandoverContractPO();
         contractQryPO.setContractId(contractId);
         contractPO = elecHandoverContractGateway.getContractByContract(contractQryPO);
         if(null == contractPO){
-            log.error("接收到确认合同过期命令后的检查操作，合同不存在，合同id：{}", contractForeignNo);
+            log.error("接收到确认合同失败命令后的检查操作，合同不存在，合同id：{}", contractForeignNo);
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "合同查询失败");
         }
-        if(ElecHandoverContractStatus.FAIL.getCode() != contractPO.getStatus() || ContractFailureReasonEnum.OVERDUE.getCode() != contractPO.getFailureReason()
+        if(ElecHandoverContractStatus.FAIL.getCode() != contractPO.getStatus() || (ContractFailureReasonEnum.OVERDUE.getCode() != contractPO.getFailureReason() && ContractFailureReasonEnum.CREATE_FAIL.getCode() != contractPO.getFailureReason())
                 || !JudgeEnum.YES.getCode().equals(contractPO.getIsShow())){
-            log.error("接收到确认合同过期命令后的检查操作，合同状态异常，合同id：{}", contractForeignNo);
+            log.error("接收到确认合同失败命令后的检查操作，合同状态异常，合同id：{}", contractForeignNo);
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "合同状态异常");
         }
     }
 
     // 接收到确认合同过期命令后的更改合同isShow字段的操作
-    public void confirmExpireContract() {
+    public void confirmFailContract() {
         ElectronicHandoverContractPO contractPO = new ElectronicHandoverContractPO();
         contractPO.setContractId(contractId);
         contractPO.setIsShow(JudgeEnum.NO.getCode());

@@ -1,6 +1,8 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import cn.hutool.json.JSONUtil;
+import com.mfexpress.component.constants.ResultErrorEnum;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
@@ -21,6 +23,9 @@ public class RecoverAbnormalQryExe {
     public RecoverAbnormalVO execute(RecoverAbnormalQry qry) {
         Result<RecoverAbnormalDTO> recoverAbnormalDTOResult = recoverVehicleAggregateRootApi.getRecoverAbnormalByQry(qry);
         RecoverAbnormalDTO recoverAbnormalDTO = ResultDataUtils.getInstance(recoverAbnormalDTOResult).getDataOrException();
+        if(null == recoverAbnormalDTO){
+            throw new CommonException(ResultErrorEnum.NOT_FOUND.getCode(), ResultErrorEnum.NOT_FOUND.getName());
+        }
         RecoverAbnormalVO recoverAbnormalVO = new RecoverAbnormalVO();
         BeanUtils.copyProperties(recoverAbnormalDTO, recoverAbnormalVO);
         recoverAbnormalVO.setReason(recoverAbnormalDTO.getCause());

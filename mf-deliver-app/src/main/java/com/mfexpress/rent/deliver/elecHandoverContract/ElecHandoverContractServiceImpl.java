@@ -11,7 +11,6 @@ import com.mfexpress.rent.deliver.elecHandoverContract.executor.qry.*;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 @Component
 public class ElecHandoverContractServiceImpl implements ElecHandoverContractServiceI {
@@ -41,7 +40,7 @@ public class ElecHandoverContractServiceImpl implements ElecHandoverContractServ
     private CancelContractCmdExe cancelContractCmdExe;
 
     @Resource
-    private ConfirmExpireContractCmdExe confirmExpireContractCmdExe;
+    private ConfirmFailContractCmdExe confirmFailContractCmdExe;
 
     @Resource
     private ContractOperationRecordQryExe operationRecordQryExe;
@@ -62,7 +61,7 @@ public class ElecHandoverContractServiceImpl implements ElecHandoverContractServ
     }
 
     @Override
-    public List<ElecContractOperationRecordVO> getContractOperationRecord(ContractQry qry, TokenInfo tokenInfo) {
+    public ElecContractOperationRecordWithSmsInfoVO getContractOperationRecord(ContractQry qry, TokenInfo tokenInfo) {
         return operationRecordQryExe.execute(qry, tokenInfo);
     }
 
@@ -82,8 +81,8 @@ public class ElecHandoverContractServiceImpl implements ElecHandoverContractServ
     }
 
     @Override
-    public Integer confirmExpireContract(ConfirmExpireContractCmd cmd, TokenInfo tokenInfo) {
-        return confirmExpireContractCmdExe.execute(cmd, tokenInfo);
+    public Integer confirmFail(ConfirmFailCmd cmd, TokenInfo tokenInfo) {
+        return confirmFailContractCmdExe.execute(cmd, tokenInfo);
     }
 
     @Override

@@ -6,7 +6,6 @@ import com.mfexpress.billing.rentcharge.api.DailyAggregateRootApi;
 import com.mfexpress.billing.rentcharge.api.VehicleDamageAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.VehicleDamage.CreateVehicleDamageCmd;
 import com.mfexpress.billing.rentcharge.dto.data.daily.DailyDTO;
-import com.mfexpress.common.domain.dto.contract.ContractDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.contract.ContractResultTopicDTO;
 import com.mfexpress.component.enums.contract.ContractStatusEnum;
@@ -15,18 +14,16 @@ import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessClass
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessMethod;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
-import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.consumer.sync.SyncServiceImpl;
 import com.mfexpress.rent.deliver.domainapi.*;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
@@ -90,21 +87,61 @@ public class ElecContractStatusMqCommand {
             cmd.setContractForeignNo(contractStatusInfo.getThirdPartContractId());
             contractAggregateRootApi.completionContractForeignNo(cmd);
         }else if(ContractStatusEnum.SIGNING.getValue().equals(contractStatusInfo.getStatus())){
-            // 合同状态改为 已创建/签署中,并补全三方合同编号
-            ContractStatusChangeCmd cmd = new ContractStatusChangeCmd();
-            cmd.setContractForeignNo(contractStatusInfo.getThirdPartContractId());
-            cmd.setContractId(Long.valueOf(contractStatusInfo.getLocalContractId()));
-            contractAggregateRootApi.signing(cmd);
+            // 合同状态改为 已创建/签署中,并补全三方合同编号；交付单中的合同状态也需改为已创建/签署中
+            contractSigning(contractStatusInfo);
         }else if(ContractStatusEnum.COMPLETE.getValue().equals(contractStatusInfo.getStatus())){
             // 合同状态改为完成
             contractCompleted(contractStatusInfo);
         }else if(ContractStatusEnum.EXPIRED.getValue().equals(contractStatusInfo.getStatus())){
-            // 合同状态改为失败，失败原因为过期
+            // 合同状态改为失败，失败原因为过期；不需要更新交付单状态，因为失败原因为过期的话需要用户确认后才会去改变交付单的状态
             ContractStatusChangeCmd cmd = new ContractStatusChangeCmd();
             cmd.setContractForeignNo(contractStatusInfo.getThirdPartContractId());
             cmd.setFailureReason(ContractFailureReasonEnum.OVERDUE.getCode());
             contractAggregateRootApi.fail(cmd);
+        }else if(ContractStatusEnum.FAIL.getValue().equals(contractStatusInfo.getStatus())){
+            // 只会在合同生成中才会有此命令，合同置为失效，交付单置为未签状态
+            contractFail(contractStatusInfo);
         }
+    }
+
+    private void contractFail(ContractResultTopicDTO contractStatusInfo) {
+        Long contractId = Long.valueOf(contractStatusInfo.getLocalContractId());
+        Result<ElecContractDTO> contractDTOResult = contractAggregateRootApi.getContractDTOByContractId(contractId);
+        ElecContractDTO contractDTO = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
+        if(null == contractDTO){
+            log.error("收车电子合同创建完成时，根据本地合同id查询合同失败，本地合同id：{}", contractId);
+            return;
+        }
+
+        ContractStatusChangeCmd cmd = new ContractStatusChangeCmd();
+        cmd.setContractForeignNo(contractStatusInfo.getThirdPartContractId());
+        cmd.setFailureReason(ContractFailureReasonEnum.CREATE_FAIL.getCode());
+        Result<Integer> failResult = contractAggregateRootApi.fail(cmd);
+        ResultValidUtils.checkResultException(failResult);
+
+        // 当合同在创建中失败时，交付单状态不改变，需用户确认后才改变
+        //deliverAggregateRootApi.makeNoSignByDeliverNo(contractDTO.getDeliverNos(), contractDTO.getDeliverType());
+    }
+
+    private void contractSigning(ContractResultTopicDTO contractStatusInfo) {
+        Long contractId = Long.valueOf(contractStatusInfo.getLocalContractId());
+        Result<ElecContractDTO> contractDTOResult = contractAggregateRootApi.getContractDTOByContractId(contractId);
+        ElecContractDTO contractDTO = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
+        if(null == contractDTO){
+            log.error("收车电子合同创建完成时，根据本地合同id查询合同失败，本地合同id：{}", contractId);
+            return;
+        }
+
+        ContractStatusChangeCmd cmd = new ContractStatusChangeCmd();
+        cmd.setContractForeignNo(contractStatusInfo.getThirdPartContractId());
+        cmd.setContractId(contractId);
+        Result<Integer> contractSigningResult = contractAggregateRootApi.signing(cmd);
+        ResultValidUtils.checkResultException(contractSigningResult);
+
+        DeliverContractSigningCmd signingCmd = new DeliverContractSigningCmd();
+        signingCmd.setDeliverNos(JSONUtil.toList(contractDTO.getDeliverNos(), String.class));
+        signingCmd.setDeliverType(contractDTO.getDeliverType());
+        deliverAggregateRootApi.contractSigning(signingCmd);
     }
 
     // 合同状态为已完成后触发的后续操作

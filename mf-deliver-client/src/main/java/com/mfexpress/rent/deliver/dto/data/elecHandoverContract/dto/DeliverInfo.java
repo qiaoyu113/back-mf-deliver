@@ -27,6 +27,6 @@ public class DeliverInfo {
 
     @ApiModelProperty(value = "发车日期", required = true)
     @NotNull(message = "发车日期不能为空")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date deliverVehicleTime;
 }

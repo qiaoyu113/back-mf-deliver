@@ -104,4 +104,7 @@ public class RecoverVehicleVO {
     @ApiModelProperty(value = "收车电子合同签署状态")
     private Integer recoverContractStatus;
 
+    @ApiModelProperty(value = "租赁服务单所属城市id")
+    private Integer cityId;
+
 }

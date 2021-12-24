@@ -7,7 +7,6 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWi
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecDocDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.qry.ContractListQry;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.qry.ContractQry;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,8 +45,8 @@ public interface ElecHandoverContractAggregateRootApi {
     @PostMapping("/getPageContractDTOSByQry")
     PagePagination<ElecContractDTO> getPageContractDTOSByQry(@RequestBody @Validated ContractListQry qry);
 
-    @PostMapping("/confirmExpireContract")
-    Result<Integer> confirmExpireContract(@RequestBody @Validated ConfirmExpireContractCmd cmd);
+    @PostMapping("/confirmFailContract")
+    Result<Integer> confirmFailContract(@RequestBody @Validated ConfirmFailCmd cmd);
 
     @PostMapping("/getContractDTOSByDeliverNosAndDeliverType")
     Result<List<ElecContractDTO>> getContractDTOSByDeliverNosAndDeliverType(@RequestParam("deliverNos") List<String> deliverNos, @RequestParam("deliverType") int deliverType);
@@ -63,4 +62,5 @@ public interface ElecHandoverContractAggregateRootApi {
 
     @PostMapping("/getDocDTOByDeliverNoAndDeliverType")
     Result<ElecDocDTO> getDocDTOByDeliverNoAndDeliverType(@RequestParam("deliverNo") String deliverNo, @RequestParam("deliverType") Integer deliverType);
+
 }

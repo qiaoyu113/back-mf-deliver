@@ -58,39 +58,39 @@ public class ContractDeliverQryExe {
         // 短信是否可发送判断，目前是一天可以发一条
         // 签署中的合同才可发送短信
         // 先判断日期是否是今天
-        if(ElecHandoverContractStatus.SIGNING.getCode() == contractDTO.getStatus()){
+        /*if(ElecHandoverContractStatus.SIGNING.getCode() == contractDTO.getStatus()){
             String sendSmsDate = contractDTO.getSendSmsDate();
             if (StringUtils.isEmpty(sendSmsDate)) {
                 contractVO.setSendSmsFlag(JudgeEnum.YES.getCode());
             } else {
                 String nowYmd = FormatUtil.ymdFormatDateToString(new Date());
-                if(nowYmd.equals(sendSmsDate)){
+                if (nowYmd.equals(sendSmsDate)) {
                     // 如果是今天，判断次数达到了限制没有
-                    if(contractDTO.getSendSmsCount() < Constants.EVERY_DAY_ENABLE_SEND_SMS_COUNT){
+                    if (contractDTO.getSendSmsCount() < Constants.EVERY_DAY_ENABLE_SEND_SMS_COUNT) {
                         contractVO.setSendSmsFlag(JudgeEnum.YES.getCode());
-                    }else{
+                    } else {
                         contractVO.setSendSmsFlag(JudgeEnum.NO.getCode());
                     }
-                }else{
+                } else {
                     // 如果不是今天，可发送
                     contractVO.setSendSmsFlag(JudgeEnum.YES.getCode());
                 }
             }
 
             // 如果短信可发送，查redis，获取短信发送倒计时
-            if(JudgeEnum.YES.getCode().equals(contractVO.getSendSmsFlag())){
+            if (JudgeEnum.YES.getCode().equals(contractVO.getSendSmsFlag())) {
                 String key = DeliverUtils.concatCacheKey(Constants.ELEC_CONTRACT_LAST_TIME_SEND_SMS_KEY, contractVO.getElecContractId().toString());
                 // 取出来的是毫秒值
                 Long lastTime = redisTools.get(key);
-                if(null != lastTime){
+                if (null != lastTime) {
                     long now = System.currentTimeMillis();
-                    int i = (int) (60 - ((now - lastTime)/1000));
-                    if(i >= 0){
+                    int i = (int) (60 - ((now - lastTime) / 1000));
+                    if (i >= 0) {
                         contractVO.setSmsCountDown(i);
                     }
                 }
             }
-        }
+        }*/
 
         return contractVO;
     }

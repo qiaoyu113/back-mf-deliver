@@ -28,4 +28,6 @@ public interface DeliverGateway {
     int updateDeliverByDeliverNos(List<String> deliverNos, Deliver deliver);
 
     Deliver getDeliverByDeliverNo(String deliverNo);
+
+    List<Deliver> getDeliverByDeliverNoList(List<String> deliverNos);
 }

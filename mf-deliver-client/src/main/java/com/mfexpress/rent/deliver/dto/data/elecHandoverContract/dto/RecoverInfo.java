@@ -31,15 +31,14 @@ public class RecoverInfo {
 
     @ApiModelProperty(value = "收车时间", required = true)
     @NotNull(message = "收车时间不能为空")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date recoverVehicleTime;
 
     @ApiModelProperty(value = "车损费", required = true)
     @NotNull(message = "车损费不能为空")
     private Double damageFee;
 
-    @ApiModelProperty(value = "路边停车费", required = true)
-    @NotNull(message = "路边停车费不能为空")
+    @ApiModelProperty(value = "路边停车费")
     private Double parkFee;
 
     @ApiModelProperty(value = "车辆停放地", required = true)

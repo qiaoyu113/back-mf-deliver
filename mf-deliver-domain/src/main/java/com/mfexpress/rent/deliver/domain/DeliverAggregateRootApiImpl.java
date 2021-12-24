@@ -2,6 +2,8 @@ package com.mfexpress.rent.deliver.domain;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.json.JSONUtil;
+import com.mfexpress.component.constants.ResultErrorEnum;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.RedisTools;
@@ -320,16 +322,60 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     }
 
     @Override
+    @PostMapping("/contractGenerating")
+    @PrintParam
+    public Result<Integer> contractGenerating(@RequestBody DeliverContractGeneratingCmd cmd) {
+        Deliver deliverToUpdate = new Deliver();
+        List<String> serveNos = cmd.getServeNos();
+        List<Deliver> delivers = deliverGateway.getDeliverByServeNoList(serveNos);
+        if(delivers.isEmpty()){
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单查询失败");
+        }
+        if (DeliverTypeEnum.DELIVER.getCode() == cmd.getDeliverType()) {
+            /*delivers.forEach(deliver -> {
+                if (DeliverContractStatusEnum.NOSIGN.getCode() != deliver.getDeliverContractStatus()) {
+                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
+                }
+            });*/
+            deliverToUpdate.setDeliverContractStatus(DeliverContractStatusEnum.GENERATING.getCode());
+        } else {
+            /*delivers.forEach(deliver -> {
+                if (DeliverContractStatusEnum.NOSIGN.getCode() != deliver.getRecoverContractStatus()) {
+                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
+                }
+            });*/
+            deliverToUpdate.setRecoverContractStatus(DeliverContractStatusEnum.GENERATING.getCode());
+        }
+        int i = deliverGateway.updateDeliverByServeNoList(cmd.getServeNos(), deliverToUpdate);
+        return Result.getInstance(i).success();
+    }
+
+    @Override
     @PostMapping("/contractSigning")
     @PrintParam
-    public Result<Integer> contractSigning(@RequestBody @Validated DeliverContractSingingCmd cmd) {
-        Deliver deliver = new Deliver();
-        if (DeliverTypeEnum.DELIVER.getCode() == cmd.getDeliverType()) {
-            deliver.setDeliverContractStatus(DeliverContractStatusEnum.SIGNING.getCode());
-        } else {
-            deliver.setRecoverContractStatus(DeliverContractStatusEnum.SIGNING.getCode());
+    public Result<Integer> contractSigning(@RequestBody @Validated DeliverContractSigningCmd cmd) {
+        Deliver deliverToUpdate = new Deliver();
+        List<String> deliverNos = cmd.getDeliverNos();
+        List<Deliver> delivers = deliverGateway.getDeliverByDeliverNoList(deliverNos);
+        if(delivers.isEmpty()){
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单查询失败");
         }
-        int i = deliverGateway.updateDeliverByServeNoList(cmd.getServeNos(), deliver);
+        if (DeliverTypeEnum.DELIVER.getCode() == cmd.getDeliverType()) {
+            /*delivers.forEach(deliver -> {
+                if (DeliverContractStatusEnum.GENERATING.getCode() != deliver.getDeliverContractStatus()) {
+                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
+                }
+            });*/
+            deliverToUpdate.setDeliverContractStatus(DeliverContractStatusEnum.SIGNING.getCode());
+        } else {
+            /*delivers.forEach(deliver -> {
+                if (DeliverContractStatusEnum.GENERATING.getCode() != deliver.getRecoverContractStatus()) {
+                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
+                }
+            });*/
+            deliverToUpdate.setRecoverContractStatus(DeliverContractStatusEnum.SIGNING.getCode());
+        }
+        int i = deliverGateway.updateDeliverByDeliverNos(deliverNos, deliverToUpdate);
         return Result.getInstance(i).success();
     }
 

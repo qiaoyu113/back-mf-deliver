@@ -74,11 +74,14 @@ public interface DeliverAggregateRootApi {
     Result<DeliverDTO> getDeliveredDeliverDTOByCarId(@RequestParam("carId") Integer carId);
 
     @PostMapping("/contractSigning")
-    Result<Integer> contractSigning(@RequestBody @Validated DeliverContractSingingCmd cmd);
+    Result<Integer> contractSigning(@RequestBody @Validated DeliverContractSigningCmd cmd);
 
     @PostMapping("/makeNoSignByDeliverNo")
     Result<Integer> makeNoSignByDeliverNo(@RequestParam("deliverNos") String deliverNos, @RequestParam("deliverType") Integer deliverType);
 
     @PostMapping("/getDeliverByDeliverNo")
     Result<DeliverDTO> getDeliverByDeliverNo(@RequestParam("deliverNo") String deliverNo);
+
+    @PostMapping("/contractGenerating")
+    Result<Integer> contractGenerating(@RequestBody DeliverContractGeneratingCmd cmd);
 }

@@ -22,7 +22,7 @@ public class RecoverAbnormalCmd extends BaseCmd {
     private String serveNo;
 
     @ApiModelProperty(value = "电子合同id", required = true)
-    @NotEmpty(message = "电子合同id不能为空")
+    @NotNull(message = "电子合同id不能为空")
     private Long elecContractId;
 
     @ApiModelProperty(value = "上报人id", required = true)

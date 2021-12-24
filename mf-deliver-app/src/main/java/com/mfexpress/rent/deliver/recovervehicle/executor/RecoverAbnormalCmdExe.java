@@ -13,6 +13,7 @@ import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
+import com.mfexpress.rent.deliver.constant.ElecHandoverContractStatus;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.consumer.sync.SyncServiceImpl;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
@@ -72,7 +73,7 @@ public class RecoverAbnormalCmdExe {
         // 判断deliver中的合同状态，如果不是签署中状态，不可进行此操作
         Result<ElecContractDTO> contractDTOResult = contractAggregateRootApi.getContractDTOByContractId(cmd.getElecContractId());
         ElecContractDTO contractDTO = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
-        if (DeliverContractStatusEnum.SIGNING.getCode() != contractDTO.getStatus()) {
+        if (ElecHandoverContractStatus.SIGNING.getCode() != contractDTO.getStatus()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "电子交接单状态异常");
         }
 

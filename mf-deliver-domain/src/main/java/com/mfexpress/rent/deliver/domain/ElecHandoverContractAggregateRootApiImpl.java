@@ -1,7 +1,6 @@
 package com.mfexpress.rent.deliver.domain;
 
 import com.mfexpress.component.constants.ResultErrorEnum;
-import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
@@ -161,13 +160,13 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
     }
 
     @Override
-    @PostMapping("/confirmExpireContract")
+    @PostMapping("/confirmFailContract")
     @PrintParam
-    public Result<Integer> confirmExpireContract(@RequestBody @Validated ConfirmExpireContractCmd cmd) {
+    public Result<Integer> confirmFailContract(@RequestBody @Validated ConfirmFailCmd cmd) {
         ElecHandoverContract elecHandoverContract = beanFactory.getBean(ElecHandoverContract.class);
         elecHandoverContract.init(cmd);
-        elecHandoverContract.confirmExpireContractCheck();
-        elecHandoverContract.confirmExpireContract();
+        elecHandoverContract.confirmFailContractCheck();
+        elecHandoverContract.confirmFailContract();
         return Result.getInstance(0).success();
     }
 
@@ -248,17 +247,23 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
 
         ElectronicHandoverContractPO contractPOToUpdate = new ElectronicHandoverContractPO();
         contractPOToUpdate.setContractId(contractPO.getContractId());
+        contractPOToUpdate.setSendSmsDate(FormatUtil.ymdHmsFormatDateToString(new Date()));
         if (ElecHandoverContractStatus.SIGNING.getCode() == contractPO.getStatus()) {
-            String sendSmsDate = contractPO.getSendSmsDate().substring(0, 10);
-            String nowYmd = FormatUtil.ymdFormatDateToString(new Date());
-            if (nowYmd.equals(sendSmsDate)) {
-                // 如果是今天，发送短信次数加1
-                contractPOToUpdate.setSendSmsCount(contractPO.getSendSmsCount() + 1);
-            } else {
-                // 如果不是今天，发送短信次数设为1，并将日期改为今天
+            if(StringUtils.isEmpty(contractPO.getSendSmsDate())){
                 contractPOToUpdate.setSendSmsCount(1);
-                contractPOToUpdate.setSendSmsDate(FormatUtil.ymdHmsFormatDateToString(new Date()));
+            }else{
+                String sendSmsDate = contractPO.getSendSmsDate().substring(0, 10);
+                String nowYmd = FormatUtil.ymdFormatDateToString(new Date());
+                if (nowYmd.equals(sendSmsDate)) {
+                    // 如果是今天，发送短信次数加1
+                    contractPOToUpdate.setSendSmsCount(contractPO.getSendSmsCount() + 1);
+                } else {
+                    // 如果不是今天，发送短信次数设为1，并将日期改为今天
+                    contractPOToUpdate.setSendSmsCount(1);
+                }
             }
+            contractPOToUpdate.setSendSmsDate(FormatUtil.ymdHmsFormatDateToString(new Date()));
+            contractGateway.updateContractByContractId(contractPOToUpdate);
         }
 
         return Result.getInstance(0).success();

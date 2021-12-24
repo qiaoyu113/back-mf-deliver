@@ -63,6 +63,7 @@ public class ContractRecoverQryExe {
         Result<WarehouseDto> warehouseDtoResult = warehouseAggregateRootApi.getWarehouseById(contractDTO.getRecoverWareHouseId());
         WarehouseDto warehouseDto = warehouseDtoResult.getData();
         recoverInfo.setWareHouseDisplay(warehouseDto == null ? "" : warehouseDto.getName());
+        recoverInfo.setWareHouseId(contractDTO.getRecoverWareHouseId());
         contractVO.setRecoverInfo(recoverInfo);
         List<GroupPhotoVO> groupPhotoVOS = JSONUtil.toList(contractDTO.getPlateNumberWithImgs(), GroupPhotoVO.class);
         contractVO.setGroupPhotoVOS(groupPhotoVOS);
@@ -70,7 +71,7 @@ public class ContractRecoverQryExe {
         // 短信是否可发送判断，目前是一天可以发一条
         // 签署中的合同才可发送短信
         // 先判断日期是否是今天
-        if(ElecHandoverContractStatus.SIGNING.getCode() == contractDTO.getStatus()){
+        /*if(ElecHandoverContractStatus.SIGNING.getCode() == contractDTO.getStatus()){
             String sendSmsDate = contractDTO.getSendSmsDate();
             if (StringUtils.isEmpty(sendSmsDate)) {
                 contractVO.setSendSmsFlag(JudgeEnum.YES.getCode());
@@ -102,7 +103,7 @@ public class ContractRecoverQryExe {
                     }
                 }
             }
-        }
+        }*/
 
         return contractVO;
     }

@@ -5,7 +5,6 @@ import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.dto.contract.ContractDocumentInfoDTO;
 import com.mfexpress.component.dto.contract.ContractDocumentDTO;
-import com.mfexpress.component.dto.contract.ContractDocumentInfoDTO;
 import com.mfexpress.component.enums.contract.ContractModeEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
@@ -20,7 +19,8 @@ import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSingingCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
@@ -122,7 +122,7 @@ public class CreateRecoverContractCmdExe {
         ContractIdWithDocIds contractIdWithDocIds = createContractWithDocInLocal(cmd, tokenInfo, serveDTO.getOrgId());
 
         // 访问契约锁域创建合同
-        Result createElecContractResult = createElecContract(cmd, contractIdWithDocIds, docInfos);
+        Result<Boolean> createElecContractResult = createElecContract(cmd, contractIdWithDocIds, docInfos);
         if(ResultErrorEnum.SUCCESSED.getCode() != createElecContractResult.getCode() || null == createElecContractResult.getData()){
             log.error("创建合同时调用契约锁域失败，返回msg：{}", createElecContractResult.getMsg());
             // 调用契约锁失败还得将本地创建的合同置为无效
@@ -131,12 +131,21 @@ public class CreateRecoverContractCmdExe {
         }
 
         // 什么时候改变交付单的状态，调用完契约锁域后，免得失败后还得改回来
-        makeDeliverContractSigning(Collections.singletonList(recoverInfo.getServeNo()), DeliverTypeEnum.RECOVER.getCode());
+        try{
+            makeDeliverContractGenerating(Collections.singletonList(recoverInfo.getServeNo()), DeliverTypeEnum.DELIVER.getCode());
+        }catch (Exception e){
+            // 操作交付单失败，合同应置为无效
+            CancelContractCmd cancelContractCmd = new CancelContractCmd();
+            cancelContractCmd.setContractId(contractIdWithDocIds.getContractId());
+            cancelContractCmd.setFailureReason(ContractFailureReasonEnum.OTHER.getCode());
+            contractAggregateRootApi.cancelContract(cancelContractCmd);
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "创建电子交接单失败");
+        }
 
         return contractIdWithDocIds.getContractId().toString();
     }
 
-    private Result createElecContract(CreateRecoverContractFrontCmd cmd, ContractIdWithDocIds contractIdWithDocIds, List<ContractDocumentInfoDTO> docInfos) {
+    private Result<Boolean> createElecContract(CreateRecoverContractFrontCmd cmd, ContractIdWithDocIds contractIdWithDocIds, List<ContractDocumentInfoDTO> docInfos) {
         // 再调用契约锁域创建合同
         docInfos.forEach(docInfo -> {
             docInfo.setType(DeliverTypeEnum.RECOVER.getCode());
@@ -236,11 +245,11 @@ public class CreateRecoverContractCmdExe {
         return createContractResult.getData();
     }
 
-    private void makeDeliverContractSigning(List<String> serveNos, int type) {
-        DeliverContractSingingCmd cmd = new DeliverContractSingingCmd();
+    private void makeDeliverContractGenerating(List<String> serveNos, int type) {
+        DeliverContractGeneratingCmd cmd = new DeliverContractGeneratingCmd();
         cmd.setServeNos(serveNos);
         cmd.setDeliverType(type);
-        deliverAggregateRootApi.contractSigning(cmd);
+        deliverAggregateRootApi.contractGenerating(cmd);
     }
 
     private void makeContractInvalid(Long contractId) {

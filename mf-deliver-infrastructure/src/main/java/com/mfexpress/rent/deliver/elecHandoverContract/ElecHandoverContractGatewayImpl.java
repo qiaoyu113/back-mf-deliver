@@ -80,9 +80,9 @@ public class ElecHandoverContractGatewayImpl implements ElecHandoverContractGate
 
         // 迫不得已，手写sql
         Example.Criteria criteriaB = example.createCriteria();
-        criteriaB.andCondition("status = ".concat(String.valueOf(ElecHandoverContractStatus.SIGNING.getCode()))
+        criteriaB.andCondition("status = ".concat(String.valueOf(ElecHandoverContractStatus.GENERATING.getCode()).concat(" or status = ").concat(String.valueOf(ElecHandoverContractStatus.SIGNING.getCode())))
                 .concat(" or (status = ".concat(String.valueOf(ElecHandoverContractStatus.FAIL.getCode()))
-                        .concat(" and failure_reason = ").concat(String.valueOf(ContractFailureReasonEnum.OVERDUE.getCode()))
+                        .concat(" and failure_reason in (").concat(String.valueOf(ContractFailureReasonEnum.CREATE_FAIL.getCode())).concat(",").concat(String.valueOf(ContractFailureReasonEnum.OVERDUE.getCode())).concat(")")
                         .concat(" and is_show = ").concat(String.valueOf(JudgeEnum.YES.getCode()))
                         .concat(")")));
 

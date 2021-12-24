@@ -6,8 +6,6 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.qry.ContractList
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.qry.ContractQry;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.*;
 
-import java.util.List;
-
 public interface ElecHandoverContractServiceI {
 
     String createDeliverContract(CreateDeliverContractCmd cmd, TokenInfo tokenInfo);
@@ -16,7 +14,7 @@ public interface ElecHandoverContractServiceI {
 
     DeliverContractListVO getDeliverContractList(ContractListQry qry, TokenInfo tokenInfo);
 
-    List<ElecContractOperationRecordVO> getContractOperationRecord(ContractQry qry, TokenInfo tokenInfo);
+    ElecContractOperationRecordWithSmsInfoVO getContractOperationRecord(ContractQry qry, TokenInfo tokenInfo);
 
     Integer sendSms(SendSmsCmd cmd, TokenInfo tokenInfo);
 
@@ -24,7 +22,7 @@ public interface ElecHandoverContractServiceI {
 
     Integer getContractCreateStatus(ContractQry qry, TokenInfo tokenInfo);
 
-    Integer confirmExpireContract(ConfirmExpireContractCmd cmd, TokenInfo tokenInfo);
+    Integer confirmFail(ConfirmFailCmd cmd, TokenInfo tokenInfo);
 
     ElecDeliverContractVO getDeliverContractInfo(ContractQry qry, TokenInfo tokenInfo);
 
