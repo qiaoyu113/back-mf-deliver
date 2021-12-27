@@ -43,15 +43,15 @@ public class DeliverVehicleExe {
     @Resource
     private EsSyncHandlerI syncServiceI;
 
-    @Resource
+    /*@Resource
     private MqTools mqTools;
 
     @Value("${rocketmq.listenEventTopic}")
-    private String event;
+    private String event;*/
 
     public String execute(DeliverVehicleCmd deliverVehicleCmd) {
         //生成发车单 交付单状态更新已发车 初始化操作状态  服务单状态更新为已发车  调用车辆服务为租赁状态
-        List<DeliverVehicleImgCmd> deliverVehicleImgCmdList = deliverVehicleCmd.getDeliverVehicleImgCmdList();
+        /*List<DeliverVehicleImgCmd> deliverVehicleImgCmdList = deliverVehicleCmd.getDeliverVehicleImgCmdList();
         List<DeliverVehicleDTO> deliverVehicleDTOList = new LinkedList<>();
         //更新服务单状态
         List<String> serveNoList = new LinkedList<>();
@@ -111,6 +111,7 @@ public class DeliverVehicleExe {
             syncServiceI.execOne(map);
         }
 
-        return deliverVehicleResult.getData();
+        return deliverVehicleResult.getData();*/
+        return null;
     }
 }

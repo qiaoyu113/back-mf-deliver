@@ -53,8 +53,8 @@ public class RecoverToCheckExe {
 
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
-    @Resource
-    private SyncServiceI syncServiceI;
+    /*@Resource
+    private SyncServiceI syncServiceI;*/
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
     @Resource
@@ -69,12 +69,12 @@ public class RecoverToCheckExe {
     @Resource
     private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
 
-    @Resource
+    /*@Resource
     private RedisTools redisTools;
     @Resource
     private MqTools mqTools;
     @Value("${rocketmq.listenEventTopic}")
-    private String topic;
+    private String topic;*/
 
     public String execute(RecoverVechicleCmd recoverVechicleCmd) {
         //完善收车单信息
