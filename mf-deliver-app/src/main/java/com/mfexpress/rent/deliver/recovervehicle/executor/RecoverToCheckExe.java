@@ -2,18 +2,18 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 
 import cn.hutool.core.date.DateUtil;
-import com.mfexpress.billing.rentcharge.api.DailyAggregateRootApi;
+import com.alibaba.fastjson.JSON;
 import com.mfexpress.billing.rentcharge.api.VehicleDamageAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.VehicleDamage.CreateVehicleDamageCmd;
-import com.mfexpress.billing.rentcharge.dto.data.daily.DailyDTO;
+import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.response.ResultStatusEnum;
-import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
+import com.mfexpress.component.starter.utils.MqTools;
 import com.mfexpress.component.starter.utils.RedisTools;
+import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
@@ -35,10 +35,14 @@ import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import com.mfexpress.rent.vehicle.data.dto.warehouse.WarehouseDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Set;
 
 @Component
 @Slf4j
@@ -50,15 +54,14 @@ public class RecoverToCheckExe {
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
     @Resource
-    private EsSyncHandlerI syncServiceI;
+    private SyncServiceI syncServiceI;
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
     @Resource
     private WarehouseAggregateRootApi warehouseAggregateRootApi;
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
-    @Resource
-    private DailyAggregateRootApi dailyAggregateRootApi;
+
 
     @Resource
     private VehicleDamageAggregateRootApi vehicleDamageAggregateRootApi;
@@ -68,6 +71,10 @@ public class RecoverToCheckExe {
 
     @Resource
     private RedisTools redisTools;
+    @Resource
+    private MqTools mqTools;
+    @Value("${rocketmq.listenEventTopic}")
+    private String topic;
 
     public String execute(RecoverVechicleCmd recoverVechicleCmd) {
         //完善收车单信息
@@ -96,12 +103,12 @@ public class RecoverToCheckExe {
         //收车验车时 收车日期不能早于发车日期
         // 2020-11-23 00:00:00.before(2021-11-20 00:00:00)
         Result<DeliverVehicleDTO> deliverVehicleDTOResult = deliverVehicleAggregateRootApi.getDeliverVehicleDto(deliverDTO.getDeliverNo());
-        if(!ResultStatusEnum.SUCCESSED.getCode().equals(deliverVehicleDTOResult.getCode()) || null == deliverVehicleDTOResult.getData()){
+        if (!ResultStatusEnum.SUCCESSED.getCode().equals(deliverVehicleDTOResult.getCode()) || null == deliverVehicleDTOResult.getData()) {
             throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "发车单查询失败");
         }
         Date deliverVehicleTime = deliverVehicleDTOResult.getData().getDeliverVehicleTime();
-        if(!deliverVehicleTime.equals(recoverVechicleCmd.getRecoverVehicleTime())){
-            if(!deliverVehicleTime.before(recoverVechicleCmd.getRecoverVehicleTime())){
+        if (!deliverVehicleTime.equals(recoverVechicleCmd.getRecoverVehicleTime())) {
+            if (!deliverVehicleTime.before(recoverVechicleCmd.getRecoverVehicleTime())) {
                 throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "收车日期不能早于发车日期");
             }
         }
@@ -114,7 +121,7 @@ public class RecoverToCheckExe {
         String serveNo = recoverVechicleCmd.getServeNo();
         String key = DeliverUtils.concatCacheKey(Constants.RECOVER_VEHICLE_CHECK_INFO_CACHE_KEY, serveNo, "*");
         Set<String> keys = redisTools.getKeys(key);
-        if(!keys.isEmpty()){
+        if (!keys.isEmpty()) {
             redisTools.delKeys(new ArrayList<>(keys));
             log.info("收车验车信息保存操作，服务单号为{}的收车验车暂存信息被删除，key分别是:{}", serveNo, keys);
         }
@@ -129,7 +136,7 @@ public class RecoverToCheckExe {
         cmd.setDamageFee(recoverVechicleCmd.getDamageFee());
         cmd.setParkFee(recoverVechicleCmd.getParkFee());
         Result<Integer> createVehicleDamageResult = vehicleDamageAggregateRootApi.createVehicleDamage(cmd);
-        if(createVehicleDamageResult.getCode() != 0){
+        if (createVehicleDamageResult.getCode() != 0) {
             // 目前没有分布式事务，如果保存费用失败不应影响后续逻辑的执行
             log.error("收车时验车，保存费用到计费域失败，serveNo：{}", serve.getServeNo());
         }
@@ -163,25 +170,18 @@ public class RecoverToCheckExe {
         //生成收车租赁日报
         Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(recoverVechicleCmd.getServeNo());
         if (serveDTOResult.getData() != null) {
-            List<DailyDTO> dailyDTOList = new LinkedList<>();
             ServeDTO serveDTO = serveDTOResult.getData();
-            DailyDTO dailyDTO = new DailyDTO();
-            dailyDTO.setCustomerId(serveDTO.getCustomerId());
-            dailyDTO.setStatus(JudgeEnum.YES.getCode());
-            dailyDTO.setRentDate(DateUtil.format(recoverVechicleCmd.getRecoverVehicleTime(), "yyyy-MM-dd"));
-            dailyDTO.setServeNo(recoverVechicleCmd.getServeNo());
-            dailyDTO.setDelFlag(JudgeEnum.NO.getCode());
-            dailyDTOList.add(dailyDTO);
-            dailyAggregateRootApi.createDaily(dailyDTOList);
+            DailyOperate operate = new DailyOperate();
+            operate.setServeNo(recoverVechicleCmd.getServeNo());
+            operate.setCustomerId(serveDTO.getCustomerId());
+            operate.setOperateDate(DateUtil.formatDate(recoverVechicleCmd.getRecoverVehicleTime()));
+            mqTools.send(topic, "recover_vehicle", null, JSON.toJSONString(operate));
         }
 
         //同步
-        Map<String, String> map = new HashMap<>();
-        map.put("serve_no", recoverVechicleCmd.getServeNo());
-        syncServiceI.execOne(map);
+        syncServiceI.execOne(recoverVechicleCmd.getServeNo());
         return deliverResult.getMsg();*/
         return null;
     }
-
 }
 

@@ -70,14 +70,12 @@ public class SyncServiceImpl implements EsSyncHandlerI {
 
     /*@Value("${rocketmq.listenBinlogTopic}")
     private String listenBinlogTopic;
-    @Value("${rocketmq.listenOrderTopic}")
-    private String listenOrderTopic;
+    @Value("${rocketmq.listenEventTopic}")
+    private String listenEventTopic;
     @Resource
     private DeliverMqCommand deliverMqCommand;
     @Resource
     private DeliverVehicleMqCommand deliverVehicleMqCommand;
-    @Resource
-    private DeliverUtils deliverUtils;*/
 
     /*@PostConstruct
     public void init() {
@@ -85,10 +83,10 @@ public class SyncServiceImpl implements EsSyncHandlerI {
         DeliverBinlogDispatch deliverBinlogDispatch = new DeliverBinlogDispatch();
         deliverBinlogDispatch.setServiceI(this);
         mqTools.addBinlogCommand(listenBinlogTopic, deliverBinlogDispatch);
-        deliverMqCommand.setTopic(DeliverUtils.getEnvVariable(listenOrderTopic));
+        deliverMqCommand.setTopic(listenEventTopic);
         deliverMqCommand.setTags(Constants.DELIVER_ORDER_TAG);
         mqTools.add(deliverMqCommand);
-        deliverVehicleMqCommand.setTopic(DeliverUtils.getEnvVariable(listenOrderTopic));
+        deliverVehicleMqCommand.setTopic(listenEventTopic);
         deliverVehicleMqCommand.setTags(Constants.DELIVER_VEHICLE_TAG);
         mqTools.add(deliverVehicleMqCommand);
 

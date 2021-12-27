@@ -2,16 +2,19 @@ package com.mfexpress.rent.deliver.consumer.common;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSON;
 import com.mfexpress.billing.rentcharge.api.DailyAggregateRootApi;
 import com.mfexpress.billing.rentcharge.api.VehicleDamageAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.VehicleDamage.CreateVehicleDamageCmd;
 import com.mfexpress.billing.rentcharge.dto.data.daily.DailyDTO;
+import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.contract.ContractResultTopicDTO;
 import com.mfexpress.component.enums.contract.ContractStatusEnum;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessClass;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessMethod;
+import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.constant.*;
@@ -32,6 +35,7 @@ import com.mfexpress.rent.vehicle.data.dto.warehouse.WarehouseDto;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -74,6 +78,12 @@ public class ElecContractStatusMqCommand {
 
     @Resource
     private SyncServiceImpl syncServiceI;
+
+    @Resource
+    private MqTools mqTools;
+
+    @Value("${rocketmq.listenEventTopic}")
+    private String event;
 
     @MFMqCommonProcessMethod(tag = Constants.THIRD_PARTY_ELEC_CONTRACT_STATUS_TAG)
     public void execute(String body) {
@@ -235,6 +245,12 @@ public class ElecContractStatusMqCommand {
             log.error("收车电子合同签署完成时，保存收车日报失败，serveNo：{}", serveDTO.getServeNo());
         }
 
+        DailyOperate operate = new DailyOperate();
+        operate.setServeNo(serveDTO.getServeNo());
+        operate.setCustomerId(serveDTO.getCustomerId());
+        operate.setOperateDate(DateUtil.formatDate(contractDTO.getRecoverVehicleTime()));
+        mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(operate));
+
         serveNoList.add(serveDTO.getServeNo());
         return serveNoList;
     }
@@ -260,6 +276,13 @@ public class ElecContractStatusMqCommand {
             dailyDTO.setStatus(JudgeEnum.NO.getCode());
             dailyDTOList.add(dailyDTO);
             serveNoList.add(deliverImgInfo.getServeNo());
+
+            //发车操作mq触发计费
+            DailyOperate operate = new DailyOperate();
+            operate.setServeNo(deliverImgInfo.getServeNo());
+            operate.setCustomerId(serveDTO.getCustomerId());
+            operate.setOperateDate(DateUtil.formatDate(contractDTO.getDeliverVehicleTime()));
+            mqTools.send(event, "deliver_vehicle", null, JSON.toJSONString(operate));
         });
 
         // 修改对应的车辆状态为租赁状态
