@@ -230,13 +230,25 @@ public class SyncServiceImpl implements EsSyncHandlerI {
                 && serveEs.getIsCheck().equals(JudgeEnum.NO.getCode())) {
             //收车中 待验车
             sort = DeliverSortEnum.ONE.getSort();
-        } else if (serveEs.getDeliverStatus() >= DeliverEnum.IS_RECOVER.getCode() && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
-                && recoverFlag) {
-            //收车中  待退保、待处理违章
+        } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
+                && serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.NOSIGN.getCode()){
+            // 收车中 待收车
             sort = DeliverSortEnum.TWO.getSort();
+        } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())
+                && (serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.GENERATING.getCode() || serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.SIGNING.getCode())){
+            // 收车中 签署中
+            sort = DeliverSortEnum.THREE.getSort();
+        } else if (DeliverEnum.RECOVER.getCode().equals(serveEs.getDeliverStatus()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
+                && (DeliverContractStatusEnum.COMPLETED.getCode() == serveEs.getRecoverContractStatus() || JudgeEnum.YES.getCode().equals(serveEs.getRecoverAbnormalFlag())) && JudgeEnum.NO.getCode().equals(serveEs.getIsInsurance())) {
+            //收车中  待退保
+            sort = DeliverSortEnum.FOUR.getSort();
+        } else if (DeliverEnum.RECOVER.getCode().equals(serveEs.getDeliverStatus()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
+                && (DeliverContractStatusEnum.COMPLETED.getCode() == serveEs.getRecoverContractStatus() || JudgeEnum.YES.getCode().equals(serveEs.getRecoverAbnormalFlag())) && JudgeEnum.YES.getCode().equals(serveEs.getIsInsurance())) {
+            //收车中  待处理违章
+            sort = DeliverSortEnum.FIVE.getSort();
         } else if (serveEs.getServeStatus().equals(ServeEnum.COMPLETED.getCode())) {
             //已完成
-            sort = DeliverSortEnum.THREE.getSort();
+            sort = DeliverSortEnum.SIX.getSort();
         }
 
         return sort;
