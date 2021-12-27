@@ -38,7 +38,7 @@ public class recoverTaskListWaitRecoverQryExe implements RecoverQryServiceI {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         List<FieldSortBuilder> fieldSortBuilderList = new LinkedList<>();
         boolQueryBuilder.must(QueryBuilders.rangeQuery("serveStatus").gte(ServeEnum.DELIVER.getCode()))
-                .must(QueryBuilders.rangeQuery("deliverStatus").gte(DeliverEnum.IS_RECOVER.getCode()))
+                .must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.IS_RECOVER.getCode()))
                 .must(QueryBuilders.matchQuery("isCheck", JudgeEnum.YES.getCode()))
                 .must(QueryBuilders.matchQuery("recoverContractStatus", DeliverContractStatusEnum.NOSIGN.getCode()))
                 .must(QueryBuilders.matchQuery("isInsurance", JudgeEnum.NO.getCode()))
