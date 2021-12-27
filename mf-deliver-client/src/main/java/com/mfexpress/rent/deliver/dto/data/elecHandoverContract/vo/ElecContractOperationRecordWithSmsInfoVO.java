@@ -2,7 +2,6 @@ package com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo;
 
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.util.List;
 

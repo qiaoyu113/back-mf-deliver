@@ -6,10 +6,7 @@ import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.RedisTools;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.DeliverEnum;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
+import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleImgCmd;
@@ -127,6 +124,7 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
                 .deliverStatus(DeliverEnum.DELIVER.getCode())
                 .isCheck(JudgeEnum.NO.getCode())
                 .isInsurance(JudgeEnum.NO.getCode())
+                .deliverContractStatus(DeliverContractStatusEnum.COMPLETED.getCode())
                 .build();
         deliverGateway.updateDeliverByServeNoList(serveNoList, deliver);
 

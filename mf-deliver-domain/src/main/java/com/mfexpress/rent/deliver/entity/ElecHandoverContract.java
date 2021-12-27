@@ -263,15 +263,6 @@ public class ElecHandoverContract {
         contractPOToUpdate.setContractForeignNo(contractForeignNo);
         contractPOToUpdate.setStatus(status);
         elecHandoverContractGateway.updateContractByContractForeignNo(contractPOToUpdate);
-        // 交付单也需改为已完成
-        List<String> deliverNos = JSONUtil.toList(contractPO.getDeliverNos(), String.class);
-        Deliver deliverToUpdate = new Deliver();
-        if (DeliverTypeEnum.DELIVER.getCode() == contractPO.getDeliverType()) {
-            deliverToUpdate.setDeliverContractStatus(DeliverContractStatusEnum.COMPLETED.getCode());
-        } else if (DeliverTypeEnum.RECOVER.getCode() == contractPO.getDeliverType()) {
-            deliverToUpdate.setRecoverContractStatus(DeliverContractStatusEnum.COMPLETED.getCode());
-        }
-        deliverGateway.updateDeliverByDeliverNos(deliverNos, deliverToUpdate);
     }
 
     // 补充交接单的文件url

@@ -195,7 +195,7 @@ public class RecoverVehicleController {
         return Result.getInstance(recoverVehicleServiceI.abnormalRecover(cmd, tokenInfo)).success();
     }
 
-    @PostMapping("/getRecoverAbnormalInfo")
+    @PostMapping("/getAbnormalRecoverInfo")
     @ApiOperation(value = "获取异常收车信息")
     @PrintParam
     public Result<RecoverAbnormalVO> getRecoverAbnormalInfo(@RequestBody @Validated RecoverAbnormalQry cmd){

@@ -12,6 +12,7 @@ import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 
@@ -39,9 +40,12 @@ public class CancelContractCmdExe {
         ResultValidUtils.checkResultException(noSignResult);
 
         ContractOperateDTO contractOperateDTO = new ContractOperateDTO();
-        contractOperateDTO.setContractId(Long.valueOf(contractDTO.getContractForeignNo()));
-        contractOperateDTO.setType(ContractModeEnum.DELIVER.getName());
-        contractTools.invalid(contractOperateDTO);
+        if(!StringUtils.isEmpty(contractDTO.getContractForeignNo())){
+            contractOperateDTO.setContractId(Long.valueOf(contractDTO.getContractForeignNo()));
+            contractOperateDTO.setType(ContractModeEnum.DELIVER.getName());
+            contractTools.invalid(contractOperateDTO);
+        }
+
         return 0;
     }
 

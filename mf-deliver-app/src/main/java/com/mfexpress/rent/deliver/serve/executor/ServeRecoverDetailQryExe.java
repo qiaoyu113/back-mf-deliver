@@ -103,6 +103,12 @@ public class ServeRecoverDetailQryExe {
         if ((ServeEnum.DELIVER.getCode().equals(serveDTO.getStatus()) || ServeEnum.REPAIR.getCode().equals(serveDTO.getStatus())) && DeliverEnum.IS_RECOVER.getCode().equals(deliverDTO.getDeliverStatus())) {
             serveRecoverDetailVO.setOrderVO(getOrderVO(serveDTO));
             serveRecoverDetailVO.setVehicleVO(getVehicleVO(serveDTO, deliverDTO, recoverVehicleDTO));
+            if(DeliverContractStatusEnum.SIGNING.getCode() == deliverDTO.getRecoverContractStatus()){
+                // recover_contract_status 属性为1或2，状态为合同生成中/签署中
+                // 需补充收车单信息
+                // 从合同中取出收车单信息
+                serveRecoverDetailVO.setRecoverVehicleVO(getRecoverVehicleVOFromContract(deliverDTO));
+            }
         } else if (ServeEnum.RECOVER.getCode().equals(serveDTO.getStatus()) && DeliverEnum.RECOVER.getCode().equals(deliverDTO.getDeliverStatus())) {
             serveRecoverDetailVO.setOrderVO(getOrderVO(serveDTO));
             serveRecoverDetailVO.setVehicleVO(getVehicleVO(serveDTO, deliverDTO, recoverVehicleDTO));
@@ -111,23 +117,16 @@ public class ServeRecoverDetailQryExe {
                 // 待收车需补充验车信息
                 serveRecoverDetailVO.setVehicleValidationVO(getVehicleValidationVO());
             }
-            if(DeliverContractStatusEnum.SIGNING.getCode() == deliverDTO.getRecoverContractStatus()){
-                // serve的status属性为3，deliver的deliver_status属性为4，recover_contract_status 属性为1，状态为签署中
-                // 需补充收车单信息
-                // 从合同中取出收车单信息
-                serveRecoverDetailVO.setRecoverVehicleVO(getRecoverVehicleVOFromContract(deliverDTO));
-            }
             if(DeliverContractStatusEnum.COMPLETED.getCode() == deliverDTO.getRecoverContractStatus()){
-                // serve的status属性为3，deliver的deliver_status属性为4，recover_contract_status 属性为1，状态为待退保
+                // serve的status属性为3，deliver的deliver_status属性为4，recover_contract_status 属性为3，状态为待退保
                 // 需补充收车单信息
                 serveRecoverDetailVO.setRecoverVehicleVO(getRecoverVehicleVO(recoverVehicleDTO));
-                if(RecoverVehicleType.NORMAL.getCode() == deliverDTO.getRecoverAbnormalFlag()){
-                    // 正常收车补充电子交接单信息
-                    serveRecoverDetailVO.setElecHandoverDocVO(getElecHandoverDocVO(deliverDTO));
-                }else{
-                    // 异常收车设置异常收车标志位为真
-                    serveRecoverDetailVO.setRecoverAbnormalFlag(RecoverVehicleType.ABNORMAL.getCode());
-                }
+                // 正常收车补充电子交接单信息
+                serveRecoverDetailVO.setElecHandoverDocVO(getElecHandoverDocVO(deliverDTO));
+            }
+            if(RecoverVehicleType.ABNORMAL.getCode() == deliverDTO.getRecoverAbnormalFlag()){
+                // 异常收车设置异常收车标志位为真
+                serveRecoverDetailVO.setRecoverAbnormalFlag(RecoverVehicleType.ABNORMAL.getCode());
             }
             if(JudgeEnum.YES.getCode().equals(deliverDTO.getIsInsurance())){
                 // serve的status属性为3，deliver的deliver_status属性为4，is_insurance属性为1，状态为待处理违章

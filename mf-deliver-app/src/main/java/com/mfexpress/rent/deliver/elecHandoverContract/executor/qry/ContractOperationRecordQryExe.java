@@ -209,7 +209,7 @@ public class ContractOperationRecordQryExe {
 
         // 交接单已过期记录
         if(ElecHandoverContractStatus.FAIL.getCode() == elecContractDTO.getStatus() && ContractFailureReasonEnum.OVERDUE.getCode() == elecContractDTO.getFailureReason()){
-            ElecContractOperationRecordVO overdueRecord = ElecContractOperationRecordVO.builder().operationType(ElecContractOperationTypeEnum.FAIL.getCode())
+            ElecContractOperationRecordVO overdueRecord = ElecContractOperationRecordVO.builder().operationType(ElecContractOperationTypeEnum.OVERDUE.getCode())
                     .operationTypeDisplay(ElecContractOperationTypeEnum.OVERDUE.getName())
                     .operationTime(elecContractDTO.getUpdateTime()).build();
             recordVOS.add(overdueRecord);

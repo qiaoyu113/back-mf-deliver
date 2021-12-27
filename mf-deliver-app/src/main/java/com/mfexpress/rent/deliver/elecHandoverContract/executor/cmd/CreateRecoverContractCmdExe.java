@@ -20,7 +20,6 @@ import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
@@ -132,7 +131,7 @@ public class CreateRecoverContractCmdExe {
 
         // 什么时候改变交付单的状态，调用完契约锁域后，免得失败后还得改回来
         try{
-            makeDeliverContractGenerating(Collections.singletonList(recoverInfo.getServeNo()), DeliverTypeEnum.DELIVER.getCode());
+            makeDeliverContractGenerating(Collections.singletonList(recoverInfo.getServeNo()), DeliverTypeEnum.RECOVER.getCode());
         }catch (Exception e){
             // 操作交付单失败，合同应置为无效
             CancelContractCmd cancelContractCmd = new CancelContractCmd();

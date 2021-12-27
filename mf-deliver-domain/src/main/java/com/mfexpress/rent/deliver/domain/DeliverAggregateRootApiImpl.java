@@ -332,18 +332,18 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单查询失败");
         }
         if (DeliverTypeEnum.DELIVER.getCode() == cmd.getDeliverType()) {
-            /*delivers.forEach(deliver -> {
+            delivers.forEach(deliver -> {
                 if (DeliverContractStatusEnum.NOSIGN.getCode() != deliver.getDeliverContractStatus()) {
                     throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
                 }
-            });*/
+            });
             deliverToUpdate.setDeliverContractStatus(DeliverContractStatusEnum.GENERATING.getCode());
         } else {
-            /*delivers.forEach(deliver -> {
+            delivers.forEach(deliver -> {
                 if (DeliverContractStatusEnum.NOSIGN.getCode() != deliver.getRecoverContractStatus()) {
                     throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
                 }
-            });*/
+            });
             deliverToUpdate.setRecoverContractStatus(DeliverContractStatusEnum.GENERATING.getCode());
         }
         int i = deliverGateway.updateDeliverByServeNoList(cmd.getServeNos(), deliverToUpdate);
@@ -361,18 +361,18 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单查询失败");
         }
         if (DeliverTypeEnum.DELIVER.getCode() == cmd.getDeliverType()) {
-            /*delivers.forEach(deliver -> {
+            delivers.forEach(deliver -> {
                 if (DeliverContractStatusEnum.GENERATING.getCode() != deliver.getDeliverContractStatus()) {
                     throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
                 }
-            });*/
+            });
             deliverToUpdate.setDeliverContractStatus(DeliverContractStatusEnum.SIGNING.getCode());
         } else {
-            /*delivers.forEach(deliver -> {
+            delivers.forEach(deliver -> {
                 if (DeliverContractStatusEnum.GENERATING.getCode() != deliver.getRecoverContractStatus()) {
                     throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
                 }
-            });*/
+            });
             deliverToUpdate.setRecoverContractStatus(DeliverContractStatusEnum.SIGNING.getCode());
         }
         int i = deliverGateway.updateDeliverByDeliverNos(deliverNos, deliverToUpdate);
