@@ -6,7 +6,7 @@ import com.mfexpress.billing.rentcharge.api.DeductAggrgateRootApi;
 import com.mfexpress.billing.rentcharge.constant.BusinessChargeTypeEnum;
 import com.mfexpress.billing.rentcharge.dto.data.deduct.DeductDTO;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.rent.deliver.api.SyncServiceI;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -20,10 +20,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class RecoverDeductionExe {
@@ -37,7 +34,7 @@ public class RecoverDeductionExe {
     @Resource
     private DeductAggrgateRootApi deductAggrgateRootApi;
     @Resource
-    private SyncServiceI syncServiceI;
+    private EsSyncHandlerI syncServiceI;
 
 
     public String execute(RecoverDeductionCmd recoverDeductionCmd) {
@@ -99,7 +96,10 @@ public class RecoverDeductionExe {
         deliverCarServiceDTO.setServeNoList(Arrays.asList(recoverDeductionCmd.getServeNo()));
         deliverCarServiceDTO.setCarServiceId(recoverDeductionCmd.getCarServiceId());
         deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
-        syncServiceI.execOne(recoverDeductionCmd.getServeNo());
+
+        Map<String, String> map = new HashMap<>();
+        map.put("serve_no", recoverDeductionCmd.getServeNo());
+        syncServiceI.execOne(map);
 
         return serveResult.getData();
     }

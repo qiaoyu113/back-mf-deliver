@@ -5,7 +5,7 @@ import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.utils.TokenTools;
+import com.mfexpress.component.starter.tools.token.TokenTools;
 import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
 import io.swagger.annotations.Api;
@@ -99,8 +99,9 @@ public class RecoverVehicleController {
 
 
     @PostMapping("/toCheck")
-    @ApiOperation(value = "收车验车")
+    @ApiOperation(value = "收车验车-废弃接口，因契约锁迭代导致验车流程发生变更，此接口废弃")
     @PrintParam
+    @Deprecated
     public Result<String> toCheck(@RequestBody RecoverVechicleCmd recoverVechicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
 
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
@@ -182,4 +183,22 @@ public class RecoverVehicleController {
 
     // ---------------------luzheng add end----------------------------
 
+    // 异常收车        æbˈnɔːml
+    @PostMapping("/abnormalRecover")
+    @ApiOperation(value = "异常收车")
+    @PrintParam
+    public Result<Integer> abnormalRecover(@RequestBody @Validated RecoverAbnormalCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt){
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            return Result.getInstance((Integer) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+        }
+        return Result.getInstance(recoverVehicleServiceI.abnormalRecover(cmd, tokenInfo)).success();
+    }
+
+    @PostMapping("/getAbnormalRecoverInfo")
+    @ApiOperation(value = "获取异常收车信息")
+    @PrintParam
+    public Result<RecoverAbnormalVO> getRecoverAbnormalInfo(@RequestBody @Validated RecoverAbnormalQry cmd){
+        return Result.getInstance(recoverVehicleServiceI.getRecoverAbnormalInfo(cmd)).success();
+    }
 }

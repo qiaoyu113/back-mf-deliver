@@ -62,4 +62,10 @@ public class DeliverDTO {
 
     private Date insuranceEndTime;
 
+    private Integer deliverContractStatus;
+
+    private Integer recoverContractStatus;
+
+    private Integer recoverAbnormalFlag;
+
 }

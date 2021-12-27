@@ -2,11 +2,10 @@ package com.mfexpress.rent.deliver.delivervehicle.executor;
 
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
-import com.mfexpress.billing.rentcharge.dto.data.daily.DailyDTO;
 import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.utils.MqTools;
-import com.mfexpress.rent.deliver.api.SyncServiceI;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
+import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -24,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -41,10 +41,11 @@ public class DeliverVehicleExe {
     @Resource
     private CustomerAggregateRootApi customerAggregateRootApi;
     @Resource
-    private SyncServiceI syncServiceI;
+    private EsSyncHandlerI syncServiceI;
 
     @Resource
     private MqTools mqTools;
+
     @Value("${rocketmq.listenEventTopic}")
     private String event;
 
@@ -52,7 +53,6 @@ public class DeliverVehicleExe {
         //生成发车单 交付单状态更新已发车 初始化操作状态  服务单状态更新为已发车  调用车辆服务为租赁状态
         List<DeliverVehicleImgCmd> deliverVehicleImgCmdList = deliverVehicleCmd.getDeliverVehicleImgCmdList();
         List<DeliverVehicleDTO> deliverVehicleDTOList = new LinkedList<>();
-        List<DailyDTO> dailyDTOList = new LinkedList<>();
         //更新服务单状态
         List<String> serveNoList = new LinkedList<>();
         List<Integer> carIdList = new LinkedList<>();
@@ -105,10 +105,11 @@ public class DeliverVehicleExe {
         deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
         Result<String> deliverVehicleResult = deliverVehicleAggregateRootApi.addDeliverVehicle(deliverVehicleDTOList);
 
+        HashMap<String, String> map = new HashMap<>();
         for (String serveNo : serveNoList) {
-            syncServiceI.execOne(serveNo);
+            map.put("serve_no", serveNo);
+            syncServiceI.execOne(map);
         }
-
 
         return deliverVehicleResult.getData();
     }

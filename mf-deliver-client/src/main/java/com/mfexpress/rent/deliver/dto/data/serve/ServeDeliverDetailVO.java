@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.dto.data.serve;
 
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleVO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.ElecHandoverDocVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -24,6 +25,9 @@ public class ServeDeliverDetailVO {
 
     @ApiModelProperty(value = "发车单信息")
     private DeliverVehicleVO deliverVehicleVO;
+
+    @ApiModelProperty(value = "电子交接单信息")
+    private ElecHandoverDocVO elecHandoverDocVO;
 
 }
 

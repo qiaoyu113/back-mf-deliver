@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 
 @RestController
-@Api(tags = "api--交付--1.3发车", value = "DeliverVehicleController")
+@Api(tags = "api--交付--1.4发车", value = "DeliverVehicleController")
 @RequestMapping("/api/deliver/v3/delivervehicle")
 @ApiSort(3)
 public class DeliverVehicleController {
@@ -25,8 +25,9 @@ public class DeliverVehicleController {
     private DeliverVehicleServiceI deliverVehicleServiceI;
 
     @PostMapping("/toDeliver")
-    @ApiOperation("发车")
+    @ApiOperation("发车,在契约锁迭代因发车流程被改变，此接口被废弃")
     @PrintParam
+    @Deprecated
     public Result<String> toDeliver(@RequestBody DeliverVehicleCmd deliverVehicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         //生成发车单 交付单状态更新已发车 初始化操作状态  服务单状态更新为已发车  调用车辆服务为租赁状态
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);

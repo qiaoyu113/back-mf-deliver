@@ -1,8 +1,8 @@
 package com.mfexpress.rent.deliver.deliver.executor;
 
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.utils.util.DateUtils;
-import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 @Component
@@ -23,7 +24,7 @@ public class DeliverToInsureExe {
     @Resource
     private VehicleInsuranceAggregateRootApi vehicleInsuranceAggregateRootApi;
     @Resource
-    private SyncServiceI syncServiceI;
+    private EsSyncHandlerI syncServiceI;
 
 
     public String execute(DeliverInsureCmd deliverInsureCmd) {
@@ -47,8 +48,10 @@ public class DeliverToInsureExe {
         deliverCarServiceDTO.setCarServiceId(deliverInsureCmd.getCarServiceId());
         deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
 
+        HashMap<String, String> map = new HashMap<>();
         for (String serveNo : serveNoList) {
-            syncServiceI.execOne(serveNo);
+            map.put("serve_no", serveNo);
+            syncServiceI.execOne(map);
         }
 
         return deliverResult.getData();
