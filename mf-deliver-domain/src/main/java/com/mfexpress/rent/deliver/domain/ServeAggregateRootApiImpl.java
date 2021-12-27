@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/domain/deliver/v3/serve")
-@Api(tags = "domain--交付--1.1租赁服务单聚合")
+@Api(tags = "domain--交付--1.4租赁服务单聚合")
 @Slf4j
 public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 

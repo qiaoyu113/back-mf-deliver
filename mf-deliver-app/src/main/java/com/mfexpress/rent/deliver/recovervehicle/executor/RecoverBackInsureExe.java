@@ -3,7 +3,7 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import cn.hutool.core.date.DateUtil;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.rent.deliver.api.SyncServiceI;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverBackInsureDTO;
@@ -16,6 +16,8 @@ import com.mfexpress.rent.vehicle.exception.CommonException;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class RecoverBackInsureExe {
@@ -25,7 +27,7 @@ public class RecoverBackInsureExe {
     @Resource
     private VehicleInsuranceAggregateRootApi vehicleInsuranceAggregateRootApi;
     @Resource
-    private SyncServiceI syncServiceI;
+    private EsSyncHandlerI syncServiceI;
 
 
     public String execute(RecoverBackInsureCmd recoverBackInsureCmd) {
@@ -52,8 +54,11 @@ public class RecoverBackInsureExe {
         deliverCarServiceDTO.setServeNoList(recoverBackInsureCmd.getServeNoList());
         deliverCarServiceDTO.setCarServiceId(recoverBackInsureCmd.getCarServiceId());
         deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
+
+        Map<String, String> map = new HashMap<>();
         for (String serveNo : recoverBackInsureCmd.getServeNoList()) {
-            syncServiceI.execOne(serveNo);
+            map.put("serve_no", serveNo);
+            syncServiceI.execOne(map);
         }
         return deliverResult.getData();
 

@@ -1,7 +1,6 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
 
-import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
@@ -22,8 +21,8 @@ import java.util.List;
 public class ServeInsureQryExe {
     @Resource
     private ServeEsDataQryExe serveEsDataQryExe;
-    @Resource
-    private SyncServiceI syncServiceI;
+    /*@Resource
+    private SyncServiceI syncServiceI;*/
 
     public ServeListVO execute(ServeQryListCmd serveQryListCmd) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();

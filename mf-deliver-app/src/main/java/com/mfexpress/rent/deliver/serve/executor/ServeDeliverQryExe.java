@@ -1,6 +1,6 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
-import com.mfexpress.rent.deliver.api.SyncServiceI;
+import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeListVO;
@@ -20,8 +20,8 @@ import java.util.List;
 public class ServeDeliverQryExe {
     @Resource
     private ServeEsDataQryExe serveEsDataQryExe;
-    @Resource
-    private SyncServiceI syncServiceI;
+    /*@Resource
+    private SyncServiceI syncServiceI;*/
 
     public ServeListVO execute(ServeQryListCmd serveQryListCmd) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -29,7 +29,8 @@ public class ServeDeliverQryExe {
                 .must(QueryBuilders.matchQuery("isPreselected", JudgeEnum.YES.getCode()))
                 .must(QueryBuilders.matchQuery("isCheck", JudgeEnum.YES.getCode()))
                 .must(QueryBuilders.matchQuery("isInsurance", JudgeEnum.YES.getCode()))
-                .must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.IS_DELIVER.getCode()));
+                .must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.IS_DELIVER.getCode()))
+                .must(QueryBuilders.matchQuery("deliverContractStatus", DeliverContractStatusEnum.NOSIGN.getCode()));
         List<FieldSortBuilder> fieldSortBuilderList = new LinkedList<>();
         FieldSortBuilder updateTimeSortBuilders = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
         fieldSortBuilderList.add(updateTimeSortBuilders);
