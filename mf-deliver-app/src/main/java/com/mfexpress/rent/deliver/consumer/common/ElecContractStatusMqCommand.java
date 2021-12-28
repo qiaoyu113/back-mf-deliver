@@ -14,6 +14,7 @@ import com.mfexpress.component.enums.contract.ContractStatusEnum;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessClass;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessMethod;
+import com.mfexpress.component.starter.tools.lock.MfLock;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
@@ -85,6 +86,8 @@ public class ElecContractStatusMqCommand {
     @Value("${rocketmq.listenEventTopic}")
     private String event;
 
+    private final String contractSignedRedisKey = "lock:mf-deliver:contractSigned:contractId:";
+
     @MFMqCommonProcessMethod(tag = Constants.THIRD_PARTY_ELEC_CONTRACT_STATUS_TAG)
     public void execute(String body) {
         log.info("mq中的合同状态信息：{}", body);
@@ -154,6 +157,8 @@ public class ElecContractStatusMqCommand {
     }
 
     // 合同状态为已完成后触发的后续操作
+    // 加锁避免重复回调
+    @MfLock(key = "#args[0].getLocalContractId()", prefix = contractSignedRedisKey)
     private void contractCompleted(ContractResultTopicDTO contractStatusInfo) {
         // 数据准备
         Result<ElecContractDTO> contractDTOResult = contractAggregateRootApi.getContractDTOByForeignNo(contractStatusInfo.getThirdPartContractId());
@@ -170,7 +175,8 @@ public class ElecContractStatusMqCommand {
         cmd.setContractForeignNo(contractStatusInfo.getThirdPartContractId());
         cmd.setContractId(Long.valueOf(contractStatusInfo.getLocalContractId()));
         cmd.setDocPdfUrlMap(contractStatusInfo.getDocUrlMapping());
-        contractAggregateRootApi.completed(cmd);
+        Result<Integer> completedResult = contractAggregateRootApi.completed(cmd);
+        ResultValidUtils.checkResultException(completedResult);
 
         List<String> serveNoList;
         if (DeliverTypeEnum.DELIVER.getCode() == contractDTO.getDeliverType()) {
