@@ -195,12 +195,6 @@ public class ElecContractStatusMqCommand {
         Result<Integer> recoveredResult = recoverVehicleAggregateRootApi.recovered(deliverDTO.getDeliverNo(), contractStatusInfo.getThirdPartContractId());
         ResultValidUtils.checkResultException(recoveredResult);
 
-        // 合同修改
-        ContractStatusChangeCmd cmd = new ContractStatusChangeCmd();
-        cmd.setContractForeignNo(contractStatusInfo.getThirdPartContractId());
-        Result<Integer> signingResult = contractAggregateRootApi.completed(cmd);
-        ResultValidUtils.checkResultException(signingResult);
-
         //更新车辆状态
         VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
         vehicleSaveCmd.setId(Collections.singletonList(deliverDTO.getCarId()));
