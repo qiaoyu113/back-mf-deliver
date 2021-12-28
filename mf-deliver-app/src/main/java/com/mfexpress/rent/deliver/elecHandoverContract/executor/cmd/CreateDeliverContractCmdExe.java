@@ -11,11 +11,13 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.tools.contract.MFContractTools;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
+import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
 import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
@@ -25,6 +27,7 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContra
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateDeliverContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
+import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.utils.CommonUtil;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
@@ -99,6 +102,9 @@ public class CreateDeliverContractCmdExe {
         }
         Map<String, Serve> serveMap = serveMapResult.getData();
 
+        // 交付单状态检查，交车电子合同签署状态应为0未签署，才能进行接下来的操作，如果检查
+        deliverCheck(serveNos);
+
         // 验车信息获取
         List<Integer> vehicleIds = deliverImgInfos.stream().map(DeliverImgInfo::getCarId).collect(Collectors.toList());
         Result<List<VehicleValidationFullInfoDTO>> fullInfoDTOSResult = vehicleValidationAggregateRootApi.getVehicleValidationFullInfoDTOSByIds(vehicleIds);
@@ -145,6 +151,16 @@ public class CreateDeliverContractCmdExe {
             syncServiceI.execOne(map);
         }
         return contractIdWithDocIds.getContractId().toString();
+    }
+
+    private void deliverCheck(List<String> serveNos) {
+        Result<Map<String, Deliver>> deliversResult = deliverAggregateRootApi.getDeliverByServeNoList(serveNos);
+        Map<String, Deliver> data = ResultDataUtils.getInstance(deliversResult).getDataOrException();
+        data.values().forEach(deliver -> {
+            if (DeliverContractStatusEnum.NOSIGN.getCode() != deliver.getDeliverContractStatus()) {
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
+            }
+        });
     }
 
     // 收集各种数据去创建电子交接单对象

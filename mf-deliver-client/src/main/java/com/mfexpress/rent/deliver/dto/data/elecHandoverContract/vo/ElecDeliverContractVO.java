@@ -41,4 +41,7 @@ public class ElecDeliverContractVO {
     @ApiModelProperty(value = "可重发短信的情况下，短信还剩多少秒可发送")
     private Integer smsCountDown;
 
+    @ApiModelProperty(value = "所属订单id")
+    private String orderId;
+
 }

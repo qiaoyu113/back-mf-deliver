@@ -1,31 +1,17 @@
 package com.mfexpress.rent.deliver.delivervehicle.executor;
 
-import cn.hutool.core.date.DateUtil;
-import com.alibaba.fastjson.JSON;
-import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
-import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleCmd;
-import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
-import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleImgCmd;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
-import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
-import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
-import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
-import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 
 @Component
 public class DeliverVehicleExe {
@@ -44,9 +30,9 @@ public class DeliverVehicleExe {
     private EsSyncHandlerI syncServiceI;
 
     /*@Resource
-    private MqTools mqTools;
+    private MqTools mqTools;*/
 
-    @Value("${rocketmq.listenEventTopic}")
+    /*@Value("${rocketmq.listenEventTopic}")
     private String event;*/
 
     public String execute(DeliverVehicleCmd deliverVehicleCmd) {
