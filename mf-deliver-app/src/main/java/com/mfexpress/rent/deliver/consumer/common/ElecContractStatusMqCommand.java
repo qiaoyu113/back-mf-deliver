@@ -14,7 +14,6 @@ import com.mfexpress.component.enums.contract.ContractStatusEnum;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessClass;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessMethod;
-import com.mfexpress.component.starter.tools.lock.MfLock;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
@@ -158,7 +157,6 @@ public class ElecContractStatusMqCommand {
 
     // 合同状态为已完成后触发的后续操作
     // 加锁避免重复回调
-    @MfLock(key = "#args[0].getLocalContractId()", prefix = contractSignedRedisKey)
     private void contractCompleted(ContractResultTopicDTO contractStatusInfo) {
         // 数据准备
         Result<ElecContractDTO> contractDTOResult = contractAggregateRootApi.getContractDTOByForeignNo(contractStatusInfo.getThirdPartContractId());
