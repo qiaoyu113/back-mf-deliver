@@ -211,7 +211,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         // 判断deliver中的合同状态，如果不是签署中状态，不可进行此操作
         Deliver deliver = deliverGateway.getDeliverByDeliverNo(deliverNo);
         if (DeliverContractStatusEnum.SIGNING.getCode() != deliver.getRecoverContractStatus()) {
-            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单当前状态不允许异常收车");
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单当前状态不允许收车");
         }
 
         // deliver 收车签署状态改为已完成，并且状态改为已收车
