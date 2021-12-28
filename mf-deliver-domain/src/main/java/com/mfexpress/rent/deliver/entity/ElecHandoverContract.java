@@ -159,9 +159,15 @@ public class ElecHandoverContract {
         if(null == contractPO){
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "获取电子交接单失败");
         }
-        if(ElecHandoverContractStatus.GENERATING.getCode() != contractPO.getStatus() && ElecHandoverContractStatus.SIGNING.getCode() != contractPO.getStatus()){
-            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "电子交接单状态异常");
+        if(ElecHandoverContractStatus.COMPLETED.getCode() == contractPO.getStatus()){
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "电子交接单状态已被签署，不可取消");
         }
+        if(ElecHandoverContractStatus.FAIL.getCode() == contractPO.getStatus()){
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "电子交接单已在失败状态，不可取消");
+        }
+        /*if(ElecHandoverContractStatus.GENERATING.getCode() != contractPO.getStatus() && ElecHandoverContractStatus.SIGNING.getCode() != contractPO.getStatus()){
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "电子交接单状态异常");
+        }*/
     }
 
     public ElectronicHandoverContractPO getContractPO() {
