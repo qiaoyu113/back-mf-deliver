@@ -5,24 +5,19 @@ import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.tools.redis.RedisTools;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.ElecHandoverContractStatus;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverInfo;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.qry.ContractQry;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.ElecDeliverContractVO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.GroupPhotoVO;
-import com.mfexpress.rent.deliver.utils.DeliverUtils;
-import com.mfexpress.rent.deliver.utils.FormatUtil;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.Date;
 import java.util.List;
 
 @Component
@@ -32,7 +27,7 @@ public class ContractDeliverQryExe {
     private ElecHandoverContractAggregateRootApi contractAggregateRootApi;
 
     @Resource
-    private RedisTools redisTools;
+    private ServeAggregateRootApi serveAggregateRootApi;
 
     public ElecDeliverContractVO execute(ContractQry qry, TokenInfo tokenInfo) {
         Result<ElecContractDTO> contractDTOResult = contractAggregateRootApi.getContractDTOByContractId(qry.getContractId());
@@ -54,6 +49,12 @@ public class ContractDeliverQryExe {
         contractVO.setDeliverInfo(deliverInfo);
         List<GroupPhotoVO> groupPhotoVOS = JSONUtil.toList(contractDTO.getPlateNumberWithImgs(), GroupPhotoVO.class);
         contractVO.setGroupPhotoVOS(groupPhotoVOS);
+        if(!groupPhotoVOS.isEmpty()){
+            // 补充订单id
+            Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(groupPhotoVOS.get(0).getServeNo());
+            ServeDTO serveDTO = ResultDataUtils.getInstance(serveDTOResult).getDataOrException();
+            contractVO.setOrderId(serveDTO.getOrderId().toString());
+        }
 
         // 短信是否可发送判断，目前是一天可以发一条
         // 签署中的合同才可发送短信

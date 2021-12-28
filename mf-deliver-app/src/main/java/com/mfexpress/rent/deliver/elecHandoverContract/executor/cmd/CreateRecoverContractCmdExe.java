@@ -14,6 +14,7 @@ import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
+import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
 import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
@@ -98,6 +99,9 @@ public class CreateRecoverContractCmdExe {
         }
         ServeDTO serveDTO = serveDTOResult.getData();
 
+        // 交付单状态检查，收车电子合同签署状态应为0未签署，才能进行接下来的操作，如果检查
+        recoverCheck(serveDTO.getServeNo());
+
         Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(recoverInfo.getServeNo());
         if(ResultErrorEnum.SUCCESSED.getCode() != deliverDTOResult.getCode() || null == deliverDTOResult.getData()){
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单查询失败");
@@ -142,6 +146,14 @@ public class CreateRecoverContractCmdExe {
         }
 
         return contractIdWithDocIds.getContractId().toString();
+    }
+
+    private void recoverCheck(String serveNo) {
+        Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(serveNo);
+        DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrException();
+        if(DeliverContractStatusEnum.NOSIGN.getCode() != deliverDTO.getRecoverContractStatus()){
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
+        }
     }
 
     private Result<Boolean> createElecContract(CreateRecoverContractFrontCmd cmd, ContractIdWithDocIds contractIdWithDocIds, List<ContractDocumentInfoDTO> docInfos) {

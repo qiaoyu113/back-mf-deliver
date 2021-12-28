@@ -30,6 +30,7 @@ public class RecoverAbnormalQryExe {
         BeanUtils.copyProperties(recoverAbnormalDTO, recoverAbnormalVO);
         recoverAbnormalVO.setReason(recoverAbnormalDTO.getCause());
         recoverAbnormalVO.setImgUrls(JSONUtil.toList(recoverAbnormalDTO.getImgUrl(), String.class));
+        recoverAbnormalVO.setRecoverTime(recoverAbnormalDTO.getCreateTime());
         return recoverAbnormalVO;
     }
 }
