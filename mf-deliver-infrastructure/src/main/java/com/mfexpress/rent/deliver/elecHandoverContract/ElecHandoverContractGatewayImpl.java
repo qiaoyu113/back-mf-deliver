@@ -8,10 +8,12 @@ import com.mfexpress.component.utils.util.MyBatisUtils;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.ElecHandoverContractStatus;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.po.ElectronicHandoverContractPO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.qry.ContractListQry;
 import com.mfexpress.rent.deliver.elecHandoverContract.repository.ElecHandoverContractMapper;
 import com.mfexpress.rent.deliver.gateway.ElecHandoverContractGateway;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 import tk.mybatis.mapper.entity.Example;
 
@@ -121,4 +123,31 @@ public class ElecHandoverContractGatewayImpl implements ElecHandoverContractGate
         criteria.andNotEqualTo("status", ElecHandoverContractStatus.FAIL.getCode());
         return contractMapper.selectOneByExample(example);
     }
+
+    @Override
+    public List<ElecContractDTO> getContractDTOSByQry(ContractListQry qry) {
+        Example example = new Example(ElectronicHandoverContractPO.class);
+        example.orderBy("updateTime").desc();
+        Example.Criteria criteriaA = example.createCriteria();
+        criteriaA.andEqualTo("orderId", qry.getOrderId());
+        criteriaA.andEqualTo("deliverType", qry.getDeliverType());
+
+        Example.Criteria criteriaB = example.createCriteria();
+        criteriaB.andCondition("status = ".concat(String.valueOf(ElecHandoverContractStatus.GENERATING.getCode()).concat(" or status = ").concat(String.valueOf(ElecHandoverContractStatus.SIGNING.getCode())))
+                .concat(" or (status = ".concat(String.valueOf(ElecHandoverContractStatus.FAIL.getCode()))
+                        .concat(" and failure_reason in (").concat(String.valueOf(ContractFailureReasonEnum.CREATE_FAIL.getCode())).concat(",").concat(String.valueOf(ContractFailureReasonEnum.OVERDUE.getCode())).concat(")")
+                        .concat(" and is_show = ").concat(String.valueOf(JudgeEnum.YES.getCode()))
+                        .concat(")")));
+
+        example.and(criteriaB);
+
+        List<ElectronicHandoverContractPO> contractPOS = contractMapper.selectByExample(example);
+        List<ElecContractDTO> collect = contractPOS.stream().map(contractPO -> {
+            ElecContractDTO contractDTO = new ElecContractDTO();
+            BeanUtils.copyProperties(contractPO, contractDTO);
+            return contractDTO;
+        }).collect(Collectors.toList());
+        return collect;
+    }
+
 }

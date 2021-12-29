@@ -128,19 +128,7 @@ public class RecoverAbnormalCmdExe {
             log.error("异常收车时，保存费用到计费域失败，serveNo：{}", cmd.getServeNo());
         }
 
-        // 创建收车日报
-        List<DailyDTO> dailyDTOList = new LinkedList<>();
-        DailyDTO dailyDTO = new DailyDTO();
-        dailyDTO.setCustomerId(serveDTO.getCustomerId());
-        dailyDTO.setStatus(JudgeEnum.YES.getCode());
-        dailyDTO.setRentDate(DateUtil.format(cmd.getRecoverTime(), "yyyy-MM-dd"));
-        dailyDTO.setServeNo(cmd.getServeNo());
-        dailyDTO.setDelFlag(JudgeEnum.NO.getCode());
-        dailyDTOList.add(dailyDTO);
-        Result<String> createDailyResult = dailyAggregateRootApi.createDaily(dailyDTOList);
-        if(ResultErrorEnum.SUCCESSED.getCode() != createDailyResult.getCode()){
-            log.error("异常收车时，保存收车日报失败，serveNo：{}", cmd.getServeNo());
-        }
+        // 缺少收车日报mq逻辑
 
         //同步
         Map<String, String> map = new HashMap<>();

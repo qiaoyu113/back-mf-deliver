@@ -1,9 +1,15 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
+import cn.hutool.json.JSONUtil;
+import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
-import com.mfexpress.rent.deliver.constant.DeliverEnum;
+import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.deliver.constant.*;
+import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.recovervehicle.RecoverQryServiceI;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -13,13 +19,18 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class RecoverTaskListAllQryExe implements RecoverQryServiceI {
+
     @Resource
     private RecoverEsDataQryExe recoverEsDataQryExe;
+
+    @Resource
+    private ElecHandoverContractAggregateRootApi contractAggregateRootApi;
 
     @Override
     public RecoverTaskListVO execute(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo) {
@@ -33,6 +44,38 @@ public class RecoverTaskListAllQryExe implements RecoverQryServiceI {
         FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
 
         List<FieldSortBuilder> fieldSortBuilderList = Arrays.asList(sortSortBuilder, updateTimeSortBuilder);
-        return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
+        RecoverTaskListVO recoverTaskListVO = recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
+
+        List<String> deliverNos = new ArrayList<>();
+        List<RecoverVehicleVO> recoverVehicleVOList = recoverTaskListVO.getRecoverVehicleVOList();
+        recoverVehicleVOList.forEach(recoverVehicleVO -> {
+            if (JudgeEnum.YES.getCode().equals(recoverVehicleVO.getRecoverAbnormalFlag())) {
+                recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.ABNORMAL.getName());
+            } else if(DeliverContractStatusEnum.NOSIGN.getCode() != recoverVehicleVO.getRecoverContractStatus()){
+                recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
+            }
+            if (null != recoverVehicleVO.getRecoverContractStatus() && (DeliverContractStatusEnum.GENERATING.getCode() == recoverVehicleVO.getRecoverContractStatus() || DeliverContractStatusEnum.SIGNING.getCode() == recoverVehicleVO.getRecoverContractStatus())) {
+                deliverNos.add(recoverVehicleVO.getDeliverNo());
+            }
+        });
+
+        if(!deliverNos.isEmpty()){
+            Result<List<ElecContractDTO>> contractDTOSResult = contractAggregateRootApi.getContractDTOSByDeliverNosAndDeliverType(deliverNos, DeliverTypeEnum.RECOVER.getCode());
+            if(ResultErrorEnum.SUCCESSED.getCode() == contractDTOSResult.getCode() && null != contractDTOSResult.getData() && !contractDTOSResult.getData().isEmpty()){
+                Map<String, ElecContractDTO> contractDTOMap = contractDTOSResult.getData().stream().collect(Collectors.toMap(ElecContractDTO::getDeliverNos, Function.identity(), (v1, v2) -> v1));
+                recoverVehicleVOList.forEach(recoverVehicleVO -> {
+                    String deliverNo = recoverVehicleVO.getDeliverNo();
+                    ElecContractDTO elecContractDTO = contractDTOMap.get(JSONUtil.toJsonStr(Collections.singletonList(deliverNo)));
+                    if(null != elecContractDTO){
+                        recoverVehicleVO.setElecContractId(elecContractDTO.getContractId().toString());
+                        recoverVehicleVO.setElecContractStatus(elecContractDTO.getStatus());
+                        recoverVehicleVO.setElecContractFailureReason(elecContractDTO.getFailureReason());
+                    }
+                    // 在签署中的数据收车类型必然为正常收车
+                    recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
+                });
+            }
+        }
+        return recoverTaskListVO;
     }
 }

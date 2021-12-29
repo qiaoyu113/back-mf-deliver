@@ -1,6 +1,8 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.constant.RecoverVehicleType;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
@@ -31,6 +33,14 @@ public class RecoverTaskListCompletedQryExe implements RecoverQryServiceI {
 
         fieldSortBuilderList.add(timeSortBuilder);
         fieldSortBuilderList.add(updateTimeSortBuilder);
-        return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
+        RecoverTaskListVO recoverTaskListVO = recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
+        recoverTaskListVO.getRecoverVehicleVOList().forEach(recoverVehicleVO -> {
+            if (JudgeEnum.YES.getCode().equals(recoverVehicleVO.getRecoverAbnormalFlag())) {
+                recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.ABNORMAL.getName());
+            } else {
+                recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
+            }
+        });
+        return recoverTaskListVO;
     }
 }

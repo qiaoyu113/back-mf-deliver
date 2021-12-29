@@ -59,6 +59,9 @@ public class ElecContractDTO {
     private Integer failureReason;
 
     @ApiModelProperty(value = "")
+    private String failureMsg;
+
+    @ApiModelProperty(value = "")
     private Integer orgId;
 
     @ApiModelProperty(value = "")

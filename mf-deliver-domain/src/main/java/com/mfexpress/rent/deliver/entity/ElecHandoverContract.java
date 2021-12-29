@@ -66,6 +66,9 @@ public class ElecHandoverContract {
     // 失败原因
     private Integer failureReason;
 
+    // 具体的失败原因描述
+    private String failureMsg;
+
     // 所属订单
     private Long orderId;
 
@@ -140,6 +143,7 @@ public class ElecHandoverContract {
         this.contractForeignNo = cmd.getContractForeignNo();
         this.status = status;
         this.failureReason = cmd.getFailureReason();
+        this.failureMsg = cmd.getFailureMsg();
     }
 
     // 用户确认合同过期命令的初始化
@@ -285,10 +289,11 @@ public class ElecHandoverContract {
     // 接收到合同失败命令后的检查操作
     public void failCheck() {
         ElectronicHandoverContractPO contractQryPO = new ElectronicHandoverContractPO();
-        contractQryPO.setContractForeignNo(contractForeignNo);
+        contractQryPO.setContractId(contractId);
         contractPO = elecHandoverContractGateway.getContractByContract(contractQryPO);
+        // SIGNING 和 GENERATING 都可以被改为失败，判断条件需要改变吗？待确认
         if(null == contractPO || (ElecHandoverContractStatus.SIGNING.getCode() != contractPO.getStatus() && ElecHandoverContractStatus.GENERATING.getCode() != contractPO.getStatus())){
-            log.error("接收到合同失败命令后的检查操作，合同不存在，合同id：{}", contractForeignNo);
+            log.error("接收到合同失败命令后的检查操作，合同不存在或合同状态不在生成中或签署中，合同id：{}", contractForeignNo);
             throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "修改合同状态失败");
         }
     }
@@ -296,14 +301,15 @@ public class ElecHandoverContract {
     // 更改合同状态为失败的操作
     public void fail() {
         ElectronicHandoverContractPO contractPOToUpdate = new ElectronicHandoverContractPO();
-        contractPOToUpdate.setContractForeignNo(contractForeignNo);
+        contractPOToUpdate.setContractId(contractId);
         contractPOToUpdate.setStatus(status);
         contractPOToUpdate.setFailureReason(failureReason);
+        contractPOToUpdate.setFailureMsg(failureMsg);
         // 失败原因为过期或者创建失败，合同仍需展示
         if(ContractFailureReasonEnum.CREATE_FAIL.getCode() == failureReason || ContractFailureReasonEnum.OVERDUE.getCode() == failureReason){
             contractPOToUpdate.setIsShow(JudgeEnum.YES.getCode());
         }
-        elecHandoverContractGateway.updateContractByContractForeignNo(contractPOToUpdate);
+        elecHandoverContractGateway.updateContractByContractId(contractPOToUpdate);
         // 电子交接单也需置为失效状态
         ElectronicHandoverDocPO docPO = new ElectronicHandoverDocPO();
         docPO.setContractId(contractPO.getContractId());
