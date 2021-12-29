@@ -103,7 +103,10 @@ public class ServeRecoverDetailQryExe {
         if ((ServeEnum.DELIVER.getCode().equals(serveDTO.getStatus()) || ServeEnum.REPAIR.getCode().equals(serveDTO.getStatus())) && DeliverEnum.IS_RECOVER.getCode().equals(deliverDTO.getDeliverStatus())) {
             serveRecoverDetailVO.setOrderVO(getOrderVO(serveDTO));
             serveRecoverDetailVO.setVehicleVO(getVehicleVO(serveDTO, deliverDTO, recoverVehicleDTO));
-            if (DeliverContractStatusEnum.SIGNING.getCode() == deliverDTO.getRecoverContractStatus()) {
+            if (JudgeEnum.YES.getCode().equals(deliverDTO.getIsCheck())) {
+                serveRecoverDetailVO.setVehicleValidationVO(getVehicleValidationVO());
+            }
+            if (DeliverContractStatusEnum.GENERATING.getCode() == deliverDTO.getRecoverContractStatus() || DeliverContractStatusEnum.SIGNING.getCode() == deliverDTO.getRecoverContractStatus()) {
                 // recover_contract_status 属性为1或2，状态为合同生成中/签署中
                 // 需补充收车单信息
                 // 从合同中取出收车单信息
@@ -180,7 +183,6 @@ public class ServeRecoverDetailQryExe {
         recoverVehicleVO.setElecContractId(contractDTO.getContractId().toString());
         recoverVehicleVO.setElecContractStatus(contractDTO.getStatus());
         recoverVehicleVO.setElecContractFailureReason(contractDTO.getFailureReason());
-        recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.getEnumValue(deliverDTO.getRecoverAbnormalFlag()));
         Result<WarehouseDto> wareHouseResult = warehouseAggregateRootApi.getWarehouseById(contractDTO.getRecoverWareHouseId());
         if (wareHouseResult.getData() != null) {
             recoverVehicleVO.setWareHouseDisplay(wareHouseResult.getData().getName());
@@ -190,7 +192,6 @@ public class ServeRecoverDetailQryExe {
             return null;
         }
         recoverVehicleVO.setImgUrl(deliverImgInfos.get(0).getImgUrl());
-        recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
         return recoverVehicleVO;
     }
 

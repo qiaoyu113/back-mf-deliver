@@ -51,7 +51,7 @@ public class RecoverTaskListAllQryExe implements RecoverQryServiceI {
         recoverVehicleVOList.forEach(recoverVehicleVO -> {
             if (JudgeEnum.YES.getCode().equals(recoverVehicleVO.getRecoverAbnormalFlag())) {
                 recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.ABNORMAL.getName());
-            } else if(DeliverContractStatusEnum.NOSIGN.getCode() != recoverVehicleVO.getRecoverContractStatus()){
+            } else if(DeliverContractStatusEnum.COMPLETED.getCode() == recoverVehicleVO.getRecoverContractStatus()){
                 recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
             }
             if (null != recoverVehicleVO.getRecoverContractStatus() && (DeliverContractStatusEnum.GENERATING.getCode() == recoverVehicleVO.getRecoverContractStatus() || DeliverContractStatusEnum.SIGNING.getCode() == recoverVehicleVO.getRecoverContractStatus())) {
@@ -71,8 +71,6 @@ public class RecoverTaskListAllQryExe implements RecoverQryServiceI {
                         recoverVehicleVO.setElecContractStatus(elecContractDTO.getStatus());
                         recoverVehicleVO.setElecContractFailureReason(elecContractDTO.getFailureReason());
                     }
-                    // 在签署中的数据收车类型必然为正常收车
-                    recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
                 });
             }
         }
