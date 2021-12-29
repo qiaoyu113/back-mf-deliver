@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
+import java.util.Map;
 
 @FeignClient(name = "mf-deliver", path = "/domain/deliver/v3/elecHandoverContract")
 public interface ElecHandoverContractAggregateRootApi {
@@ -63,4 +64,6 @@ public interface ElecHandoverContractAggregateRootApi {
     @PostMapping("/getDocDTOByDeliverNoAndDeliverType")
     Result<ElecDocDTO> getDocDTOByDeliverNoAndDeliverType(@RequestParam("deliverNo") String deliverNo, @RequestParam("deliverType") Integer deliverType);
 
+    @PostMapping("/getContractIdMapByQry")
+    Result<Map<String, String>> getContractIdMapByQry(@RequestBody ContractListQry contractListQry);
 }

@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.gateway;
 
 import com.mfexpress.component.response.PagePagination;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.po.ElectronicHandoverContractPO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.qry.ContractListQry;
 
@@ -25,4 +26,6 @@ public interface ElecHandoverContractGateway {
     ElectronicHandoverContractPO getContractByForeignNo(String foreignNo);
 
     ElectronicHandoverContractPO getContractDTOByDeliverNoAndDeliverType(String deliverNo, Integer deliverType);
+
+    List<ElecContractDTO> getContractDTOSByQry(ContractListQry qry);
 }

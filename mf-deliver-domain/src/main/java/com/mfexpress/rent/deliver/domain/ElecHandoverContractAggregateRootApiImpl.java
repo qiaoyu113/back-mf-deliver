@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.domain;
 
+import cn.hutool.json.JSONUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -295,6 +297,26 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
         ElecDocDTO elecDocDTO = new ElecDocDTO();
         BeanUtils.copyProperties(docPO, elecDocDTO);
         return Result.getInstance(elecDocDTO).success();
+    }
+
+    @Override
+    @PostMapping("/getContractIdMapByQry")
+    @PrintParam
+    public Result<Map<String, String>> getContractIdMapByQry(@RequestBody ContractListQry qry) {
+        List<ElecContractDTO> contractDTOS = contractGateway.getContractDTOSByQry(qry);
+        Map<String, String> allContractIdMap = new HashMap<>();
+        contractDTOS.forEach(contractDTO -> {
+            List<String> deliverNos = JSONUtil.toList(contractDTO.getDeliverNos(), String.class);
+            deliverNos.forEach(deliverNo -> {
+                allContractIdMap.put(deliverNo, contractDTO.getContractId().toString());
+            });
+        });
+        Map<String, String> neededContractIdMap = new HashMap<>();
+        List<String> deliverNos = qry.getDeliverNos();
+        deliverNos.forEach(deliverNo -> {
+            neededContractIdMap.put(deliverNo, allContractIdMap.get(deliverNo));
+        });
+        return Result.getInstance(neededContractIdMap).success();
     }
 
 }

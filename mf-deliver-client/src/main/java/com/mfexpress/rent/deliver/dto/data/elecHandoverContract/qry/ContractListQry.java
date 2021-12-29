@@ -7,6 +7,7 @@ import lombok.Data;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @ApiModel(value = "ContractListQry 电子交接合同列表查询命令")
 @Data
@@ -29,5 +30,8 @@ public class ContractListQry {
     @NotNull(message = "每页多少条不能为空")
     @Min(value = 1, message = "分页参数错误")
     private Integer limit;
+
+    @ApiModelProperty(value = "交付单编号列表")
+    private List<String> deliverNos;
 
 }

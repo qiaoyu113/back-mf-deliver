@@ -68,6 +68,9 @@ public class ElectronicHandoverContractPO {
     @Column(name = "failure_reason")
     private Integer failureReason;
 
+    @Column(name = "failure_msg")
+    private String failureMsg;
+
     @Column(name = "order_id")
     private Long orderId;
 

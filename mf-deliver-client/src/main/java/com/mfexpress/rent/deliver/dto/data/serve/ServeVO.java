@@ -75,6 +75,9 @@ public class ServeVO {
 
     @ApiModelProperty(value = "异常收车标志位")
     private Integer recoverAbnormalFlag;
+
+    @ApiModelProperty(value = "所属电子合同id")
+    private String elecContractId;
 }
 
 

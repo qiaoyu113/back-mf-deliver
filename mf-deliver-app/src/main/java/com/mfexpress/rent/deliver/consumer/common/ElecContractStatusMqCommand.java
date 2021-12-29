@@ -35,11 +35,14 @@ import com.mfexpress.rent.vehicle.data.dto.warehouse.WarehouseDto;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.integration.redis.util.RedisLockRegistry;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
 
 @Component
 @MFMqCommonProcessClass(topicKey = "rocketmq.listenContractTopic")
@@ -87,6 +90,9 @@ public class ElecContractStatusMqCommand {
 
     private final String contractSignedRedisKey = "lock:mf-deliver:contractSigned:contractId:";
 
+    @Resource
+    private RedisLockRegistry redisLockRegistry;
+
     @MFMqCommonProcessMethod(tag = Constants.THIRD_PARTY_ELEC_CONTRACT_STATUS_TAG)
     public void execute(String body) {
         log.info("mq中的合同状态信息：{}", body);
@@ -102,11 +108,18 @@ public class ElecContractStatusMqCommand {
             contractSigning(contractStatusInfo);
         }else if(ContractStatusEnum.COMPLETE.getValue().equals(contractStatusInfo.getStatus())){
             // 合同状态改为完成
-            contractCompleted(contractStatusInfo);
+            // 加锁避免重复回调
+            Lock obtain = this.redisLockRegistry.obtain(StringUtils.join(contractSignedRedisKey, ":", contractStatusInfo.getThirdPartContractId()));
+            obtain.lock();
+            try{
+                contractCompleted(contractStatusInfo);
+            }finally {
+                obtain.unlock();
+            }
         }else if(ContractStatusEnum.EXPIRED.getValue().equals(contractStatusInfo.getStatus())){
             // 合同状态改为失败，失败原因为过期；不需要更新交付单状态，因为失败原因为过期的话需要用户确认后才会去改变交付单的状态
             ContractStatusChangeCmd cmd = new ContractStatusChangeCmd();
-            cmd.setContractForeignNo(contractStatusInfo.getThirdPartContractId());
+            cmd.setContractId(Long.valueOf(contractStatusInfo.getLocalContractId()));
             cmd.setFailureReason(ContractFailureReasonEnum.OVERDUE.getCode());
             contractAggregateRootApi.fail(cmd);
         }else if(ContractStatusEnum.FAIL.getValue().equals(contractStatusInfo.getStatus())){
@@ -116,17 +129,10 @@ public class ElecContractStatusMqCommand {
     }
 
     private void contractFail(ContractResultTopicDTO contractStatusInfo) {
-        Long contractId = Long.valueOf(contractStatusInfo.getLocalContractId());
-        Result<ElecContractDTO> contractDTOResult = contractAggregateRootApi.getContractDTOByContractId(contractId);
-        ElecContractDTO contractDTO = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
-        if(null == contractDTO){
-            log.error("收车电子合同创建完成时，根据本地合同id查询合同失败，本地合同id：{}", contractId);
-            return;
-        }
-
         ContractStatusChangeCmd cmd = new ContractStatusChangeCmd();
-        cmd.setContractForeignNo(contractStatusInfo.getThirdPartContractId());
+        cmd.setContractId(Long.valueOf(contractStatusInfo.getLocalContractId()));
         cmd.setFailureReason(ContractFailureReasonEnum.CREATE_FAIL.getCode());
+        cmd.setFailureMsg(contractStatusInfo.getMsg());
         Result<Integer> failResult = contractAggregateRootApi.fail(cmd);
         ResultValidUtils.checkResultException(failResult);
 
@@ -156,7 +162,6 @@ public class ElecContractStatusMqCommand {
     }
 
     // 合同状态为已完成后触发的后续操作
-    // 加锁避免重复回调
     private void contractCompleted(ContractResultTopicDTO contractStatusInfo) {
         // 数据准备
         Result<ElecContractDTO> contractDTOResult = contractAggregateRootApi.getContractDTOByForeignNo(contractStatusInfo.getThirdPartContractId());
@@ -229,20 +234,6 @@ public class ElecContractStatusMqCommand {
             log.error("收车电子合同签署完成时，保存费用到计费域失败，serveNo：{}", serveDTO.getServeNo());
         }
 
-        // 创建收车日报
-        List<DailyDTO> dailyDTOList = new LinkedList<>();
-        DailyDTO dailyDTO = new DailyDTO();
-        dailyDTO.setCustomerId(serveDTO.getCustomerId());
-        dailyDTO.setStatus(JudgeEnum.YES.getCode());
-        dailyDTO.setRentDate(DateUtil.format(contractDTO.getRecoverVehicleTime(), "yyyy-MM-dd"));
-        dailyDTO.setServeNo(serveDTO.getServeNo());
-        dailyDTO.setDelFlag(JudgeEnum.NO.getCode());
-        dailyDTOList.add(dailyDTO);
-        Result<String> createDailyResult = dailyAggregateRootApi.createDaily(dailyDTOList);
-        if(ResultErrorEnum.SUCCESSED.getCode() != createDailyResult.getCode()){
-            log.error("收车电子合同签署完成时，保存收车日报失败，serveNo：{}", serveDTO.getServeNo());
-        }
-
         DailyOperate operate = new DailyOperate();
         operate.setServeNo(serveDTO.getServeNo());
         operate.setCustomerId(serveDTO.getCustomerId());
@@ -265,15 +256,6 @@ public class ElecContractStatusMqCommand {
         List<Integer> carIdList = new LinkedList<>();
         deliverImgInfos.forEach(deliverImgInfo -> {
             carIdList.add(deliverImgInfo.getCarId());
-            DailyDTO dailyDTO = new DailyDTO();
-            dailyDTO.setServeNo(deliverImgInfo.getServeNo());
-            dailyDTO.setDelFlag(JudgeEnum.NO.getCode());
-            // 同一个订单下的服务单的客户都是一样的
-            dailyDTO.setCustomerId(serveDTO.getCustomerId());
-            dailyDTO.setRentDate(DateUtil.format(contractDTO.getDeliverVehicleTime(), "yyyy-MM-dd"));
-            dailyDTO.setStatus(JudgeEnum.NO.getCode());
-            dailyDTOList.add(dailyDTO);
-            serveNoList.add(deliverImgInfo.getServeNo());
 
             //发车操作mq触发计费
             DailyOperate operate = new DailyOperate();
@@ -297,9 +279,6 @@ public class ElecContractStatusMqCommand {
         if(ResultErrorEnum.SUCCESSED.getCode() != vehicleResult.getCode()){
             log.error("发车电子合同签署完成时，更改车辆状态失败。车辆id：{}", carIdList);
         }
-
-        // 生成发车租赁日报
-        dailyAggregateRootApi.createDaily(dailyDTOList);
 
         return serveNoList;
     }

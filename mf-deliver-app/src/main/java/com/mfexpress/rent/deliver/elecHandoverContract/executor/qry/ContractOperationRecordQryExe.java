@@ -60,6 +60,9 @@ public class ContractOperationRecordQryExe {
             ElecContractOperationRecordVO failRecord = ElecContractOperationRecordVO.builder().operationType(ElecContractOperationTypeEnum.FAIL.getCode())
                     .operationTypeDisplay(ElecContractOperationTypeEnum.FAIL.getName())
                     .operationTime(elecContractDTO.getUpdateTime()).build();
+            if(!StringUtils.isEmpty(elecContractDTO.getFailureMsg())){
+                failRecord.setOperationTypeDisplay(failRecord.getOperationTypeDisplay().concat("（").concat(elecContractDTO.getFailureMsg()).concat("）"));
+            }
             recordVOS.add(failRecord);
             recordWithSmsInfoVO.setFailureReason(ContractFailureReasonEnum.CREATE_FAIL.getCode());
         } else {
