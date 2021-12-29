@@ -7,7 +7,6 @@ import com.mfexpress.rent.deliver.deliver.repository.DeliverMapper;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import org.springframework.stereotype.Component;
-import tk.mybatis.mapper.entity.Condition;
 import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
@@ -129,6 +128,17 @@ public class DeliverGatewayImpl implements DeliverGateway {
         Example example = new Example(Deliver.class);
         example.createCriteria().andEqualTo("deliverNo", deliverNo).andEqualTo("status", ValidStatusEnum.VALID.getCode());
         return deliverMapper.selectOneByExample(example);
+    }
+
+    @Override
+    public List<Deliver> getDeliverByCarId(Integer carId) {
+        Example example = new Example(Deliver.class);
+        example.createCriteria()
+                .andEqualTo("carId",carId);
+        example.setOrderByClause("create_time desc");
+        return deliverMapper.selectByCondition(example);
+
+
     }
 
 }

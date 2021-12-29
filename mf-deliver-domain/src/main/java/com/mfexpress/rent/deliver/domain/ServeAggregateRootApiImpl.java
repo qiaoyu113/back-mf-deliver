@@ -2,6 +2,8 @@ package com.mfexpress.rent.deliver.domain;
 
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.collection.CollectionUtil;
 import com.github.pagehelper.PageHelper;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.log.PrintParam;
@@ -385,6 +387,18 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         }
 
         return Result.getInstance(newServeNo).success();
+    }
+
+    @Override
+    @PostMapping("/getServeListByOrderIds")
+    @PrintParam
+    public Result<List<ServeDTO>> getServeListByOrderIds(@RequestBody List<Long> orderIds) {
+        List<Serve> serveListByOrderIds = serveGateway.getServeListByOrderIds(orderIds);
+        if (CollectionUtil.isEmpty(serveListByOrderIds)){
+            return Result.getInstance((List<ServeDTO>)null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+        }
+        List<ServeDTO> serveDTOS = BeanUtil.copyToList(serveListByOrderIds, ServeDTO.class, CopyOptions.create());
+        return Result.getInstance(serveDTOS).success();
     }
 
 }

@@ -69,4 +69,8 @@ public interface ServeAggregateRootApi {
     @PostMapping("/addServeForReplaceVehicle")
     Result<String> addServeForReplaceVehicle(@RequestBody ServeReplaceVehicleAddDTO serveAddDTO);
 
+    @PostMapping("/getServeListByOrderIds")
+    Result<List<ServeDTO>> getServeListByOrderIds(@RequestBody List<Long> orderIds);
+
+
 }

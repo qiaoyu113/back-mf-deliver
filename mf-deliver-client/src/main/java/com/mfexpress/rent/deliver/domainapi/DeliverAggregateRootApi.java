@@ -84,4 +84,8 @@ public interface DeliverAggregateRootApi {
 
     @PostMapping("/contractGenerating")
     Result<Integer> contractGenerating(@RequestBody DeliverContractGeneratingCmd cmd);
+
+    @PostMapping("/getLastDeliverByCarId")
+    Result<DeliverDTO> getLastDeliverByCarId(@RequestParam("carId") Integer carId);
+
 }

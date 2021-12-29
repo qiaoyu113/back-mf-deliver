@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.domain;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.json.JSONUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
@@ -409,6 +410,17 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
             deliver.setInsuranceEndTime(null);
         }
         BeanUtils.copyProperties(deliver, deliverDTO);
+        return Result.getInstance(deliverDTO).success();
+    }
+
+    @Override
+    public Result<DeliverDTO> getLastDeliverByCarId(@RequestParam("carId") Integer carId) {
+        List<Deliver> deliverByCarId = deliverGateway.getDeliverByCarId(carId);
+        if (CollectionUtil.isEmpty(deliverByCarId)){
+            return Result.getInstance((DeliverDTO)null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+        }
+        DeliverDTO deliverDTO = new DeliverDTO();
+        BeanUtils.copyProperties(deliverByCarId.get(0), deliverDTO);
         return Result.getInstance(deliverDTO).success();
     }
 
