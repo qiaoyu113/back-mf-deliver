@@ -99,6 +99,14 @@ public class CreateRecoverContractCmdExe {
         }
         ServeDTO serveDTO = serveDTOResult.getData();
 
+        ReviewOrderQry qry = new ReviewOrderQry();
+        qry.setId(serveDTO.getOrderId().toString());
+        Result<OrderDTO> orderDTOResult = orderAggregateRootApi.getOrderInfo(qry);
+        OrderDTO orderDTO = ResultDataUtils.getInstance(orderDTOResult).getDataOrException();
+        if(null == orderDTO){
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "订单查询失败");
+        }
+
         // 交付单状态检查，收车电子合同签署状态应为0未签署，才能进行接下来的操作，如果检查
         recoverCheck(serveDTO.getServeNo());
 
@@ -125,7 +133,7 @@ public class CreateRecoverContractCmdExe {
         ContractIdWithDocIds contractIdWithDocIds = createContractWithDocInLocal(cmd, tokenInfo, serveDTO.getOrgId());
 
         // 访问契约锁域创建合同
-        Result<Boolean> createElecContractResult = createElecContract(cmd, contractIdWithDocIds, docInfos);
+        Result<Boolean> createElecContractResult = createElecContract(cmd, contractIdWithDocIds, docInfos, orderDTO);
         if(ResultErrorEnum.SUCCESSED.getCode() != createElecContractResult.getCode() || null == createElecContractResult.getData()){
             log.error("创建合同时调用契约锁域失败，返回msg：{}", createElecContractResult.getMsg());
             // 调用契约锁失败还得将本地创建的合同置为无效
@@ -156,7 +164,7 @@ public class CreateRecoverContractCmdExe {
         }
     }
 
-    private Result<Boolean> createElecContract(CreateRecoverContractFrontCmd cmd, ContractIdWithDocIds contractIdWithDocIds, List<ContractDocumentInfoDTO> docInfos) {
+    private Result<Boolean> createElecContract(CreateRecoverContractFrontCmd cmd, ContractIdWithDocIds contractIdWithDocIds, List<ContractDocumentInfoDTO> docInfos, OrderDTO orderDTO) {
         // 再调用契约锁域创建合同
         docInfos.forEach(docInfo -> {
             docInfo.setType(DeliverTypeEnum.RECOVER.getCode());
@@ -168,6 +176,7 @@ public class CreateRecoverContractCmdExe {
         contractDocumentDTO.setPhone(cmd.getRecoverInfo().getContactsPhone());
         contractDocumentDTO.setDocumentInfoDTOList(docInfos);
         contractDocumentDTO.setType(ContractModeEnum.DELIVER.getName());
+        contractDocumentDTO.setOrderContractId(orderDTO.getContractCode());
 
         return contractTools.create(contractDocumentDTO);
     }
