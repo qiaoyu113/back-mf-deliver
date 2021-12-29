@@ -30,4 +30,7 @@ public interface DeliverGateway {
     Deliver getDeliverByDeliverNo(String deliverNo);
 
     List<Deliver> getDeliverByDeliverNoList(List<String> deliverNos);
+
+    List<Deliver> getDeliverByCarId(Integer carId);
+
 }
