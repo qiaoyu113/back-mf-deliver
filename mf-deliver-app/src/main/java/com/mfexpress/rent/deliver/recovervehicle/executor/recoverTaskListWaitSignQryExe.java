@@ -70,8 +70,6 @@ public class recoverTaskListWaitSignQryExe implements RecoverQryServiceI {
                     recoverVehicleVO.setElecContractStatus(elecContractDTO.getStatus());
                     recoverVehicleVO.setElecContractFailureReason(elecContractDTO.getFailureReason());
                 }
-                // 在签署中的数据收车类型必然为正常收车
-                recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
             });
         }
         return recoverTaskListVO;

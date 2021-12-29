@@ -102,6 +102,15 @@ public class CreateDeliverContractCmdExe {
         }
         Map<String, Serve> serveMap = serveMapResult.getData();
 
+        ReviewOrderQry qry = new ReviewOrderQry();
+        Long orderId = serveMap.get(deliverImgInfos.get(0).getServeNo()).getOrderId();
+        qry.setId(orderId.toString());
+        Result<OrderDTO> orderDTOResult = orderAggregateRootApi.getOrderInfo(qry);
+        OrderDTO orderDTO = ResultDataUtils.getInstance(orderDTOResult).getDataOrException();
+        if (null == orderDTO) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "订单查询失败");
+        }
+
         // 交付单状态检查，交车电子合同签署状态应为0未签署，才能进行接下来的操作，如果检查
         deliverCheck(serveNos);
 
@@ -125,7 +134,7 @@ public class CreateDeliverContractCmdExe {
         ContractIdWithDocIds contractIdWithDocIds = createContractWithDocInLocal(cmd, tokenInfo, serveMap.get(deliverImgInfos.get(0).getServeNo()).getOrgId(), serveMap.get(deliverImgInfos.get(0).getServeNo()).getOrderId());
 
         // 访问契约锁域创建合同
-        Result<Boolean> createElecContractResult = createElecContract(cmd, contractIdWithDocIds, docInfos);
+        Result<Boolean> createElecContractResult = createElecContract(cmd, contractIdWithDocIds, docInfos, orderDTO);
         if(ResultErrorEnum.SUCCESSED.getCode() != createElecContractResult.getCode() || null == createElecContractResult.getData()){
             log.error("创建合同时调用契约锁域失败，返回msg：{}", createElecContractResult.getMsg());
             // 调用契约锁失败还得将本地创建的合同置为无效
@@ -151,6 +160,25 @@ public class CreateDeliverContractCmdExe {
             syncServiceI.execOne(map);
         }
         return contractIdWithDocIds.getContractId().toString();
+    }
+
+    // 调用契约锁域创建合同
+    private Result<Boolean> createElecContract(CreateDeliverContractCmd cmd, ContractIdWithDocIds contractIdWithDocIds, List<ContractDocumentInfoDTO> docInfos, OrderDTO orderDTO) {
+        docInfos.forEach(docInfo -> {
+            docInfo.setType(DeliverTypeEnum.DELIVER.getCode());
+            docInfo.setElecDocId(contractIdWithDocIds.getDeliverNoWithDocId().get(docInfo.getDeliverNo()));
+        });
+
+        ContractDocumentDTO contractQysDocumentDTO = new ContractDocumentDTO();
+        contractQysDocumentDTO.setElecContractId(contractIdWithDocIds.getContractId().toString());
+        contractQysDocumentDTO.setUserName(cmd.getDeliverInfo().getContactsName());
+        contractQysDocumentDTO.setPhone(cmd.getDeliverInfo().getContactsPhone());
+        contractQysDocumentDTO.setDocumentInfoDTOList(docInfos);
+        contractQysDocumentDTO.setType(ContractModeEnum.DELIVER.getName());
+        contractQysDocumentDTO.setOrderContractId(orderDTO.getContractCode());
+
+        System.out.println(JSONUtil.toJsonStr(contractQysDocumentDTO));
+        return contractTools.create(contractQysDocumentDTO);
     }
 
     private void deliverCheck(List<String> serveNos) {
@@ -209,24 +237,6 @@ public class CreateDeliverContractCmdExe {
             return docInfo;
         }).collect(Collectors.toList());
         return docInfos;
-    }
-
-    // 调用契约锁域创建合同
-    private Result<Boolean> createElecContract(CreateDeliverContractCmd cmd, ContractIdWithDocIds contractIdWithDocIds, List<ContractDocumentInfoDTO> docInfos) {
-        docInfos.forEach(docInfo -> {
-            docInfo.setType(DeliverTypeEnum.DELIVER.getCode());
-            docInfo.setElecDocId(contractIdWithDocIds.getDeliverNoWithDocId().get(docInfo.getDeliverNo()));
-        });
-
-        ContractDocumentDTO contractQysDocumentDTO = new ContractDocumentDTO();
-        contractQysDocumentDTO.setElecContractId(contractIdWithDocIds.getContractId().toString());
-        contractQysDocumentDTO.setUserName(cmd.getDeliverInfo().getContactsName());
-        contractQysDocumentDTO.setPhone(cmd.getDeliverInfo().getContactsPhone());
-        contractQysDocumentDTO.setDocumentInfoDTOList(docInfos);
-        contractQysDocumentDTO.setType(ContractModeEnum.DELIVER.getName());
-
-        System.out.println(JSONUtil.toJsonStr(contractQysDocumentDTO));
-        return contractTools.create(contractQysDocumentDTO);
     }
 
     public void initDictData() {
