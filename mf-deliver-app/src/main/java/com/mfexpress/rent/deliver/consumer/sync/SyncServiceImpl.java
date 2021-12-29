@@ -216,16 +216,27 @@ public class SyncServiceImpl implements EsSyncHandlerI {
         int sort = DeliverSortEnum.ZERO.getSort();
         boolean deliverFlag = serveEs.getIsCheck().equals(JudgeEnum.NO.getCode()) || serveEs.getIsInsurance().equals(JudgeEnum.NO.getCode());
         boolean recoverFlag = serveEs.getIsInsurance().equals(JudgeEnum.NO.getCode()) || serveEs.getIsDeduction().equals(JudgeEnum.NO.getCode());
-        //待发车
-        if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_DELIVER.getCode()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
+        if (serveEs.getServeStatus().equals(ServeEnum.PRESELECTED.getCode()) && serveEs.getDeliverStatus().equals(DeliverEnum.IS_DELIVER.getCode()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
                 && serveEs.getIsInsurance().equals(JudgeEnum.YES.getCode())) {
-            sort = DeliverSortEnum.ONE.getSort();
-        } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_DELIVER.getCode()) && deliverFlag) {
-            //待验车、待投保
+            if(DeliverContractStatusEnum.NOSIGN.getCode() == serveEs.getDeliverContractStatus()){
+                // 待发车
+                sort = DeliverSortEnum.ONE.getSort();
+            }else{
+                // 签署中
+                sort = DeliverSortEnum.TWO.getSort();
+            }
+        } else if (serveEs.getServeStatus().equals(ServeEnum.NOT_PRESELECTED.getCode())) {
+            // 待预选
             sort = DeliverSortEnum.THREE.getSort();
-        } else if (serveEs.getDeliverStatus().equals(DeliverEnum.DELIVER.getCode())) {
-            //已发车
+        } else if (serveEs.getServeStatus().equals(ServeEnum.PRESELECTED.getCode()) && JudgeEnum.NO.getCode().equals(serveEs.getIsCheck())) {
+            // 待验车
             sort = DeliverSortEnum.FOUR.getSort();
+        } else if (serveEs.getServeStatus().equals(ServeEnum.PRESELECTED.getCode()) && JudgeEnum.YES.getCode().equals(serveEs.getIsCheck())) {
+            // 待投保
+            sort = DeliverSortEnum.FIVE.getSort();
+        } else if (serveEs.getServeStatus().equals(ServeEnum.DELIVER.getCode())) {
+            // 发车已完成
+            sort = DeliverSortEnum.SIX.getSort();
         } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())
                 && serveEs.getIsCheck().equals(JudgeEnum.NO.getCode())) {
             //收车中 待验车
