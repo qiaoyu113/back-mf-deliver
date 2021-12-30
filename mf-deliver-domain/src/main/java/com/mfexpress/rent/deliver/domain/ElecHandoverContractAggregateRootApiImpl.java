@@ -278,7 +278,12 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
         if (StringUtils.isEmpty(deliverNo) || null == deliverType) {
             return Result.getInstance((ElecContractDTO)null).fail(-1, "参数不可为空");
         }
-        ElectronicHandoverContractPO contractPO =  contractGateway.getContractDTOByDeliverNoAndDeliverType(deliverNo, deliverType);
+        List<ElectronicHandoverContractPO> contractPOS =  contractGateway.getContractDTOSByDeliverNoAndDeliverType(deliverNo, deliverType);
+        if(contractPOS.isEmpty()){
+            return Result.getInstance((ElecContractDTO)null).success();
+        }
+        // 取最新的电子交接合同
+        ElectronicHandoverContractPO contractPO = contractPOS.get(0);
         ElecContractDTO contractDTO = new ElecContractDTO();
         BeanUtils.copyProperties(contractPO, contractDTO);
         contractDTO.setDeliverVehicleTime(FormatUtil.ymdHmsFormatStringToDate(contractPO.getDeliverVehicleTime()));

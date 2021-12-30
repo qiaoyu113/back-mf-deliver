@@ -115,13 +115,14 @@ public class ElecHandoverContractGatewayImpl implements ElecHandoverContractGate
     }
 
     @Override
-    public ElectronicHandoverContractPO getContractDTOByDeliverNoAndDeliverType(String deliverNo, Integer deliverType) {
+    public List<ElectronicHandoverContractPO> getContractDTOSByDeliverNoAndDeliverType(String deliverNo, Integer deliverType) {
         Example example = new Example(ElectronicHandoverContractPO.class);
+        example.orderBy("createTime").desc();
         Example.Criteria criteria = example.createCriteria();
         criteria.andLike("deliverNos", "%".concat(deliverNo).concat("%"));
         criteria.andEqualTo("deliverType", deliverType);
-        criteria.andNotEqualTo("status", ElecHandoverContractStatus.FAIL.getCode());
-        return contractMapper.selectOneByExample(example);
+        //criteria.andNotEqualTo("status", ElecHandoverContractStatus.FAIL.getCode());
+        return contractMapper.selectByExample(example);
     }
 
     @Override

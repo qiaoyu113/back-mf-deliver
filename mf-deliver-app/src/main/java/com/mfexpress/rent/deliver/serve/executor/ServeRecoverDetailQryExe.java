@@ -175,6 +175,9 @@ public class ServeRecoverDetailQryExe {
     private RecoverVehicleVO getRecoverVehicleVOFromContract(DeliverDTO deliverDTO) {
         Result<ElecContractDTO> contractDTOSResult = contractAggregateRootApi.getContractDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.RECOVER.getCode());
         ElecContractDTO contractDTO = ResultDataUtils.getInstance(contractDTOSResult).getDataOrException();
+        if(null == contractDTO){
+            throw new CommonException(400005, "电子交接单查询失败");
+        }
 
         RecoverVehicleVO recoverVehicleVO = new RecoverVehicleVO();
         BeanUtils.copyProperties(contractDTO, recoverVehicleVO);

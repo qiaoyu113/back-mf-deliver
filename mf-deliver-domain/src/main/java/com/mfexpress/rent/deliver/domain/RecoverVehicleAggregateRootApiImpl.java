@@ -146,9 +146,9 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @PostMapping("/abnormalRecover")
     @Transactional(rollbackFor = Exception.class)
     public Result<Integer> abnormalRecover(@RequestBody @Validated RecoverAbnormalCmd cmd) {
-        // 判断deliver中的合同状态，如果不是签署中状态，不可进行此操作
+        // 判断deliver中的合同状态，如果不是签署中和生成中状态，不可进行此操作
         Deliver deliver = deliverGateway.getDeliverByServeNo(cmd.getServeNo());
-        if(DeliverContractStatusEnum.SIGNING.getCode() != deliver.getRecoverContractStatus()){
+        if(DeliverContractStatusEnum.GENERATING.getCode() != deliver.getRecoverContractStatus() && DeliverContractStatusEnum.SIGNING.getCode() != deliver.getRecoverContractStatus()){
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单当前状态不允许异常收车");
         }
 

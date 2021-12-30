@@ -70,11 +70,11 @@ public class RecoverAbnormalCmdExe {
     private SyncServiceImpl syncServiceI;
 
     public Integer execute(RecoverAbnormalCmd cmd, TokenInfo tokenInfo) {
-        // 判断deliver中的合同状态，如果不是签署中状态，不可进行此操作
+        // 判断deliver中的合同状态，如果是已完成状态，不可进行此操作
         Result<ElecContractDTO> contractDTOResult = contractAggregateRootApi.getContractDTOByContractId(cmd.getElecContractId());
         ElecContractDTO contractDTO = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
-        if (ElecHandoverContractStatus.SIGNING.getCode() != contractDTO.getStatus()) {
-            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "电子交接单状态异常");
+        if (ElecHandoverContractStatus.COMPLETED.getCode() == contractDTO.getStatus()) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "电子交接单已签署完成，不可进行异常收车操作");
         }
 
         // 数据准备
