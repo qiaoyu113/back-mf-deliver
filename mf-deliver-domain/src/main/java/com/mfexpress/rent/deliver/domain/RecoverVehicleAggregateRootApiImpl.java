@@ -159,7 +159,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         Date deliverVehicleTime = deliverVehicle.getDeliverVehicleTime();
         if(!deliverVehicleTime.equals(cmd.getRecoverTime())){
             if(!deliverVehicleTime.before(cmd.getRecoverTime())){
-                throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "收车日期不能早于发车日期");
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "收车日期不能早于发车日期");
             }
         }
 
