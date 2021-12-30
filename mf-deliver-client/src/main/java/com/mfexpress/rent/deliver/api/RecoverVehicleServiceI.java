@@ -13,8 +13,7 @@ public interface RecoverVehicleServiceI {
 
     String cancelRecover(RecoverCancelCmd recoverCancelCmd);
 
-    String toCheck(RecoverVechicleCmd recoverVechicleCmd);
-
+    String whetherToCheck(RecoverVechicleCmd recoverVechicleCmd);
 
     String toBackInsure(RecoverBackInsureCmd recoverBackInsureCmd);
 

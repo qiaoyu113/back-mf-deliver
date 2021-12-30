@@ -98,11 +98,11 @@ public class RecoverVehicleController {
     }
 
 
-    @PostMapping("/toCheck")
-    @ApiOperation(value = "收车验车-废弃接口，因契约锁迭代导致验车流程发生变更，此接口废弃")
+    @PostMapping("/whetherToCheck")
+    @ApiOperation(value = "是否可收车验车")
     @PrintParam
     @Deprecated
-    public Result<String> toCheck(@RequestBody RecoverVechicleCmd recoverVechicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+    public Result<String> whetherToCheck(@RequestBody RecoverVechicleCmd recoverVechicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
 
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
@@ -111,7 +111,7 @@ public class RecoverVehicleController {
         }
         recoverVechicleCmd.setCarServiceId(tokenInfo.getId());
         //交付单更新待验车状态 完善收车单还车人合照信息
-        return Result.getInstance(recoverVehicleServiceI.toCheck(recoverVechicleCmd)).success();
+        return Result.getInstance(recoverVehicleServiceI.whetherToCheck(recoverVechicleCmd)).success();
 
     }
 

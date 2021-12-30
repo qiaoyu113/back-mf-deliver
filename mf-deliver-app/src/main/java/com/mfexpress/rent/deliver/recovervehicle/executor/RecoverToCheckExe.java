@@ -78,9 +78,7 @@ public class RecoverToCheckExe {
 
     public String execute(RecoverVechicleCmd recoverVechicleCmd) {
         //完善收车单信息
-        /*RecoverVehicleDTO recoverVehicleDTO = new RecoverVehicleDTO();
-        BeanUtils.copyProperties(recoverVechicleCmd, recoverVehicleDTO);
-        Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(recoverVechicleCmd.getServeNo());
+        /*Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(recoverVechicleCmd.getServeNo());
         if (deliverDTOResult.getData() == null) {
             log.error("不存在交付单，服务单号，{}" + recoverVechicleCmd.getServeNo());
             return ResultErrorEnum.DATA_NOT_FOUND.getName();
@@ -90,19 +88,19 @@ public class RecoverToCheckExe {
         if (vehicleDtoResult == null) {
             log.error("不存在车辆，服务单号，{}" + recoverVechicleCmd.getServeNo());
             return ResultErrorEnum.DATA_NOT_FOUND.getName();
-        }
-        Result<ServeDTO> serveDTOResult1 = serveAggregateRootApi.getServeDtoByServeNo(recoverVechicleCmd.getServeNo());
-        if (serveDTOResult1.getCode() != 0) {
+        }*/
+        Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(recoverVechicleCmd.getServeNo());
+        if (serveDTOResult.getCode() != 0) {
             return "服务单不存在";
         }
-        ServeDTO serve = serveDTOResult1.getData();
+        ServeDTO serve = serveDTOResult.getData();
         if (serve.getStatus().equals(ServeEnum.REPAIR.getCode())) {
             return "服务单维修中不允许收车";
         }
 
         //收车验车时 收车日期不能早于发车日期
         // 2020-11-23 00:00:00.before(2021-11-20 00:00:00)
-        Result<DeliverVehicleDTO> deliverVehicleDTOResult = deliverVehicleAggregateRootApi.getDeliverVehicleDto(deliverDTO.getDeliverNo());
+        /*Result<DeliverVehicleDTO> deliverVehicleDTOResult = deliverVehicleAggregateRootApi.getDeliverVehicleDto(deliverDTO.getDeliverNo());
         if (!ResultStatusEnum.SUCCESSED.getCode().equals(deliverVehicleDTOResult.getCode()) || null == deliverVehicleDTOResult.getData()) {
             throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "发车单查询失败");
         }
