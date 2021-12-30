@@ -299,6 +299,9 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
             return Result.getInstance((ElecDocDTO)null).fail(-1, "参数不可为空");
         }
         ElectronicHandoverDocPO docPO = docGateway.getDocByDeliverNoAndDeliverType(deliverNo, deliverType);
+        if(null == docPO){
+            return Result.getInstance((ElecDocDTO)null).success();
+        }
         ElecDocDTO elecDocDTO = new ElecDocDTO();
         BeanUtils.copyProperties(docPO, elecDocDTO);
         return Result.getInstance(elecDocDTO).success();

@@ -98,6 +98,7 @@ public class ElecHandoverContractGatewayImpl implements ElecHandoverContractGate
     public List<ElectronicHandoverContractPO> getContractDTOSByDeliverNosAndDeliverType(List<String> deliverNos, int deliverType) {
         // 此处不做状态限制，即使是失效状态，也能查出来
         Example example = new Example(ElectronicHandoverContractPO.class);
+        example.orderBy("createTime").desc();
         Example.Criteria criteria = example.createCriteria();
         List<String> collect = deliverNos.stream().map(deliverNo -> JSONUtil.toJsonStr(Collections.singletonList(deliverNo))).collect(Collectors.toList());
         criteria.andIn("deliverNos", collect);
