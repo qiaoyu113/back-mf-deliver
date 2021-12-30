@@ -49,10 +49,15 @@ public class RecoverTaskListAllQryExe implements RecoverQryServiceI {
         List<String> deliverNos = new ArrayList<>();
         List<RecoverVehicleVO> recoverVehicleVOList = recoverTaskListVO.getRecoverVehicleVOList();
         recoverVehicleVOList.forEach(recoverVehicleVO -> {
-            if (JudgeEnum.YES.getCode().equals(recoverVehicleVO.getRecoverAbnormalFlag())) {
-                recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.ABNORMAL.getName());
-            } else if(DeliverContractStatusEnum.COMPLETED.getCode() == recoverVehicleVO.getRecoverContractStatus()){
-                recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
+            if(ServeEnum.RECOVER.getCode() <= recoverVehicleVO.getServeStatus() && DeliverEnum.RECOVER.getCode().equals(recoverVehicleVO.getDeliverStatus())){
+                if (JudgeEnum.YES.getCode().equals(recoverVehicleVO.getRecoverAbnormalFlag())) {
+                    recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.ABNORMAL.getName());
+                } else if(DeliverContractStatusEnum.COMPLETED.getCode() == recoverVehicleVO.getRecoverContractStatus()){
+                    recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
+                }
+                if(JudgeEnum.NO.getCode().equals(recoverVehicleVO.getRecoverAbnormalFlag()) && DeliverContractStatusEnum.NOSIGN.getCode() == recoverVehicleVO.getRecoverContractStatus()){
+                    recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
+                }
             }
             if (null != recoverVehicleVO.getRecoverContractStatus() && (DeliverContractStatusEnum.GENERATING.getCode() == recoverVehicleVO.getRecoverContractStatus() || DeliverContractStatusEnum.SIGNING.getCode() == recoverVehicleVO.getRecoverContractStatus())) {
                 deliverNos.add(recoverVehicleVO.getDeliverNo());
