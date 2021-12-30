@@ -184,6 +184,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         recoverAbnormal.setCause(cmd.getReason());
         recoverAbnormal.setImgUrl(JSONUtil.toJsonStr(cmd.getImgUrls()));
         recoverAbnormal.setCreatorId(cmd.getOperatorId());
+        recoverAbnormal.setCreateTime(cmd.getRecoverTime());
         recoverAbnormalGateway.create(recoverAbnormal);
 
         // 取出合同信息修改收车单

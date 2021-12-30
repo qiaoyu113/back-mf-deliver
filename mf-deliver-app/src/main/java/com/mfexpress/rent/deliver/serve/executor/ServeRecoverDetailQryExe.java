@@ -129,6 +129,10 @@ public class ServeRecoverDetailQryExe {
                 serveRecoverDetailVO.setRecoverAbnormalFlag(RecoverVehicleType.ABNORMAL.getCode());
                 serveRecoverDetailVO.getRecoverVehicleVO().setRecoverTypeDisplay(RecoverVehicleType.ABNORMAL.getName());
             }
+            if(DeliverContractStatusEnum.NOSIGN.getCode() == deliverDTO.getRecoverContractStatus() && RecoverVehicleType.NORMAL.getCode() == deliverDTO.getRecoverAbnormalFlag()){
+                // 历史数据为正常收车
+                serveRecoverDetailVO.getRecoverVehicleVO().setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
+            }
             if (JudgeEnum.YES.getCode().equals(deliverDTO.getIsInsurance())) {
                 // serve的status属性为3，deliver的deliver_status属性为4，is_insurance属性为1，状态为待处理违章
                 // 待处理违章需补充保险信息
@@ -150,6 +154,10 @@ public class ServeRecoverDetailQryExe {
             } else if (RecoverVehicleType.ABNORMAL.getCode() == deliverDTO.getRecoverAbnormalFlag()) {
                 serveRecoverDetailVO.setRecoverAbnormalFlag(RecoverVehicleType.ABNORMAL.getCode());
                 serveRecoverDetailVO.getRecoverVehicleVO().setRecoverTypeDisplay(RecoverVehicleType.ABNORMAL.getName());
+            }
+            if(DeliverContractStatusEnum.NOSIGN.getCode() == deliverDTO.getRecoverContractStatus() && RecoverVehicleType.NORMAL.getCode() == deliverDTO.getRecoverAbnormalFlag()){
+                // 历史数据为正常收车
+                serveRecoverDetailVO.getRecoverVehicleVO().setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
             }
         } else {
             throw new CommonException(400005, "数据状态异常");

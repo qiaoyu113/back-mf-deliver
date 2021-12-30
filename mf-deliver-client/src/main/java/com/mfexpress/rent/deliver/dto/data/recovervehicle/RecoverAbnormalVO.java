@@ -27,7 +27,7 @@ public class RecoverAbnormalVO {
     private List<String> imgUrls;
 
     @ApiModelProperty(value = "收车时间")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date recoverTime;
 
 }
