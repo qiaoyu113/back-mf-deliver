@@ -10,6 +10,7 @@ import com.mfexpress.billing.rentcharge.dto.data.daily.DailyDTO;
 import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.contract.ContractResultTopicDTO;
+import com.mfexpress.component.enums.contract.ContractFailTypeEnum;
 import com.mfexpress.component.enums.contract.ContractStatusEnum;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessClass;
@@ -132,7 +133,9 @@ public class ElecContractStatusMqCommand {
         ContractStatusChangeCmd cmd = new ContractStatusChangeCmd();
         cmd.setContractId(Long.valueOf(contractStatusInfo.getLocalContractId()));
         cmd.setFailureReason(ContractFailureReasonEnum.CREATE_FAIL.getCode());
-        cmd.setFailureMsg(contractStatusInfo.getMsg());
+        if(ContractFailTypeEnum.AUTH_ERROR.getCode().equals(contractStatusInfo.getFailType())){
+            cmd.setFailureMsg("填写姓名与客户实名手机号不一致");
+        }
         Result<Integer> failResult = contractAggregateRootApi.fail(cmd);
         ResultValidUtils.checkResultException(failResult);
 
