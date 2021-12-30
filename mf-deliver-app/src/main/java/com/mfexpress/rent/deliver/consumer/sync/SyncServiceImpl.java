@@ -234,7 +234,7 @@ public class SyncServiceImpl implements EsSyncHandlerI {
         } else if (serveEs.getServeStatus().equals(ServeEnum.PRESELECTED.getCode()) && JudgeEnum.YES.getCode().equals(serveEs.getIsCheck())) {
             // 待投保
             sort = DeliverSortEnum.FIVE.getSort();
-        } else if (serveEs.getServeStatus().equals(ServeEnum.DELIVER.getCode())) {
+        } else if ((serveEs.getServeStatus().equals(ServeEnum.DELIVER.getCode()) || serveEs.getServeStatus().equals(ServeEnum.REPAIR.getCode())) && serveEs.getDeliverStatus().equals(DeliverEnum.DELIVER.getCode())) {
             // 发车已完成
             sort = DeliverSortEnum.SIX.getSort();
         } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())
@@ -249,12 +249,10 @@ public class SyncServiceImpl implements EsSyncHandlerI {
                 && (serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.GENERATING.getCode() || serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.SIGNING.getCode())){
             // 收车中 签署中
             sort = DeliverSortEnum.THREE.getSort();
-        } else if (DeliverEnum.RECOVER.getCode().equals(serveEs.getDeliverStatus()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
-                && (DeliverContractStatusEnum.COMPLETED.getCode() == serveEs.getRecoverContractStatus() || JudgeEnum.YES.getCode().equals(serveEs.getRecoverAbnormalFlag())) && JudgeEnum.NO.getCode().equals(serveEs.getIsInsurance())) {
+        } else if (DeliverEnum.RECOVER.getCode().equals(serveEs.getDeliverStatus()) && JudgeEnum.NO.getCode().equals(serveEs.getIsInsurance())) {
             //收车中  待退保
             sort = DeliverSortEnum.FOUR.getSort();
-        } else if (DeliverEnum.RECOVER.getCode().equals(serveEs.getDeliverStatus()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
-                && (DeliverContractStatusEnum.COMPLETED.getCode() == serveEs.getRecoverContractStatus() || JudgeEnum.YES.getCode().equals(serveEs.getRecoverAbnormalFlag())) && JudgeEnum.YES.getCode().equals(serveEs.getIsInsurance())) {
+        } else if (serveEs.getServeStatus().equals(ServeEnum.RECOVER.getCode()) && DeliverEnum.RECOVER.getCode().equals(serveEs.getDeliverStatus()) && JudgeEnum.YES.getCode().equals(serveEs.getIsInsurance())) {
             //收车中  待处理违章
             sort = DeliverSortEnum.FIVE.getSort();
         } else if (serveEs.getServeStatus().equals(ServeEnum.COMPLETED.getCode())) {

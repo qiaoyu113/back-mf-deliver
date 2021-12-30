@@ -115,22 +115,17 @@ public class ServeRecoverDetailQryExe {
         } else if (ServeEnum.RECOVER.getCode().equals(serveDTO.getStatus()) && DeliverEnum.RECOVER.getCode().equals(deliverDTO.getDeliverStatus())) {
             serveRecoverDetailVO.setOrderVO(getOrderVO(serveDTO));
             serveRecoverDetailVO.setVehicleVO(getVehicleVO(serveDTO, deliverDTO, recoverVehicleDTO));
-            if (JudgeEnum.YES.getCode().equals(deliverDTO.getIsCheck())) {
-                // serve的status属性为3，deliver的deliver_status属性为4，is_check属性为1，状态为待收车
-                // 待收车需补充验车信息
-                serveRecoverDetailVO.setVehicleValidationVO(getVehicleValidationVO());
-            }
+            serveRecoverDetailVO.setVehicleValidationVO(getVehicleValidationVO());
+            serveRecoverDetailVO.setRecoverVehicleVO(getRecoverVehicleVO(recoverVehicleDTO));
             if (DeliverContractStatusEnum.COMPLETED.getCode() == deliverDTO.getRecoverContractStatus()) {
                 // serve的status属性为3，deliver的deliver_status属性为4，recover_contract_status 属性为3，状态为待退保
                 // 需补充收车单信息
-                serveRecoverDetailVO.setRecoverVehicleVO(getRecoverVehicleVO(recoverVehicleDTO));
                 serveRecoverDetailVO.getRecoverVehicleVO().setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
                 // 正常收车补充电子交接单信息
                 serveRecoverDetailVO.setElecHandoverDocVO(getElecHandoverDocVO(deliverDTO));
             }
             if (RecoverVehicleType.ABNORMAL.getCode() == deliverDTO.getRecoverAbnormalFlag()) {
                 // 异常收车设置异常收车标志位为真
-                serveRecoverDetailVO.setRecoverVehicleVO(getRecoverVehicleVO(recoverVehicleDTO));
                 serveRecoverDetailVO.setRecoverAbnormalFlag(RecoverVehicleType.ABNORMAL.getCode());
                 serveRecoverDetailVO.getRecoverVehicleVO().setRecoverTypeDisplay(RecoverVehicleType.ABNORMAL.getName());
             }
@@ -167,6 +162,9 @@ public class ServeRecoverDetailQryExe {
     private ElecHandoverDocVO getElecHandoverDocVO(DeliverDTO deliverDTO) {
         Result<ElecDocDTO> docDTOResult = contractAggregateRootApi.getDocDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.RECOVER.getCode());
         ElecDocDTO docDTO = ResultDataUtils.getInstance(docDTOResult).getDataOrException();
+        if(null == docDTO){
+            return null;
+        }
         ElecHandoverDocVO elecHandoverDocVO = new ElecHandoverDocVO();
         elecHandoverDocVO.setFileUrl(docDTO.getFileUrl());
         return elecHandoverDocVO;
