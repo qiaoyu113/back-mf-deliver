@@ -44,8 +44,8 @@ public class recoverTaskListWaitSignQryExe implements RecoverQryServiceI {
         // 2. 排序规则：“最近一次数据更新时间”倒序
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         List<FieldSortBuilder> fieldSortBuilderList = new LinkedList<>();
-        boolQueryBuilder.must(QueryBuilders.rangeQuery("serveStatus").gte(ServeEnum.DELIVER.getCode()))
-                .must(QueryBuilders.rangeQuery("deliverStatus").gte(DeliverEnum.IS_RECOVER.getCode()))
+        boolQueryBuilder.must(QueryBuilders.matchQuery("serveStatus", ServeEnum.DELIVER.getCode()))
+                .must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.IS_RECOVER.getCode()))
                 .must(QueryBuilders.matchQuery("isCheck", JudgeEnum.YES.getCode()))
                 .must(QueryBuilders.termsQuery("recoverContractStatus", Arrays.asList(DeliverContractStatusEnum.GENERATING.getCode(), DeliverContractStatusEnum.SIGNING.getCode())))
                 .must(QueryBuilders.matchQuery("isInsurance", JudgeEnum.NO.getCode()))

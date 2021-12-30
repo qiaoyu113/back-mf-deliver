@@ -58,7 +58,7 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     }
 
     @Override
-    public String toCheck(RecoverVechicleCmd recoverVechicleCmd) {
+    public String whetherToCheck(RecoverVechicleCmd recoverVechicleCmd) {
         return recoverToCheckExe.execute(recoverVechicleCmd);
     }
 
