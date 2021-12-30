@@ -26,6 +26,9 @@ public class ElectronicHandoverContractPO {
     @Column(name = "contract_id")
     private Long contractId;
 
+    @Column(name = "contract_show_no")
+    private String contractShowNo;
+
     @Column(name = "deliver_nos")
     private String deliverNos;
 

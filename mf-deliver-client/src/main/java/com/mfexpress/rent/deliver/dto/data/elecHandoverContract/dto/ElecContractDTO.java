@@ -17,6 +17,9 @@ public class ElecContractDTO {
     private Long contractId;
 
     @ApiModelProperty(value = "")
+    private String contractShowNo;
+
+    @ApiModelProperty(value = "")
     private String deliverNos;
 
     @ApiModelProperty(value = "")
