@@ -15,6 +15,7 @@ import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.gateway.ElecHandoverContractGateway;
 import com.mfexpress.rent.deliver.gateway.ElecHandoverDocGateway;
+import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -194,6 +195,8 @@ public class ElecHandoverContract {
 
         contractId = redisTools.getBizId(125);
         po.setContractId(contractId);
+        long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_DELIVER_CONTRACT_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
+        po.setContractShowNo(DeliverUtils.getNo(Constants.REDIS_DELIVER_CONTRACT_KEY, incr));
         return po;
     }
 

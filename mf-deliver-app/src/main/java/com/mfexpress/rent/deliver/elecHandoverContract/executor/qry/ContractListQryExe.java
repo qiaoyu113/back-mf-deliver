@@ -100,6 +100,7 @@ public class ContractListQryExe {
             contractWithServesVO.setElecContractNo(contractDTO.getContractForeignNo());
             contractWithServesVO.setElecContractStatus(contractDTO.getStatus());
             contractWithServesVO.setElecContractFailureReason(contractDTO.getFailureReason());
+            contractWithServesVO.setElecContractShowNo(contractDTO.getContractShowNo());
 
             List<String> deliverNos = JSONUtil.toList(contractDTO.getDeliverNos(), String.class);
             contractWithServesVO.setDeliverNos(deliverNos);

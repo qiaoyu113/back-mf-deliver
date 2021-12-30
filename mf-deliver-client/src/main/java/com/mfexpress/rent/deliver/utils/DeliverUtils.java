@@ -41,6 +41,7 @@ public class DeliverUtils {
         numMap.put(Constants.REDIS_SERVE_KEY, "FWD");
         numMap.put(Constants.REDIS_DELIVER_VEHICLE_KEY, "JCD");
         numMap.put(Constants.REDIS_RECOVER_VEHICLE_KEY, "SCD");
+        numMap.put(Constants.REDIS_DELIVER_CONTRACT_KEY, "HX");
     }
 
     public static String getNo(String tag, long seq) {

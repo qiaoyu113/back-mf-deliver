@@ -23,6 +23,9 @@ public class ElecDeliverContractVO {
     @ApiModelProperty(value = "电子合同失败原因，1：作废，2：过期，3其他")
     private Integer elecContractFailureReason;
 
+    @ApiModelProperty(value = "合同展示编号")
+    private String elecContractShowNo;
+
     // 发车单信息
     @ApiModelProperty(value = "发车单信息")
     private DeliverInfo deliverInfo;
