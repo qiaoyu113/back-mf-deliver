@@ -160,7 +160,7 @@ public class CreateRecoverContractCmdExe {
         Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(serveNo);
         DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrException();
         if(DeliverContractStatusEnum.NOSIGN.getCode() != deliverDTO.getRecoverContractStatus()){
-            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "选中车辆存在电子交接单，请回列表页查看");
         }
     }
 

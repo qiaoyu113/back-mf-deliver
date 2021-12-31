@@ -186,7 +186,7 @@ public class CreateDeliverContractCmdExe {
         Map<String, Deliver> data = ResultDataUtils.getInstance(deliversResult).getDataOrException();
         data.values().forEach(deliver -> {
             if (DeliverContractStatusEnum.NOSIGN.getCode() != deliver.getDeliverContractStatus()) {
-                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "选中车辆存在电子交接单，请回列表页查看");
             }
         });
     }
