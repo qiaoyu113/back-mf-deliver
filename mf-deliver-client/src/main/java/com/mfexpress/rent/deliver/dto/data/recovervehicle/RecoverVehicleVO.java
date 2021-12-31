@@ -107,4 +107,6 @@ public class RecoverVehicleVO {
     @ApiModelProperty(value = "租赁服务单所属城市id")
     private Integer cityId;
 
+    private Integer orgId;
+
 }
