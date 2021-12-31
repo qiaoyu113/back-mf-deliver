@@ -14,4 +14,6 @@ public interface ElecHandoverDocGateway {
     int updateDocByDocId(Integer docId, ElectronicHandoverDocPO docPO);
 
     ElectronicHandoverDocPO getDocByDeliverNoAndDeliverType(String deliverNo, Integer deliverType);
+
+    ElectronicHandoverDocPO getDocByContractId(Long contractId);
 }

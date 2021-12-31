@@ -1,6 +1,8 @@
 package com.mfexpress.rent.deliver.domain;
 
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
@@ -161,6 +163,13 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
             if(!deliverVehicleTime.before(cmd.getRecoverTime())){
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "收车日期不能早于发车日期");
             }
+        }
+
+        DateTime endDate = DateUtil.endOfMonth(new Date());
+        DateTime startDate = DateUtil.beginOfMonth(new Date());
+        //增加收车日期限制
+        if (!endDate.isAfter(cmd.getRecoverTime()) || cmd.getRecoverTime().before(startDate)) {
+            throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "收车日期请选择在当月内");
         }
 
         // deliver 收车签署状态改为未签，并且异常收车flag改为真，状态改为已收车

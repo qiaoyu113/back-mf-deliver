@@ -1,5 +1,7 @@
 package com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
@@ -10,6 +12,7 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.contract.MFContractTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
+import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
@@ -32,6 +35,8 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.RecoverInfo;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.utils.CommonUtil;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
+import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
+import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.VehicleValidationAggregateRootApi;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInfoDto;
@@ -78,6 +83,9 @@ public class CreateRecoverContractCmdExe {
 
     @Resource
     private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
+
+    @Resource
+    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
 
     @Resource
     private MFContractTools contractTools;
@@ -238,6 +246,22 @@ public class CreateRecoverContractCmdExe {
         Date deliverVehicleTime = deliverVehicleDTO.getDeliverVehicleTime();
         if(recoverVehicleTime.before(deliverVehicleTime)){
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "收车日期不能早于发车日期");
+        }
+
+        Result<MaintenanceDTO> maintainResult = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getRecoverInfo().getServeNo());
+        if (ResultValidUtils.checkResult(maintainResult)) {
+            MaintenanceDTO maintenanceDTO = maintainResult.getData();
+            //格式化为yyyy-MM-dd
+            String confirmDate = DateUtil.formatDate(maintenanceDTO.getConfirmDate());
+            if (recoverVehicleTime.before(DateUtil.parseDate(confirmDate))) {
+                throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "收车日期请晚于维修交车日期");
+            }
+        }
+        DateTime endDate = DateUtil.endOfMonth(new Date());
+        DateTime startDate = DateUtil.beginOfMonth(new Date());
+        //增加收车日期限制
+        if (!endDate.isAfter(recoverVehicleTime) || recoverVehicleTime.before(startDate)) {
+            throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "收车日期请选择在当月内");
         }
 
         CreateRecoverContractCmd createRecoverContractCmd = new CreateRecoverContractCmd();

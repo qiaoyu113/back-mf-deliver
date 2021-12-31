@@ -66,4 +66,7 @@ public interface ElecHandoverContractAggregateRootApi {
 
     @PostMapping("/getContractIdMapByQry")
     Result<Map<String, String>> getContractIdMapByQry(@RequestBody ContractListQry contractListQry);
+
+    @PostMapping("/getDocDTOByContractId")
+    Result<ElecDocDTO> getDocDTOByContractId(@RequestParam("contractId") Long contractId);
 }

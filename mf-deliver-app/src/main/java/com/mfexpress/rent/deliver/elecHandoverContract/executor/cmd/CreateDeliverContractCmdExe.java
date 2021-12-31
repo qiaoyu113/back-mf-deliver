@@ -1,5 +1,7 @@
 package com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.component.constants.ResultErrorEnum;
@@ -42,6 +44,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -255,6 +258,12 @@ public class CreateDeliverContractCmdExe {
     }
 
     private ContractIdWithDocIds createContractWithDocInLocal(CreateDeliverContractCmd cmd, TokenInfo tokenInfo, Integer orgId, Long orderId) {
+        DateTime endDate = DateUtil.endOfMonth(new Date());
+        DateTime startDate = DateUtil.beginOfMonth(new Date());
+        //增加收车日期限制
+        if (!endDate.isAfter(cmd.getDeliverInfo().getDeliverVehicleTime()) || cmd.getDeliverInfo().getDeliverVehicleTime().before(startDate)) {
+            throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "发车日期请选择在当月内");
+        }
         cmd.setOperatorId(tokenInfo.getId());
         cmd.setDeliverType(DeliverTypeEnum.DELIVER.getCode());
         cmd.setOrgId(orgId);

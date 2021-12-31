@@ -12,7 +12,7 @@ import tk.mybatis.spring.annotation.MapperScan;
 @EnableFeignClients(basePackages = {"com.mfexpress.rent.deliver.domainapi",
         "com.mfexpress.rent.deliver.api", "com.mfexpress.rent.vehicle.api",
         "com.mfexpress.order.api.app","com.mfexpress.common.domain.api","com.mfexpress.transportation.customer.api","com.mfexpress.billing.rentcharge.api",
-        "com.mfexpress.component.starter.feign.contract", "com.mfexpress.component.starter.feign.excel"})
+        "com.mfexpress.component.starter.feign.contract", "com.mfexpress.component.starter.feign.excel", "com.mfexpress.rent.maintain.api.app"})
 @EnableDiscoveryClient
 @MapperScan(basePackages = {"com.mfexpress.rent.deliver.*.repository"})
 public class MfDeliveryApplication {

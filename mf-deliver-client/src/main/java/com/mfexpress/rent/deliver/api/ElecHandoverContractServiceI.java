@@ -27,4 +27,6 @@ public interface ElecHandoverContractServiceI {
     ElecDeliverContractVO getDeliverContractInfo(ContractQry qry, TokenInfo tokenInfo);
 
     ElecRecoverContractVO getRecoverContractInfo(ContractQry qry, TokenInfo tokenInfo);
+
+    ElecHandoverDocVO getElecDoc(ContractQry qry);
 }

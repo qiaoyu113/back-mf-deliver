@@ -151,4 +151,12 @@ public class ElecHandoverContractController {
         return Result.getInstance(elecHandoverContractServiceI.confirmFail(cmd, tokenInfo)).success();
     }
 
+    // 查询电子交接单
+    @ApiOperation(value = "查询电子交接单_" + project_version)
+    @PostMapping("/getElecDoc")
+    @PrintParam
+    public Result<ElecHandoverDocVO> getElecDoc(@RequestBody @Validated ContractQry qry) {
+        return Result.getInstance(elecHandoverContractServiceI.getElecDoc(qry)).success();
+    }
+
 }
