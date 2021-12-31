@@ -91,11 +91,11 @@ public class RecoverToCheckExe {
         }*/
         Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(recoverVechicleCmd.getServeNo());
         if (serveDTOResult.getCode() != 0) {
-            return "服务单不存在";
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), ResultErrorEnum.OPER_ERROR.getName());
         }
         ServeDTO serve = serveDTOResult.getData();
         if (serve.getStatus().equals(ServeEnum.REPAIR.getCode())) {
-            return "服务单维修中不允许收车";
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单维修中不允许收车");
         }
 
         //收车验车时 收车日期不能早于发车日期
