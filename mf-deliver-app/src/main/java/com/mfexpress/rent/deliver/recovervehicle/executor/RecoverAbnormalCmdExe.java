@@ -1,14 +1,17 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import cn.hutool.core.date.DateUtil;
+import com.alibaba.fastjson.JSON;
 import com.mfexpress.billing.rentcharge.api.DailyAggregateRootApi;
 import com.mfexpress.billing.rentcharge.api.VehicleDamageAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.VehicleDamage.CreateVehicleDamageCmd;
 import com.mfexpress.billing.rentcharge.dto.data.daily.DailyDTO;
+import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
@@ -26,6 +29,8 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContract
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd.CancelContractCmdExe;
+import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
+import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
@@ -33,6 +38,8 @@ import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import com.mfexpress.rent.vehicle.data.dto.warehouse.WarehouseDto;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -40,6 +47,7 @@ import java.util.*;
 
 @Component
 @Slf4j
+//@DependsOn("mqLocalTools")
 public class RecoverAbnormalCmdExe {
 
     @Resource
@@ -58,7 +66,7 @@ public class RecoverAbnormalCmdExe {
     private VehicleDamageAggregateRootApi vehicleDamageAggregateRootApi;
 
     @Resource
-    private DailyAggregateRootApi dailyAggregateRootApi;
+    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
 
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
@@ -68,6 +76,12 @@ public class RecoverAbnormalCmdExe {
 
     @Resource
     private SyncServiceImpl syncServiceI;
+
+    /*@Resource
+    private MqTools mqTools;*/
+
+    @Value("${rocketmq.listenEventTopic}")
+    private String event;
 
     public Integer execute(RecoverAbnormalCmd cmd, TokenInfo tokenInfo) {
         // 判断deliver中的合同状态，如果是已完成状态，不可进行此操作
@@ -87,6 +101,15 @@ public class RecoverAbnormalCmdExe {
         // deliver 收车签署状态改为未签，并且异常收车flag改为真，状态改为已收车；服务单状态更改为已收车；补充异常收车信息；取出合同信息修改收车单；
         cmd.setOperatorId(tokenInfo.getId());
         cmd.setElecContractDTO(contractDTO);
+        Result<MaintenanceDTO> maintainResult = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getServeNo());
+        if (ResultValidUtils.checkResult(maintainResult)) {
+            MaintenanceDTO maintenanceDTO = maintainResult.getData();
+            //格式化为yyyy-MM-dd
+            String confirmDate = DateUtil.formatDate(maintenanceDTO.getConfirmDate());
+            if (cmd.getRecoverTime().before(DateUtil.parseDate(confirmDate))) {
+                throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "收车日期请晚于维修交车日期");
+            }
+        }
         Result<Integer> operationResult = recoverAggregateRootApi.abnormalRecover(cmd);
         ResultValidUtils.checkResultException(operationResult);
 
@@ -96,6 +119,7 @@ public class RecoverAbnormalCmdExe {
         vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.UNCHECKED.getCode());
         vehicleSaveCmd.setStockStatus(ValidStockStatusEnum.IN.getCode());
         vehicleSaveCmd.setWarehouseId(contractDTO.getRecoverWareHouseId());
+        vehicleSaveCmd.setCustomerId(0);
         Result<WarehouseDto> wareHouseResult = warehouseAggregateRootApi.getWarehouseById(vehicleSaveCmd.getWarehouseId());
         if (wareHouseResult.getData() != null) {
             vehicleSaveCmd.setAddress(wareHouseResult.getData().getName());
@@ -128,7 +152,12 @@ public class RecoverAbnormalCmdExe {
             log.error("异常收车时，保存费用到计费域失败，serveNo：{}", cmd.getServeNo());
         }
 
-        // 缺少收车日报mq逻辑
+        // 收车日报mq逻辑
+        DailyOperate operate = new DailyOperate();
+        operate.setServeNo(serveDTO.getServeNo());
+        operate.setCustomerId(serveDTO.getCustomerId());
+        operate.setOperateDate(DateUtil.formatDate(contractDTO.getRecoverVehicleTime()));
+        //mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(operate));
 
         //同步
         Map<String, String> map = new HashMap<>();

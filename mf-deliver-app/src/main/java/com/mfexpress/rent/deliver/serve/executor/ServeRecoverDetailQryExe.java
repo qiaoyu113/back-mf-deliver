@@ -174,6 +174,7 @@ public class ServeRecoverDetailQryExe {
             return null;
         }
         ElecHandoverDocVO elecHandoverDocVO = new ElecHandoverDocVO();
+        elecHandoverDocVO.setContractId(docDTO.getContractId().toString());
         elecHandoverDocVO.setFileUrl(docDTO.getFileUrl());
         return elecHandoverDocVO;
     }

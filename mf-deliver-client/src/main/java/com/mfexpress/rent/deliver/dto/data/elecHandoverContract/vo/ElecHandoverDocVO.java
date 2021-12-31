@@ -8,6 +8,9 @@ import lombok.Data;
 @Data
 public class ElecHandoverDocVO {
 
+    @ApiModelProperty(value = "电子合同id")
+    private String contractId;
+
     @ApiModelProperty(value = "电子交接单pdf文件url")
     private String fileUrl;
 

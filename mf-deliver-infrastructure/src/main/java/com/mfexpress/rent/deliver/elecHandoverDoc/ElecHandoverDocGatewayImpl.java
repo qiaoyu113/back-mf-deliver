@@ -56,4 +56,12 @@ public class ElecHandoverDocGatewayImpl implements ElecHandoverDocGateway {
         return docMapper.selectOneByExample(example);
     }
 
+    @Override
+    public ElectronicHandoverDocPO getDocByContractId(Long contractId) {
+        Example example = MyBatisUtils.createEqualExampleByMap(ImmutableMap.<String, Object>builder()
+                .put("contractId", contractId)
+                .build(), ElectronicHandoverDocPO.class);
+        return docMapper.selectOneByExample(example);
+    }
+
 }

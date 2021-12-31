@@ -98,32 +98,32 @@ public class ElecContractStatusMqCommand {
     public void execute(String body) {
         log.info("mq中的合同状态信息：{}", body);
         ContractResultTopicDTO contractStatusInfo = JSONUtil.toBean(body, ContractResultTopicDTO.class);
-        if(ContractStatusEnum.CREATING.getValue().equals(contractStatusInfo.getStatus())){
+        if (ContractStatusEnum.CREATING.getValue().equals(contractStatusInfo.getStatus())) {
             // 补全三方合同编号
             ContractStatusChangeCmd cmd = new ContractStatusChangeCmd();
             cmd.setContractId(Long.valueOf(contractStatusInfo.getLocalContractId()));
             cmd.setContractForeignNo(contractStatusInfo.getThirdPartContractId());
             contractAggregateRootApi.completionContractForeignNo(cmd);
-        }else if(ContractStatusEnum.SIGNING.getValue().equals(contractStatusInfo.getStatus())){
+        } else if (ContractStatusEnum.SIGNING.getValue().equals(contractStatusInfo.getStatus())) {
             // 合同状态改为 已创建/签署中,并补全三方合同编号；交付单中的合同状态也需改为已创建/签署中
             contractSigning(contractStatusInfo);
-        }else if(ContractStatusEnum.COMPLETE.getValue().equals(contractStatusInfo.getStatus())){
+        } else if (ContractStatusEnum.COMPLETE.getValue().equals(contractStatusInfo.getStatus())) {
             // 合同状态改为完成
             // 加锁避免重复回调
             Lock obtain = this.redisLockRegistry.obtain(StringUtils.join(contractSignedRedisKey, ":", contractStatusInfo.getThirdPartContractId()));
             obtain.lock();
-            try{
+            try {
                 contractCompleted(contractStatusInfo);
-            }finally {
+            } finally {
                 obtain.unlock();
             }
-        }else if(ContractStatusEnum.EXPIRED.getValue().equals(contractStatusInfo.getStatus())){
+        } else if (ContractStatusEnum.EXPIRED.getValue().equals(contractStatusInfo.getStatus())) {
             // 合同状态改为失败，失败原因为过期；不需要更新交付单状态，因为失败原因为过期的话需要用户确认后才会去改变交付单的状态
             ContractStatusChangeCmd cmd = new ContractStatusChangeCmd();
             cmd.setContractId(Long.valueOf(contractStatusInfo.getLocalContractId()));
             cmd.setFailureReason(ContractFailureReasonEnum.OVERDUE.getCode());
             contractAggregateRootApi.fail(cmd);
-        }else if(ContractStatusEnum.FAIL.getValue().equals(contractStatusInfo.getStatus())){
+        } else if (ContractStatusEnum.FAIL.getValue().equals(contractStatusInfo.getStatus())) {
             // 只会在合同生成中才会有此命令，合同置为失效，交付单置为未签状态
             contractFail(contractStatusInfo);
         }
@@ -213,6 +213,7 @@ public class ElecContractStatusMqCommand {
         vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.UNCHECKED.getCode());
         vehicleSaveCmd.setStockStatus(ValidStockStatusEnum.IN.getCode());
         vehicleSaveCmd.setWarehouseId(contractDTO.getRecoverWareHouseId());
+        vehicleSaveCmd.setCustomerId(0);
         Result<WarehouseDto> wareHouseResult = warehouseAggregateRootApi.getWarehouseById(vehicleSaveCmd.getWarehouseId());
         if (wareHouseResult.getData() != null) {
             vehicleSaveCmd.setAddress(wareHouseResult.getData().getName());

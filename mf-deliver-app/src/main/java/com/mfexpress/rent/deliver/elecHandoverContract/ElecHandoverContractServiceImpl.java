@@ -45,6 +45,9 @@ public class ElecHandoverContractServiceImpl implements ElecHandoverContractServ
     @Resource
     private ContractOperationRecordQryExe operationRecordQryExe;
 
+    @Resource
+    private ContractDocQryExe contractDocQryExe;
+
     @Override
     public String createDeliverContract(CreateDeliverContractCmd cmd, TokenInfo tokenInfo) {
         return createDeliverContractCmdExe.execute(cmd, tokenInfo);
@@ -93,5 +96,10 @@ public class ElecHandoverContractServiceImpl implements ElecHandoverContractServ
     @Override
     public ElecRecoverContractVO getRecoverContractInfo(ContractQry qry, TokenInfo tokenInfo) {
         return contractRecoverQryExe.execute(qry, tokenInfo);
+    }
+
+    @Override
+    public ElecHandoverDocVO getElecDoc(ContractQry qry) {
+        return contractDocQryExe.execute(qry);
     }
 }

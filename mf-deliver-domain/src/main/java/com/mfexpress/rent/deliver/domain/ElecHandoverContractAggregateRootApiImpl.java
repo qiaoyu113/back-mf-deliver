@@ -327,4 +327,18 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
         return Result.getInstance(neededContractIdMap).success();
     }
 
+    @Override
+    public Result<ElecDocDTO> getDocDTOByContractId(Long contractId) {
+        if (null == contractId) {
+            return Result.getInstance((ElecDocDTO)null).fail(-1, "参数不可为空");
+        }
+        ElectronicHandoverDocPO docPO = docGateway.getDocByContractId(contractId);
+        if(null == docPO){
+            return Result.getInstance((ElecDocDTO)null).success();
+        }
+        ElecDocDTO elecDocDTO = new ElecDocDTO();
+        BeanUtils.copyProperties(docPO, elecDocDTO);
+        return Result.getInstance(elecDocDTO).success();
+    }
+
 }

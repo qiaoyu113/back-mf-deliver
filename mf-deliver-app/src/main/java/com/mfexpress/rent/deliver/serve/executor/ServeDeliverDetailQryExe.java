@@ -122,7 +122,11 @@ public class ServeDeliverDetailQryExe {
     private ElecHandoverDocVO getElecHandoverDocVO(DeliverDTO deliverDTO) {
         Result<ElecDocDTO> docDTOResult = contractAggregateRootApi.getDocDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.DELIVER.getCode());
         ElecDocDTO docDTO = ResultDataUtils.getInstance(docDTOResult).getDataOrException();
+        if(null == docDTO){
+            return null;
+        }
         ElecHandoverDocVO elecHandoverDocVO = new ElecHandoverDocVO();
+        elecHandoverDocVO.setContractId(docDTO.getContractId().toString());
         elecHandoverDocVO.setFileUrl(docDTO.getFileUrl());
         return elecHandoverDocVO;
     }
