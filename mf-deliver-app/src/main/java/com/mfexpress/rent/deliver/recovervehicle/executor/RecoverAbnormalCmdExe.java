@@ -2,10 +2,8 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
-import com.mfexpress.billing.rentcharge.api.DailyAggregateRootApi;
 import com.mfexpress.billing.rentcharge.api.VehicleDamageAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.VehicleDamage.CreateVehicleDamageCmd;
-import com.mfexpress.billing.rentcharge.dto.data.daily.DailyDTO;
 import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
@@ -15,9 +13,7 @@ import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
-import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
 import com.mfexpress.rent.deliver.constant.ElecHandoverContractStatus;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.consumer.sync.SyncServiceImpl;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
@@ -28,7 +24,6 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContra
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd.CancelContractCmdExe;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
 import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
@@ -38,8 +33,8 @@ import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import com.mfexpress.rent.vehicle.data.dto.warehouse.WarehouseDto;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -47,7 +42,6 @@ import java.util.*;
 
 @Component
 @Slf4j
-//@DependsOn("mqLocalTools")
 public class RecoverAbnormalCmdExe {
 
     @Resource
@@ -77,8 +71,10 @@ public class RecoverAbnormalCmdExe {
     @Resource
     private SyncServiceImpl syncServiceI;
 
-    /*@Resource
-    private MqTools mqTools;*/
+    private MqTools mqTools;
+
+    @Resource
+    private BeanFactory beanFactory;
 
     @Value("${rocketmq.listenEventTopic}")
     private String event;
@@ -157,7 +153,10 @@ public class RecoverAbnormalCmdExe {
         operate.setServeNo(serveDTO.getServeNo());
         operate.setCustomerId(serveDTO.getCustomerId());
         operate.setOperateDate(DateUtil.formatDate(contractDTO.getRecoverVehicleTime()));
-        //mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(operate));
+        if(null == mqTools){
+            mqTools = beanFactory.getBean(MqTools.class);
+        }
+        mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(operate));
 
         //同步
         Map<String, String> map = new HashMap<>();
