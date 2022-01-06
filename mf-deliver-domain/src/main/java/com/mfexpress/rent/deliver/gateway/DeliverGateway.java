@@ -25,6 +25,9 @@ public interface DeliverGateway {
 
     List<Deliver>getDeliverByDeductStatus(List<String>serveNoList);
 
+    List<Deliver> getDeliverByCarId(Integer carId);
+
+
 
 
 }

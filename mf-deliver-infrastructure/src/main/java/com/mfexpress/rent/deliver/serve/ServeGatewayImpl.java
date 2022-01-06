@@ -91,4 +91,12 @@ public class ServeGatewayImpl implements ServeGateway {
         example.createCriteria().andIn("serveNo", serveNoList);
         return serveMapper.selectByExample(example);
     }
+
+    @Override
+    public List<Serve> getServeListByOrderIds(List<Long> orderIds) {
+        Example example = new Example(Serve.class);
+        example.createCriteria()
+                .andIn("orderId", orderIds);
+        return serveMapper.selectByExample(example);
+    }
 }
