@@ -23,5 +23,6 @@ public interface ServeGateway {
     List<Serve>getCycleServe(List<Integer> customerIdList);
     List<Serve> getServeByServeNoList(List<String> serveNoList);
 
+    List<Serve> getServeListByOrderIds(List<Long> orderIds);
 
 }
