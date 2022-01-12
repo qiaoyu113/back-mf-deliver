@@ -54,7 +54,7 @@ public class ServeEsDataQryExe {
         int start = (nowPage - 1) * limit;
         Map<String, Object> map = elasticsearchTools.searchByQuerySort(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX),
                 Utils.getEnvVariable(Constants.ES_DELIVER_INDEX), start, limit,
-                boolQueryBuilder, fieldSortBuilderList);
+                boolQueryBuilder, sortBuilderList);
         List<Map<String, Object>> data = (List<Map<String, Object>>) map.get("data");
         List<ServeVO> serveVoList = new LinkedList<>();
         for (Map<String, Object> serveMap : data) {

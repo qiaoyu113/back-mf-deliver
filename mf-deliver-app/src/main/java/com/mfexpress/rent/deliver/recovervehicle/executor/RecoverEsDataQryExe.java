@@ -68,7 +68,7 @@ public class RecoverEsDataQryExe {
         }
         int start = (recoverQryListCmd.getPage() - 1) * recoverQryListCmd.getLimit();
         Map<String, Object> map = elasticsearchTools.searchByQuerySort(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX),
-                DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), start, recoverQryListCmd.getLimit(), boolQueryBuilder, fieldSortBuilderList
+                DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), start, recoverQryListCmd.getLimit(), boolQueryBuilder, sortBuilderList
         );
         List<Map<String, Object>> data = (List<Map<String, Object>>) map.get("data");
         long total = (long) map.get("total");
