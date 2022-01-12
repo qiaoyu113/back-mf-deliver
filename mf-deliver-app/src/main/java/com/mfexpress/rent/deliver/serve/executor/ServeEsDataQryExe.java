@@ -21,6 +21,8 @@ import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -43,6 +45,11 @@ public class ServeEsDataQryExe {
     private VehicleAggregateRootApi vehicleAggregateRootApi;
 
     public ServeListVO execute(String orderId, QueryBuilder boolQueryBuilder, int nowPage, int limit, List<FieldSortBuilder> fieldSortBuilderList) {
+        List<FieldSortBuilder> sortBuilderList = new LinkedList<>();
+        FieldSortBuilder scoreSortBuilder = SortBuilders.fieldSort("_score").order(SortOrder.DESC);
+        sortBuilderList.add(scoreSortBuilder);
+        sortBuilderList.addAll(fieldSortBuilderList);
+
         ServeListVO serveListVO = new ServeListVO();
         int start = (nowPage - 1) * limit;
         Map<String, Object> map = elasticsearchTools.searchByQuerySort(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX),

@@ -19,6 +19,8 @@ import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
@@ -38,6 +40,11 @@ public class RecoverEsDataQryExe {
     public RecoverTaskListVO getEsData(RecoverQryListCmd recoverQryListCmd, BoolQueryBuilder boolQueryBuilder
             , List<FieldSortBuilder> fieldSortBuilderList, TokenInfo tokenInfo) {
         RecoverTaskListVO recoverTaskListVO = new RecoverTaskListVO();
+
+        List<FieldSortBuilder> sortBuilderList = new LinkedList<>();
+        FieldSortBuilder scoreSortBuilder = SortBuilders.fieldSort("_score").order(SortOrder.DESC);
+        sortBuilderList.add(scoreSortBuilder);
+        sortBuilderList.addAll(fieldSortBuilderList);
 
         Result<List<SysOfficeDto>> sysOfficeResult = officeAggregateRootApi.getOfficeCityListByRegionId(tokenInfo.getOfficeId());
         if (sysOfficeResult.getCode() == 0 && sysOfficeResult.getData() != null) {
