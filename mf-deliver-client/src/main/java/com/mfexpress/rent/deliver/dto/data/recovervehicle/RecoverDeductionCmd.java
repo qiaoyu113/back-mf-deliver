@@ -23,4 +23,13 @@ public class RecoverDeductionCmd {
     private BigDecimal agencyAmount;
     private Integer carServiceId;
 
+    @ApiModelProperty(value = "车损费")
+    private Double damageFee;
+
+    @ApiModelProperty(value = "路边停车费")
+    private Double parkFee;
+
+    @ApiModelProperty(value = "是否为历史数据")
+    private Integer IsHistoricalData;
+
 }

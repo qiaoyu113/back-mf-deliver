@@ -82,4 +82,7 @@ public class RecoverVehicleVO {
     @ApiModelProperty(value = "合照")
     private String imgUrl;
 
+    @ApiModelProperty(value = "是否是历史数据，影响收车时的扣罚费项处理")
+    private Integer IsHistoricalData;
+
 }
