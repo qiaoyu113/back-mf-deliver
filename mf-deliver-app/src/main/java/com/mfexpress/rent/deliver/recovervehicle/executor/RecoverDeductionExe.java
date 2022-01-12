@@ -117,25 +117,27 @@ public class RecoverDeductionExe {
         deliverCarServiceDTO.setCarServiceId(recoverDeductionCmd.getCarServiceId());
         deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
 
-        // 保存车损费和停车费到收车单中
-        Result<Integer> updateResult = recoverVehicleAggregateRootApi.updateDeductionFee(recoverDeductionCmd);
-        if(ResultStatusEnum.SUCCESSED.getCode() != updateResult.getCode() || null == updateResult.getData()){
-            log.error("在收车进行处理事项操作时，修改收车单失败");
-        }
+        if(null == recoverDeductionCmd.getIsHistoricalData() || JudgeEnum.NO.getCode().equals(recoverDeductionCmd.getIsHistoricalData())){
+            // 保存车损费和停车费到收车单中
+            Result<Integer> updateResult = recoverVehicleAggregateRootApi.updateDeductionFee(recoverDeductionCmd);
+            if(ResultStatusEnum.SUCCESSED.getCode() != updateResult.getCode() || null == updateResult.getData()){
+                log.error("在收车进行处理事项操作时，修改收车单失败");
+            }
 
-        // 保存费用到计费域
-        CreateVehicleDamageCmd cmd = new CreateVehicleDamageCmd();
-        cmd.setServeNo(serveDTO.getServeNo());
-        cmd.setOrderId(serveDTO.getOrderId());
-        cmd.setCustomerId(serveDTO.getCustomerId());
-        cmd.setCarNum(deliverDTO.getCarNum());
-        cmd.setFrameNum(deliverDTO.getFrameNum());
-        cmd.setDamageFee(recoverDeductionCmd.getDamageFee());
-        cmd.setParkFee(recoverDeductionCmd.getParkFee());
-        Result<Integer> createVehicleDamageResult = vehicleDamageAggregateRootApi.createVehicleDamage(cmd);
-        if (createVehicleDamageResult.getCode() != 0) {
-            // 目前没有分布式事务，如果保存费用失败不应影响后续逻辑的执行
-            log.error("收车时验车，保存费用到计费域失败，serveNo：{}", serveDTO.getServeNo());
+            // 保存费用到计费域
+            CreateVehicleDamageCmd cmd = new CreateVehicleDamageCmd();
+            cmd.setServeNo(serveDTO.getServeNo());
+            cmd.setOrderId(serveDTO.getOrderId());
+            cmd.setCustomerId(serveDTO.getCustomerId());
+            cmd.setCarNum(deliverDTO.getCarNum());
+            cmd.setFrameNum(deliverDTO.getFrameNum());
+            cmd.setDamageFee(recoverDeductionCmd.getDamageFee());
+            cmd.setParkFee(recoverDeductionCmd.getParkFee());
+            Result<Integer> createVehicleDamageResult = vehicleDamageAggregateRootApi.createVehicleDamage(cmd);
+            if (createVehicleDamageResult.getCode() != 0) {
+                // 目前没有分布式事务，如果保存费用失败不应影响后续逻辑的执行
+                log.error("收车时验车，保存费用到计费域失败，serveNo：{}", serveDTO.getServeNo());
+            }
         }
 
         syncServiceI.execOne(recoverDeductionCmd.getServeNo());

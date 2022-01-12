@@ -29,4 +29,7 @@ public class RecoverDeductionCmd {
     @ApiModelProperty(value = "路边停车费")
     private Double parkFee;
 
+    @ApiModelProperty(value = "是否为历史数据")
+    private Integer IsHistoricalData;
+
 }
