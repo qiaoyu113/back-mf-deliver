@@ -16,13 +16,9 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -36,9 +32,6 @@ public class RecoverTaskListDeductionQryExe implements RecoverQryServiceI {
 
     @Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
-
-    @Value("${projectUpdateTime}")
-    private String projectUpdateTimeChar;
 
     @Override
     public RecoverTaskListVO execute(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo) {
@@ -61,23 +54,10 @@ public class RecoverTaskListDeductionQryExe implements RecoverQryServiceI {
                 return esData;
             }
             Map<String, RecoverVehicle> recoverVehicleMap = recoverVehicleMapResult.getData();
-
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             recoverVehicleVOList.forEach(recoverVehicleVO -> {
                 RecoverVehicle recoverVehicle = recoverVehicleMap.get(recoverVehicleVO.getServeNo());
                 recoverVehicleVO.setDamageFee(recoverVehicle == null ? null : recoverVehicle.getDamageFee());
                 recoverVehicleVO.setParkFee(recoverVehicle == null ? null : recoverVehicle.getParkFee());
-                try {
-                    Date projectUpdateTime = dateFormat.parse(projectUpdateTimeChar);
-                    // 如果收车时间在上线时间之前，标记此数据为历史数据
-                    if (projectUpdateTime.after(recoverVehicleVO.getRecoverVehicleTime())) {
-                        recoverVehicleVO.setIsHistoricalData(JudgeEnum.YES.getCode());
-                    } else {
-                        recoverVehicleVO.setIsHistoricalData(JudgeEnum.NO.getCode());
-                    }
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
             });
         }
         return esData;
