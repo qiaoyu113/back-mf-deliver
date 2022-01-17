@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.domainapi;
 
 import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.entity.RecoverVehicle;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -32,5 +33,6 @@ public interface RecoverVehicleAggregateRootApi {
     @PostMapping("/getRecoverVehicleByServeNo")
     Result<Map<String, RecoverVehicle>> getRecoverVehicleByServeNo(@RequestBody List<String> serveNoList);
 
-
+    @PostMapping("/updateDeductionFee")
+    Result<Integer> updateDeductionFee(@RequestBody RecoverDeductionCmd cmd);
 }

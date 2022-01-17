@@ -7,6 +7,7 @@ import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.entity.RecoverVehicle;
 import com.mfexpress.rent.deliver.gateway.RecoverVehicleGateway;
@@ -114,4 +115,20 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
 
         return Result.getInstance(map).success();
     }
+
+    @Override
+    @PostMapping("/updateDeductionFee")
+    public Result<Integer> updateDeductionFee(@RequestBody RecoverDeductionCmd cmd) {
+        RecoverVehicle recoverVehicle = new RecoverVehicle();
+        recoverVehicle.setServeNo(cmd.getServeNo());
+        recoverVehicle.setParkFee(cmd.getParkFee());
+        recoverVehicle.setDamageFee(cmd.getDamageFee());
+        int i = recoverVehicleGateway.updateRecoverVehicle(recoverVehicle);
+        if (i <= 0) {
+            return Result.getInstance((Integer) null).fail(-1, "修改失败");
+
+        }
+        return Result.getInstance(i).success();
+    }
+
 }

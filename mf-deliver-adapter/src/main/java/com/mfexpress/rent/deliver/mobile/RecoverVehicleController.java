@@ -131,7 +131,7 @@ public class RecoverVehicleController {
     @PostMapping("/toDeduction")
     @ApiOperation(value = "收车处理违章")
     @PrintParam
-    public Result<String> toDeduction(@RequestBody RecoverDeductionCmd recoverDeductionCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+    public Result<String> toDeduction(@RequestBody @Validated RecoverDeductionCmd recoverDeductionCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
 
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
