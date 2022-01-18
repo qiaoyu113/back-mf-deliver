@@ -40,9 +40,17 @@ public class ServeDTO {
     private Integer cityId;
 
     private Integer orgId;
+
     private BigDecimal rent;
+
+    private Double deposit;
 
     private Date createTime;
 
     private Date updateTime;
+
+    private String contractCode;
+
+    private Integer goodsId;
+
 }

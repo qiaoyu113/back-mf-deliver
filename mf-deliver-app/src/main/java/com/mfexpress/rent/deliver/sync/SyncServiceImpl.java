@@ -104,6 +104,8 @@ public class SyncServiceImpl implements SyncServiceI {
         BeanUtils.copyProperties(serveDTO, serveEs);
         serveEs.setServeStatus(serveDTO.getStatus());
         serveEs.setOrderId(serveDTO.getOrderId().toString());
+        serveEs.setRent(serveDTO.getRent().toString());
+        serveEs.setDeposit(serveDTO.getDeposit().toString());
         //租赁方式
         serveEs.setLeaseModelDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.DELIVER_LEASE_MODE), serveEs.getLeaseModelId().toString()));
 

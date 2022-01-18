@@ -7,10 +7,10 @@ import com.mfexpress.rent.deliver.serve.executor.*;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @Service
 public class ServeServiceImpl implements ServeServiceI {
-
 
     @Resource
     private ServeAddCmdExe serveAddCmdExe;
@@ -36,6 +36,9 @@ public class ServeServiceImpl implements ServeServiceI {
 
     @Resource
     private ServeRecoverDetailQryExe serveRecoverDetailQryExe;
+
+    @Resource
+    private RenewableServeListQryExe renewableServeListQryExe;
 
     @Override
     public ServeListVO getServeListVoByOrderNoAll(ServeQryListCmd serveQryListCmd) {
@@ -93,6 +96,11 @@ public class ServeServiceImpl implements ServeServiceI {
     @Override
     public ServeRecoverDetailVO getServeRecoverDetail(ServeQryCmd cmd) {
         return serveRecoverDetailQryExe.execute(cmd);
+    }
+
+    @Override
+    public List<ServeToRenewalVO> getRenewableServeList(RenewableServeQry qry, TokenInfo tokenInfo) {
+        return renewableServeListQryExe.execute(qry, tokenInfo);
     }
 
 }
