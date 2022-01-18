@@ -29,10 +29,10 @@ public class RecoverApplyListAllQryExe implements RecoverQryServiceI {
     public RecoverTaskListVO execute(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverStatus").gte(DeliverEnum.IS_RECOVER.getCode()));
-        FieldSortBuilder checkSortBuilder = SortBuilders.fieldSort("isCheck").order(SortOrder.ASC);
-        FieldSortBuilder timeSortBuilder = SortBuilders.fieldSort("expectRecoverTime").unmappedType("integer").order(SortOrder.ASC);
-        FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.ASC);
-        List<FieldSortBuilder> fieldSortBuilderList = Arrays.asList(checkSortBuilder, timeSortBuilder, updateTimeSortBuilder);
+        FieldSortBuilder deliverStatusSortBuilder = SortBuilders.fieldSort("deliverStatus").order(SortOrder.ASC);
+        FieldSortBuilder expectRecoverTimeSortBuilder = SortBuilders.fieldSort("expectRecoverTime").unmappedType("integer").order(SortOrder.DESC);
+        FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
+        List<FieldSortBuilder> fieldSortBuilderList = Arrays.asList(deliverStatusSortBuilder, expectRecoverTimeSortBuilder, updateTimeSortBuilder);
         return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
     }
 }
