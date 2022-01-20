@@ -199,7 +199,6 @@ public class SyncServiceImpl implements SyncServiceI {
     private Integer getSort(ServeES serveEs) {
         int sort = DeliverSortEnum.ZERO.getSort();
         boolean deliverFlag = serveEs.getIsCheck().equals(JudgeEnum.NO.getCode()) || serveEs.getIsInsurance().equals(JudgeEnum.NO.getCode());
-        boolean recoverFlag = serveEs.getIsInsurance().equals(JudgeEnum.NO.getCode()) || serveEs.getIsDeduction().equals(JudgeEnum.NO.getCode());
         //待发车
         if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_DELIVER.getCode()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
                 && serveEs.getIsInsurance().equals(JudgeEnum.YES.getCode())) {
@@ -215,12 +214,17 @@ public class SyncServiceImpl implements SyncServiceI {
             //收车中 待验车
             sort = DeliverSortEnum.ONE.getSort();
         } else if (serveEs.getDeliverStatus() >= DeliverEnum.IS_RECOVER.getCode() && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
-                && recoverFlag) {
-            //收车中  待退保、待处理违章
+                && serveEs.getIsInsurance().equals(JudgeEnum.NO.getCode())) {
+            //收车中  待退保
             sort = DeliverSortEnum.TWO.getSort();
+
+        } else if (serveEs.getDeliverStatus() >= DeliverEnum.IS_RECOVER.getCode() && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
+                && serveEs.getIsInsurance().equals(JudgeEnum.YES.getCode()) && serveEs.getIsDeduction().equals(JudgeEnum.NO.getCode())) {
+            //待处理事项
+            sort = DeliverSortEnum.THREE.getSort();
         } else if (serveEs.getServeStatus().equals(ServeEnum.COMPLETED.getCode())) {
             //已完成
-            sort = DeliverSortEnum.THREE.getSort();
+            sort = DeliverSortEnum.FOUR.getSort();
         }
 
         return sort;
