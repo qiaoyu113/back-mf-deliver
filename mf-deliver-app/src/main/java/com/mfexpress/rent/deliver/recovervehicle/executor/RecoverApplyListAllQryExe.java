@@ -29,7 +29,7 @@ public class RecoverApplyListAllQryExe implements RecoverQryServiceI {
     public RecoverTaskListVO execute(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverStatus").gte(DeliverEnum.IS_RECOVER.getCode()));
-        FieldSortBuilder deliverStatusSortBuilder = SortBuilders.fieldSort("deliverStatus").order(SortOrder.ASC);
+        FieldSortBuilder deliverStatusSortBuilder = SortBuilders.fieldSort("isCheck").order(SortOrder.ASC);
         FieldSortBuilder expectRecoverTimeSortBuilder = SortBuilders.fieldSort("expectRecoverTime").unmappedType("integer").order(SortOrder.DESC);
         FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
         List<FieldSortBuilder> fieldSortBuilderList = Arrays.asList(deliverStatusSortBuilder, expectRecoverTimeSortBuilder, updateTimeSortBuilder);
