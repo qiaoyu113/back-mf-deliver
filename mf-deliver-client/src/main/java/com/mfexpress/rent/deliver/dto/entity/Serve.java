@@ -71,8 +71,8 @@ public class Serve {
     private String leaseEndDate;
 
     private String billingAdjustmentDate;
-    // 续签合同迭代增加的字段-----------end
 
     private Integer renewalType;
+    // 续签合同迭代增加的字段-----------end
 
 }

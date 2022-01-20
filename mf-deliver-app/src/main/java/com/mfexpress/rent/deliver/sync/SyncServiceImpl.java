@@ -106,6 +106,7 @@ public class SyncServiceImpl implements SyncServiceI {
         serveEs.setOrderId(serveDTO.getOrderId().toString());
         serveEs.setRent(serveDTO.getRent().toString());
         serveEs.setDeposit(serveDTO.getDeposit().toString());
+        serveEs.setLeaseEndDate(serveDTO.getLeaseEndDate());
         //租赁方式
         serveEs.setLeaseModelDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.DELIVER_LEASE_MODE), serveEs.getLeaseModelId().toString()));
 
@@ -118,7 +119,7 @@ public class SyncServiceImpl implements SyncServiceI {
         Result<OrderDTO> orderResult = orderAggregateRootApi.getOrderInfo(reviewOrderQry);
         if (orderResult.getCode() == 0 && orderResult.getData() != null) {
             OrderDTO order = orderResult.getData();
-            serveEs.setContractNo(order.getContractCode());
+            serveEs.setContractNo(order.getOaContractCode());
             Result<CustomerVO> customerResult = customerAggregateRootApi.getById(order.getCustomerId());
             if (customerResult.getCode() == 0 && customerResult.getData() != null) {
                 serveEs.setCustomerName(customerResult.getData().getName());

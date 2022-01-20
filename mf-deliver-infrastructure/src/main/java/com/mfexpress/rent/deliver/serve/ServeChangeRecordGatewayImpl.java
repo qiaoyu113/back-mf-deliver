@@ -16,6 +16,8 @@ public class ServeChangeRecordGatewayImpl implements ServeChangeRecordGateway {
 
     @Override
     public void insertList(List<ServeChangeRecord> recordList) {
-        serveChangeRecordMapper.insertList(recordList);
+        recordList.forEach(serveChangeRecord -> {
+            serveChangeRecordMapper.insertSelective(serveChangeRecord);
+        });
     }
 }

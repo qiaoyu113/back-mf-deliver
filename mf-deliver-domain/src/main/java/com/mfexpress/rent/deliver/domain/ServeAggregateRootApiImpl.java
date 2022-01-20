@@ -30,6 +30,7 @@ import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -64,7 +65,10 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         Serve serve = serveGateway.getServeByServeNo(serveNo);
         ServeDTO serveDTO = new ServeDTO();
         if (serve != null) {
-            BeanUtil.copyProperties(serve, serveDTO);
+            BeanUtils.copyProperties(serve, serveDTO);
+            if(!StringUtils.isEmpty(serve.getLeaseEndDate())){
+                serveDTO.setLeaseEndDate(DateUtil.parseDate(serve.getLeaseEndDate()));
+            }
             return Result.getInstance(serveDTO).success();
         }
 
@@ -110,6 +114,14 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setRemark("");
                 serve.setRent(serveVehicleDTO.getRent());
                 serve.setGoodsId(serveVehicleDTO.getGoodsId());
+
+                serve.setOaContractCode(serveVehicleDTO.getOaContractCode());
+                serve.setDeposit(serveVehicleDTO.getDeposit());
+                serve.setLeaseBeginDate(serveVehicleDTO.getLeaseBeginDate());
+                serve.setLeaseMonths(serveVehicleDTO.getLeaseMonths());
+                serve.setLeaseEndDate(serveVehicleDTO.getLeaseEndDate());
+                serve.setBillingAdjustmentDate("");
+                serve.setRenewalType(0);
                 serveList.add(serve);
             }
         }
@@ -420,7 +432,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @Override
     @PostMapping("/renewalServe")
     @PrintParam
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Result<Integer> renewalServe(@RequestBody @Validated RenewalCmd cmd) {
         // 判断服务单是否存在，状态是否为已发车或维修中
         List<RenewalServeCmd> renewalServeCmdList = cmd.getServeCmdList();

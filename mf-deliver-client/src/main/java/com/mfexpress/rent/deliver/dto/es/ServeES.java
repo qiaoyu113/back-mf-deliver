@@ -75,6 +75,9 @@ public class ServeES {
     @ApiModelProperty(value = "预计还车日期")
     private Date expectRecoverTime;
 
+    @ApiModelProperty(value = "租赁结束日期")
+    private Date leaseEndDate;
+
     @ApiModelProperty(value = "替换车标识")
     private Integer replaceFlag;
 

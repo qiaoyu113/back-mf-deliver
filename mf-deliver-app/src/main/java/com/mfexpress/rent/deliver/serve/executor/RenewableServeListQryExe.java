@@ -12,13 +12,13 @@ import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
-import com.mfexpress.order.exception.CommonException;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.RenewableServeQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeToRenewalVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeVO;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
+import com.mfexpress.rent.deliver.exception.CommonException;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.utils.Utils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -69,7 +69,7 @@ public class RenewableServeListQryExe {
             boolQueryBuilder.must(QueryBuilders.termQuery("carId", qry.getCarId()));
         }
         if (!StringUtils.isEmpty(qry.getOaContractCode())) {
-            boolQueryBuilder.must(QueryBuilders.termQuery("contractNo", qry.getOaContractCode()));
+            boolQueryBuilder.must(QueryBuilders.termQuery("contractNo.keyword", qry.getOaContractCode()));
         }
         if (null != qry.getStatus() && 0 != qry.getStatus()) {
             if(!Objects.equals(ServeEnum.DELIVER.getCode(), qry.getStatus()) && !Objects.equals(ServeEnum.REPAIR.getCode(), qry.getStatus())){

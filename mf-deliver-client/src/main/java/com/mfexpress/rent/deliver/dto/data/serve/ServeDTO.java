@@ -49,8 +49,10 @@ public class ServeDTO {
 
     private Date updateTime;
 
-    private String contractCode;
+    private String oaContractCode;
 
     private Integer goodsId;
+
+    private Date leaseEndDate;
 
 }
