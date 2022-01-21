@@ -6,8 +6,8 @@ import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
+import com.mfexpress.rent.deliver.exception.CommonException;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
-import com.mfexpress.rent.vehicle.exception.CommonException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 

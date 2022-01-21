@@ -3,7 +3,10 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
-import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
+/*import com.mfexpress.billing.rentcharge.api.VehicleDamageAggregateRootApi;*/
+import com.mfexpress.billing.rentcharge.dto.data.VehicleDamage.CreateVehicleDamageCmd;
+//import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
+//import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.response.ResultStatusEnum;
@@ -59,6 +62,10 @@ public class RecoverToCheckExe {
     private WarehouseAggregateRootApi warehouseAggregateRootApi;
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
+
+
+    /*@Resource
+    private VehicleDamageAggregateRootApi vehicleDamageAggregateRootApi;*/
 
     @Resource
     private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
@@ -170,7 +177,7 @@ public class RecoverToCheckExe {
         deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
 
         //生成收车租赁日报
-        Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(recoverVechicleCmd.getServeNo());
+        /*Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(recoverVechicleCmd.getServeNo());
         if (serveDTOResult.getData() != null) {
             ServeDTO serveDTO = serveDTOResult.getData();
             DailyOperate operate = new DailyOperate();
@@ -178,7 +185,7 @@ public class RecoverToCheckExe {
             operate.setCustomerId(serveDTO.getCustomerId());
             operate.setOperateDate(DateUtil.formatDate(recoverVechicleCmd.getRecoverVehicleTime()));
             mqTools.send(topic, "recover_vehicle", null, JSON.toJSONString(operate));
-        }
+        }*/
 
         //同步
         syncServiceI.execOne(recoverVechicleCmd.getServeNo());
