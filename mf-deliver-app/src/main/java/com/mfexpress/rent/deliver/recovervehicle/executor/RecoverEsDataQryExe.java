@@ -19,6 +19,8 @@ import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
@@ -37,6 +39,8 @@ public class RecoverEsDataQryExe {
 
     public RecoverTaskListVO getEsData(RecoverQryListCmd recoverQryListCmd, BoolQueryBuilder boolQueryBuilder
             , List<FieldSortBuilder> fieldSortBuilderList, TokenInfo tokenInfo) {
+        List<FieldSortBuilder> sortBuilderList = new LinkedList<>();
+
         RecoverTaskListVO recoverTaskListVO = new RecoverTaskListVO();
 
         Result<List<SysOfficeDto>> sysOfficeResult = officeAggregateRootApi.getOfficeCityListByRegionId(tokenInfo.getOfficeId());
@@ -48,6 +52,8 @@ public class RecoverEsDataQryExe {
 
         if (StringUtils.isNotBlank(recoverQryListCmd.getKeyword())) {
             boolQueryBuilder.must(QueryBuilders.multiMatchQuery(recoverQryListCmd.getKeyword(), "customerName", "customerPhone"));
+            FieldSortBuilder scoreSortBuilder = SortBuilders.fieldSort("_score").order(SortOrder.DESC);
+            sortBuilderList.add(scoreSortBuilder);
         }
         if (recoverQryListCmd.getCarModelId() != null && recoverQryListCmd.getCarModelId() != 0) {
             boolQueryBuilder.must(QueryBuilders.matchQuery("carModelId", recoverQryListCmd.getCarModelId()));
@@ -59,9 +65,12 @@ public class RecoverEsDataQryExe {
             boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverVehicleTime").from(recoverQryListCmd.getStartDeliverTime().getTime()).to(recoverQryListCmd.getEndDeliverTime().getTime()));
 
         }
+
         int start = (recoverQryListCmd.getPage() - 1) * recoverQryListCmd.getLimit();
+
+        sortBuilderList.addAll(fieldSortBuilderList);
         Map<String, Object> map = elasticsearchTools.searchByQuerySort(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX),
-                DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), start, recoverQryListCmd.getLimit(), boolQueryBuilder, fieldSortBuilderList
+                DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), start, recoverQryListCmd.getLimit(), boolQueryBuilder, sortBuilderList
         );
         List<Map<String, Object>> data = (List<Map<String, Object>>) map.get("data");
         long total = (long) map.get("total");
