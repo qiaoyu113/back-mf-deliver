@@ -156,6 +156,14 @@ public class RecoverToCheckExe {
             return serveResult.getMsg();
         }
 
+        // 发送收车信息到mq，由合同域判断服务单所属的合同是否到已履约完成状态
+        ServeDTO serveDTOToNoticeContract = new ServeDTO();
+        serveDTOToNoticeContract.setServeNo(serve.getServeNo());
+        serveDTOToNoticeContract.setOaContractCode(serve.getOaContractCode());
+        serveDTOToNoticeContract.setGoodsId(serve.getGoodsId());
+        serveDTOToNoticeContract.setCarServiceId(recoverVechicleCmd.getCarServiceId());
+        mqTools.send(topic, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));
+
         DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();
         deliverCarServiceDTO.setCarServiceId(recoverVechicleCmd.getCarServiceId());
         deliverCarServiceDTO.setServeNoList(Arrays.asList(recoverVechicleCmd.getServeNo()));

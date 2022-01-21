@@ -9,17 +9,38 @@ import java.math.BigDecimal;
 @Data
 @ApiModel("车辆信息")
 public class ServeVehicleDTO {
+
     @ApiModelProperty(value = "车型id")
     private Integer carModelId;
+
     @ApiModelProperty(value = "品牌id")
     private Integer brandId;
+
     @ApiModelProperty(value = "租赁方式id")
     private Integer leaseModelId;
+
     @ApiModelProperty(value = "数量")
     private Integer num;
+
     @ApiModelProperty(value = "月租金")
     private BigDecimal rent;
 
-    @ApiModelProperty(value = "月租金")
+    @ApiModelProperty(value = "订单下的商品id")
     private Integer goodsId;
+
+    @ApiModelProperty(value = "oa合同编号")
+    private String oaContractCode;
+
+    @ApiModelProperty(value = "押金")
+    private Double deposit;
+
+    @ApiModelProperty(value = "租赁开始日期")
+    private String leaseBeginDate;
+
+    @ApiModelProperty(value = "租赁期限（月）")
+    private Integer leaseMonths;
+
+    @ApiModelProperty(value = "租赁结束日期")
+    private String leaseEndDate;
+
 }

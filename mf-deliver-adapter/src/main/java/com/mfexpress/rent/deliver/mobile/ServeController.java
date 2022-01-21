@@ -8,6 +8,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.TokenTools;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
+import com.mfexpress.rent.deliver.exception.CommonException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiSort;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/deliver/v3/serve")
@@ -128,6 +130,17 @@ public class ServeController {
     @PrintParam
     public Result<ServeRecoverDetailVO> getServeRecoverDetail(@RequestBody @Validated ServeQryCmd cmd) {
         return Result.getInstance(serveServiceI.getServeRecoverDetail(cmd)).success();
+    }
+
+    @PostMapping("/getRenewableServeList")
+    @ApiOperation("续约合同时客户下的服务单列表的展示/查询")
+    @PrintParam
+    public Result<List<ServeToRenewalVO>> getRenewableServeList(@RequestBody @Validated RenewableServeQry qry, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            throw new CommonException(ResultErrorEnum.LOGIN_OVERDUE.getCode(), ResultErrorEnum.LOGIN_OVERDUE.getName());
+        }
+        return Result.getInstance(serveServiceI.getRenewableServeList(qry, tokenInfo)).success();
     }
 
 }
