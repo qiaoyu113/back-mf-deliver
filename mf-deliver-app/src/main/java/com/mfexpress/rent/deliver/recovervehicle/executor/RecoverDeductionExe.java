@@ -14,7 +14,7 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.vehicle.exception.CommonException;
+import com.mfexpress.rent.deliver.exception.CommonException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
