@@ -6,7 +6,7 @@ import com.alibaba.fastjson.JSON;
 /*import com.mfexpress.billing.rentcharge.api.VehicleDamageAggregateRootApi;*/
 import com.mfexpress.billing.rentcharge.dto.data.VehicleDamage.CreateVehicleDamageCmd;
 //import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
-import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
+//import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.response.ResultStatusEnum;
