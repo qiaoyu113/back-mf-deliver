@@ -1,14 +1,12 @@
 package com.mfexpress.rent.deliver.scheduler;
 
-import com.alibaba.schedulerx.worker.domain.JobContext;
-import com.alibaba.schedulerx.worker.processor.JavaProcessor;
-import com.alibaba.schedulerx.worker.processor.ProcessResult;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.serve.PassiveRenewalServeCmd;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -17,7 +15,7 @@ import java.util.List;
 
 @Component
 @Slf4j
-public class ServeRenewalScheduler extends JavaProcessor {
+public class ServeRenewalScheduler {
 
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
@@ -26,16 +24,17 @@ public class ServeRenewalScheduler extends JavaProcessor {
 
     private final int limit = 100;
 
-    @Override
-    public ProcessResult process(JobContext jobContext) throws Exception {
+    // 每天的0时1分0秒执行一次
+    @Scheduled(cron = "0 1 0 * * *")
+    public void process() {
         PassiveRenewalServeCmd cmd = new PassiveRenewalServeCmd();
         cmd.setStatuses(defaultStatuses);
         cmd.setLimit(limit);
         Result<Integer> renewalResult = serveAggregateRootApi.passiveRenewalServe(cmd);
         if (ResultErrorEnum.SUCCESSED.getCode() != renewalResult.getCode() || null == renewalResult.getData()) {
-            return new ProcessResult(false, "自动续约失败，msg：" + renewalResult.getMsg());
+            log.error("自动续约失败，msg：" + renewalResult.getMsg());
         }
 
-        return new ProcessResult(true, "自动续约了" + renewalResult.getData() + "条服务单");
+        log.info("自动续约了" + renewalResult.getData() + "条服务单");
     }
 }

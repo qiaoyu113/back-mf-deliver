@@ -2,9 +2,9 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 
 import cn.hutool.core.date.DateUtil;
-import com.mfexpress.billing.rentcharge.api.DeductAggrgateRootApi;
+/*import com.mfexpress.billing.rentcharge.api.DeductAggrgateRootApi;
 import com.mfexpress.billing.rentcharge.constant.BusinessChargeTypeEnum;
-import com.mfexpress.billing.rentcharge.dto.data.deduct.DeductDTO;
+import com.mfexpress.billing.rentcharge.dto.data.deduct.DeductDTO;*/
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
@@ -34,8 +34,8 @@ public class RecoverDeductionExe {
 
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
-    @Resource
-    private DeductAggrgateRootApi deductAggrgateRootApi;
+    /*@Resource
+    private DeductAggrgateRootApi deductAggrgateRootApi;*/
     @Resource
     private SyncServiceI syncServiceI;
 
@@ -55,7 +55,7 @@ public class RecoverDeductionExe {
             throw new CommonException(serveResult.getCode(), serveResult.getMsg());
         }
         //生成消分代办金额扣罚项
-        List<DeductDTO> deductDTOList = new LinkedList<>();
+        /*List<DeductDTO> deductDTOList = new LinkedList<>();
         if (recoverDeductionCmd.getDeductionHandel().equals(3)) {
             Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(recoverDeductionCmd.getServeNo());
             Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(recoverDeductionCmd.getServeNo());
@@ -94,7 +94,7 @@ public class RecoverDeductionExe {
                 }
                 deductAggrgateRootApi.createDeduct(deductDTOList);
             }
-        }
+        }*/
         DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();
         deliverCarServiceDTO.setServeNoList(Arrays.asList(recoverDeductionCmd.getServeNo()));
         deliverCarServiceDTO.setCarServiceId(recoverDeductionCmd.getCarServiceId());
