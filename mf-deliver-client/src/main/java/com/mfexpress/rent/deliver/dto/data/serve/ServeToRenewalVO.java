@@ -33,7 +33,7 @@ public class ServeToRenewalVO {
     private String deposit;
 
     @ApiModelProperty(value = "发车日期")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date deliverVehicleTime;
 
     @ApiModelProperty(value = "租赁天数")
