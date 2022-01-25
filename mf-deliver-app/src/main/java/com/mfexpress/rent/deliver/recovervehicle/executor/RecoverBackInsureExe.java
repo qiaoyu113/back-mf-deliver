@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 
 import cn.hutool.core.date.DateUtil;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;

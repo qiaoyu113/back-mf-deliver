@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import com.alibaba.fastjson.JSONObject;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
