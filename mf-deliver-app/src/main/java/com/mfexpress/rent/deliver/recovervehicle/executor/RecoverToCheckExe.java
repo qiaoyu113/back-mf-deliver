@@ -8,6 +8,7 @@ import com.mfexpress.billing.rentcharge.dto.data.VehicleDamage.CreateVehicleDama
 //import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
 //import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
 import com.mfexpress.component.constants.ResultErrorEnum;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.starter.utils.MqTools;
@@ -25,7 +26,6 @@ import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.exception.CommonException;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
@@ -169,6 +169,7 @@ public class RecoverToCheckExe {
         serveDTOToNoticeContract.setOaContractCode(serve.getOaContractCode());
         serveDTOToNoticeContract.setGoodsId(serve.getGoodsId());
         serveDTOToNoticeContract.setCarServiceId(recoverVechicleCmd.getCarServiceId());
+        serveDTOToNoticeContract.setRenewalType(serve.getRenewalType());
         mqTools.send(topic, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));
 
         DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();

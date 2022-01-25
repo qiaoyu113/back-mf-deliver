@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 
 import cn.hutool.core.date.DateUtil;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
@@ -9,7 +10,6 @@ import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverBackInsureDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureCmd;
-import com.mfexpress.rent.deliver.exception.CommonException;
 import com.mfexpress.rent.vehicle.api.VehicleInsuranceAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidInsuranceStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicleinsurance.VehicleInsuranceSaveListCmd;

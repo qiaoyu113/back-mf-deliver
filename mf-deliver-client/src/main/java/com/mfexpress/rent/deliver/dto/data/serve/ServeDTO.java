@@ -55,4 +55,6 @@ public class ServeDTO {
 
     private Date leaseEndDate;
 
+    private Integer renewalType;
+
 }

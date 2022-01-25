@@ -7,7 +7,7 @@
     <groupId>com.mfexpress.rent.deliver</groupId>
     <artifactId>mf-deliver</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
     <name>mf-deliver</name>
     <modules>
         <module>mf-deliver-client</module>
@@ -22,6 +22,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <project.dependents.version>1.0.0-SNAPSHOT</project.dependents.version>
 
         <mybatis-starter.version>1.3.1</mybatis-starter.version>
         <spring-boot.version>2.3.10.RELEASE</spring-boot.version>
@@ -29,6 +30,7 @@
         <cola.components.version>4.0.1</cola.components.version>
         <feign.version>2.2.7.RELEASE</feign.version>
         <mf.components.version>1.1-SNAPSHOT</mf.components.version>
+        <mf.components.exception.version>1.2-SNAPSHOT</mf.components.exception.version>
         <swagger.version>2.9.2</swagger.version>
         <elasticsearch.version>6.6.2</elasticsearch.version>
         <guava.version>30.1.1-jre</guava.version>
@@ -88,7 +90,7 @@
             <dependency>
                 <groupId>com.mfexpress</groupId>
                 <artifactId>mf-component-exception</artifactId>
-                <version>${mf.components.version}</version>
+                <version>${mf.components.exception.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.mfexpress</groupId>
@@ -114,17 +116,17 @@
             <dependency>
                 <groupId>com.mfexpress</groupId>
                 <artifactId>mf-common-client</artifactId>
-                <version>${project.version}</version>
+                <version>${project.dependents.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.mfexpress.transportation.project</groupId>
                 <artifactId>mf-customer-client</artifactId>
-                <version>${project.version}</version>
+                <version>${project.dependents.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.mfexpress.billing.rentcharge</groupId>
                 <artifactId>mf-billing-rentcharge-client</artifactId>
-                <version>${project.version}</version>
+                <version>${project.dependents.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
@@ -135,7 +137,7 @@
             <dependency>
                 <groupId>com.mfexpress.rent.order</groupId>
                 <artifactId>mf-order-client</artifactId>
-                <version>${project.version}</version>
+                <version>1.1.0-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.mfexpress.rent.deliver</groupId>
@@ -166,7 +168,7 @@
             <dependency>
                 <groupId>com.mfexpress.rent.vehicle</groupId>
                 <artifactId>mf-vehicle-client</artifactId>
-                <version>${project.version}</version>
+                <version>${project.dependents.version}</version>
             </dependency>
             <!--COLA Components-->
             <dependency>
