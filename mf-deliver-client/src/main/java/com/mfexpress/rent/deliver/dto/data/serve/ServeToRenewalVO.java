@@ -40,6 +40,7 @@ public class ServeToRenewalVO {
     private String leaseDays;
 
     @ApiModelProperty(value = "预计收车日期/租赁结束日期")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date leaseEndDate;
 
     @ApiModelProperty(value = "租赁方式")

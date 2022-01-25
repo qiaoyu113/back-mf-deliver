@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -102,6 +103,7 @@ public class SyncServiceImpl implements SyncServiceI {
         }
         ServeDTO serveDTO = serveResult.getData();
         BeanUtils.copyProperties(serveDTO, serveEs);
+        serveEs.setContractNo(serveDTO.getOaContractCode());
         serveEs.setServeStatus(serveDTO.getStatus());
         serveEs.setOrderId(serveDTO.getOrderId().toString());
         serveEs.setRent(serveDTO.getRent().toString());
@@ -119,7 +121,9 @@ public class SyncServiceImpl implements SyncServiceI {
         Result<OrderDTO> orderResult = orderAggregateRootApi.getOrderInfo(reviewOrderQry);
         if (orderResult.getCode() == 0 && orderResult.getData() != null) {
             OrderDTO order = orderResult.getData();
-            serveEs.setContractNo(order.getOaContractCode());
+            if (StringUtils.isEmpty(serveEs.getContractNo())) {
+                serveEs.setContractNo(order.getOaContractCode());
+            }
             Result<CustomerVO> customerResult = customerAggregateRootApi.getById(order.getCustomerId());
             if (customerResult.getCode() == 0 && customerResult.getData() != null) {
                 serveEs.setCustomerName(customerResult.getData().getName());
