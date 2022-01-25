@@ -78,4 +78,7 @@ public interface ServeAggregateRootApi {
 
     @PostMapping("/passiveRenewalServe")
     Result<Integer> passiveRenewalServe(@RequestBody @Validated PassiveRenewalServeCmd cmd);
+
+    @PostMapping("/getServeChangeRecordList")
+    Result<List<ServeChangeRecordDTO>> getServeChangeRecordList(@RequestParam("serveNo") String serveNo);
 }

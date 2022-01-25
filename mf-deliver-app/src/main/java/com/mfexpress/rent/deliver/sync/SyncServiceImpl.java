@@ -7,6 +7,7 @@ import com.mfexpress.common.domain.dto.DictTypeDTO;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
 import com.mfexpress.component.starter.utils.MqTools;
+import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.data.ProductDTO;
@@ -68,6 +69,9 @@ public class SyncServiceImpl implements SyncServiceI {
     @Resource
     private DictAggregateRootApi dictAggregateRootApi;
 
+    @Resource
+    private ContractAggregateRootApi contractAggregateRootApi;
+
     @Value("${rocketmq.listenBinlogTopic}")
     private String listenBinlogTopic;
     @Value("${rocketmq.listenEventTopic}")
@@ -111,6 +115,7 @@ public class SyncServiceImpl implements SyncServiceI {
         serveEs.setLeaseEndDate(serveDTO.getLeaseEndDate());
         //租赁方式
         serveEs.setLeaseModelDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.DELIVER_LEASE_MODE), serveEs.getLeaseModelId().toString()));
+        serveEs.setExtractVehicleTime(serveDTO.getLeaseBeginDate());
 
         //品牌车型描述
         Result<String> carModelResult = vehicleAggregateRootApi.getVehicleBrandTypeById(serveEs.getCarModelId());
