@@ -2,8 +2,7 @@ package com.mfexpress.rent.deliver.delivervehicle.executor;
 
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
-/*import com.mfexpress.billing.rentcharge.dto.data.daily.DailyDTO;
-import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;*/
+import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.MqTools;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
@@ -70,11 +69,11 @@ public class DeliverVehicleExe {
             deliverVehicleDTOList.add(deliverVehicleDTO);
 
             //发车操作mq触发计费
-            /*DailyOperate operate = new DailyOperate();
+            DailyOperate operate = new DailyOperate();
             operate.setServeNo(deliverVehicleImgCmd.getServeNo());
             operate.setCustomerId(deliverVehicleCmd.getCustomerId());
             operate.setOperateDate(DateUtil.formatDate(deliverVehicleCmd.getDeliverVehicleTime()));
-            mqTools.send(event, "deliver_vehicle", null, JSON.toJSONString(operate));*/
+            mqTools.send(event, "deliver_vehicle", null, JSON.toJSONString(operate));
         }
         VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
         vehicleSaveCmd.setStockStatus(ValidStockStatusEnum.OUT.getCode());
