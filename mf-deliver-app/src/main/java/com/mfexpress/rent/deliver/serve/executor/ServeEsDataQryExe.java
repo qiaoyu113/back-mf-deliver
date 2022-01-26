@@ -63,24 +63,27 @@ public class ServeEsDataQryExe {
             BeanUtil.copyProperties(serveEs, serveVO);
             serveVoList.add(serveVO);
         }
+        ReviewOrderQry reviewOrderQry = new ReviewOrderQry();
+        reviewOrderQry.setId(orderId);
+        Result<?> orderResult = orderAggregateRootApi.getOrderInfo(reviewOrderQry);
+        if (orderResult.getCode() == 0 && orderResult.getData() != null) {
+            OrderDTO order = (OrderDTO) orderResult.getData();
+            // 合同编号以订单中的信息为准
+            serveListVO.setContractNo(order.getOaContractCode());
+        }
         if (data.size() > 0) {
             Map<String, Object> mapExample = data.get(0);
             ServeES serveEsExample = BeanUtil.mapToBean(mapExample, ServeES.class, false, new CopyOptions());
             serveListVO.setOrderId(serveEsExample.getOrderId());
             serveListVO.setCarModelVOList(serveEsExample.getCarModelVOList());
             serveListVO.setCustomerName(serveEsExample.getCustomerName());
-            serveListVO.setContractNo(serveEsExample.getContractNo());
             serveListVO.setExtractVehicleTime(serveEsExample.getExtractVehicleTime());
             serveListVO.setCustomerId(serveEsExample.getCustomerId());
         } else {
             //todo es查询订单信息
-            ReviewOrderQry reviewOrderQry = new ReviewOrderQry();
-            reviewOrderQry.setId(orderId);
-            Result<?> orderResult = orderAggregateRootApi.getOrderInfo(reviewOrderQry);
             if (orderResult.getCode() == 0 && orderResult.getData() != null) {
                 OrderDTO order = (OrderDTO) orderResult.getData();
                 serveListVO.setOrderId(orderId);
-                serveListVO.setContractNo(order.getOaContractCode());
                 serveListVO.setCustomerId(order.getCustomerId());
                 Result<CustomerVO> customerResult = customerAggregateRootApi.getById(order.getCustomerId());
                 if (customerResult.getCode() == 0 && customerResult.getData() != null) {
