@@ -102,7 +102,7 @@ public class RecoverVehicleDetailQryExe {
         // 数据拼装
         RecoverDetailVO recoverDetailVO = new RecoverDetailVO();
         recoverDetailVO.setCustomerName(customerVO.getName());
-        recoverDetailVO.setContractNo(orderDTO.getOaContractCode());
+        recoverDetailVO.setContractNo(serveDTO.getOaContractCode());
 
         RecoverVehicleVO recoverVehicleVO = new RecoverVehicleVO();
         recoverVehicleVO.setCarNum(deliverDTO.getCarNum());
