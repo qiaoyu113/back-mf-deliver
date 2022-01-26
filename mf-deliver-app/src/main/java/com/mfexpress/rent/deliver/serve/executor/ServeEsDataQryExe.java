@@ -80,7 +80,7 @@ public class ServeEsDataQryExe {
             if (orderResult.getCode() == 0 && orderResult.getData() != null) {
                 OrderDTO order = (OrderDTO) orderResult.getData();
                 serveListVO.setOrderId(orderId);
-                serveListVO.setContractNo(order.getContractCode());
+                serveListVO.setContractNo(order.getOaContractCode());
                 serveListVO.setCustomerId(order.getCustomerId());
                 Result<CustomerVO> customerResult = customerAggregateRootApi.getById(order.getCustomerId());
                 if (customerResult.getCode() == 0 && customerResult.getData() != null) {
