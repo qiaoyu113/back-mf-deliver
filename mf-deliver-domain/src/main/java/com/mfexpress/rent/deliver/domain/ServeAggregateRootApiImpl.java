@@ -41,7 +41,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/domain/deliver/v3/serve")
@@ -68,7 +67,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             BeanUtils.copyProperties(serve, serveDTO);
             if(!StringUtils.isEmpty(serve.getLeaseEndDate())){
                 serveDTO.setLeaseEndDate(DateUtil.parseDate(serve.getLeaseEndDate()));
-                serveDTO.leaseBeginDate(DateUtil.parseDate(serve.getLeaseBeginDate()));
+                serveDTO.setLeaseBeginDate(DateUtil.parseDate(serve.getLeaseBeginDate()));
             }
             return Result.getInstance(serveDTO).success();
         }
@@ -513,10 +512,12 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             Date finalNowDate = nowDate;
             serves.forEach(serve -> {
                 String leaseEndDateChar = serve.getLeaseEndDate();
-                Date leaseEndDate = DateUtil.parse(leaseEndDateChar);
-                if(leaseEndDate.before(finalNowDate)){
-                    // 租赁结束日期在当前日期之前，那么此服务单需要被自动续约，只判断到天
-                    needPassiveRenewalServeList.add(serve);
+                if(!StringUtils.isEmpty(leaseEndDateChar)){
+                    Date leaseEndDate = DateUtil.parse(leaseEndDateChar);
+                    if(leaseEndDate.before(finalNowDate)){
+                        // 租赁结束日期在当前日期之前，那么此服务单需要被自动续约，只判断到天
+                        needPassiveRenewalServeList.add(serve);
+                    }
                 }
             });
         }
