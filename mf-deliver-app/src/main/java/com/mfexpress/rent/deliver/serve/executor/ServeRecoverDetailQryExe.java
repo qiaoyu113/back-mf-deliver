@@ -200,7 +200,7 @@ public class ServeRecoverDetailQryExe {
         }
         OrderDTO orderDTO = orderResult.getData();
         OrderVO orderVO = new OrderVO();
-        orderVO.setContractNo(orderDTO.getContractCode());
+        orderVO.setContractNo(serveDTO.getOaContractCode());
         orderVO.setDeliveryDate(orderDTO.getDeliveryDate());
         Result<CustomerVO> customerResult = customerAggregateRootApi.getById(orderDTO.getCustomerId());
         if (!DeliverUtils.resultDataCheck(customerResult)) {
