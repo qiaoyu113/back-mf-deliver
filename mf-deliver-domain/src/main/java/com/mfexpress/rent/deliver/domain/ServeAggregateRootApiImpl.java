@@ -504,8 +504,10 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
         // 找出所有的需要自动续约的服务单
         List<Serve> needPassiveRenewalServeList = new ArrayList<>();
+        int page = 1;
         for (int i = 0; i < count; i += cmd.getLimit()) {
-            qry.setPage(i+1);
+            qry.setPage(page);
+            page++;
             qry.setLimit(cmd.getLimit());
             PagePagination<Serve> pagePagination = serveGateway.getPageServeByQry(qry);
             List<Serve> serves = pagePagination.getList();

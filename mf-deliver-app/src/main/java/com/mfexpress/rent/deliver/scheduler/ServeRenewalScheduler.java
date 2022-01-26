@@ -25,7 +25,7 @@ public class ServeRenewalScheduler {
     private final int limit = 100;
 
     // 每天的0时1分0秒执行一次
-    @Scheduled(cron = "0 1 0 * * *")
+    @Scheduled(cron = "0 10 0 * * *")
     public void process() {
         PassiveRenewalServeCmd cmd = new PassiveRenewalServeCmd();
         cmd.setStatuses(defaultStatuses);
