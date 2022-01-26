@@ -7,4 +7,6 @@ import java.util.List;
 public interface ServeChangeRecordGateway {
 
     void insertList(List<ServeChangeRecord> recordList);
+
+    List<ServeChangeRecord> getList(String serveNo);
 }

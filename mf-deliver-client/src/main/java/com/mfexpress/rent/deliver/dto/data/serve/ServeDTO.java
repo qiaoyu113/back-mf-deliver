@@ -53,6 +53,8 @@ public class ServeDTO {
 
     private Integer goodsId;
 
+    private Date leaseBeginDate;
+
     private Date leaseEndDate;
 
     private Integer renewalType;

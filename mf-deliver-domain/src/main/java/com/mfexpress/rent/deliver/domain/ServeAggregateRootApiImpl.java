@@ -68,6 +68,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             BeanUtils.copyProperties(serve, serveDTO);
             if(!StringUtils.isEmpty(serve.getLeaseEndDate())){
                 serveDTO.setLeaseEndDate(DateUtil.parseDate(serve.getLeaseEndDate()));
+                serveDTO.leaseBeginDate(DateUtil.parseDate(serve.getLeaseBeginDate()));
             }
             return Result.getInstance(serveDTO).success();
         }
@@ -546,6 +547,22 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         serveChangeRecordGateway.insertList(recordList);
 
         return Result.getInstance(serveToUpdateList.size()).success();
+    }
+
+    @Override
+    @PostMapping("/getServeChangeRecordList")
+    @PrintParam
+    public Result<List<ServeChangeRecordDTO>> getServeChangeRecordList(@RequestParam("serveNo") String serveNo) {
+        List<ServeChangeRecord> recordList = serveChangeRecordGateway.getList(serveNo);
+        if(recordList.isEmpty()){
+            return Result.getInstance((List<ServeChangeRecordDTO>) null).success();
+        }
+        List<ServeChangeRecordDTO> recordDTOList = recordList.stream().map(record -> {
+            ServeChangeRecordDTO recordDTO = new ServeChangeRecordDTO();
+            BeanUtils.copyProperties(record, recordDTO);
+            return recordDTO;
+        }).collect(Collectors.toList());
+        return Result.getInstance(recordDTOList).success();
     }
 
 }
