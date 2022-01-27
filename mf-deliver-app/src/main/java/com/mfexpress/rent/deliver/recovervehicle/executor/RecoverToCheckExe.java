@@ -126,7 +126,7 @@ public class RecoverToCheckExe {
         }
 
         // 保存费用到计费域
-        CreateVehicleDamageCmd cmd = new CreateVehicleDamageCmd();
+        /*CreateVehicleDamageCmd cmd = new CreateVehicleDamageCmd();
         cmd.setServeNo(serve.getServeNo());
         cmd.setOrderId(serve.getOrderId());
         cmd.setCustomerId(serve.getCustomerId());
@@ -138,7 +138,7 @@ public class RecoverToCheckExe {
         if (createVehicleDamageResult.getCode() != 0) {
             // 目前没有分布式事务，如果保存费用失败不应影响后续逻辑的执行
             log.error("收车时验车，保存费用到计费域失败，serveNo：{}", serve.getServeNo());
-        }
+        }*/
 
         //更新交付单状态未 已验车 已收车
         Result<Integer> deliverResult = deliverAggregateRootApi.toCheck(recoverVechicleCmd.getServeNo());
