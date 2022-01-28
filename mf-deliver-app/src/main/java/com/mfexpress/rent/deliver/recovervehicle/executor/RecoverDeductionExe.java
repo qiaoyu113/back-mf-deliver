@@ -35,6 +35,7 @@ import java.util.List;
 @Slf4j
 public class RecoverDeductionExe {
 
+
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
 
@@ -81,6 +82,7 @@ public class RecoverDeductionExe {
         //生成消分代办金额扣罚项
         List<DeductDTO> deductDTOList = new LinkedList<>();
         if (recoverDeductionCmd.getDeductionHandel().equals(3)) {
+            DeliverDTO deliverDTO1 = deliverDTOResult.getData();
             if (recoverDeductionCmd.getDeductionAmount().compareTo(BigDecimal.ZERO) != 0) {
                 DeductDTO deductDTO = new DeductDTO();
                 deductDTO.setServeNo(recoverDeductionCmd.getServeNo());
@@ -89,8 +91,8 @@ public class RecoverDeductionExe {
                 deductDTO.setStatus(JudgeEnum.NO.getCode());
                 deductDTO.setDeductPoints(recoverDeductionCmd.getViolationPoints());
                 deductDTO.setCreateDate(DateUtil.formatDate(new Date()));
-                deductDTO.setCarNum(deliverDTO.getCarNum());
-                deductDTO.setFrameNum(deliverDTO.getFrameNum());
+                deductDTO.setCarNum(deliverDTO1.getCarNum());
+                deductDTO.setFrameNum(deliverDTO1.getFrameNum());
                 deductDTO.setType(BusinessChargeTypeEnum.DEDUCT_ELIMINATE.getCode());
                 deductDTO.setAmount(recoverDeductionCmd.getDeductionAmount());
                 deductDTOList.add(deductDTO);
@@ -103,12 +105,11 @@ public class RecoverDeductionExe {
                 deductDTO.setStatus(JudgeEnum.NO.getCode());
                 deductDTO.setDeductPoints(recoverDeductionCmd.getViolationPoints());
                 deductDTO.setCreateDate(DateUtil.formatDate(new Date()));
-                deductDTO.setCarNum(deliverDTO.getCarNum());
-                deductDTO.setFrameNum(deliverDTO.getFrameNum());
+                deductDTO.setCarNum(deliverDTO1.getCarNum());
+                deductDTO.setFrameNum(deliverDTO1.getFrameNum());
                 deductDTO.setType(BusinessChargeTypeEnum.DEDUCT_AGENCY.getCode());
                 deductDTO.setAmount(recoverDeductionCmd.getAgencyAmount());
                 deductDTOList.add(deductDTO);
-
             }
             deductAggrgateRootApi.createDeduct(deductDTOList);
         }

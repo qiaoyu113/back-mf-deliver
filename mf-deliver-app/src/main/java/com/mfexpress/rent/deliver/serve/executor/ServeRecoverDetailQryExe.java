@@ -4,6 +4,7 @@ import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.common.domain.dto.DictDataDTO;
 import com.mfexpress.common.domain.dto.DictTypeDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
@@ -21,7 +22,6 @@ import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
-import com.mfexpress.rent.deliver.exception.CommonException;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
@@ -200,7 +200,7 @@ public class ServeRecoverDetailQryExe {
         }
         OrderDTO orderDTO = orderResult.getData();
         OrderVO orderVO = new OrderVO();
-        orderVO.setContractNo(orderDTO.getContractCode());
+        orderVO.setContractNo(serveDTO.getOaContractCode());
         orderVO.setDeliveryDate(orderDTO.getDeliveryDate());
         Result<CustomerVO> customerResult = customerAggregateRootApi.getById(orderDTO.getCustomerId());
         if (!DeliverUtils.resultDataCheck(customerResult)) {

@@ -31,7 +31,7 @@ public class DeliverVehicleController {
         //生成发车单 交付单状态更新已发车 初始化操作状态  服务单状态更新为已发车  调用车辆服务为租赁状态
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
-            //提示失败结果
+            //提示失败结果oaContractCode
             return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         deliverVehicleCmd.setCarServiceId(tokenInfo.getId());

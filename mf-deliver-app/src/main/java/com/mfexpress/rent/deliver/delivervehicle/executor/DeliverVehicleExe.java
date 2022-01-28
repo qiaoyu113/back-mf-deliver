@@ -2,7 +2,6 @@ package com.mfexpress.rent.deliver.delivervehicle.executor;
 
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
-import com.mfexpress.billing.rentcharge.dto.data.daily.DailyDTO;
 import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.MqTools;
@@ -52,7 +51,7 @@ public class DeliverVehicleExe {
         //生成发车单 交付单状态更新已发车 初始化操作状态  服务单状态更新为已发车  调用车辆服务为租赁状态
         List<DeliverVehicleImgCmd> deliverVehicleImgCmdList = deliverVehicleCmd.getDeliverVehicleImgCmdList();
         List<DeliverVehicleDTO> deliverVehicleDTOList = new LinkedList<>();
-        List<DailyDTO> dailyDTOList = new LinkedList<>();
+        //List<DailyDTO> dailyDTOList = new LinkedList<>();
         //更新服务单状态
         List<String> serveNoList = new LinkedList<>();
         List<Integer> carIdList = new LinkedList<>();

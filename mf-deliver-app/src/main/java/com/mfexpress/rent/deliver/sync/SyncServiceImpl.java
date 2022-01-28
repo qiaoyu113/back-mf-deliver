@@ -7,6 +7,7 @@ import com.mfexpress.common.domain.dto.DictTypeDTO;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
 import com.mfexpress.component.starter.utils.MqTools;
+import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.data.ProductDTO;
@@ -31,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -67,6 +69,9 @@ public class SyncServiceImpl implements SyncServiceI {
     @Resource
     private DictAggregateRootApi dictAggregateRootApi;
 
+    @Resource
+    private ContractAggregateRootApi contractAggregateRootApi;
+
     @Value("${rocketmq.listenBinlogTopic}")
     private String listenBinlogTopic;
     @Value("${rocketmq.listenEventTopic}")
@@ -102,10 +107,15 @@ public class SyncServiceImpl implements SyncServiceI {
         }
         ServeDTO serveDTO = serveResult.getData();
         BeanUtils.copyProperties(serveDTO, serveEs);
+        serveEs.setContractNo(serveDTO.getOaContractCode());
         serveEs.setServeStatus(serveDTO.getStatus());
         serveEs.setOrderId(serveDTO.getOrderId().toString());
+        serveEs.setRent(serveDTO.getRent().toString());
+        serveEs.setDeposit(serveDTO.getDeposit().toString());
+        serveEs.setLeaseEndDate(serveDTO.getLeaseEndDate());
         //租赁方式
         serveEs.setLeaseModelDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.DELIVER_LEASE_MODE), serveEs.getLeaseModelId().toString()));
+        serveEs.setExtractVehicleTime(serveDTO.getLeaseBeginDate());
 
         //品牌车型描述
         Result<String> carModelResult = vehicleAggregateRootApi.getVehicleBrandTypeById(serveEs.getCarModelId());
@@ -116,7 +126,9 @@ public class SyncServiceImpl implements SyncServiceI {
         Result<OrderDTO> orderResult = orderAggregateRootApi.getOrderInfo(reviewOrderQry);
         if (orderResult.getCode() == 0 && orderResult.getData() != null) {
             OrderDTO order = orderResult.getData();
-            serveEs.setContractNo(order.getContractCode());
+            if (StringUtils.isEmpty(serveEs.getContractNo())) {
+                serveEs.setContractNo(order.getOaContractCode());
+            }
             Result<CustomerVO> customerResult = customerAggregateRootApi.getById(order.getCustomerId());
             if (customerResult.getCode() == 0 && customerResult.getData() != null) {
                 serveEs.setCustomerName(customerResult.getData().getName());
