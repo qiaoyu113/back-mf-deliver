@@ -4,6 +4,8 @@ package com.mfexpress.rent.deliver.api;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 
+import java.util.List;
+
 public interface ServeServiceI {
 
     ServeListVO getServeListVoByOrderNoAll(ServeQryListCmd serveQryListCmd);
@@ -28,4 +30,6 @@ public interface ServeServiceI {
     ServeDeliverDetailVO getServeDeliverDetail(ServeQryCmd cmd);
 
     ServeRecoverDetailVO getServeRecoverDetail(ServeQryCmd cmd);
+
+    List<ServeToRenewalVO> getRenewableServeList(RenewableServeQry qry, TokenInfo tokenInfo);
 }

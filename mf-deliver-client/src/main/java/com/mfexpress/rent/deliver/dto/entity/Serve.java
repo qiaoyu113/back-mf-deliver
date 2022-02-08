@@ -59,4 +59,20 @@ public class Serve {
 
     private Integer goodsId;
 
+    // 续签合同迭代增加的字段-----------start
+    private String oaContractCode;
+
+    private Double deposit;
+
+    private String leaseBeginDate;
+
+    private Integer leaseMonths;
+
+    private String leaseEndDate;
+
+    private String billingAdjustmentDate;
+
+    private Integer renewalType;
+    // 续签合同迭代增加的字段-----------end
+
 }

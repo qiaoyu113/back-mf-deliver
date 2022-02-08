@@ -1,11 +1,8 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
-
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
-import com.mfexpress.billing.rentcharge.api.VehicleDamageAggregateRootApi;
-import com.mfexpress.billing.rentcharge.dto.data.VehicleDamage.CreateVehicleDamageCmd;
-import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
+import com.mfexpress.billing.rentcharge.dto.data.deliver.RecoverVehicleCmd;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
@@ -61,10 +58,6 @@ public class RecoverToCheckExe {
     private WarehouseAggregateRootApi warehouseAggregateRootApi;
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
-
-
-    @Resource
-    private VehicleDamageAggregateRootApi vehicleDamageAggregateRootApi;
 
     @Resource
     private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
@@ -125,7 +118,7 @@ public class RecoverToCheckExe {
         }
 
         // 保存费用到计费域
-        CreateVehicleDamageCmd cmd = new CreateVehicleDamageCmd();
+        /*CreateVehicleDamageCmd cmd = new CreateVehicleDamageCmd();
         cmd.setServeNo(serve.getServeNo());
         cmd.setOrderId(serve.getOrderId());
         cmd.setCustomerId(serve.getCustomerId());
@@ -137,7 +130,7 @@ public class RecoverToCheckExe {
         if (createVehicleDamageResult.getCode() != 0) {
             // 目前没有分布式事务，如果保存费用失败不应影响后续逻辑的执行
             log.error("收车时验车，保存费用到计费域失败，serveNo：{}", serve.getServeNo());
-        }
+        }*/
 
         //更新交付单状态未 已验车 已收车
         Result<Integer> deliverResult = deliverAggregateRootApi.toCheck(recoverVechicleCmd.getServeNo());
@@ -160,22 +153,29 @@ public class RecoverToCheckExe {
             return serveResult.getMsg();
         }
 
+        // 发送收车信息到mq，由合同域判断服务单所属的合同是否到已履约完成状态
+        ServeDTO serveDTOToNoticeContract = new ServeDTO();
+        serveDTOToNoticeContract.setServeNo(serve.getServeNo());
+        serveDTOToNoticeContract.setOaContractCode(serve.getOaContractCode());
+        serveDTOToNoticeContract.setGoodsId(serve.getGoodsId());
+        serveDTOToNoticeContract.setCarServiceId(recoverVechicleCmd.getCarServiceId());
+        serveDTOToNoticeContract.setRenewalType(serve.getRenewalType());
+        mqTools.send(topic, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));
+
         DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();
         deliverCarServiceDTO.setCarServiceId(recoverVechicleCmd.getCarServiceId());
         deliverCarServiceDTO.setServeNoList(Arrays.asList(recoverVechicleCmd.getServeNo()));
         deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
 
-        //生成收车租赁日报
-        Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(recoverVechicleCmd.getServeNo());
-        if (serveDTOResult.getData() != null) {
-            ServeDTO serveDTO = serveDTOResult.getData();
-            DailyOperate operate = new DailyOperate();
-            operate.setServeNo(recoverVechicleCmd.getServeNo());
-            operate.setCustomerId(serveDTO.getCustomerId());
-            operate.setOperateDate(DateUtil.formatDate(recoverVechicleCmd.getRecoverVehicleTime()));
-            mqTools.send(topic, "recover_vehicle", null, JSON.toJSONString(operate));
-        }
-
+        //收车计费
+        RecoverVehicleCmd recoverVehicleCmd = new RecoverVehicleCmd();
+        recoverVehicleCmd.setServeNo(serveNo);
+        recoverVehicleCmd.setVehicleId(deliverDTO.getCarId());
+        recoverVehicleCmd.setDeliverNo(deliverDTO.getDeliverNo());
+        recoverVehicleCmd.setCustomerId(serve.getCustomerId());
+        recoverVehicleCmd.setCreateId(recoverVechicleCmd.getCarServiceId());
+        recoverVehicleCmd.setRecoverDate(DateUtil.formatDate(recoverVechicleCmd.getRecoverVehicleTime()));
+        mqTools.send(topic, "recover_vehicle", null, JSON.toJSONString(recoverVehicleCmd));
         //同步
         syncServiceI.execOne(recoverVechicleCmd.getServeNo());
         return deliverResult.getMsg();*/

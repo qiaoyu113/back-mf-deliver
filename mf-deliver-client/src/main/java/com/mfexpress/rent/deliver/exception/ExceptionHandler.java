@@ -3,6 +3,8 @@ package com.mfexpress.rent.deliver.exception;
 
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.List;
 
 @RestControllerAdvice
+@ConditionalOnClass(value = {DeliverAggregateRootApi.class})
 public class ExceptionHandler {
 
     @ResponseBody

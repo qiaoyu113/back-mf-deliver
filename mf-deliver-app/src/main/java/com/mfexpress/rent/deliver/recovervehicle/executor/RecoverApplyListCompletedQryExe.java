@@ -29,9 +29,9 @@ public class RecoverApplyListCompletedQryExe implements RecoverQryServiceI {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverStatus").gte(DeliverEnum.RECOVER.getCode()))
                 .must(QueryBuilders.matchQuery("isCheck", JudgeEnum.YES.getCode()));
-        FieldSortBuilder timeSortBuilder = SortBuilders.fieldSort("expectRecoverTime").unmappedType("integer").order(SortOrder.ASC);
-        FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.ASC);
-        fieldSortBuilderList.add(timeSortBuilder);
+        FieldSortBuilder recoverVehicleTimeSortBuilder = SortBuilders.fieldSort("recoverVehicleTime").unmappedType("integer").order(SortOrder.DESC);
+        FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
+        fieldSortBuilderList.add(recoverVehicleTimeSortBuilder);
         fieldSortBuilderList.add(updateTimeSortBuilder);
         return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
     }

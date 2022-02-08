@@ -75,8 +75,20 @@ public class ServeES {
     @ApiModelProperty(value = "预计还车日期")
     private Date expectRecoverTime;
 
+    @ApiModelProperty(value = "租赁结束日期")
+    private Date leaseEndDate;
+
     @ApiModelProperty(value = "替换车标识")
     private Integer replaceFlag;
+
+    @ApiModelProperty(value = "商品id")
+    private Integer goodsId;
+
+    @ApiModelProperty(value = "租金")
+    private String rent;
+
+    @ApiModelProperty(value = "押金")
+    private String deposit;
 
     private Integer cityId;
 

@@ -16,6 +16,7 @@ import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class RecoverApplyExe {
@@ -30,10 +31,8 @@ public class RecoverApplyExe {
 
 
     public String execute(RecoverApplyListCmd recoverApplyListCmd) {
-        List<RecoverApplyCmd> recoverApplyCmdList = recoverApplyListCmd.getRecoverApplyCmdList();
-
+        List<RecoverApplyCmd> recoverApplyCmdList = recoverApplyListCmd.getRecoverApplyCmdList().stream().distinct().collect(Collectors.toList());
         List<String> serveNoList = new LinkedList<>();
-
         List<RecoverVehicleDTO> recoverVehicleDTOList = new LinkedList<>();
         for (RecoverApplyCmd recoverApplyCmd : recoverApplyCmdList) {
             serveNoList.add(recoverApplyCmd.getServeNo());

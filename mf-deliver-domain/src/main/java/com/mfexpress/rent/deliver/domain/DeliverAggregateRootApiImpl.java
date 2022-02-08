@@ -5,6 +5,8 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.json.JSONUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
+import cn.hutool.core.collection.CollectionUtil;
+import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.RedisTools;
@@ -414,6 +416,8 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     }
 
     @Override
+    @PostMapping("/getLastDeliverByCarId")
+    @PrintParam
     public Result<DeliverDTO> getLastDeliverByCarId(@RequestParam("carId") Integer carId) {
         List<Deliver> deliverByCarId = deliverGateway.getDeliverByCarId(carId);
         if (CollectionUtil.isEmpty(deliverByCarId)){
