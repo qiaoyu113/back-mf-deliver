@@ -1,8 +1,10 @@
 package com.mfexpress.rent.deliver.delivervehicle.executor;
 
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
-import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
+import com.mfexpress.component.constants.ResultErrorEnum;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.MqTools;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
@@ -13,6 +15,7 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleCmd;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleImgCmd;
+import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
 import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
@@ -23,8 +26,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class DeliverVehicleExe {
@@ -53,11 +56,16 @@ public class DeliverVehicleExe {
         List<DeliverVehicleDTO> deliverVehicleDTOList = new LinkedList<>();
         //List<DailyDTO> dailyDTOList = new LinkedList<>();
         //更新服务单状态
-        List<String> serveNoList = new LinkedList<>();
-        List<Integer> carIdList = new LinkedList<>();
+
+        List<String> serveNoList = deliverVehicleImgCmdList.stream().map(DeliverVehicleImgCmd::getServeNo).collect(Collectors.toList());
+        List<Integer> carIdList = deliverVehicleImgCmdList.stream().map(DeliverVehicleImgCmd::getCarId).collect(Collectors.toList());
+        //触发计费
+        Result<Map<String, Serve>> serveMapResult = serveAggregateRootApi.getServeMapByServeNoList(serveNoList);
+        if (serveMapResult.getCode() != 0) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单信息不存在");
+        }
+        Map<String, Serve> serveMap = serveMapResult.getData();
         for (DeliverVehicleImgCmd deliverVehicleImgCmd : deliverVehicleImgCmdList) {
-            serveNoList.add(deliverVehicleImgCmd.getServeNo());
-            carIdList.add(deliverVehicleImgCmd.getCarId());
             DeliverVehicleDTO deliverVehicleDTO = new DeliverVehicleDTO();
             deliverVehicleDTO.setServeNo(deliverVehicleImgCmd.getServeNo());
             deliverVehicleDTO.setDeliverNo(deliverVehicleImgCmd.getDeliverNo());
@@ -68,13 +76,21 @@ public class DeliverVehicleExe {
             deliverVehicleDTO.setDeliverVehicleTime(deliverVehicleCmd.getDeliverVehicleTime());
             deliverVehicleDTOList.add(deliverVehicleDTO);
 
+            Serve serve = serveMap.get(deliverVehicleImgCmd.getServeNo());
+            com.mfexpress.billing.rentcharge.dto.data.deliver.DeliverVehicleCmd rentChargeCmd = new com.mfexpress.billing.rentcharge.dto.data.deliver.DeliverVehicleCmd();
+            rentChargeCmd.setServeNo(serve.getServeNo());
+            rentChargeCmd.setDeliverNo(deliverVehicleImgCmd.getDeliverNo());
+            rentChargeCmd.setRent(serve.getRent());
+            rentChargeCmd.setExpectRecoverDate(getExpectRecoverDate(deliverVehicleCmd.getDeliverVehicleTime(),serve.getLeaseMonths()));
+            rentChargeCmd.setDeliverFlag(true);
+            rentChargeCmd.setCustomerId(deliverVehicleCmd.getCustomerId());
+            rentChargeCmd.setCreateId(deliverVehicleCmd.getCarServiceId());
+            rentChargeCmd.setVehicleId(deliverVehicleImgCmd.getCarId());
+            rentChargeCmd.setDeliverDate(DateUtil.formatDate(deliverVehicleCmd.getDeliverVehicleTime()));
             //发车操作mq触发计费
-            DailyOperate operate = new DailyOperate();
-            operate.setServeNo(deliverVehicleImgCmd.getServeNo());
-            operate.setCustomerId(deliverVehicleCmd.getCustomerId());
-            operate.setOperateDate(DateUtil.formatDate(deliverVehicleCmd.getDeliverVehicleTime()));
-            mqTools.send(event, "deliver_vehicle", null, JSON.toJSONString(operate));
+            mqTools.send(event, "deliver_vehicle", null, JSON.toJSONString(rentChargeCmd));
         }
+
         VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
         vehicleSaveCmd.setStockStatus(ValidStockStatusEnum.OUT.getCode());
         vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.LEASE.getCode());
@@ -107,8 +123,24 @@ public class DeliverVehicleExe {
         for (String serveNo : serveNoList) {
             syncServiceI.execOne(serveNo);
         }
-
-
         return deliverVehicleResult.getData();
     }
+
+    private  String getExpectRecoverDate(Date deliverVehicleDate, int offset) {
+        DateTime dateTime = DateUtil.endOfMonth(deliverVehicleDate);
+        String deliverDate = DateUtil.formatDate(deliverVehicleDate);
+        String endDate = DateUtil.formatDate(dateTime);
+        if (deliverDate.equals(endDate)) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(DateUtil.endOfMonth(new Date()));
+            calendar.add(Calendar.MONTH, offset);
+            calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+            return DateUtil.formatDate(calendar.getTime());
+        } else {
+            return DateUtil.formatDate(DateUtil.offsetMonth(deliverVehicleDate, offset));
+        }
+    }
+
+
 }
+
