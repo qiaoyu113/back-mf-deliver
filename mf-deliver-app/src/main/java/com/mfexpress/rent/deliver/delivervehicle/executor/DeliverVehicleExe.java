@@ -132,7 +132,7 @@ public class DeliverVehicleExe {
         String endDate = DateUtil.formatDate(dateTime);
         if (deliverDate.equals(endDate)) {
             Calendar calendar = Calendar.getInstance();
-            calendar.setTime(DateUtil.endOfMonth(new Date()));
+            calendar.setTime(dateTime);
             calendar.add(Calendar.MONTH, offset);
             calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
             return DateUtil.formatDate(calendar.getTime());
