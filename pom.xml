@@ -34,7 +34,7 @@
         <swagger.version>2.9.2</swagger.version>
         <elasticsearch.version>6.6.2</elasticsearch.version>
         <guava.version>30.1.1-jre</guava.version>
-        <billing-rentcharge-version>1.1.0-SNAPSHOT</billing-rentcharge-version>
+        <billing.rentcharge.version>1.1.0-SNAPSHOT</billing.rentcharge.version>
         <!--<schedulerx2.version>1.2.4.3</schedulerx2.version>-->
     </properties>
     <profiles>
@@ -127,7 +127,7 @@
             <dependency>
                 <groupId>com.mfexpress.billing.rentcharge</groupId>
                 <artifactId>mf-billing-rentcharge-client</artifactId>
-                <version>${billing-rentcharge-version}</version>
+                <version>${billing.rentcharge.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
@@ -175,7 +175,7 @@
             <dependency>
                 <groupId>com.mfexpress.rent.maintain</groupId>
                 <artifactId>mf-maintain-client</artifactId>
-                <version>${project.version}</version>
+                <version>${project.dependents.version}</version>
             </dependency>
             <!--COLA Components-->
             <dependency>

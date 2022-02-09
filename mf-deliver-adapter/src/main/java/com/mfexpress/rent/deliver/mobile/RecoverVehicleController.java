@@ -133,7 +133,6 @@ public class RecoverVehicleController {
     @ApiOperation(value = "收车处理违章")
     @PrintParam
     public Result<String> toDeduction(@RequestBody @Validated RecoverDeductionCmd recoverDeductionCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
-
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果
@@ -141,8 +140,7 @@ public class RecoverVehicleController {
         }
         recoverDeductionCmd.setCarServiceId(tokenInfo.getId());
         // 服务单 交付单状态更新已收车  交付单处理违章状态更新  车辆租赁状态更新未租赁
-
-        return Result.getInstance(recoverVehicleServiceI.toDeduction(recoverDeductionCmd));
+        return Result.getInstance(recoverVehicleServiceI.toDeduction(recoverDeductionCmd)).success();
     }
 
     // ---------------------luzheng add start----------------------------

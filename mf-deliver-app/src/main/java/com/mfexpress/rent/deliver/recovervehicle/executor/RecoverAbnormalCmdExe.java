@@ -2,9 +2,7 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
-import com.mfexpress.billing.rentcharge.api.VehicleDamageAggregateRootApi;
-import com.mfexpress.billing.rentcharge.dto.data.VehicleDamage.CreateVehicleDamageCmd;
-import com.mfexpress.billing.rentcharge.dto.data.daily.cmd.DailyOperate;
+import com.mfexpress.billing.rentcharge.dto.data.deliver.RecoverVehicleCmd;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.exception.CommonException;
@@ -57,9 +55,6 @@ public class RecoverAbnormalCmdExe {
     private DeliverAggregateRootApi deliverAggregateRootApi;
 
     @Resource
-    private VehicleDamageAggregateRootApi vehicleDamageAggregateRootApi;
-
-    @Resource
     private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
 
     @Resource
@@ -80,6 +75,9 @@ public class RecoverAbnormalCmdExe {
     private String event;
 
     public Integer execute(RecoverAbnormalCmd cmd, TokenInfo tokenInfo) {
+        if(null == mqTools){
+            mqTools = beanFactory.getBean(MqTools.class);
+        }
         // 判断deliver中的合同状态，如果是已完成状态，不可进行此操作
         Result<ElecContractDTO> contractDTOResult = contractAggregateRootApi.getContractDTOByContractId(cmd.getElecContractId());
         ElecContractDTO contractDTO = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
@@ -133,30 +131,26 @@ public class RecoverAbnormalCmdExe {
         Result<Integer> cancelResult = contractAggregateRootApi.cancelContract(cancelContractCmd);
         ResultValidUtils.checkResultException(cancelResult);
 
-        // 保存费用到计费域
-        CreateVehicleDamageCmd createVehicleDamageCmd = new CreateVehicleDamageCmd();
-        createVehicleDamageCmd.setServeNo(serveDTO.getServeNo());
-        createVehicleDamageCmd.setOrderId(serveDTO.getOrderId());
-        createVehicleDamageCmd.setCustomerId(serveDTO.getCustomerId());
-        createVehicleDamageCmd.setCarNum(deliverDTO.getCarNum());
-        createVehicleDamageCmd.setFrameNum(deliverDTO.getFrameNum());
-        createVehicleDamageCmd.setDamageFee(contractDTO.getRecoverDamageFee());
-        createVehicleDamageCmd.setParkFee(contractDTO.getRecoverParkFee());
-        Result<Integer> createVehicleDamageResult = vehicleDamageAggregateRootApi.createVehicleDamage(createVehicleDamageCmd);
-        if(ResultErrorEnum.SUCCESSED.getCode() != createVehicleDamageResult.getCode()){
-            // 目前没有分布式事务，如果保存费用失败不应影响后续逻辑的执行
-            log.error("异常收车时，保存费用到计费域失败，serveNo：{}", cmd.getServeNo());
-        }
+        // 发送收车信息到mq，由合同域判断服务单所属的合同是否到已履约完成状态
+        ServeDTO serveDTOToNoticeContract = new ServeDTO();
+        serveDTOToNoticeContract.setServeNo(serveDTO.getServeNo());
+        serveDTOToNoticeContract.setOaContractCode(serveDTO.getOaContractCode());
+        serveDTOToNoticeContract.setGoodsId(serveDTO.getGoodsId());
+        serveDTOToNoticeContract.setCarServiceId(contractDTO.getCreatorId());
+        serveDTOToNoticeContract.setRenewalType(serveDTO.getRenewalType());
+        log.info("异常收车时，交付域向合同域发送的收车单信息：{}", serveDTOToNoticeContract);
+        mqTools.send(event, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));
 
-        // 收车日报mq逻辑
-        DailyOperate operate = new DailyOperate();
-        operate.setServeNo(serveDTO.getServeNo());
-        operate.setCustomerId(serveDTO.getCustomerId());
-        operate.setOperateDate(DateUtil.formatDate(contractDTO.getRecoverVehicleTime()));
-        if(null == mqTools){
-            mqTools = beanFactory.getBean(MqTools.class);
-        }
-        mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(operate));
+        //收车计费
+        RecoverVehicleCmd recoverVehicleCmd = new RecoverVehicleCmd();
+        recoverVehicleCmd.setServeNo(serveDTO.getServeNo());
+        recoverVehicleCmd.setVehicleId(deliverDTO.getCarId());
+        recoverVehicleCmd.setDeliverNo(deliverDTO.getDeliverNo());
+        recoverVehicleCmd.setCustomerId(serveDTO.getCustomerId());
+        recoverVehicleCmd.setCreateId(contractDTO.getCreatorId());
+        recoverVehicleCmd.setRecoverDate(DateUtil.formatDate(contractDTO.getRecoverVehicleTime()));
+        log.info("异常收车时，交付域向计费域发送的收车单信息：{}", recoverVehicleCmd);
+        mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(recoverVehicleCmd));
 
         //同步
         Map<String, String> map = new HashMap<>();

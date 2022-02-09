@@ -1,73 +1,45 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
-import cn.hutool.core.date.DateUtil;
-import com.alibaba.fastjson.JSON;
-import com.mfexpress.billing.rentcharge.dto.data.deliver.RecoverVehicleCmd;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.response.ResultStatusEnum;
-import com.mfexpress.component.starter.utils.MqTools;
-import com.mfexpress.component.starter.utils.RedisTools;
-import com.mfexpress.rent.deliver.api.SyncServiceI;
-import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
-import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
-import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.utils.DeliverUtils;
-import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
-import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
-import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
-import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
-import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInfoDto;
-import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
-import com.mfexpress.rent.vehicle.data.dto.warehouse.WarehouseDto;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Set;
 
 @Component
 @Slf4j
 public class RecoverToCheckExe {
 
-    @Resource
+    /*@Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
 
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
-    /*@Resource
-    private SyncServiceI syncServiceI;*/
+    @Resource
+    private SyncServiceI syncServiceI;
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
     @Resource
     private WarehouseAggregateRootApi warehouseAggregateRootApi;
-    @Resource
-    private ServeAggregateRootApi serveAggregateRootApi;
 
     @Resource
     private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
 
-    /*@Resource
+    @Resource
     private RedisTools redisTools;
     @Resource
     private MqTools mqTools;
     @Value("${rocketmq.listenEventTopic}")
     private String topic;*/
+
+    @Resource
+    private ServeAggregateRootApi serveAggregateRootApi;
 
     public String execute(RecoverVechicleCmd recoverVechicleCmd) {
         //完善收车单信息
@@ -130,10 +102,10 @@ public class RecoverToCheckExe {
         if (createVehicleDamageResult.getCode() != 0) {
             // 目前没有分布式事务，如果保存费用失败不应影响后续逻辑的执行
             log.error("收车时验车，保存费用到计费域失败，serveNo：{}", serve.getServeNo());
-        }*/
+        }
 
         //更新交付单状态未 已验车 已收车
-        Result<Integer> deliverResult = deliverAggregateRootApi.toCheck(recoverVechicleCmd.getServeNo());
+        Result<Integer> deliverResult = deliverAggregateRootApi.toCheck(recoverVechicleCmd.getServeNo(), recoverVechicleCmd.get);
         if (deliverResult.getCode() == 0) {
             //更新车辆状态
             VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();

@@ -5,20 +5,17 @@ import com.alibaba.fastjson.JSON;
 import com.mfexpress.billing.rentcharge.dto.data.deliver.DeductFeeCmd;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
-import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.response.ResultStatusEnum;
-import com.mfexpress.component.starter.utils.MqTools;
-import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,7 +42,6 @@ public class RecoverDeductionExe {
     private MqTools mqTools;
     @Value("${rocketmq.listenEventTopic}")
     private String topic;
-
 
     public String execute(RecoverDeductionCmd recoverDeductionCmd) {
         Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(recoverDeductionCmd.getServeNo());

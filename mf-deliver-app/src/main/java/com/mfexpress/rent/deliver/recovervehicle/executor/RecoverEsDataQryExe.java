@@ -39,7 +39,6 @@ public class RecoverEsDataQryExe {
 
     public RecoverTaskListVO getEsData(RecoverQryListCmd recoverQryListCmd, BoolQueryBuilder boolQueryBuilder
             , List<FieldSortBuilder> fieldSortBuilderList, TokenInfo tokenInfo) {
-        List<FieldSortBuilder> sortBuilderList = new LinkedList<>();
 
         RecoverTaskListVO recoverTaskListVO = new RecoverTaskListVO();
 
@@ -57,8 +56,6 @@ public class RecoverEsDataQryExe {
 
         if (StringUtils.isNotBlank(recoverQryListCmd.getKeyword())) {
             boolQueryBuilder.must(QueryBuilders.multiMatchQuery(recoverQryListCmd.getKeyword(), "customerName", "customerPhone"));
-            FieldSortBuilder scoreSortBuilder = SortBuilders.fieldSort("_score").order(SortOrder.DESC);
-            sortBuilderList.add(scoreSortBuilder);
         }
         if (recoverQryListCmd.getCarModelId() != null && recoverQryListCmd.getCarModelId() != 0) {
             boolQueryBuilder.must(QueryBuilders.matchQuery("carModelId", recoverQryListCmd.getCarModelId()));
