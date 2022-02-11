@@ -69,17 +69,17 @@ public class RecoverDeductionExe {
             throw new CommonException(serveResult.getCode(), serveResult.getMsg());
         }
         //生成消分代办金额扣罚项
+        DeductFeeCmd deductFeeCmd = new DeductFeeCmd();
+        deductFeeCmd.setDamage(BigDecimal.valueOf(recoverDeductionCmd.getDamageFee() == null ? 0 : recoverDeductionCmd.getDamageFee()));
+        deductFeeCmd.setPark(BigDecimal.valueOf(recoverDeductionCmd.getParkFee() == null ? 0 : recoverDeductionCmd.getParkFee()));
+        deductFeeCmd.setCreateId(recoverDeductionCmd.getCarServiceId());
+        deductFeeCmd.setServeNo(recoverDeductionCmd.getServeNo());
+        deductFeeCmd.setVehicleId(deliverDTO.getCarId());
+        deductFeeCmd.setDeliverNo(deliverDTO.getDeliverNo());
+        deductFeeCmd.setCustomerId(serveDTO.getCustomerId());
         if (recoverDeductionCmd.getDeductionHandel().equals(3)) {
-            DeductFeeCmd deductFeeCmd = new DeductFeeCmd();
             deductFeeCmd.setAgency(recoverDeductionCmd.getAgencyAmount());
-            deductFeeCmd.setDamage(BigDecimal.valueOf(recoverDeductionCmd.getDamageFee() == null ? 0 : recoverDeductionCmd.getDamageFee()));
-            deductFeeCmd.setPark(BigDecimal.valueOf(recoverDeductionCmd.getParkFee() == null ? 0 : recoverDeductionCmd.getParkFee()));
             deductFeeCmd.setEliminate(recoverDeductionCmd.getDeductionAmount());
-            deductFeeCmd.setCreateId(recoverDeductionCmd.getCarServiceId());
-            deductFeeCmd.setServeNo(recoverDeductionCmd.getServeNo());
-            deductFeeCmd.setVehicleId(deliverDTO.getCarId());
-            deductFeeCmd.setDeliverNo(deliverDTO.getDeliverNo());
-            deductFeeCmd.setCustomerId(serveDTO.getCustomerId());
             mqTools.send(topic, "deduct_fee", null, JSON.toJSONString(deductFeeCmd));
 //            if (recoverDeductionCmd.getDeductionAmount().compareTo(BigDecimal.ZERO) != 0) {
 //                DeductDTO deductDTO = new DeductDTO();
