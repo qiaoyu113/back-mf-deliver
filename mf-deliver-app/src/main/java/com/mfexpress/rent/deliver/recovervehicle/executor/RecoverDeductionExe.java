@@ -80,7 +80,6 @@ public class RecoverDeductionExe {
         if (recoverDeductionCmd.getDeductionHandel().equals(3)) {
             deductFeeCmd.setAgency(recoverDeductionCmd.getAgencyAmount());
             deductFeeCmd.setEliminate(recoverDeductionCmd.getDeductionAmount());
-            mqTools.send(topic, "deduct_fee", null, JSON.toJSONString(deductFeeCmd));
 //            if (recoverDeductionCmd.getDeductionAmount().compareTo(BigDecimal.ZERO) != 0) {
 //                DeductDTO deductDTO = new DeductDTO();
 //                deductDTO.setServeNo(recoverDeductionCmd.getServeNo());
@@ -111,6 +110,7 @@ public class RecoverDeductionExe {
 //            }
 //            deductAggrgateRootApi.createDeduct(deductDTOList);
         }
+        mqTools.send(topic, "deduct_fee", null, JSON.toJSONString(deductFeeCmd));
         DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();
         deliverCarServiceDTO.setServeNoList(Arrays.asList(recoverDeductionCmd.getServeNo()));
         deliverCarServiceDTO.setCarServiceId(recoverDeductionCmd.getCarServiceId());
