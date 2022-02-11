@@ -7,12 +7,14 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.starter.utils.MqTools;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
@@ -21,14 +23,17 @@ import com.mfexpress.rent.deliver.constant.ServeRenewalTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
+import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.dto.entity.ServeChangeRecord;
+import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
@@ -56,6 +61,12 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Resource
     private RedisTools redisTools;
+    @Resource
+    private DeliverGateway deliverGateway;
+    @Resource
+    private MqTools mqTools;
+    @Value("${rocketmq.listenEventTopic}")
+    private String event;
 
     @Override
     @PostMapping("/getServeDtoByServeNo")
@@ -65,7 +76,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         ServeDTO serveDTO = new ServeDTO();
         if (serve != null) {
             BeanUtils.copyProperties(serve, serveDTO);
-            if(!StringUtils.isEmpty(serve.getLeaseEndDate())){
+            if (!StringUtils.isEmpty(serve.getLeaseEndDate())) {
                 serveDTO.setLeaseEndDate(DateUtil.parseDate(serve.getLeaseEndDate()));
                 serveDTO.setLeaseBeginDate(DateUtil.parseDate(serve.getLeaseBeginDate()));
             }
@@ -470,6 +481,24 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             record.setCreatorId(cmd.getOperatorId());
             recordList.add(record);
 
+            //发生计费
+            //在这里查询交付单 后续看情况做修改
+            Deliver deliver = deliverGateway.getDeliverByServeNo(serve.getServeNo());
+            RenewalChargeCmd renewalChargeCmd = new RenewalChargeCmd();
+            renewalChargeCmd.setServeNo(serve.getServeNo());
+            renewalChargeCmd.setCreateId(cmd.getOperatorId());
+            renewalChargeCmd.setCustomerId(rawDataServe.getCustomerId());
+            renewalChargeCmd.setDeliverNo(deliver.getDeliverNo());
+            renewalChargeCmd.setVehicleId(deliver.getCarId());
+            if (rawDataServe.getRent().equals(serve.getRent())) {
+                renewalChargeCmd.setEffectFlag(false);
+            } else {
+                renewalChargeCmd.setEffectFlag(true);
+                renewalChargeCmd.setRent(serve.getRent());
+                renewalChargeCmd.setRentEffectDate(renewalServeCmd.getBillingAdjustmentDate());
+            }
+            renewalChargeCmd.setRenewalDate(renewalServeCmd.getLeaseEndDate());
+            mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
             return serve;
         }).collect(Collectors.toList());
         serveListToUpdate.forEach(serve -> {
@@ -514,9 +543,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             Date finalNowDate = nowDate;
             serves.forEach(serve -> {
                 String leaseEndDateChar = serve.getLeaseEndDate();
-                if(!StringUtils.isEmpty(leaseEndDateChar)){
+                if (!StringUtils.isEmpty(leaseEndDateChar)) {
                     Date leaseEndDate = DateUtil.parse(leaseEndDateChar);
-                    if(leaseEndDate.before(finalNowDate)){
+                    if (leaseEndDate.before(finalNowDate)) {
                         // 租赁结束日期在当前日期之前，那么此服务单需要被自动续约，只判断到天
                         needPassiveRenewalServeList.add(serve);
                     }
@@ -557,7 +586,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     public Result<List<ServeChangeRecordDTO>> getServeChangeRecordList(@RequestParam("serveNo") String serveNo) {
         List<ServeChangeRecord> recordList = serveChangeRecordGateway.getList(serveNo);
-        if(recordList.isEmpty()){
+        if (recordList.isEmpty()) {
             return Result.getInstance((List<ServeChangeRecordDTO>) null).success();
         }
         List<ServeChangeRecordDTO> recordDTOList = recordList.stream().map(record -> {
