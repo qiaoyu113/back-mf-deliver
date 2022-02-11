@@ -180,7 +180,6 @@ public class CreateDeliverContractCmdExe {
         contractQysDocumentDTO.setType(ContractModeEnum.DELIVER.getName());
         contractQysDocumentDTO.setOrderContractId(orderDTO.getContractCode());
 
-        System.out.println(JSONUtil.toJsonStr(contractQysDocumentDTO));
         return contractTools.create(contractQysDocumentDTO);
     }
 

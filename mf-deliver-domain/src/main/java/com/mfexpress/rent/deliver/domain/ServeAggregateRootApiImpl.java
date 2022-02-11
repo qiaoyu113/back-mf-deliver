@@ -508,9 +508,6 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         // 保存serve的修改记录
         serveChangeRecordGateway.insertList(recordList);
 
-        // 发送计费命令
-        // 111
-
         return Result.getInstance(0).success();
     }
 
@@ -568,8 +565,23 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             record.setRenewalType(ServeRenewalTypeEnum.PASSIVE.getCode());
             record.setRawData(JSONUtil.toJsonStr(serve));
             record.setNewData(JSONUtil.toJsonStr(serveToUpdate));
-            record.setCreatorId(-1);
+            // -999 代表系统
+            record.setCreatorId(-999);
             recordList.add(record);
+
+            //发生计费
+            //在这里查询交付单 后续看情况做修改
+            Deliver deliver = deliverGateway.getDeliverByServeNo(serve.getServeNo());
+            RenewalChargeCmd renewalChargeCmd = new RenewalChargeCmd();
+            renewalChargeCmd.setServeNo(serve.getServeNo());
+            renewalChargeCmd.setCreateId(-999);
+            renewalChargeCmd.setCustomerId(serve.getCustomerId());
+            renewalChargeCmd.setDeliverNo(deliver.getDeliverNo());
+            renewalChargeCmd.setVehicleId(deliver.getCarId());
+            renewalChargeCmd.setEffectFlag(false);
+            renewalChargeCmd.setRenewalDate(dateFormat.format(updatedLeaseEndDate));
+            mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
+
             return serveToUpdate;
         }).collect(Collectors.toList());
 
