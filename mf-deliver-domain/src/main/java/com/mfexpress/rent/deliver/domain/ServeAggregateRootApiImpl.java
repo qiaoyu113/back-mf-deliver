@@ -14,8 +14,8 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.utils.MqTools;
-import com.mfexpress.component.starter.utils.RedisTools;
+import com.mfexpress.component.starter.tools.mq.MqTools;
+import com.mfexpress.component.starter.tools.redis.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
@@ -61,10 +61,13 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Resource
     private RedisTools redisTools;
+
     @Resource
     private DeliverGateway deliverGateway;
+
     @Resource
     private MqTools mqTools;
+
     @Value("${rocketmq.listenEventTopic}")
     private String event;
 
