@@ -526,6 +526,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     public Result<Integer> passiveRenewalServe(@RequestBody @Validated PassiveRenewalServeCmd cmd) {
         ServeListQry qry = new ServeListQry();
         qry.setStatuses(cmd.getStatuses());
+        qry.setReplaceFlag(JudgeEnum.NO.getCode());
         Integer count = serveGateway.getCountByQry(qry);
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
