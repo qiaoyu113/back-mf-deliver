@@ -178,7 +178,7 @@ public class CreateDeliverContractCmdExe {
         contractQysDocumentDTO.setPhone(cmd.getDeliverInfo().getContactsPhone());
         contractQysDocumentDTO.setDocumentInfoDTOList(docInfos);
         contractQysDocumentDTO.setType(ContractModeEnum.DELIVER.getName());
-        contractQysDocumentDTO.setOrderContractId(orderDTO.getContractCode());
+        contractQysDocumentDTO.setOrderContractId(orderDTO.getOaContractCode());
 
         return contractTools.create(contractQysDocumentDTO);
     }
