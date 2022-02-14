@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.consumer.sync;
 
 
+import cn.hutool.core.collection.CollUtil;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.common.domain.dto.DictDataDTO;
 import com.mfexpress.common.domain.dto.DictTypeDTO;
@@ -9,6 +10,7 @@ import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogRelation;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogTableFullName;
 import com.mfexpress.component.starter.tools.es.ElasticsearchTools;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
@@ -141,18 +143,20 @@ public class SyncServiceImpl implements EsSyncHandlerI {
             serveEs.setExtractVehicleTime(order.getDeliveryDate());
             List<OrderCarModelVO> carModelList = new LinkedList<>();
             List<ProductDTO> productList = order.getProductList();
-            List<Integer> modelsIdList = productList.stream().map(ProductDTO::getModelsId).collect(Collectors.toList());
-            Result<Map<Integer, String>> vehicleBrandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeListById(modelsIdList);
-            Map<Integer, String> brandTypeMap = vehicleBrandTypeResult.getData();
-            for (ProductDTO productDTO : productList) {
-                OrderCarModelVO orderCarModelVO = new OrderCarModelVO();
-                orderCarModelVO.setBrandId(productDTO.getBrandId());
-                orderCarModelVO.setCarModelId(productDTO.getModelsId());
-                orderCarModelVO.setBrandModelDisplay(brandTypeMap.get(productDTO.getModelsId()));
-                orderCarModelVO.setNum(productDTO.getProductNum());
-                carModelList.add(orderCarModelVO);
+            if (!CollUtil.isEmpty(productList)) {
+                List<Integer> modelsIdList = productList.stream().map(ProductDTO::getModelsId).collect(Collectors.toList());
+                Result<Map<Integer, String>> vehicleBrandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeListById(modelsIdList);
+                Map<Integer, String> brandTypeMap = vehicleBrandTypeResult.getData();
+                for (ProductDTO productDTO : productList) {
+                    OrderCarModelVO orderCarModelVO = new OrderCarModelVO();
+                    orderCarModelVO.setBrandId(productDTO.getBrandId());
+                    orderCarModelVO.setCarModelId(productDTO.getModelsId());
+                    orderCarModelVO.setBrandModelDisplay(brandTypeMap.get(productDTO.getModelsId()));
+                    orderCarModelVO.setNum(productDTO.getProductNum());
+                    carModelList.add(orderCarModelVO);
+                }
+                serveEs.setCarModelVOList(carModelList);
             }
-            serveEs.setCarModelVOList(carModelList);
         }
 
 
