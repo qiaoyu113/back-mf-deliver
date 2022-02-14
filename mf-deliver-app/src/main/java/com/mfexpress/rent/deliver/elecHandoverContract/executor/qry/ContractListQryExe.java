@@ -67,7 +67,7 @@ public class ContractListQryExe {
         // 这里的一般信息查询失败不抛异常
         CustomerVO customerVO = customerAggregateRootApi.getById(orderDTO.getCustomerId()).getData();
         deliverContractListVO.setCustomerName(customerVO == null ? "" : customerVO.getName());
-        deliverContractListVO.setContractNo(orderDTO.getContractCode());
+        deliverContractListVO.setContractNo(orderDTO.getOaContractCode());
         deliverContractListVO.setExtractVehicleTime(orderDTO.getDeliveryDate());
 
         // 补充车型信息
