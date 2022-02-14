@@ -184,7 +184,7 @@ public class CreateRecoverContractCmdExe {
         contractDocumentDTO.setPhone(cmd.getRecoverInfo().getContactsPhone());
         contractDocumentDTO.setDocumentInfoDTOList(docInfos);
         contractDocumentDTO.setType(ContractModeEnum.DELIVER.getName());
-        contractDocumentDTO.setOrderContractId(orderDTO.getContractCode());
+        contractDocumentDTO.setOrderContractId(orderDTO.getOaContractCode());
 
         return contractTools.create(contractDocumentDTO);
     }
