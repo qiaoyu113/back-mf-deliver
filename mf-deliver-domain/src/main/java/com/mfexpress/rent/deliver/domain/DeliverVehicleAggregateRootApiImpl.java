@@ -1,6 +1,5 @@
 package com.mfexpress.rent.deliver.domain;
 
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.log.PrintParam;
@@ -9,7 +8,6 @@ import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
-import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleImgCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
@@ -25,10 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -97,7 +92,7 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
     @Transactional(rollbackFor = Exception.class)
     public Result<Integer> deliverVehicles(@RequestBody ElecContractDTO contractDTO) {
         List<DeliverImgInfo> deliverImgInfos = JSONUtil.toList(contractDTO.getPlateNumberWithImgs(), DeliverImgInfo.class);
-        if(deliverImgInfos.isEmpty()){
+        if (deliverImgInfos.isEmpty()) {
             return Result.getInstance((Integer) null).fail(ResultErrorEnum.OPER_ERROR.getCode(), ResultErrorEnum.OPER_ERROR.getName());
         }
         List<String> serveNoList = new LinkedList<>();
@@ -115,9 +110,17 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
             deliverVehicleDTOList.add(deliverVehicleDTO);
         }
 
-        // 服务单状态更新为已发车
-        Serve serve = Serve.builder().status(ServeEnum.DELIVER.getCode()).build();
-        serveGateway.updateServeByServeNoList(serveNoList, serve);
+        // 服务单状态更新为已发车 填充预计收车日期
+        Map<String, String> expectRecoverDateMap = contractDTO.getExpectRecoverDateMap();
+        for (String serveNo : serveNoList) {
+            Serve serve = Serve.builder().status(ServeEnum.DELIVER.getCode()).build();
+            String expectRecoverDate = expectRecoverDateMap.get(serveNo);
+            if (Objects.nonNull(expectRecoverDate)){
+                serve.setExpectRecoverDate(expectRecoverDate);
+            }
+            serveGateway.updateServeByServeNo(serveNo, serve);
+        }
+
 
         // 交付单状态更新为已发车并初始化操作状态
         Deliver deliver = Deliver.builder()

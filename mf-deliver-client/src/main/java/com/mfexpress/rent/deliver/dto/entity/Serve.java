@@ -73,6 +73,8 @@ public class Serve {
     private String billingAdjustmentDate;
 
     private Integer renewalType;
+
+    private String expectRecoverDate;
     // 续签合同迭代增加的字段-----------end
 
 }

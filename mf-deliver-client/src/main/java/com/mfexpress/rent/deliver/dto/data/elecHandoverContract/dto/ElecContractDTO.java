@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.Map;
 
 @ApiModel(value = "ElecContractDTO 电子交接合同DTO")
 @Data
@@ -90,5 +91,8 @@ public class ElecContractDTO {
 
     @ApiModelProperty(value = "")
     private Integer updaterId;
+
+    @ApiModelProperty(value = "预计收车日期")
+    private Map<String,String> expectRecoverDateMap;
 
 }

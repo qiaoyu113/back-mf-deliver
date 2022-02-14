@@ -17,12 +17,13 @@ import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessMetho
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
-import com.mfexpress.rent.deliver.constant.*;
+import com.mfexpress.rent.deliver.constant.Constants;
+import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
+import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
 import com.mfexpress.rent.deliver.consumer.sync.SyncServiceImpl;
 import com.mfexpress.rent.deliver.domainapi.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
-import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleImgCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
@@ -251,10 +252,6 @@ public class ElecContractStatusMqCommand {
     }
 
     private List<String> deliverVehicleProcess(ServeDTO serveDTO, ElecContractDTO contractDTO) {
-        //生成发车单 交付单状态更新已发车并初始化操作状态  服务单状态更新为已发车
-        Result<Integer> result = deliverVehicleAggregateRootApi.deliverVehicles(contractDTO);
-        ResultValidUtils.checkResultException(result);
-
         // 数据收集
         List<DeliverImgInfo> deliverImgInfos = JSONUtil.toList(contractDTO.getPlateNumberWithImgs(), DeliverImgInfo.class);
         List<String> serveNoList = deliverImgInfos.stream().map(DeliverImgInfo::getServeNo).collect(Collectors.toList());
@@ -263,17 +260,36 @@ public class ElecContractStatusMqCommand {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单信息不存在");
         }
         Map<String, Serve> serveMap = serveMapResult.getData();
+        //每个服务单对应的预计收车日期
+        Map<String, String> expectRecoverDateMap = new HashMap<>(serveMap.size());
+        for (String serveNo : serveNoList) {
+            Serve serve = serveMap.get(serveNo);
+            //替换车使用维修车的预计收车日期
+            if(!serve.getReplaceFlag().equals(1)){
+                String expectRecoverDate = getExpectRecoverDate(contractDTO.getDeliverVehicleTime(), serve.getLeaseMonths());
+                expectRecoverDateMap.put(serveNo, expectRecoverDate);
+            }
+        }
+        //生成发车单 交付单状态更新已发车并初始化操作状态  服务单状态更新为已发车
+        contractDTO.setExpectRecoverDateMap(expectRecoverDateMap);
+        Result<Integer> result = deliverVehicleAggregateRootApi.deliverVehicles(contractDTO);
+        ResultValidUtils.checkResultException(result);
         List<Integer> carIdList = new LinkedList<>();
         deliverImgInfos.forEach(deliverImgInfo -> {
             carIdList.add(deliverImgInfo.getCarId());
-
             //发车操作mq触发计费
             Serve serve = serveMap.get(deliverImgInfo.getServeNo());
             DeliverVehicleCmd rentChargeCmd = new DeliverVehicleCmd();
             rentChargeCmd.setServeNo(deliverImgInfo.getServeNo());
             rentChargeCmd.setDeliverNo(deliverImgInfo.getDeliverNo());
             rentChargeCmd.setRent(serve.getRent());
-            rentChargeCmd.setExpectRecoverDate(getExpectRecoverDate(contractDTO.getDeliverVehicleTime(), serve.getLeaseMonths()));
+            String expectRecoverDate = expectRecoverDateMap.get(deliverImgInfo.getServeNo());
+            if (Objects.isNull(expectRecoverDate)){
+                //替换车使用原车的预计收车日期作为计费截止日期
+                rentChargeCmd.setExpectRecoverDate(serve.getExpectRecoverDate());
+            }else {
+                rentChargeCmd.setExpectRecoverDate(expectRecoverDate);
+            }
             rentChargeCmd.setDeliverFlag(true);
             rentChargeCmd.setCustomerId(serve.getCustomerId());
             rentChargeCmd.setCreateId(contractDTO.getCreatorId());
