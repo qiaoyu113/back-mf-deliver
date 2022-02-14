@@ -136,6 +136,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setLeaseEndDate(serveVehicleDTO.getLeaseEndDate());
                 serve.setBillingAdjustmentDate("");
                 serve.setRenewalType(0);
+                serve.setExpectRecoverDate("");
                 serveList.add(serve);
             }
         }
