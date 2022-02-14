@@ -460,6 +460,11 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             }
         }).collect(Collectors.toMap(Serve::getServeNo, Function.identity(), (v1, v2) -> v1));
 
+        List<Deliver> deliverList = deliverGateway.getDeliverByServeNoList(serveNoList);
+        if (serveNoList.size() != deliverList.size()) {
+            throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "交付单查询失败");
+        }
+        Map<String, Deliver> deliverMap = deliverList.stream().collect(Collectors.toMap(Deliver::getServeNo, Function.identity(), (v1, v2) -> v1));
         // 修改服务单相关信息，顺带生成操作记录对象
         List<ServeChangeRecord> recordList = new ArrayList<>();
         List<Serve> serveListToUpdate = renewalServeCmdList.stream().map(renewalServeCmd -> {
@@ -486,7 +491,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
             //发生计费
             //在这里查询交付单 后续看情况做修改
-            Deliver deliver = deliverGateway.getDeliverByServeNo(serve.getServeNo());
+            Deliver deliver = deliverMap.get(serve.getServeNo());
             RenewalChargeCmd renewalChargeCmd = new RenewalChargeCmd();
             renewalChargeCmd.setServeNo(serve.getServeNo());
             renewalChargeCmd.setCreateId(cmd.getOperatorId());
@@ -611,5 +616,18 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         }).collect(Collectors.toList());
         return Result.getInstance(recordDTOList).success();
     }
+
+    @Override
+    @PostMapping("/getServeByCustomerIdAndDeliver")
+    @PrintParam
+    public Result<List<ServeDTO>> getServeByCustomerIdAndDeliver(@RequestBody List<Integer> customerIdList) {
+        List<Serve> serveList = serveGateway.getServeByCustomerIdDeliver(customerIdList);
+        if (CollectionUtil.isEmpty(serveList)) {
+            return Result.getInstance((List<ServeDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+        }
+        List<ServeDTO> serveDTOList = BeanUtil.copyToList(serveList, ServeDTO.class, new CopyOptions().ignoreError());
+        return Result.getInstance(serveDTOList).success();
+    }
+
 
 }

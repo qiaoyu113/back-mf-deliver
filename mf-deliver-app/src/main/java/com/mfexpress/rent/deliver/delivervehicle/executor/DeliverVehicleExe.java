@@ -62,16 +62,23 @@ public class DeliverVehicleExe {
             deliverVehicleDTOList.add(deliverVehicleDTO);
 
             Serve serve = serveMap.get(deliverVehicleImgCmd.getServeNo());
+
             com.mfexpress.billing.rentcharge.dto.data.deliver.DeliverVehicleCmd rentChargeCmd = new com.mfexpress.billing.rentcharge.dto.data.deliver.DeliverVehicleCmd();
             rentChargeCmd.setServeNo(serve.getServeNo());
             rentChargeCmd.setDeliverNo(deliverVehicleImgCmd.getDeliverNo());
             rentChargeCmd.setRent(serve.getRent());
-            rentChargeCmd.setExpectRecoverDate(getExpectRecoverDate(deliverVehicleCmd.getDeliverVehicleTime(),serve.getLeaseMonths()));
+
+            rentChargeCmd.setDeliverDate(DateUtil.formatDate(deliverVehicleCmd.getDeliverVehicleTime()));
+            //替换车
+            if (serve.getReplaceFlag().equals(1)){
+                rentChargeCmd.setExpectRecoverDate(serve.getLeaseEndDate());
+            }else {
+                rentChargeCmd.setExpectRecoverDate(getExpectRecoverDate(deliverVehicleCmd.getDeliverVehicleTime(),serve.getLeaseMonths()));
+            }
             rentChargeCmd.setDeliverFlag(true);
             rentChargeCmd.setCustomerId(deliverVehicleCmd.getCustomerId());
             rentChargeCmd.setCreateId(deliverVehicleCmd.getCarServiceId());
             rentChargeCmd.setVehicleId(deliverVehicleImgCmd.getCarId());
-            rentChargeCmd.setDeliverDate(DateUtil.formatDate(deliverVehicleCmd.getDeliverVehicleTime()));
             //发车操作mq触发计费
             mqTools.send(event, "deliver_vehicle", null, JSON.toJSONString(rentChargeCmd));
         }

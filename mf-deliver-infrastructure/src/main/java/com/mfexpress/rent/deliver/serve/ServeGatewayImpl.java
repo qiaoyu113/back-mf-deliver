@@ -3,7 +3,6 @@ package com.mfexpress.rent.deliver.serve;
 import com.github.pagehelper.PageHelper;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
-import com.mfexpress.rent.deliver.dto.data.serve.PassiveRenewalServeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
@@ -132,6 +131,18 @@ public class ServeGatewayImpl implements ServeGateway {
         serveToUpdateList.forEach(serve -> {
             serveMapper.updateByPrimaryKeySelective(serve);
         });
+    }
+
+    @Override
+    public List<Serve> getServeByCustomerIdDeliver(List<Integer> customerIdList) {
+        Example example = new Example(Serve.class);
+        Example.Criteria criteria1 = example.createCriteria();
+        Example.Criteria criteria2 = example.createCriteria();
+
+        criteria1 .andIn("customerId", customerIdList);
+        criteria2.orEqualTo("status",2).andEqualTo("status",5);
+        example.and(criteria2);
+        return serveMapper.selectByExample(example);
     }
 
 }
