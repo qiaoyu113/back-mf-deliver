@@ -5,6 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import tk.mybatis.spring.annotation.MapperScan;
 
 @SpringBootApplication(scanBasePackages = {"com.mfexpress.rent.deliver", "com.mfexpress.rent.vehicle.fallback", "com.mfexpress.order.fallback","com.mfexpress.billing.rentcharge.fallback"
@@ -15,6 +16,7 @@ import tk.mybatis.spring.annotation.MapperScan;
         "com.mfexpress.component.starter.feign.contract", "com.mfexpress.component.starter.feign.excel", "com.mfexpress.rent.maintain.api.app"})
 @EnableDiscoveryClient
 @MapperScan(basePackages = {"com.mfexpress.rent.deliver.*.repository"})
+@EnableScheduling
 public class MfDeliveryApplication {
 
     public static void main(String[] args) {

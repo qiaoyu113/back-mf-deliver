@@ -39,12 +39,18 @@ public class DeliverVehicleExe {
         //生成发车单 交付单状态更新已发车 初始化操作状态  服务单状态更新为已发车  调用车辆服务为租赁状态
         /*List<DeliverVehicleImgCmd> deliverVehicleImgCmdList = deliverVehicleCmd.getDeliverVehicleImgCmdList();
         List<DeliverVehicleDTO> deliverVehicleDTOList = new LinkedList<>();
+        //List<DailyDTO> dailyDTOList = new LinkedList<>();
         //更新服务单状态
-        List<String> serveNoList = new LinkedList<>();
-        List<Integer> carIdList = new LinkedList<>();
+
+        List<String> serveNoList = deliverVehicleImgCmdList.stream().map(DeliverVehicleImgCmd::getServeNo).collect(Collectors.toList());
+        List<Integer> carIdList = deliverVehicleImgCmdList.stream().map(DeliverVehicleImgCmd::getCarId).collect(Collectors.toList());
+        //触发计费
+        Result<Map<String, Serve>> serveMapResult = serveAggregateRootApi.getServeMapByServeNoList(serveNoList);
+        if (serveMapResult.getCode() != 0) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单信息不存在");
+        }
+        Map<String, Serve> serveMap = serveMapResult.getData();
         for (DeliverVehicleImgCmd deliverVehicleImgCmd : deliverVehicleImgCmdList) {
-            serveNoList.add(deliverVehicleImgCmd.getServeNo());
-            carIdList.add(deliverVehicleImgCmd.getCarId());
             DeliverVehicleDTO deliverVehicleDTO = new DeliverVehicleDTO();
             deliverVehicleDTO.setServeNo(deliverVehicleImgCmd.getServeNo());
             deliverVehicleDTO.setDeliverNo(deliverVehicleImgCmd.getDeliverNo());
@@ -55,13 +61,28 @@ public class DeliverVehicleExe {
             deliverVehicleDTO.setDeliverVehicleTime(deliverVehicleCmd.getDeliverVehicleTime());
             deliverVehicleDTOList.add(deliverVehicleDTO);
 
+            Serve serve = serveMap.get(deliverVehicleImgCmd.getServeNo());
+
+            com.mfexpress.billing.rentcharge.dto.data.deliver.DeliverVehicleCmd rentChargeCmd = new com.mfexpress.billing.rentcharge.dto.data.deliver.DeliverVehicleCmd();
+            rentChargeCmd.setServeNo(serve.getServeNo());
+            rentChargeCmd.setDeliverNo(deliverVehicleImgCmd.getDeliverNo());
+            rentChargeCmd.setRent(serve.getRent());
+
+            rentChargeCmd.setDeliverDate(DateUtil.formatDate(deliverVehicleCmd.getDeliverVehicleTime()));
+            //替换车
+            if (serve.getReplaceFlag().equals(1)){
+                rentChargeCmd.setExpectRecoverDate(serve.getLeaseEndDate());
+            }else {
+                rentChargeCmd.setExpectRecoverDate(getExpectRecoverDate(deliverVehicleCmd.getDeliverVehicleTime(),serve.getLeaseMonths()));
+            }
+            rentChargeCmd.setDeliverFlag(true);
+            rentChargeCmd.setCustomerId(deliverVehicleCmd.getCustomerId());
+            rentChargeCmd.setCreateId(deliverVehicleCmd.getCarServiceId());
+            rentChargeCmd.setVehicleId(deliverVehicleImgCmd.getCarId());
             //发车操作mq触发计费
-            DailyOperate operate = new DailyOperate();
-            operate.setServeNo(deliverVehicleImgCmd.getServeNo());
-            operate.setCustomerId(deliverVehicleCmd.getCustomerId());
-            operate.setOperateDate(DateUtil.formatDate(deliverVehicleCmd.getDeliverVehicleTime()));
-            mqTools.send(event, "deliver_vehicle", null, JSON.toJSONString(operate));
+            mqTools.send(event, "deliver_vehicle", null, JSON.toJSONString(rentChargeCmd));
         }
+
         VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
         vehicleSaveCmd.setStockStatus(ValidStockStatusEnum.OUT.getCode());
         vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.LEASE.getCode());
@@ -100,4 +121,21 @@ public class DeliverVehicleExe {
         return deliverVehicleResult.getData();*/
         return null;
     }
+
+    /*private  String getExpectRecoverDate(Date deliverVehicleDate, int offset) {
+        DateTime dateTime = DateUtil.endOfMonth(deliverVehicleDate);
+        String deliverDate = DateUtil.formatDate(deliverVehicleDate);
+        String endDate = DateUtil.formatDate(dateTime);
+        if (deliverDate.equals(endDate)) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(dateTime);
+            calendar.add(Calendar.MONTH, offset);
+            calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+            return DateUtil.formatDate(calendar.getTime());
+        } else {
+            return DateUtil.formatDate(DateUtil.offsetMonth(deliverVehicleDate, offset));
+        }
+    }*/
+
 }
+

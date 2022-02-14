@@ -4,6 +4,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalQry;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.entity.RecoverVehicle;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -44,4 +45,6 @@ public interface RecoverVehicleAggregateRootApi {
 
     @PostMapping("/getRecoverAbnormalByQry")
     Result<RecoverAbnormalDTO> getRecoverAbnormalByQry(@RequestBody RecoverAbnormalQry qry);
+    @PostMapping("/updateDeductionFee")
+    Result<Integer> updateDeductionFee(@RequestBody RecoverDeductionCmd cmd);
 }

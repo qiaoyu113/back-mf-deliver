@@ -21,6 +21,8 @@ import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -43,11 +45,16 @@ public class ServeEsDataQryExe {
     private VehicleAggregateRootApi vehicleAggregateRootApi;
 
     public ServeListVO execute(String orderId, QueryBuilder boolQueryBuilder, int nowPage, int limit, List<FieldSortBuilder> fieldSortBuilderList) {
+        List<FieldSortBuilder> sortBuilderList = new LinkedList<>();
+        FieldSortBuilder scoreSortBuilder = SortBuilders.fieldSort("_score").order(SortOrder.DESC);
+        sortBuilderList.add(scoreSortBuilder);
+        sortBuilderList.addAll(fieldSortBuilderList);
+
         ServeListVO serveListVO = new ServeListVO();
         int start = (nowPage - 1) * limit;
         Map<String, Object> map = elasticsearchTools.searchByQuerySort(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX),
                 Utils.getEnvVariable(Constants.ES_DELIVER_INDEX), start, limit,
-                boolQueryBuilder, fieldSortBuilderList);
+                boolQueryBuilder, sortBuilderList);
         List<Map<String, Object>> data = (List<Map<String, Object>>) map.get("data");
         List<ServeVO> serveVoList = new LinkedList<>();
         for (Map<String, Object> serveMap : data) {
@@ -56,24 +63,27 @@ public class ServeEsDataQryExe {
             BeanUtil.copyProperties(serveEs, serveVO);
             serveVoList.add(serveVO);
         }
+        ReviewOrderQry reviewOrderQry = new ReviewOrderQry();
+        reviewOrderQry.setId(orderId);
+        Result<?> orderResult = orderAggregateRootApi.getOrderInfo(reviewOrderQry);
+        if (orderResult.getCode() == 0 && orderResult.getData() != null) {
+            OrderDTO order = (OrderDTO) orderResult.getData();
+            // 合同编号以订单中的信息为准
+            serveListVO.setContractNo(order.getOaContractCode());
+        }
         if (data.size() > 0) {
             Map<String, Object> mapExample = data.get(0);
             ServeES serveEsExample = BeanUtil.mapToBean(mapExample, ServeES.class, false, new CopyOptions());
             serveListVO.setOrderId(serveEsExample.getOrderId());
             serveListVO.setCarModelVOList(serveEsExample.getCarModelVOList());
             serveListVO.setCustomerName(serveEsExample.getCustomerName());
-            serveListVO.setContractNo(serveEsExample.getContractNo());
             serveListVO.setExtractVehicleTime(serveEsExample.getExtractVehicleTime());
             serveListVO.setCustomerId(serveEsExample.getCustomerId());
         } else {
             //todo es查询订单信息
-            ReviewOrderQry reviewOrderQry = new ReviewOrderQry();
-            reviewOrderQry.setId(orderId);
-            Result<?> orderResult = orderAggregateRootApi.getOrderInfo(reviewOrderQry);
             if (orderResult.getCode() == 0 && orderResult.getData() != null) {
                 OrderDTO order = (OrderDTO) orderResult.getData();
                 serveListVO.setOrderId(orderId);
-                serveListVO.setContractNo(order.getContractCode());
                 serveListVO.setCustomerId(order.getCustomerId());
                 Result<CustomerVO> customerResult = customerAggregateRootApi.getById(order.getCustomerId());
                 if (customerResult.getCode() == 0 && customerResult.getData() != null) {

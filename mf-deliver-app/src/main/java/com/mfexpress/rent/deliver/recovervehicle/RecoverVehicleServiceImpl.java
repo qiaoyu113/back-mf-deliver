@@ -77,7 +77,6 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
 
     @Override
     public String toDeduction(RecoverDeductionCmd recoverDeductionCmd) {
-
         return recoverDeductionExe.execute(recoverDeductionCmd);
     }
 

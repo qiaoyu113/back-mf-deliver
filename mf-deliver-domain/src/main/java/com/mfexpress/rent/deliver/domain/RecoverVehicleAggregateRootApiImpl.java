@@ -19,6 +19,7 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.GroupPhotoVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalQry;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.entity.*;
 import com.mfexpress.rent.deliver.gateway.*;
@@ -143,6 +144,22 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
 
         return Result.getInstance(map).success();
     }
+
+    @Override
+    @PostMapping("/updateDeductionFee")
+    public Result<Integer> updateDeductionFee(@RequestBody RecoverDeductionCmd cmd) {
+        RecoverVehicle recoverVehicle = new RecoverVehicle();
+        recoverVehicle.setServeNo(cmd.getServeNo());
+        recoverVehicle.setParkFee(cmd.getParkFee());
+        recoverVehicle.setDamageFee(cmd.getDamageFee());
+        int i = recoverVehicleGateway.updateRecoverVehicle(recoverVehicle);
+        if (i <= 0) {
+            return Result.getInstance((Integer) null).fail(-1, "修改失败");
+
+        }
+        return Result.getInstance(i).success();
+    }
+
 
     @Override
     @PostMapping("/abnormalRecover")

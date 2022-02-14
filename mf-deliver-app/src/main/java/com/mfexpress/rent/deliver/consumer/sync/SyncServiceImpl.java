@@ -9,6 +9,7 @@ import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogRelation;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogTableFullName;
 import com.mfexpress.component.starter.tools.es.ElasticsearchTools;
+import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.data.ProductDTO;
@@ -68,7 +69,10 @@ public class SyncServiceImpl implements EsSyncHandlerI {
     @Resource
     private DictAggregateRootApi dictAggregateRootApi;
 
-    /*@Value("${rocketmq.listenBinlogTopic}")
+    /*@Resource
+    private ContractAggregateRootApi contractAggregateRootApi;
+
+    @Value("${rocketmq.listenBinlogTopic}")
     private String listenBinlogTopic;
     @Value("${rocketmq.listenEventTopic}")
     private String listenEventTopic;
@@ -107,10 +111,15 @@ public class SyncServiceImpl implements EsSyncHandlerI {
         }
         ServeDTO serveDTO = serveResult.getData();
         BeanUtils.copyProperties(serveDTO, serveEs);
+        serveEs.setContractNo(serveDTO.getOaContractCode());
         serveEs.setServeStatus(serveDTO.getStatus());
         serveEs.setOrderId(serveDTO.getOrderId().toString());
+        serveEs.setRent(serveDTO.getRent().toString());
+        serveEs.setDeposit(serveDTO.getDeposit().toString());
+        serveEs.setLeaseEndDate(serveDTO.getLeaseEndDate());
         //租赁方式
         serveEs.setLeaseModelDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.DELIVER_LEASE_MODE), serveEs.getLeaseModelId().toString()));
+        serveEs.setExtractVehicleTime(serveDTO.getLeaseBeginDate());
 
         //品牌车型描述
         Result<String> carModelResult = vehicleAggregateRootApi.getVehicleBrandTypeById(serveEs.getCarModelId());
@@ -121,7 +130,9 @@ public class SyncServiceImpl implements EsSyncHandlerI {
         Result<OrderDTO> orderResult = orderAggregateRootApi.getOrderInfo(reviewOrderQry);
         if (orderResult.getCode() == 0 && orderResult.getData() != null) {
             OrderDTO order = orderResult.getData();
-            serveEs.setContractNo(order.getContractCode());
+            if (StringUtils.isEmpty(serveEs.getContractNo())) {
+                serveEs.setContractNo(order.getOaContractCode());
+            }
             Result<CustomerVO> customerResult = customerAggregateRootApi.getById(order.getCustomerId());
             if (customerResult.getCode() == 0 && customerResult.getData() != null) {
                 serveEs.setCustomerName(customerResult.getData().getName());
@@ -225,7 +236,7 @@ public class SyncServiceImpl implements EsSyncHandlerI {
                 // 签署中
                 sort = DeliverSortEnum.TWO.getSort();
             }
-        } else if (serveEs.getServeStatus().equals(ServeEnum.NOT_PRESELECTED.getCode())) {
+        } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_DELIVER.getCode()) && deliverFlag) {
             // 待预选
             sort = DeliverSortEnum.THREE.getSort();
         } else if (serveEs.getServeStatus().equals(ServeEnum.PRESELECTED.getCode()) && JudgeEnum.NO.getCode().equals(serveEs.getIsCheck())) {

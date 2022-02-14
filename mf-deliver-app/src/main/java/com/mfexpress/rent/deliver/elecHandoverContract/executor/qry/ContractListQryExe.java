@@ -36,10 +36,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -113,8 +110,8 @@ public class ContractListQryExe {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         boolQueryBuilder.must(QueryBuilders.termsQuery("deliverNo.keyword", allDeliverNos));
         FieldSortBuilder updateTimeSortBuilders = SortBuilders.fieldSort("updateTime").unmappedType("date").order(SortOrder.DESC);
-        List<FieldSortBuilder> fieldSortBuilderList = new LinkedList<>();
-        fieldSortBuilderList.add(updateTimeSortBuilders);
+        FieldSortBuilder scoreSortBuilder = SortBuilders.fieldSort("_score").order(SortOrder.DESC);
+        List<FieldSortBuilder> fieldSortBuilderList = Arrays.asList(scoreSortBuilder, updateTimeSortBuilders);
         Map<String, Object> map = elasticsearchTools.searchByQuerySort(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX),
                 DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), 0, 0,
                 boolQueryBuilder, fieldSortBuilderList);

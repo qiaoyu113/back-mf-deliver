@@ -1,6 +1,9 @@
 package com.mfexpress.rent.deliver.serve;
 
+import com.github.pagehelper.PageHelper;
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
@@ -17,7 +20,6 @@ public class ServeGatewayImpl implements ServeGateway {
 
     @Resource
     private ServeMapper serveMapper;
-
 
     @Override
     public int updateServeByServeNo(String serveNo, Serve serve) {
@@ -99,4 +101,48 @@ public class ServeGatewayImpl implements ServeGateway {
                 .andIn("orderId", orderIds);
         return serveMapper.selectByExample(example);
     }
+
+    @Override
+    public Integer getCountByQry(ServeListQry qry) {
+        Example example = new Example(Serve.class);
+        example.createCriteria().andIn("status", qry.getStatuses());
+        return serveMapper.selectCountByExample(example);
+    }
+
+    @Override
+    public PagePagination<Serve> getPageServeByQry(ServeListQry qry) {
+        if(qry.getPage() == 0){
+            qry.setPage(1);
+        }
+        if(qry.getLimit() == 0){
+            qry.setLimit(5);
+        }
+        PageHelper.clearPage();
+        PageHelper.startPage(qry.getPage(), qry.getLimit());
+
+        Example example = new Example(Serve.class);
+        example.createCriteria().andIn("status", qry.getStatuses());
+        List<Serve> serveList = serveMapper.selectByExample(example);
+        return PagePagination.getInstance(serveList);
+    }
+
+    @Override
+    public void batchUpdate(List<Serve> serveToUpdateList) {
+        serveToUpdateList.forEach(serve -> {
+            serveMapper.updateByPrimaryKeySelective(serve);
+        });
+    }
+
+    @Override
+    public List<Serve> getServeByCustomerIdDeliver(List<Integer> customerIdList) {
+        Example example = new Example(Serve.class);
+        Example.Criteria criteria1 = example.createCriteria();
+        Example.Criteria criteria2 = example.createCriteria();
+
+        criteria1 .andIn("customerId", customerIdList);
+        criteria2.orEqualTo("status",2).andEqualTo("status",5);
+        example.and(criteria2);
+        return serveMapper.selectByExample(example);
+    }
+
 }

@@ -84,7 +84,7 @@ public class ServeDeliverTaskListQryExe {
             serveDeliverTaskVO.setContractNo(aggMap.get(orderId).get(0).getContractNo());
             serveDeliverTaskVOList.add(serveDeliverTaskVO);
         }
-        serveDeliverTaskVOList = serveDeliverTaskVOList.stream().sorted(Comparator.comparing(ServeDeliverTaskVO::getExtractVehicleTime)).collect(Collectors.toList());
+        // serveDeliverTaskVOList = serveDeliverTaskVOList.stream().sorted(Comparator.comparing(ServeDeliverTaskVO::getExtractVehicleTime)).collect(Collectors.toList());
         //总条数
         int total = serveDeliverTaskVOList.size();
         BigDecimal bigDecimalTotal = new BigDecimal(total);

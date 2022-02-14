@@ -6,6 +6,7 @@ import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -72,5 +73,20 @@ public interface ServeAggregateRootApi {
     @PostMapping("/getServeListByOrderIds")
     Result<List<ServeDTO>> getServeListByOrderIds(@RequestBody List<Long> orderIds);
 
+    @PostMapping("/renewalServe")
+    Result<Integer> renewalServe(@RequestBody @Validated RenewalCmd cmd);
 
+    @PostMapping("/passiveRenewalServe")
+    Result<Integer> passiveRenewalServe(@RequestBody @Validated PassiveRenewalServeCmd cmd);
+
+    @PostMapping("/getServeChangeRecordList")
+    Result<List<ServeChangeRecordDTO>> getServeChangeRecordList(@RequestParam("serveNo") String serveNo);
+
+    /**
+     * 根据客户查询租赁中的服务单
+     * @param customerIdList 客户
+     * @return 服务单
+     */
+    @PostMapping("/getServeByCustomerIdAndDeliver")
+    Result<List<ServeDTO>>getServeByCustomerIdAndDeliver(@RequestBody List<Integer>customerIdList);
 }

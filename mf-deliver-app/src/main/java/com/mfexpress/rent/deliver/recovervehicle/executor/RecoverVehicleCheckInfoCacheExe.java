@@ -1,13 +1,13 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import com.alibaba.fastjson.JSONObject;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
-import com.mfexpress.rent.vehicle.exception.CommonException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
