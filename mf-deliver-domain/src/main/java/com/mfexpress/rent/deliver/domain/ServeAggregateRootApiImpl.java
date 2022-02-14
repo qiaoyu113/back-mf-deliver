@@ -475,6 +475,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             serve.setRent(BigDecimal.valueOf(renewalServeCmd.getRent()));
             serve.setUpdateId(cmd.getOperatorId());
             serve.setRenewalType(ServeRenewalTypeEnum.ACTIVE.getCode());
+            serve.setExpectRecoverDate(renewalServeCmd.getLeaseEndDate());
 
             ServeChangeRecord record = new ServeChangeRecord();
             Serve rawDataServe = serveMap.get(serve.getServeNo());
@@ -568,6 +569,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             DateTime leaseEndDate = DateUtil.parse(serve.getLeaseEndDate());
             DateTime updatedLeaseEndDate = DateUtil.offsetMonth(leaseEndDate, 1);
             serveToUpdate.setLeaseEndDate(dateFormat.format(updatedLeaseEndDate));
+            serveToUpdate.setExpectRecoverDate(dateFormat.format(updatedLeaseEndDate));
             serveToUpdate.setRenewalType(ServeRenewalTypeEnum.PASSIVE.getCode());
 
             ServeChangeRecord record = new ServeChangeRecord();
