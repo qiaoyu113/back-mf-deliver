@@ -35,7 +35,6 @@ public class RecoverInfo {
     private Date recoverVehicleTime;
 
     @ApiModelProperty(value = "车损费", required = true)
-    @NotNull(message = "车损费不能为空")
     private Double damageFee;
 
     @ApiModelProperty(value = "路边停车费")
