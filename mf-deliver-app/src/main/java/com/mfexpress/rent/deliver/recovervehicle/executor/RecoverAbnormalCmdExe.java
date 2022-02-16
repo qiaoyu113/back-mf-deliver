@@ -5,8 +5,11 @@ import com.alibaba.fastjson.JSON;
 import com.mfexpress.billing.rentcharge.dto.data.deliver.RecoverVehicleCmd;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.dto.contract.ContractOperateDTO;
+import com.mfexpress.component.enums.contract.ContractModeEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.starter.tools.contract.MFContractTools;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
@@ -34,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -65,6 +69,9 @@ public class RecoverAbnormalCmdExe {
 
     @Resource
     private SyncServiceImpl syncServiceI;
+
+    @Resource
+    private MFContractTools contractTools;
 
     private MqTools mqTools;
 
@@ -130,6 +137,14 @@ public class RecoverAbnormalCmdExe {
         cancelContractCmd.setOperatorId(tokenInfo.getId());
         Result<Integer> cancelResult = contractAggregateRootApi.cancelContract(cancelContractCmd);
         ResultValidUtils.checkResultException(cancelResult);
+
+        // 向契约锁域发送合同取消命令
+        ContractOperateDTO contractOperateDTO = new ContractOperateDTO();
+        if(!StringUtils.isEmpty(contractDTO.getContractForeignNo())){
+            contractOperateDTO.setContractId(Long.valueOf(contractDTO.getContractForeignNo()));
+            contractOperateDTO.setType(ContractModeEnum.DELIVER.getName());
+            contractTools.invalid(contractOperateDTO);
+        }
 
         // 发送收车信息到mq，由合同域判断服务单所属的合同是否到已履约完成状态
         ServeDTO serveDTOToNoticeContract = new ServeDTO();
