@@ -16,4 +16,7 @@ public class ServeListQry extends ListQry {
     @ApiModelProperty(value = "服务单状态")
     private List<Integer> statuses;
 
+    @ApiModelProperty(value = "是否为替换车服务单标志位")
+    private Integer replaceFlag;
+
 }

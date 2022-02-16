@@ -14,6 +14,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
 import com.mfexpress.rent.deliver.constant.Constants;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.RenewableServeQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeToRenewalVO;
@@ -79,6 +80,8 @@ public class RenewableServeListQryExe {
         } else {
             boolQueryBuilder.must(QueryBuilders.termsQuery("serveStatus", defaultServeStatus));
         }
+        // 20220214新增，被续约的服务单不可是维修车的替换服务单
+        boolQueryBuilder.must(QueryBuilders.termQuery("replaceFlag", JudgeEnum.NO.getCode()));
 
         // 排序条件拼装
         ArrayList<FieldSortBuilder> fieldSortList = new ArrayList<>();

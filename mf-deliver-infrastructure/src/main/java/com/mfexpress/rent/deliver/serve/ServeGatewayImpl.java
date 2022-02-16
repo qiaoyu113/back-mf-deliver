@@ -105,23 +105,31 @@ public class ServeGatewayImpl implements ServeGateway {
     @Override
     public Integer getCountByQry(ServeListQry qry) {
         Example example = new Example(Serve.class);
-        example.createCriteria().andIn("status", qry.getStatuses());
+        Example.Criteria criteria = example.createCriteria();
+        if (null != qry.getReplaceFlag()) {
+            criteria.andEqualTo("replaceFlag", qry.getReplaceFlag());
+        }
+        criteria.andIn("status", qry.getStatuses());
         return serveMapper.selectCountByExample(example);
     }
 
     @Override
     public PagePagination<Serve> getPageServeByQry(ServeListQry qry) {
-        if(qry.getPage() == 0){
+        if (qry.getPage() == 0) {
             qry.setPage(1);
         }
-        if(qry.getLimit() == 0){
+        if (qry.getLimit() == 0) {
             qry.setLimit(5);
         }
         PageHelper.clearPage();
         PageHelper.startPage(qry.getPage(), qry.getLimit());
 
         Example example = new Example(Serve.class);
-        example.createCriteria().andIn("status", qry.getStatuses());
+        Example.Criteria criteria = example.createCriteria();
+        if (null != qry.getReplaceFlag()) {
+            criteria.andEqualTo("replaceFlag", qry.getReplaceFlag());
+        }
+        criteria.andIn("status", qry.getStatuses());
         List<Serve> serveList = serveMapper.selectByExample(example);
         return PagePagination.getInstance(serveList);
     }
@@ -139,8 +147,8 @@ public class ServeGatewayImpl implements ServeGateway {
         Example.Criteria criteria1 = example.createCriteria();
         Example.Criteria criteria2 = example.createCriteria();
 
-        criteria1 .andIn("customerId", customerIdList);
-        criteria2.orEqualTo("status",2).andEqualTo("status",5);
+        criteria1.andIn("customerId", customerIdList);
+        criteria2.orEqualTo("status", 2).andEqualTo("status", 5);
         example.and(criteria2);
         return serveMapper.selectByExample(example);
     }

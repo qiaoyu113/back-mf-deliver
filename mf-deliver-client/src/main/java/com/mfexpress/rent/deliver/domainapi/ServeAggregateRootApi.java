@@ -76,6 +76,9 @@ public interface ServeAggregateRootApi {
     @PostMapping("/renewalServe")
     Result<Integer> renewalServe(@RequestBody @Validated RenewalCmd cmd);
 
+    @PostMapping("/renewalReplaceServe")
+    Result<Integer> renewalReplaceServe(@RequestBody @Validated RenewalReplaceServeCmd cmd);
+
     @PostMapping("/passiveRenewalServe")
     Result<Integer> passiveRenewalServe(@RequestBody @Validated PassiveRenewalServeCmd cmd);
 
@@ -89,4 +92,10 @@ public interface ServeAggregateRootApi {
      */
     @PostMapping("/getServeByCustomerIdAndDeliver")
     Result<List<ServeDTO>>getServeByCustomerIdAndDeliver(@RequestBody List<Integer>customerIdList);
+
+    @PostMapping("/getCountByQry")
+    Result<Long> getCountByQry(@RequestBody ServeListQry qry);
+
+    @PostMapping("/getPageServeByQry")
+    Result<PagePagination<Serve>> getPageServeByQry(@RequestBody ServeListQry qry);
 }
