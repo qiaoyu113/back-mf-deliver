@@ -20,6 +20,7 @@ import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.consumer.sync.SyncServiceImpl;
 import com.mfexpress.rent.deliver.domainapi.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
@@ -227,14 +228,16 @@ public class ElecContractStatusMqCommand {
         }
 
         // 发送收车信息到mq，由合同域判断服务单所属的合同是否到已履约完成状态
-        ServeDTO serveDTOToNoticeContract = new ServeDTO();
-        serveDTOToNoticeContract.setServeNo(serveDTO.getServeNo());
-        serveDTOToNoticeContract.setOaContractCode(serveDTO.getOaContractCode());
-        serveDTOToNoticeContract.setGoodsId(serveDTO.getGoodsId());
-        serveDTOToNoticeContract.setCarServiceId(contractDTO.getCreatorId());
-        serveDTOToNoticeContract.setRenewalType(serveDTO.getRenewalType());
-        log.info("正常收车时，交付域向合同域发送的收车单信息：{}", serveDTOToNoticeContract);
-        mqTools.send(event, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));
+        if(JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())){
+            ServeDTO serveDTOToNoticeContract = new ServeDTO();
+            serveDTOToNoticeContract.setServeNo(serveDTO.getServeNo());
+            serveDTOToNoticeContract.setOaContractCode(serveDTO.getOaContractCode());
+            serveDTOToNoticeContract.setGoodsId(serveDTO.getGoodsId());
+            serveDTOToNoticeContract.setCarServiceId(contractDTO.getCreatorId());
+            serveDTOToNoticeContract.setRenewalType(serveDTO.getRenewalType());
+            log.info("正常收车时，交付域向合同域发送的收车单信息：{}", serveDTOToNoticeContract);
+            mqTools.send(event, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));
+        }
 
         //收车计费
         RecoverVehicleCmd recoverVehicleCmd = new RecoverVehicleCmd();
