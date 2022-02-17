@@ -562,6 +562,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             record.setNewData(JSONUtil.toJsonStr(serveToUpdate));
             record.setCreatorId(cmd.getOperatorId());
             recordList.add(record);
+
+            replaceServe.setExpectRecoverDate(serve.getExpectRecoverDate());
             return serveToUpdate;
         }).collect(Collectors.toList());
 
@@ -577,16 +579,16 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 //发生计费
                 //在这里查询交付单 后续看情况做修改
                 Deliver deliver = deliverMap.get(serveNo);
-                Serve originServe = serveMap.get(serveNo);
-                if(null != originServe){
+                Serve replaceServe = replaceServeMap.get(serveNo);
+                if(null != replaceServe){
                     RenewalChargeCmd renewalChargeCmd = new RenewalChargeCmd();
                     renewalChargeCmd.setServeNo(serveNo);
                     renewalChargeCmd.setCreateId(cmd.getOperatorId());
-                    renewalChargeCmd.setCustomerId(originServe.getCustomerId());
+                    renewalChargeCmd.setCustomerId(replaceServe.getCustomerId());
                     renewalChargeCmd.setDeliverNo(deliver.getDeliverNo());
                     renewalChargeCmd.setVehicleId(deliver.getCarId());
                     renewalChargeCmd.setEffectFlag(false);
-                    renewalChargeCmd.setRenewalDate(originServe.getExpectRecoverDate());
+                    renewalChargeCmd.setRenewalDate(replaceServe.getExpectRecoverDate());
                     mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
                 }
             });
