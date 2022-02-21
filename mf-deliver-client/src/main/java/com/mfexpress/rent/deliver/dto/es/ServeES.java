@@ -107,4 +107,7 @@ public class ServeES {
     @ApiModelProperty(value = "异常收车标志位")
     private Integer recoverAbnormalFlag;
 
+    @ApiModelProperty(value = "续约状态，0：未续约，1：主动续约，2：被动/自动续约")
+    private Integer renewalType;
+
 }

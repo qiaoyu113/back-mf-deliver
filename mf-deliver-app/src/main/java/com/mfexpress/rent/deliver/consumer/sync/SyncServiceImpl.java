@@ -98,6 +98,23 @@ public class SyncServiceImpl implements EsSyncHandlerI {
 
     }*/
 
+    @Override
+    public boolean execAll() {
+        Result<List<String>> serveNoResult = serveAggregateRootApi.getServeNoListAll();
+        boolean flag = true;
+        if (serveNoResult.getData() != null) {
+            List<String> serveNoList = serveNoResult.getData();
+            Map<String, String> data = new HashMap<>();
+            for (String serveNo : serveNoList) {
+                data.put("serve_no", serveNo);
+                boolean isSuccess = execOne(data);
+                if(!isSuccess){
+                    flag = false;
+                }
+            }
+        }
+        return flag;
+    }
 
     @Override
     @MFMqBinlogTableFullName({"mf-deliver.deliver", "mf-deliver.serve", "mf-deliver.deliver_vehicle", "mf-deliver.recover_vehicle"})
@@ -119,6 +136,7 @@ public class SyncServiceImpl implements EsSyncHandlerI {
         serveEs.setRent(serveDTO.getRent().toString());
         serveEs.setDeposit(serveDTO.getDeposit().toString());
         serveEs.setLeaseEndDate(serveDTO.getLeaseEndDate());
+        serveEs.setRenewalType(serveDTO.getRenewalType());
         //租赁方式
         serveEs.setLeaseModelDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.DELIVER_LEASE_MODE), serveEs.getLeaseModelId().toString()));
         serveEs.setExtractVehicleTime(serveDTO.getLeaseBeginDate());
@@ -207,24 +225,6 @@ public class SyncServiceImpl implements EsSyncHandlerI {
         elasticsearchTools.saveByEntity(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), serveNo, serveEs);
 
         return true;
-    }
-
-    @Override
-    public boolean execAll() {
-        Result<List<String>> serveNoResult = serveAggregateRootApi.getServeNoListAll();
-        boolean flag = true;
-        if (serveNoResult.getData() != null) {
-            List<String> serveNoList = serveNoResult.getData();
-            Map<String, String> data = new HashMap<>();
-            for (String serveNo : serveNoList) {
-                data.put("serve_no", serveNo);
-                boolean isSuccess = execOne(data);
-                if(!isSuccess){
-                    flag = false;
-                }
-            }
-        }
-        return flag;
     }
 
     private Integer getSort(ServeES serveEs) {
