@@ -41,12 +41,12 @@ public class ServeRenewalScheduler {
     @Value("${spring.profiles}")
     private String envVariable;
 
-    private final List<Integer> defaultStatuses = Arrays.asList(ServeEnum.DELIVER.getCode(), ServeEnum.RECOVER.getCode());
+    private final List<Integer> defaultStatuses = Arrays.asList(ServeEnum.DELIVER.getCode(), ServeEnum.REPAIR.getCode());
 
     private final int limit = 100;
 
     // 每天的0时10分0秒执行一次
-    @Scheduled(cron = "0 10 0 * * *")
+    //@Scheduled(cron = "0 10 0 * * *")
     public void process() {
         // 生产环境同一个服务多机器部署，可能会出现多机器同时执行定时任务的情况，这里用了全局锁，使用redis的set类型，谁设置成功谁执行
         // 过期时间1分钟
