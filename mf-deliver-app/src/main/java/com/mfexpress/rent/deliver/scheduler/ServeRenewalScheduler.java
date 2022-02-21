@@ -41,7 +41,7 @@ public class ServeRenewalScheduler {
     @Value("${spring.profiles}")
     private String envVariable;
 
-    private final List<Integer> defaultStatuses = Arrays.asList(ServeEnum.DELIVER.getCode(), ServeEnum.RECOVER.getCode());
+    private final List<Integer> defaultStatuses = Arrays.asList(ServeEnum.DELIVER.getCode(), ServeEnum.REPAIR.getCode());
 
     private final int limit = 100;
 
