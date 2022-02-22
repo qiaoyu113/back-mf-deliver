@@ -21,8 +21,8 @@ import java.util.List;
 public class RecoverApplyListAllQryExe implements RecoverQryServiceI {
     @Resource
     private RecoverEsDataQryExe recoverEsDataQryExe;
-    @Resource
-    private SyncServiceI syncServiceI;
+    /*@Resource
+    private SyncServiceI syncServiceI;*/
 
 
     @Override

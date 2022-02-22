@@ -9,6 +9,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.TokenTools;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
+import com.mfexpress.rent.deliver.scheduler.ServeRenewalScheduler;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiSort;
@@ -21,12 +22,15 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/deliver/v3/serve")
-@Api(tags = "api--交付--1.1租赁服务单", value = "ServeController")
+@Api(tags = "api--交付--1.4租赁服务单", value = "ServeController")
 @ApiSort(1)
 public class ServeController {
 
     @Resource
     private ServeServiceI serveServiceI;
+
+    @Resource
+    private ServeRenewalScheduler serveRenewalScheduler;
 
 
     //====================租赁服务单生成===============//
@@ -141,6 +145,14 @@ public class ServeController {
             throw new CommonException(ResultErrorEnum.LOGIN_OVERDUE.getCode(), ResultErrorEnum.LOGIN_OVERDUE.getName());
         }
         return Result.getInstance(serveServiceI.getRenewableServeList(qry, tokenInfo)).success();
+    }
+
+    @PostMapping("/scheduler")
+    @ApiOperation("续约合同时客户下的服务单列表的展示/查询")
+    @PrintParam
+    public Result<Integer> scheduler() {
+        serveRenewalScheduler.process();
+        return Result.getInstance(0).success();
     }
 
 }

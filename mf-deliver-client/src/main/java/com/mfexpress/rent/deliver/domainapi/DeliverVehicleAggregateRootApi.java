@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.domainapi;
 
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.entity.DeliverVehicle;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,4 +24,7 @@ public interface DeliverVehicleAggregateRootApi {
 
     @PostMapping("/getDeliverVehicleByServeNo")
     Result<Map<String, DeliverVehicle>> getDeliverVehicleByServeNo(@RequestBody List<String> serveNoList);
+
+    @PostMapping("/deliverVehicles")
+    Result<Integer> deliverVehicles(@RequestBody ElecContractDTO contractDTO);
 }

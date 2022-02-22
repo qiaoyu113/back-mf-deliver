@@ -2,7 +2,7 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 
 import com.mfexpress.component.response.Result;
-import com.mfexpress.rent.deliver.api.SyncServiceI;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
@@ -13,6 +13,7 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,7 +27,7 @@ public class RecoverApplyExe {
     @Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
     @Resource
-    private SyncServiceI syncServiceI;
+    private EsSyncHandlerI syncServiceI;
 
 
     public String execute(RecoverApplyListCmd recoverApplyListCmd) {
@@ -59,8 +60,10 @@ public class RecoverApplyExe {
         //生成收车单
         Result<String> recoverResult = recoverVehicleAggregateRootApi.addRecoverVehicle(recoverVehicleDTOList);
 
-        for (String seveNo : serveNoList) {
-            syncServiceI.execOne(seveNo);
+        HashMap<String, String> map = new HashMap<>();
+        for (String serveNo : serveNoList) {
+            map.put("serve_no", serveNo);
+            syncServiceI.execOne(map);
         }
         return recoverResult.getData();
 

@@ -1,24 +1,25 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
+import cn.hutool.json.JSONUtil;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.common.domain.dto.DictDataDTO;
 import com.mfexpress.common.domain.dto.DictTypeDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.DeliverEnum;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
-import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.constant.*;
+import com.mfexpress.rent.deliver.domainapi.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleVO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecDocDTO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.ElecHandoverDocVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
@@ -68,18 +69,21 @@ public class ServeRecoverDetailQryExe {
     @Resource
     private DictAggregateRootApi dictAggregateRootApi;
 
+    @Resource
+    private ElecHandoverContractAggregateRootApi contractAggregateRootApi;
+
     public ServeRecoverDetailVO execute(ServeQryCmd cmd) {
         String serveNo = cmd.getServeNo();
         // 数据查询----start
         Result<ServeDTO> serveDtoResult = serveAggregateRootApi.getServeDtoByServeNo(serveNo);
-        if(!DeliverUtils.resultDataCheck(serveDtoResult)){
+        if (!DeliverUtils.resultDataCheck(serveDtoResult)) {
             // commonException应封到base中
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
         ServeDTO serveDTO = serveDtoResult.getData();
 
         Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(serveNo);
-        if(!DeliverUtils.resultDataCheck(deliverDTOResult)){
+        if (!DeliverUtils.resultDataCheck(deliverDTOResult)) {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "交付单信息查询失败");
         }
         DeliverDTO deliverDTO = deliverDTOResult.getData();
@@ -99,16 +103,37 @@ public class ServeRecoverDetailQryExe {
         if ((ServeEnum.DELIVER.getCode().equals(serveDTO.getStatus()) || ServeEnum.REPAIR.getCode().equals(serveDTO.getStatus())) && DeliverEnum.IS_RECOVER.getCode().equals(deliverDTO.getDeliverStatus())) {
             serveRecoverDetailVO.setOrderVO(getOrderVO(serveDTO));
             serveRecoverDetailVO.setVehicleVO(getVehicleVO(serveDTO, deliverDTO, recoverVehicleDTO));
+            if (JudgeEnum.YES.getCode().equals(deliverDTO.getIsCheck())) {
+                serveRecoverDetailVO.setVehicleValidationVO(getVehicleValidationVO());
+            }
+            if (DeliverContractStatusEnum.GENERATING.getCode() == deliverDTO.getRecoverContractStatus() || DeliverContractStatusEnum.SIGNING.getCode() == deliverDTO.getRecoverContractStatus()) {
+                // recover_contract_status 属性为1或2，状态为合同生成中/签署中
+                // 需补充收车单信息
+                // 从合同中取出收车单信息
+                serveRecoverDetailVO.setRecoverVehicleVO(getRecoverVehicleVOFromContract(deliverDTO));
+            }
         } else if (ServeEnum.RECOVER.getCode().equals(serveDTO.getStatus()) && DeliverEnum.RECOVER.getCode().equals(deliverDTO.getDeliverStatus())) {
             serveRecoverDetailVO.setOrderVO(getOrderVO(serveDTO));
             serveRecoverDetailVO.setVehicleVO(getVehicleVO(serveDTO, deliverDTO, recoverVehicleDTO));
-            if(JudgeEnum.YES.getCode().equals(deliverDTO.getIsCheck())){
-                // serve的status属性为3，deliver的deliver_status属性为4，is_check属性为1，状态为待退保
-                // 待退保需补充验车信息和收车单信息
-                serveRecoverDetailVO.setVehicleValidationVO(getVehicleValidationVO());
-                serveRecoverDetailVO.setRecoverVehicleVO(getRecoverVehicleVO(recoverVehicleDTO));
+            serveRecoverDetailVO.setVehicleValidationVO(getVehicleValidationVO());
+            serveRecoverDetailVO.setRecoverVehicleVO(getRecoverVehicleVO(recoverVehicleDTO));
+            if (DeliverContractStatusEnum.COMPLETED.getCode() == deliverDTO.getRecoverContractStatus()) {
+                // serve的status属性为3，deliver的deliver_status属性为4，recover_contract_status 属性为3，状态为待退保
+                // 需补充收车单信息
+                serveRecoverDetailVO.getRecoverVehicleVO().setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
+                // 正常收车补充电子交接单信息
+                serveRecoverDetailVO.setElecHandoverDocVO(getElecHandoverDocVO(deliverDTO));
             }
-            if(JudgeEnum.YES.getCode().equals(deliverDTO.getIsInsurance())){
+            if (RecoverVehicleType.ABNORMAL.getCode() == deliverDTO.getRecoverAbnormalFlag()) {
+                // 异常收车设置异常收车标志位为真
+                serveRecoverDetailVO.setRecoverAbnormalFlag(RecoverVehicleType.ABNORMAL.getCode());
+                serveRecoverDetailVO.getRecoverVehicleVO().setRecoverTypeDisplay(RecoverVehicleType.ABNORMAL.getName());
+            }
+            if(DeliverContractStatusEnum.NOSIGN.getCode() == deliverDTO.getRecoverContractStatus() && RecoverVehicleType.NORMAL.getCode() == deliverDTO.getRecoverAbnormalFlag()){
+                // 历史数据为正常收车
+                serveRecoverDetailVO.getRecoverVehicleVO().setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
+            }
+            if (JudgeEnum.YES.getCode().equals(deliverDTO.getIsInsurance())) {
                 // serve的status属性为3，deliver的deliver_status属性为4，is_insurance属性为1，状态为待处理违章
                 // 待处理违章需补充保险信息
                 serveRecoverDetailVO.setVehicleInsuranceVO(getVehicleInsuranceVO(deliverDTO));
@@ -123,6 +148,17 @@ public class ServeRecoverDetailQryExe {
             serveRecoverDetailVO.setRecoverVehicleVO(getRecoverVehicleVO(recoverVehicleDTO));
             serveRecoverDetailVO.setVehicleInsuranceVO(getVehicleInsuranceVO(deliverDTO));
             serveRecoverDetailVO.setViolationInfoVO(getViolationInfoVO(deliverDTO));
+            if (DeliverContractStatusEnum.COMPLETED.getCode() == deliverDTO.getRecoverContractStatus()) {
+                serveRecoverDetailVO.getRecoverVehicleVO().setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
+                serveRecoverDetailVO.setElecHandoverDocVO(getElecHandoverDocVO(deliverDTO));
+            } else if (RecoverVehicleType.ABNORMAL.getCode() == deliverDTO.getRecoverAbnormalFlag()) {
+                serveRecoverDetailVO.setRecoverAbnormalFlag(RecoverVehicleType.ABNORMAL.getCode());
+                serveRecoverDetailVO.getRecoverVehicleVO().setRecoverTypeDisplay(RecoverVehicleType.ABNORMAL.getName());
+            }
+            if(DeliverContractStatusEnum.NOSIGN.getCode() == deliverDTO.getRecoverContractStatus() && RecoverVehicleType.NORMAL.getCode() == deliverDTO.getRecoverAbnormalFlag()){
+                // 历史数据为正常收车
+                serveRecoverDetailVO.getRecoverVehicleVO().setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
+            }
         } else {
             throw new CommonException(400005, "数据状态异常");
         }
@@ -131,7 +167,45 @@ public class ServeRecoverDetailQryExe {
         return serveRecoverDetailVO;
     }
 
-    public ViolationInfoVO getViolationInfoVO(DeliverDTO deliverDTO){
+    private ElecHandoverDocVO getElecHandoverDocVO(DeliverDTO deliverDTO) {
+        Result<ElecDocDTO> docDTOResult = contractAggregateRootApi.getDocDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.RECOVER.getCode());
+        ElecDocDTO docDTO = ResultDataUtils.getInstance(docDTOResult).getDataOrException();
+        if(null == docDTO){
+            return null;
+        }
+        ElecHandoverDocVO elecHandoverDocVO = new ElecHandoverDocVO();
+        elecHandoverDocVO.setContractId(docDTO.getContractId().toString());
+        elecHandoverDocVO.setFileUrl(docDTO.getFileUrl());
+        return elecHandoverDocVO;
+    }
+
+    private RecoverVehicleVO getRecoverVehicleVOFromContract(DeliverDTO deliverDTO) {
+        Result<ElecContractDTO> contractDTOSResult = contractAggregateRootApi.getContractDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.RECOVER.getCode());
+        ElecContractDTO contractDTO = ResultDataUtils.getInstance(contractDTOSResult).getDataOrException();
+        if(null == contractDTO){
+            throw new CommonException(400005, "电子交接单查询失败");
+        }
+
+        RecoverVehicleVO recoverVehicleVO = new RecoverVehicleVO();
+        BeanUtils.copyProperties(contractDTO, recoverVehicleVO);
+        recoverVehicleVO.setDamageFee(contractDTO.getRecoverDamageFee());
+        recoverVehicleVO.setParkFee(contractDTO.getRecoverParkFee());
+        recoverVehicleVO.setElecContractId(contractDTO.getContractId().toString());
+        recoverVehicleVO.setElecContractStatus(contractDTO.getStatus());
+        recoverVehicleVO.setElecContractFailureReason(contractDTO.getFailureReason());
+        Result<WarehouseDto> wareHouseResult = warehouseAggregateRootApi.getWarehouseById(contractDTO.getRecoverWareHouseId());
+        if (wareHouseResult.getData() != null) {
+            recoverVehicleVO.setWareHouseDisplay(wareHouseResult.getData().getName());
+        }
+        List<DeliverImgInfo> deliverImgInfos = JSONUtil.toList(contractDTO.getPlateNumberWithImgs(), DeliverImgInfo.class);
+        if (deliverImgInfos.isEmpty()) {
+            return null;
+        }
+        recoverVehicleVO.setImgUrl(deliverImgInfos.get(0).getImgUrl());
+        return recoverVehicleVO;
+    }
+
+    public ViolationInfoVO getViolationInfoVO(DeliverDTO deliverDTO) {
         ViolationInfoVO violationInfoVO = new ViolationInfoVO();
         BeanUtils.copyProperties(deliverDTO, violationInfoVO);
         violationInfoVO.setDeductionHandle(deliverDTO.getDeductionHandel());
@@ -139,14 +213,14 @@ public class ServeRecoverDetailQryExe {
         return violationInfoVO;
     }
 
-    public VehicleInsuranceVO getVehicleInsuranceVO(DeliverDTO deliverDTO){
+    public VehicleInsuranceVO getVehicleInsuranceVO(DeliverDTO deliverDTO) {
         VehicleInsuranceVO vehicleInsuranceVO = new VehicleInsuranceVO();
-        if(0 == deliverDTO.getInsuranceRemark()){
+        if (0 == deliverDTO.getInsuranceRemark()) {
             // 正常退保 补全退保时间
             vehicleInsuranceVO.setIsInsurance(JudgeEnum.YES.getCode());
             vehicleInsuranceVO.setIsInsuranceDisplay(JudgeEnum.YES.getName());
             vehicleInsuranceVO.setEndTime(deliverDTO.getInsuranceEndTime());
-        }else{
+        } else {
             // 暂不退保 补全原因
             vehicleInsuranceVO.setIsInsurance(JudgeEnum.NO.getCode());
             vehicleInsuranceVO.setIsInsuranceDisplay(JudgeEnum.NO.getName());
@@ -156,7 +230,7 @@ public class ServeRecoverDetailQryExe {
         return vehicleInsuranceVO;
     }
 
-    public RecoverVehicleVO getRecoverVehicleVO(RecoverVehicleDTO recoverVehicleDTO){
+    public RecoverVehicleVO getRecoverVehicleVO(RecoverVehicleDTO recoverVehicleDTO) {
         RecoverVehicleVO recoverVehicleVO = new RecoverVehicleVO();
         BeanUtils.copyProperties(recoverVehicleDTO, recoverVehicleVO);
         Result<WarehouseDto> wareHouseResult = warehouseAggregateRootApi.getWarehouseById(recoverVehicleDTO.getWareHouseId());

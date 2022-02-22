@@ -18,6 +18,7 @@ public class Constants {
 
     public static final String ES_DELIVER_INDEX = "deliver";
     public static final String REDIS_DELIVER_KEY = "mf:deliver";
+    public static final String REDIS_DELIVER_CONTRACT_KEY = "mf:deliver:contract";
     public static final String REDIS_SERVE_KEY = "mf:serve";
     public static final String REDIS_DELIVER_VEHICLE_KEY = "mf:deliver:vehicle";
     public static final String REDIS_RECOVER_VEHICLE_KEY = "mf:recover:vehicle";
@@ -25,5 +26,12 @@ public class Constants {
     public static final String DELIVER_ORDER_TAG = "order_payment_finish";
     public static final String DELIVER_VEHICLE_TAG = "vehicle_update";
 
+    public static final String THIRD_PARTY_ELEC_CONTRACT_STATUS_TAG = "deliver_tag";
+
     public static final String RECOVER_VEHICLE_CHECK_INFO_CACHE_KEY = "recoverVehicleCheckInfoCache";
+
+    public static final String ELEC_CONTRACT_LAST_TIME_SEND_SMS_KEY = "elec_contract_last_time_send_sms_key";
+
+    // 电子交接合同每天可发送几次催签短信
+    public static final int EVERY_DAY_ENABLE_SEND_SMS_COUNT = 1;
 }

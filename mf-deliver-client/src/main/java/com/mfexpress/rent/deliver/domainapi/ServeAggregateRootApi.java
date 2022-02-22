@@ -76,9 +76,26 @@ public interface ServeAggregateRootApi {
     @PostMapping("/renewalServe")
     Result<Integer> renewalServe(@RequestBody @Validated RenewalCmd cmd);
 
+    @PostMapping("/renewalReplaceServe")
+    Result<Integer> renewalReplaceServe(@RequestBody @Validated RenewalReplaceServeCmd cmd);
+
     @PostMapping("/passiveRenewalServe")
     Result<Integer> passiveRenewalServe(@RequestBody @Validated PassiveRenewalServeCmd cmd);
 
     @PostMapping("/getServeChangeRecordList")
     Result<List<ServeChangeRecordDTO>> getServeChangeRecordList(@RequestParam("serveNo") String serveNo);
+
+    /**
+     * 根据客户查询租赁中的服务单
+     * @param customerIdList 客户
+     * @return 服务单
+     */
+    @PostMapping("/getServeByCustomerIdAndDeliver")
+    Result<List<ServeDTO>>getServeByCustomerIdAndDeliver(@RequestBody List<Integer>customerIdList);
+
+    @PostMapping("/getCountByQry")
+    Result<Long> getCountByQry(@RequestBody ServeListQry qry);
+
+    @PostMapping("/getPageServeByQry")
+    Result<PagePagination<Serve>> getPageServeByQry(@RequestBody ServeListQry qry);
 }

@@ -1,18 +1,21 @@
-package com.mfexpress.rent.deliver.sync;
+package com.mfexpress.rent.deliver.consumer.sync;
 
 
+import cn.hutool.core.collection.CollUtil;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.common.domain.dto.DictDataDTO;
 import com.mfexpress.common.domain.dto.DictTypeDTO;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.utils.ElasticsearchTools;
-import com.mfexpress.component.starter.utils.MqTools;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
+import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogRelation;
+import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogTableFullName;
+import com.mfexpress.component.starter.tools.es.ElasticsearchTools;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.data.ProductDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
-import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
@@ -30,11 +33,9 @@ import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -45,10 +46,11 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class SyncServiceImpl implements SyncServiceI {
+@MFMqBinlogRelation
+public class SyncServiceImpl implements EsSyncHandlerI {
 
-    @Resource
-    private MqTools mqTools;
+    /*@Resource
+    private MqTools mqTools;*/
 
     @Resource
     private ElasticsearchTools elasticsearchTools;
@@ -69,7 +71,7 @@ public class SyncServiceImpl implements SyncServiceI {
     @Resource
     private DictAggregateRootApi dictAggregateRootApi;
 
-    @Resource
+    /*@Resource
     private ContractAggregateRootApi contractAggregateRootApi;
 
     @Value("${rocketmq.listenBinlogTopic}")
@@ -81,8 +83,7 @@ public class SyncServiceImpl implements SyncServiceI {
     @Resource
     private DeliverVehicleMqCommand deliverVehicleMqCommand;
 
-
-    @PostConstruct
+    /*@PostConstruct
     public void init() {
 
         DeliverBinlogDispatch deliverBinlogDispatch = new DeliverBinlogDispatch();
@@ -95,15 +96,20 @@ public class SyncServiceImpl implements SyncServiceI {
         deliverVehicleMqCommand.setTags(Constants.DELIVER_VEHICLE_TAG);
         mqTools.add(deliverVehicleMqCommand);
 
-    }
+    }*/
 
 
     @Override
-    public void execOne(String serveNo) {
+    @MFMqBinlogTableFullName({"mf-deliver.deliver", "mf-deliver.serve", "mf-deliver.deliver_vehicle", "mf-deliver.recover_vehicle"})
+    public boolean execOne(Map<String, String> data) {
         ServeES serveEs = new ServeES();
+        String serveNo = data.get("serve_no");
+        if(StringUtils.isEmpty(serveNo)){
+            return false;
+        }
         Result<ServeDTO> serveResult = serveAggregateRootApi.getServeDtoByServeNo(serveNo);
         if (serveResult.getData() == null) {
-            return;
+            return false;
         }
         ServeDTO serveDTO = serveResult.getData();
         BeanUtils.copyProperties(serveDTO, serveEs);
@@ -137,18 +143,20 @@ public class SyncServiceImpl implements SyncServiceI {
             serveEs.setExtractVehicleTime(order.getDeliveryDate());
             List<OrderCarModelVO> carModelList = new LinkedList<>();
             List<ProductDTO> productList = order.getProductList();
-            List<Integer> modelsIdList = productList.stream().map(ProductDTO::getModelsId).collect(Collectors.toList());
-            Result<Map<Integer, String>> vehicleBrandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeListById(modelsIdList);
-            Map<Integer, String> brandTypeMap = vehicleBrandTypeResult.getData();
-            for (ProductDTO productDTO : productList) {
-                OrderCarModelVO orderCarModelVO = new OrderCarModelVO();
-                orderCarModelVO.setBrandId(productDTO.getBrandId());
-                orderCarModelVO.setCarModelId(productDTO.getModelsId());
-                orderCarModelVO.setBrandModelDisplay(brandTypeMap.get(productDTO.getModelsId()));
-                orderCarModelVO.setNum(productDTO.getProductNum());
-                carModelList.add(orderCarModelVO);
+            if (!CollUtil.isEmpty(productList)) {
+                List<Integer> modelsIdList = productList.stream().map(ProductDTO::getModelsId).collect(Collectors.toList());
+                Result<Map<Integer, String>> vehicleBrandTypeResult = vehicleAggregateRootApi.getVehicleBrandTypeListById(modelsIdList);
+                Map<Integer, String> brandTypeMap = vehicleBrandTypeResult.getData();
+                for (ProductDTO productDTO : productList) {
+                    OrderCarModelVO orderCarModelVO = new OrderCarModelVO();
+                    orderCarModelVO.setBrandId(productDTO.getBrandId());
+                    orderCarModelVO.setCarModelId(productDTO.getModelsId());
+                    orderCarModelVO.setBrandModelDisplay(brandTypeMap.get(productDTO.getModelsId()));
+                    orderCarModelVO.setNum(productDTO.getProductNum());
+                    carModelList.add(orderCarModelVO);
+                }
+                serveEs.setCarModelVOList(carModelList);
             }
-            serveEs.setCarModelVOList(carModelList);
         }
 
 
@@ -169,6 +177,9 @@ public class SyncServiceImpl implements SyncServiceI {
             serveEs.setVehicleAge(deliverDTO.getVehicleAge());
             serveEs.setCarServiceId(deliverDTO.getCarServiceId());
             serveEs.setUpdateTime(deliverDTO.getUpdateTime());
+            serveEs.setDeliverContractStatus(deliverDTO.getDeliverContractStatus());
+            serveEs.setRecoverContractStatus(deliverDTO.getRecoverContractStatus());
+            serveEs.setRecoverAbnormalFlag(deliverDTO.getRecoverAbnormalFlag());
 
             //排序规则
             Integer sort = getSort(serveEs);
@@ -195,48 +206,73 @@ public class SyncServiceImpl implements SyncServiceI {
         }
         elasticsearchTools.saveByEntity(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), serveNo, serveEs);
 
+        return true;
     }
 
     @Override
-    public void execAll() {
+    public boolean execAll() {
         Result<List<String>> serveNoResult = serveAggregateRootApi.getServeNoListAll();
+        boolean flag = true;
         if (serveNoResult.getData() != null) {
             List<String> serveNoList = serveNoResult.getData();
+            Map<String, String> data = new HashMap<>();
             for (String serveNo : serveNoList) {
-                execOne(serveNo);
+                data.put("serve_no", serveNo);
+                boolean isSuccess = execOne(data);
+                if(!isSuccess){
+                    flag = false;
+                }
             }
         }
+        return flag;
     }
 
     private Integer getSort(ServeES serveEs) {
         int sort = DeliverSortEnum.ZERO.getSort();
         boolean deliverFlag = serveEs.getIsCheck().equals(JudgeEnum.NO.getCode()) || serveEs.getIsInsurance().equals(JudgeEnum.NO.getCode());
-        //待发车
-        if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_DELIVER.getCode()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
+        boolean recoverFlag = serveEs.getIsInsurance().equals(JudgeEnum.NO.getCode()) || serveEs.getIsDeduction().equals(JudgeEnum.NO.getCode());
+        if (serveEs.getServeStatus().equals(ServeEnum.PRESELECTED.getCode()) && serveEs.getDeliverStatus().equals(DeliverEnum.IS_DELIVER.getCode()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
                 && serveEs.getIsInsurance().equals(JudgeEnum.YES.getCode())) {
-            sort = DeliverSortEnum.ONE.getSort();
+            if(DeliverContractStatusEnum.NOSIGN.getCode() == serveEs.getDeliverContractStatus()){
+                // 待发车
+                sort = DeliverSortEnum.ONE.getSort();
+            }else{
+                // 签署中
+                sort = DeliverSortEnum.TWO.getSort();
+            }
         } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_DELIVER.getCode()) && deliverFlag) {
-            //待验车、待投保
+            // 待预选
             sort = DeliverSortEnum.THREE.getSort();
-        } else if (serveEs.getDeliverStatus().equals(DeliverEnum.DELIVER.getCode())) {
-            //已发车
+        } else if (serveEs.getServeStatus().equals(ServeEnum.PRESELECTED.getCode()) && JudgeEnum.NO.getCode().equals(serveEs.getIsCheck())) {
+            // 待验车
             sort = DeliverSortEnum.FOUR.getSort();
-        } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())
+        } else if (serveEs.getServeStatus().equals(ServeEnum.PRESELECTED.getCode()) && JudgeEnum.YES.getCode().equals(serveEs.getIsCheck())) {
+            // 待投保
+            sort = DeliverSortEnum.FIVE.getSort();
+        } else if ((serveEs.getServeStatus().equals(ServeEnum.DELIVER.getCode()) || serveEs.getServeStatus().equals(ServeEnum.REPAIR.getCode())) && serveEs.getDeliverStatus().equals(DeliverEnum.DELIVER.getCode())) {
+            // 发车已完成
+            sort = DeliverSortEnum.SIX.getSort();
+        } else if (serveEs.getServeStatus().equals(ServeEnum.COMPLETED.getCode())) {
+            // 收车已完成
+            sort = DeliverSortEnum.SIX.getSort();
+        }else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())
                 && serveEs.getIsCheck().equals(JudgeEnum.NO.getCode())) {
             //收车中 待验车
             sort = DeliverSortEnum.ONE.getSort();
-        } else if (serveEs.getDeliverStatus() >= DeliverEnum.IS_RECOVER.getCode() && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
-                && serveEs.getIsInsurance().equals(JudgeEnum.NO.getCode())) {
-            //收车中  待退保
+        } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
+                && serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.NOSIGN.getCode()){
+            // 收车中 待收车
             sort = DeliverSortEnum.TWO.getSort();
-
-        } else if (serveEs.getDeliverStatus() >= DeliverEnum.IS_RECOVER.getCode() && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
-                && serveEs.getIsInsurance().equals(JudgeEnum.YES.getCode()) && serveEs.getIsDeduction().equals(JudgeEnum.NO.getCode())) {
-            //待处理事项
+        } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())
+                && (serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.GENERATING.getCode() || serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.SIGNING.getCode())){
+            // 收车中 签署中
             sort = DeliverSortEnum.THREE.getSort();
-        } else if (serveEs.getServeStatus().equals(ServeEnum.COMPLETED.getCode())) {
-            //已完成
+        } else if (serveEs.getServeStatus().equals(ServeEnum.RECOVER.getCode()) && DeliverEnum.RECOVER.getCode().equals(serveEs.getDeliverStatus()) && JudgeEnum.NO.getCode().equals(serveEs.getIsInsurance())) {
+            //收车中  待退保
             sort = DeliverSortEnum.FOUR.getSort();
+        } else if (serveEs.getServeStatus().equals(ServeEnum.RECOVER.getCode()) && DeliverEnum.RECOVER.getCode().equals(serveEs.getDeliverStatus()) && JudgeEnum.YES.getCode().equals(serveEs.getIsInsurance())) {
+            //收车中  待处理违章
+            sort = DeliverSortEnum.FIVE.getSort();
         }
 
         return sort;

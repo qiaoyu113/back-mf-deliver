@@ -71,4 +71,10 @@ public class Deliver {
 
     private String insuranceEndTime;
 
+    private Integer deliverContractStatus;
+
+    private Integer recoverContractStatus;
+
+    private Integer recoverAbnormalFlag;
+
 }

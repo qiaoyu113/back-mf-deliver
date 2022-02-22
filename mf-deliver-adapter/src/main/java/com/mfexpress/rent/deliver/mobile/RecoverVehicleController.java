@@ -5,7 +5,7 @@ import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.utils.TokenTools;
+import com.mfexpress.component.starter.tools.token.TokenTools;
 import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
 import io.swagger.annotations.Api;
@@ -98,10 +98,11 @@ public class RecoverVehicleController {
     }
 
 
-    @PostMapping("/toCheck")
-    @ApiOperation(value = "收车验车")
+    @PostMapping("/whetherToCheck")
+    @ApiOperation(value = "是否可收车验车")
     @PrintParam
-    public Result<String> toCheck(@RequestBody RecoverVechicleCmd recoverVechicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+    @Deprecated
+    public Result<String> whetherToCheck(@RequestBody RecoverVechicleCmd recoverVechicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
 
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
@@ -110,7 +111,7 @@ public class RecoverVehicleController {
         }
         recoverVechicleCmd.setCarServiceId(tokenInfo.getId());
         //交付单更新待验车状态 完善收车单还车人合照信息
-        return Result.getInstance(recoverVehicleServiceI.toCheck(recoverVechicleCmd)).success();
+        return Result.getInstance(recoverVehicleServiceI.whetherToCheck(recoverVechicleCmd)).success();
 
     }
 
@@ -132,7 +133,6 @@ public class RecoverVehicleController {
     @ApiOperation(value = "收车处理违章")
     @PrintParam
     public Result<String> toDeduction(@RequestBody @Validated RecoverDeductionCmd recoverDeductionCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
-
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果
@@ -140,8 +140,7 @@ public class RecoverVehicleController {
         }
         recoverDeductionCmd.setCarServiceId(tokenInfo.getId());
         // 服务单 交付单状态更新已收车  交付单处理违章状态更新  车辆租赁状态更新未租赁
-
-        return Result.getInstance(recoverVehicleServiceI.toDeduction(recoverDeductionCmd));
+        return Result.getInstance(recoverVehicleServiceI.toDeduction(recoverDeductionCmd)).success();
     }
 
     // ---------------------luzheng add start----------------------------
@@ -182,4 +181,22 @@ public class RecoverVehicleController {
 
     // ---------------------luzheng add end----------------------------
 
+    // 异常收车        æbˈnɔːml
+    @PostMapping("/abnormalRecover")
+    @ApiOperation(value = "异常收车")
+    @PrintParam
+    public Result<Integer> abnormalRecover(@RequestBody @Validated RecoverAbnormalCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt){
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            return Result.getInstance((Integer) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+        }
+        return Result.getInstance(recoverVehicleServiceI.abnormalRecover(cmd, tokenInfo)).success();
+    }
+
+    @PostMapping("/getAbnormalRecoverInfo")
+    @ApiOperation(value = "获取异常收车信息")
+    @PrintParam
+    public Result<RecoverAbnormalVO> getRecoverAbnormalInfo(@RequestBody @Validated RecoverAbnormalQry cmd){
+        return Result.getInstance(recoverVehicleServiceI.getRecoverAbnormalInfo(cmd)).success();
+    }
 }

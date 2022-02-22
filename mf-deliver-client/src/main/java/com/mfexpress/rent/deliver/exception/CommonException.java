@@ -1,3 +1,4 @@
+/*
 package com.mfexpress.rent.deliver.exception;
 
 public class CommonException extends RuntimeException{
@@ -29,3 +30,4 @@ public class CommonException extends RuntimeException{
         this.msg = msg;
     }
 }
+*/

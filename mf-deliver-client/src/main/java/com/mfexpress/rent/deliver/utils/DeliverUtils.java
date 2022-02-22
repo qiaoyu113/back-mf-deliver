@@ -22,9 +22,7 @@ public class DeliverUtils {
 
     private static final String yyyy_MM_dd = "yyyy-MM-dd";
 
-    private static final SimpleDateFormat string_to_date_format_yyyy_MM_dd = new SimpleDateFormat(DeliverUtils.yyyy_MM_dd);
-
-    private static final SimpleDateFormat yyyyMMddHHmmss = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final String yyyyMMddHHmmss = "yyyy-MM-dd HH:mm:ss";
 
     @Value("${spring.profiles}")
     private String envVariable;
@@ -41,6 +39,7 @@ public class DeliverUtils {
         numMap.put(Constants.REDIS_SERVE_KEY, "FWD");
         numMap.put(Constants.REDIS_DELIVER_VEHICLE_KEY, "JCD");
         numMap.put(Constants.REDIS_RECOVER_VEHICLE_KEY, "SCD");
+        numMap.put(Constants.REDIS_DELIVER_CONTRACT_KEY, "HX");
     }
 
     public static String getNo(String tag, long seq) {
@@ -66,7 +65,7 @@ public class DeliverUtils {
         if (StringUtils.isEmpty(date))
             return null;
         try {
-            return string_to_date_format_yyyy_MM_dd.parse(date);
+            return new SimpleDateFormat(DeliverUtils.yyyy_MM_dd).parse(date);
         } catch (ParseException e) {
             e.printStackTrace();
             return null;
@@ -77,7 +76,7 @@ public class DeliverUtils {
         if (StringUtils.isEmpty(date))
             return null;
         try {
-            return yyyyMMddHHmmss.parse(date);
+            return new SimpleDateFormat(yyyyMMddHHmmss).parse(date);
         } catch (ParseException e) {
             e.printStackTrace();
             return null;
@@ -88,7 +87,7 @@ public class DeliverUtils {
         if (date == null){
             return "";
         }
-        return yyyyMMddHHmmss.format(date);
+        return new SimpleDateFormat(yyyyMMddHHmmss).format(date);
     }
 
 

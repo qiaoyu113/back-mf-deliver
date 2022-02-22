@@ -99,6 +99,13 @@ public class DeliverGatewayImpl implements DeliverGateway {
     }
 
     @Override
+    public List<Deliver> getDeliverByDeliverNoList(List<String> deliverNos) {
+        Example example = new Example(Deliver.class);
+        example.createCriteria().andIn("deliverNo", deliverNos).andEqualTo("status", ValidStatusEnum.VALID.getCode());
+        return deliverMapper.selectByExample(example);
+    }
+
+    @Override
     public List<Deliver> getDeliverByDeductStatus(List<String> serveNoList) {
         Example example = new Example(Deliver.class);
         if (serveNoList != null && serveNoList.size() > 0) {
@@ -107,6 +114,20 @@ public class DeliverGatewayImpl implements DeliverGateway {
             example.createCriteria().andEqualTo("isDeduction", JudgeEnum.YES.getCode()).andEqualTo("status", ValidStatusEnum.VALID.getCode());
         }
         return deliverMapper.selectByExample(example);
+    }
+
+    @Override
+    public int updateDeliverByDeliverNos(List<String> deliverNos, Deliver deliver) {
+        Example example = new Example(Deliver.class);
+        example.createCriteria().andIn("deliverNo", deliverNos).andEqualTo("status", ValidStatusEnum.VALID.getCode());
+        return deliverMapper.updateByExampleSelective(deliver, example);
+    }
+
+    @Override
+    public Deliver getDeliverByDeliverNo(String deliverNo) {
+        Example example = new Example(Deliver.class);
+        example.createCriteria().andEqualTo("deliverNo", deliverNo).andEqualTo("status", ValidStatusEnum.VALID.getCode());
+        return deliverMapper.selectOneByExample(example);
     }
 
     @Override

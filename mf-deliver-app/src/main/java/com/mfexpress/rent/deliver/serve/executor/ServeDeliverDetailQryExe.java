@@ -1,23 +1,28 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
+import cn.hutool.json.JSONUtil;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.common.domain.dto.DictDataDTO;
 import com.mfexpress.common.domain.dto.DictTypeDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleVO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecDocDTO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.ElecHandoverDocVO;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
@@ -57,6 +62,9 @@ public class ServeDeliverDetailQryExe {
     @Resource
     private DictAggregateRootApi dictAggregateRootApi;
 
+    @Resource
+    private ElecHandoverContractAggregateRootApi contractAggregateRootApi;
+
     public ServeDeliverDetailVO execute(ServeQryCmd cmd) {
         String serveNo = cmd.getServeNo();
         Result<ServeDTO> serveDtoResult = serveAggregateRootApi.getServeDtoByServeNo(serveNo);
@@ -90,16 +98,55 @@ public class ServeDeliverDetailQryExe {
                     // 投保标志位为true补充投保信息
                     serveDeliverDetailVO.setVehicleInsuranceVO(getVehicleInsuranceVO(deliverDTO));
                 }
+                if(DeliverContractStatusEnum.SIGNING.getCode() == deliverDTO.getDeliverContractStatus()){
+                    // 补充发车单信息,从合同中取
+                    serveDeliverDetailVO.setDeliverVehicleVO(getDeliverVehicleVOFromContract(deliverDTO));
+                }
             } else {
                 // serve的status属性为2/3/4/5，服务单信息全部补充
                 serveDeliverDetailVO.setVehicleVO(getVehicleVO(serveDTO, deliverDTO));
                 serveDeliverDetailVO.setVehicleValidationVO(getVehicleValidationVO());
                 serveDeliverDetailVO.setVehicleInsuranceVO(getVehicleInsuranceVO(deliverDTO));
+                // 补充发车单信息,从发车单中取
                 serveDeliverDetailVO.setDeliverVehicleVO(getDeliverVehicleVO(deliverDTO));
+                if(DeliverContractStatusEnum.COMPLETED.getCode() == deliverDTO.getDeliverContractStatus()){
+                    // 补充电子交接单信息
+                    serveDeliverDetailVO.setElecHandoverDocVO(getElecHandoverDocVO(deliverDTO));
+                }
             }
         }
 
         return serveDeliverDetailVO;
+    }
+
+    private ElecHandoverDocVO getElecHandoverDocVO(DeliverDTO deliverDTO) {
+        Result<ElecDocDTO> docDTOResult = contractAggregateRootApi.getDocDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.DELIVER.getCode());
+        ElecDocDTO docDTO = ResultDataUtils.getInstance(docDTOResult).getDataOrException();
+        if(null == docDTO){
+            return null;
+        }
+        ElecHandoverDocVO elecHandoverDocVO = new ElecHandoverDocVO();
+        elecHandoverDocVO.setContractId(docDTO.getContractId().toString());
+        elecHandoverDocVO.setFileUrl(docDTO.getFileUrl());
+        return elecHandoverDocVO;
+    }
+
+    private DeliverVehicleVO getDeliverVehicleVOFromContract(DeliverDTO deliverDTO) {
+        Result<ElecContractDTO> contractDTOSResult = contractAggregateRootApi.getContractDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.DELIVER.getCode());
+        ElecContractDTO contractDTO = ResultDataUtils.getInstance(contractDTOSResult).getDataOrException();
+        DeliverVehicleVO deliverVehicleVO = new DeliverVehicleVO();
+        BeanUtils.copyProperties(contractDTO, deliverVehicleVO);
+        List<DeliverImgInfo> deliverImgInfos = JSONUtil.toList(contractDTO.getPlateNumberWithImgs(), DeliverImgInfo.class);
+        if(deliverImgInfos.isEmpty()){
+            return null;
+        }
+        Map<String, DeliverImgInfo> imgInfoMap = deliverImgInfos.stream().collect(Collectors.toMap(DeliverImgInfo::getDeliverNo, Function.identity(), (v1, v2) -> v1));
+        DeliverImgInfo deliverImgInfo = imgInfoMap.get(deliverDTO.getDeliverNo());
+        if(null == deliverImgInfo){
+            return null;
+        }
+        deliverVehicleVO.setImgUrl(deliverImgInfo.getImgUrl());
+        return deliverVehicleVO;
     }
 
     public DeliverVehicleVO getDeliverVehicleVO(DeliverDTO deliverDTO){

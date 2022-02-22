@@ -29,11 +29,12 @@
         <alibaba.cloud.version>2.2.6.RELEASE</alibaba.cloud.version>
         <cola.components.version>4.0.1</cola.components.version>
         <feign.version>2.2.7.RELEASE</feign.version>
-        <mf.components.version>1.1-SNAPSHOT</mf.components.version>
+        <mf.components.version>1.3-SNAPSHOT</mf.components.version>
         <mf.components.exception.version>1.2-SNAPSHOT</mf.components.exception.version>
         <swagger.version>2.9.2</swagger.version>
         <elasticsearch.version>6.6.2</elasticsearch.version>
         <guava.version>30.1.1-jre</guava.version>
+        <billing.rentcharge.version>1.1.0-SNAPSHOT</billing.rentcharge.version>
         <!--<schedulerx2.version>1.2.4.3</schedulerx2.version>-->
     </properties>
     <profiles>
@@ -119,14 +120,14 @@
                 <version>${project.dependents.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.mfexpress.transportation.project</groupId>
+                <groupId>com.mfexpress.transportation.customer</groupId>
                 <artifactId>mf-customer-client</artifactId>
                 <version>${project.dependents.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.mfexpress.billing.rentcharge</groupId>
                 <artifactId>mf-billing-rentcharge-client</artifactId>
-                <version>${project.dependents.version}</version>
+                <version>${billing.rentcharge.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
@@ -168,6 +169,12 @@
             <dependency>
                 <groupId>com.mfexpress.rent.vehicle</groupId>
                 <artifactId>mf-vehicle-client</artifactId>
+                <version>${project.dependents.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.mfexpress.rent.maintain</groupId>
+                <artifactId>mf-maintain-client</artifactId>
                 <version>${project.dependents.version}</version>
             </dependency>
             <!--COLA Components-->

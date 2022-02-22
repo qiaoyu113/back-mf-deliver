@@ -2,14 +2,15 @@ package com.mfexpress.rent.deliver.domain;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.json.JSONUtil;
+import com.mfexpress.component.constants.ResultErrorEnum;
+import com.mfexpress.component.exception.CommonException;
+import cn.hutool.core.collection.CollectionUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.RedisTools;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.DeliverEnum;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
+import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.*;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
@@ -19,6 +20,7 @@ import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -28,7 +30,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/domain/deliver/v3/deliver")
-@Api(tags = "domain-交付--1.2交付单聚合")
+@Api(tags = "domain-交付--1.4交付单聚合")
 @Slf4j
 public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
@@ -82,13 +84,16 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @Override
     @PostMapping("/toCheck")
     @PrintParam
-    public Result<Integer> toCheck(@RequestParam("serveNo") String serveNo) {
+    // 发车验车和收车验车对deliver的更改都走的是这个接口
+    public Result<Integer> toCheck(@RequestParam("serveNo") String serveNo, @RequestParam("operatorId") Integer operatorId) {
         //2021-10-13修改 收车验车时交付单变更为已收车
         Deliver deliver = deliverGateway.getDeliverByServeNo(serveNo);
         deliver.setIsCheck(JudgeEnum.YES.getCode());
-        if (deliver.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())) {
+        deliver.setCarServiceId(operatorId);
+        deliver.setUpdateId(operatorId);
+        /*if (deliver.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())) {
             deliver.setDeliverStatus(DeliverEnum.RECOVER.getCode());
-        }
+        }*/
         int i = deliverGateway.updateDeliverByServeNo(serveNo, deliver);
         return i > 0 ? Result.getInstance(deliver.getCarId()).success() : Result.getInstance(0).fail(-1, "验车失败");
     }
@@ -301,9 +306,101 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     /* luzheng add */
     @Override
     @PostMapping("/getDeliveredDeliverDTOByCarId")
+    @PrintParam
     public Result<DeliverDTO> getDeliveredDeliverDTOByCarId(@RequestParam("carId") Integer carId) {
         // 状态为已发车和收车中的交车单所属的车辆都可以被维修
         Deliver deliver = deliverGateway.getDeliverByCarIdAndDeliverStatus(carId, Arrays.asList(DeliverEnum.DELIVER.getCode(), DeliverEnum.IS_RECOVER.getCode()));
+        if (null == deliver) {
+            return Result.getInstance((DeliverDTO) null).success();
+        }
+        DeliverDTO deliverDTO = new DeliverDTO();
+        if(StringUtils.isEmpty(deliver.getInsuranceStartTime())){
+            deliver.setInsuranceStartTime(null);
+        }
+        if(StringUtils.isEmpty(deliver.getInsuranceEndTime())){
+            deliver.setInsuranceEndTime(null);
+        }
+        BeanUtils.copyProperties(deliver, deliverDTO);
+        return Result.getInstance(deliverDTO).success();
+    }
+
+    @Override
+    @PostMapping("/contractGenerating")
+    @PrintParam
+    public Result<Integer> contractGenerating(@RequestBody DeliverContractGeneratingCmd cmd) {
+        Deliver deliverToUpdate = new Deliver();
+        List<String> serveNos = cmd.getServeNos();
+        List<Deliver> delivers = deliverGateway.getDeliverByServeNoList(serveNos);
+        if(delivers.isEmpty()){
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单查询失败");
+        }
+        if (DeliverTypeEnum.DELIVER.getCode() == cmd.getDeliverType()) {
+            delivers.forEach(deliver -> {
+                if (DeliverContractStatusEnum.NOSIGN.getCode() != deliver.getDeliverContractStatus()) {
+                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
+                }
+            });
+            deliverToUpdate.setDeliverContractStatus(DeliverContractStatusEnum.GENERATING.getCode());
+        } else {
+            delivers.forEach(deliver -> {
+                if (DeliverContractStatusEnum.NOSIGN.getCode() != deliver.getRecoverContractStatus()) {
+                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
+                }
+            });
+            deliverToUpdate.setRecoverContractStatus(DeliverContractStatusEnum.GENERATING.getCode());
+        }
+        int i = deliverGateway.updateDeliverByServeNoList(cmd.getServeNos(), deliverToUpdate);
+        return Result.getInstance(i).success();
+    }
+
+    @Override
+    @PostMapping("/contractSigning")
+    @PrintParam
+    public Result<Integer> contractSigning(@RequestBody @Validated DeliverContractSigningCmd cmd) {
+        Deliver deliverToUpdate = new Deliver();
+        List<String> deliverNos = cmd.getDeliverNos();
+        List<Deliver> delivers = deliverGateway.getDeliverByDeliverNoList(deliverNos);
+        if(delivers.isEmpty()){
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单查询失败");
+        }
+        if (DeliverTypeEnum.DELIVER.getCode() == cmd.getDeliverType()) {
+            delivers.forEach(deliver -> {
+                if (DeliverContractStatusEnum.GENERATING.getCode() != deliver.getDeliverContractStatus()) {
+                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
+                }
+            });
+            deliverToUpdate.setDeliverContractStatus(DeliverContractStatusEnum.SIGNING.getCode());
+        } else {
+            delivers.forEach(deliver -> {
+                if (DeliverContractStatusEnum.GENERATING.getCode() != deliver.getRecoverContractStatus()) {
+                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
+                }
+            });
+            deliverToUpdate.setRecoverContractStatus(DeliverContractStatusEnum.SIGNING.getCode());
+        }
+        int i = deliverGateway.updateDeliverByDeliverNos(deliverNos, deliverToUpdate);
+        return Result.getInstance(i).success();
+    }
+
+    @Override
+    @PostMapping("/makeNoSignByDeliverNo")
+    @PrintParam
+    public Result<Integer> makeNoSignByDeliverNo(@RequestParam("deliverNos") String deliverNos, @RequestParam("deliverType") Integer deliverType) {
+        Deliver deliverToUpdate = new Deliver();
+        if (DeliverTypeEnum.DELIVER.getCode() == deliverType) {
+            deliverToUpdate.setDeliverContractStatus(DeliverContractStatusEnum.NOSIGN.getCode());
+        } else {
+            deliverToUpdate.setRecoverContractStatus(DeliverContractStatusEnum.NOSIGN.getCode());
+        }
+        int i = deliverGateway.updateDeliverByDeliverNos(JSONUtil.toList(deliverNos, String.class), deliverToUpdate);
+        return Result.getInstance(i).success();
+    }
+
+    @Override
+    @PostMapping("/getDeliverByDeliverNo")
+    @PrintParam
+    public Result<DeliverDTO> getDeliverByDeliverNo(@RequestParam("deliverNo") String deliverNo) {
+        Deliver deliver = deliverGateway.getDeliverByDeliverNo(deliverNo);
         if (null == deliver) {
             return Result.getInstance((DeliverDTO) null).success();
         }

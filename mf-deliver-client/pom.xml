@@ -52,6 +52,16 @@
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.mfexpress</groupId>
+            <artifactId>mf-component-exception</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.mfexpress</groupId>
+            <artifactId>mf-common-client</artifactId>
+        </dependency>
         <!--        测试使用-->
 
         <!--        测试使用-->

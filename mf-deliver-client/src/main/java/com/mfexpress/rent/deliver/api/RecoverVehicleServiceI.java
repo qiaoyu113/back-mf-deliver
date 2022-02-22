@@ -13,8 +13,7 @@ public interface RecoverVehicleServiceI {
 
     String cancelRecover(RecoverCancelCmd recoverCancelCmd);
 
-    String toCheck(RecoverVechicleCmd recoverVechicleCmd);
-
+    String whetherToCheck(RecoverVechicleCmd recoverVechicleCmd);
 
     String toBackInsure(RecoverBackInsureCmd recoverBackInsureCmd);
 
@@ -27,4 +26,8 @@ public interface RecoverVehicleServiceI {
     RecoverVehicleVO getCachedCheckInfo(RecoverVechicleCmd recoverVechicleCmd);
 
     RecoverDetailVO getRecoverDetail(RecoverDetailQryCmd cmd);
+
+    Integer abnormalRecover(RecoverAbnormalCmd cmd, TokenInfo tokenInfo);
+
+    RecoverAbnormalVO getRecoverAbnormalInfo(RecoverAbnormalQry cmd);
 }

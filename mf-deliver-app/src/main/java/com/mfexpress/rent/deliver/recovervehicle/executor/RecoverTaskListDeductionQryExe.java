@@ -2,9 +2,11 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.constant.RecoverVehicleType;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
@@ -58,6 +60,11 @@ public class RecoverTaskListDeductionQryExe implements RecoverQryServiceI {
                 RecoverVehicle recoverVehicle = recoverVehicleMap.get(recoverVehicleVO.getServeNo());
                 recoverVehicleVO.setDamageFee(recoverVehicle == null ? null : recoverVehicle.getDamageFee());
                 recoverVehicleVO.setParkFee(recoverVehicle == null ? null : recoverVehicle.getParkFee());
+                if (JudgeEnum.YES.getCode().equals(recoverVehicleVO.getRecoverAbnormalFlag())) {
+                    recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.ABNORMAL.getName());
+                } else {
+                    recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
+                }
             });
         }
         return esData;

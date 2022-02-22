@@ -25,9 +25,12 @@ public interface DeliverGateway {
 
     List<Deliver>getDeliverByDeductStatus(List<String>serveNoList);
 
+    int updateDeliverByDeliverNos(List<String> deliverNos, Deliver deliver);
+
+    Deliver getDeliverByDeliverNo(String deliverNo);
+
+    List<Deliver> getDeliverByDeliverNoList(List<String> deliverNos);
+
     List<Deliver> getDeliverByCarId(Integer carId);
-
-
-
 
 }

@@ -1,3 +1,4 @@
+/*
 package com.mfexpress.rent.deliver.sync;
 
 import com.mfexpress.component.dto.cdc.binlog.dispatch.BinlogDispatch;
@@ -9,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public class DeliverBinlogDispatch extends BinlogDispatch {
+public class DeliverBinlogDispatch implements BinlogDispatch {
 
     private SyncServiceI serviceI;
 
@@ -48,3 +49,4 @@ public class DeliverBinlogDispatch extends BinlogDispatch {
         log.info("invoker finish");
     }
 }
+*/

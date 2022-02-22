@@ -19,7 +19,7 @@
             <artifactId>mf-common-client</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.mfexpress.transportation.project</groupId>
+            <groupId>com.mfexpress.transportation.customer</groupId>
             <artifactId>mf-customer-client</artifactId>
         </dependency>
         <dependency>
@@ -37,6 +37,10 @@
         <dependency>
             <groupId>com.mfexpress.rent.deliver</groupId>
             <artifactId>mf-deliver-infrastructure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mfexpress.rent.maintain</groupId>
+            <artifactId>mf-maintain-client</artifactId>
         </dependency>
         <dependency>
             <groupId>com.alibaba.cola</groupId>

@@ -36,6 +36,12 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     @Resource
     private RecoverVehicleDetailQryExe recoverVehicleDetailQryExe;
 
+    @Resource
+    private RecoverAbnormalCmdExe recoverAbnormalCmdExe;
+
+    @Resource
+    private RecoverAbnormalQryExe recoverAbnormalQryExe;
+
     @Override
     public List<RecoverApplyVO> getRecoverVehicleListVO(RecoverApplyQryCmd recoverApplyQryCmd, TokenInfo tokenInfo) {
         return recoverVehicleQryExe.execute(recoverApplyQryCmd,tokenInfo);
@@ -52,7 +58,7 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     }
 
     @Override
-    public String toCheck(RecoverVechicleCmd recoverVechicleCmd) {
+    public String whetherToCheck(RecoverVechicleCmd recoverVechicleCmd) {
         return recoverToCheckExe.execute(recoverVechicleCmd);
     }
 
@@ -71,7 +77,6 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
 
     @Override
     public String toDeduction(RecoverDeductionCmd recoverDeductionCmd) {
-
         return recoverDeductionExe.execute(recoverDeductionCmd);
     }
 
@@ -88,5 +93,15 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     @Override
     public RecoverDetailVO getRecoverDetail(RecoverDetailQryCmd cmd) {
         return recoverVehicleDetailQryExe.execute(cmd);
+    }
+
+    @Override
+    public Integer abnormalRecover(RecoverAbnormalCmd cmd, TokenInfo tokenInfo) {
+        return recoverAbnormalCmdExe.execute(cmd, tokenInfo);
+    }
+
+    @Override
+    public RecoverAbnormalVO getRecoverAbnormalInfo(RecoverAbnormalQry cmd) {
+        return recoverAbnormalQryExe.execute(cmd);
     }
 }

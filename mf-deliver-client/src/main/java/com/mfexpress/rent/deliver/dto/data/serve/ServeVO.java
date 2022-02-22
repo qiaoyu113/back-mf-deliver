@@ -66,6 +66,18 @@ public class ServeVO {
     private Double mileage;
     @ApiModelProperty(value = "车龄")
     private Double vehicleAge;
+
+    @ApiModelProperty(value = "交车电子合同签署状态")
+    private Integer deliverContractStatus;
+
+    @ApiModelProperty(value = "收车电子合同签署状态")
+    private Integer recoverContractStatus;
+
+    @ApiModelProperty(value = "异常收车标志位")
+    private Integer recoverAbnormalFlag;
+
+    @ApiModelProperty(value = "所属电子合同id")
+    private String elecContractId;
 }
 
 
