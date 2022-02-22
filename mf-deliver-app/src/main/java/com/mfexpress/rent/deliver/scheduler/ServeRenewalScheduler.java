@@ -71,7 +71,7 @@ public class ServeRenewalScheduler {
         Date nowDate = new Date();
         try {
             // nowDate = dateFormat.parse(dateFormat.format(nowDate));
-            nowDate = dateFormat.parse("2022-02-28");
+            nowDate = dateFormat.parse("2022-03-01");
         } catch (ParseException e) {
             log.error("自动续约失败，日期格式化失败");
             e.printStackTrace();
