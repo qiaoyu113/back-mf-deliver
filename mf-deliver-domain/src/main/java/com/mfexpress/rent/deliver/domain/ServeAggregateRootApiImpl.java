@@ -650,10 +650,10 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         List<Serve> serveToUpdateList = needPassiveRenewalServeList.stream().map(serve -> {
             Serve serveToUpdate = new Serve();
             serveToUpdate.setId(serve.getId());
-            DateTime leaseEndDate = DateUtil.parse(serve.getLeaseEndDate());
-            DateTime updatedLeaseEndDate = DateUtil.offsetMonth(leaseEndDate, 1);
-            serveToUpdate.setLeaseEndDate(dateFormat.format(updatedLeaseEndDate));
-            serveToUpdate.setExpectRecoverDate(dateFormat.format(updatedLeaseEndDate));
+            DateTime expectRecoverDate = DateUtil.parse(serve.getExpectRecoverDate());
+            String updatedExpectRecoverDate = getExpectRecoverDate(expectRecoverDate, 1);
+            serveToUpdate.setLeaseEndDate(updatedExpectRecoverDate);
+            serveToUpdate.setExpectRecoverDate(updatedExpectRecoverDate);
             serveToUpdate.setRenewalType(ServeRenewalTypeEnum.PASSIVE.getCode());
             serveToUpdate.setUpdateId(cmd.getOperatorId());
 
@@ -675,7 +675,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             renewalChargeCmd.setDeliverNo(deliver.getDeliverNo());
             renewalChargeCmd.setVehicleId(deliver.getCarId());
             renewalChargeCmd.setEffectFlag(false);
-            renewalChargeCmd.setRenewalDate(dateFormat.format(updatedLeaseEndDate));
+            renewalChargeCmd.setRenewalDate(updatedExpectRecoverDate);
             mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
 
             return serveToUpdate;
@@ -732,5 +732,19 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         return Result.getInstance(serveGateway.getPageServeByQry(qry)).success();
     }
 
+    private String getExpectRecoverDate(Date deliverVehicleDate, int offset) {
+        DateTime dateTime = DateUtil.endOfMonth(deliverVehicleDate);
+        String deliverDate = DateUtil.formatDate(deliverVehicleDate);
+        String endDate = DateUtil.formatDate(dateTime);
+        if (deliverDate.equals(endDate)) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(DateUtil.endOfMonth(dateTime));
+            calendar.add(Calendar.MONTH, offset);
+            calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+            return DateUtil.formatDate(calendar.getTime());
+        } else {
+            return DateUtil.formatDate(DateUtil.offsetMonth(deliverVehicleDate, offset));
+        }
+    }
 
 }
