@@ -91,9 +91,6 @@ public class ServeRenewalScheduler {
                 List<Serve> serves = pagePagination.getList();
                 Date finalNowDate = nowDate;
                 serves.forEach(serve -> {
-                    if("FWD2021112600007".equals(serve.getServeNo())){
-                        System.out.println(1);
-                    }
                     String leaseEndDateChar = serve.getLeaseEndDate();
                     if (!StringUtils.isEmpty(leaseEndDateChar)) {
                         Date leaseEndDate = DateUtil.parse(leaseEndDateChar);
