@@ -170,6 +170,7 @@ public class RenewableServeListQryExe {
         serveESList.forEach(serveES -> {
             ServeToRenewalVO serveToRenewalVO = new ServeToRenewalVO();
             BeanUtil.copyProperties(serveES, serveToRenewalVO);
+            serveToRenewalVO.setPurpose(serveES.getLeaseModelId());
             serveToRenewalVO.setOaContractCode(serveES.getContractNo());
             serveToRenewalVO.setBrandDisplay(serveES.getBrandModelDisplay());
             serveToRenewalVO.setStatusDisplay(Objects.requireNonNull(ServeEnum.getServeEnum(serveES.getServeStatus())).getStatus());
@@ -178,22 +179,22 @@ public class RenewableServeListQryExe {
                 Date deliverVehicleTime = serveES.getDeliverVehicleTime();
                 serveToRenewalVO.setLeaseDays(String.valueOf(DateUtil.between(nowDate, deliverVehicleTime, DateUnit.DAY)));
             }
-            if(serveNoListWithContractCommodity.contains(serveES.getServeNo())){
-                if(null != contractCommodityDTOMap){
+            if (serveNoListWithContractCommodity.contains(serveES.getServeNo())) {
+                if (null != contractCommodityDTOMap) {
                     CommodityDTO commodityDTO = contractCommodityDTOMap.get(serveES.getGoodsId());
-                    if(null != commodityDTO){
-                        serveToRenewalVO.setLeaseFee(commodityDTO.getRentFee());
-                        serveToRenewalVO.setServiceFee(commodityDTO.getServiceFee());
-                        serveToRenewalVO.setInsuranceInfoDTO(commodityDTO.getInsuranceInfo());
+                    if (null != commodityDTO) {
+                        serveToRenewalVO.setRentFee(commodityDTO.getRentFee() == null ? "0.00" : commodityDTO.getRentFee().toString());
+                        serveToRenewalVO.setServiceFee(commodityDTO.getServiceFee() == null ? "0.00" : commodityDTO.getServiceFee().toString());
+                        serveToRenewalVO.setInsuranceInfo(commodityDTO.getInsuranceInfo());
                     }
                 }
-            }else if(serveNoListWithOrderCommodity.contains(serveES.getServeNo())){
-                if(null != orderCommodityDTOMap){
+            } else if (serveNoListWithOrderCommodity.contains(serveES.getServeNo())) {
+                if (null != orderCommodityDTOMap) {
                     CommodityDTO commodityDTO = orderCommodityDTOMap.get(serveES.getGoodsId());
-                    if(null != commodityDTO){
-                        serveToRenewalVO.setLeaseFee(commodityDTO.getRentFee());
-                        serveToRenewalVO.setServiceFee(commodityDTO.getServiceFee());
-                        serveToRenewalVO.setInsuranceInfoDTO(commodityDTO.getInsuranceInfo());
+                    if (null != commodityDTO) {
+                        serveToRenewalVO.setRentFee(commodityDTO.getRentFee() == null ? "0.00" : commodityDTO.getRentFee().toString());
+                        serveToRenewalVO.setServiceFee(commodityDTO.getServiceFee() == null ? "0.00" : commodityDTO.getServiceFee().toString());
+                        serveToRenewalVO.setInsuranceInfo(commodityDTO.getInsuranceInfo());
                     }
                 }
             }

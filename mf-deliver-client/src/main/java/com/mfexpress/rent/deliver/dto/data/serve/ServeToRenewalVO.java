@@ -45,7 +45,7 @@ public class ServeToRenewalVO {
     private Date leaseEndDate;
 
     @ApiModelProperty(value = "租赁方式id")
-    private Integer leaseModelId;
+    private Integer purpose;
 
     @ApiModelProperty(value = "租赁方式")
     private String leaseModelDisplay;
@@ -54,12 +54,12 @@ public class ServeToRenewalVO {
     private String statusDisplay;
 
     @ApiModelProperty(value = "租赁价格，不含服务费")
-    private Double leaseFee;
+    private String rentFee;
 
     @ApiModelProperty(value = "服务费")
-    private Double serviceFee;
+    private String serviceFee;
 
     @ApiModelProperty(value = "保险信息")
-    private InsuranceInfoDTO insuranceInfoDTO;
+    private InsuranceInfoDTO insuranceInfo;
 
 }
