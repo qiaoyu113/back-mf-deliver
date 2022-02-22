@@ -47,4 +47,7 @@ public interface RecoverVehicleAggregateRootApi {
     Result<RecoverAbnormalDTO> getRecoverAbnormalByQry(@RequestBody RecoverAbnormalQry qry);
     @PostMapping("/updateDeductionFee")
     Result<Integer> updateDeductionFee(@RequestBody RecoverDeductionCmd cmd);
+
+    @PostMapping("/getRecoverVehicleDtosByDeliverNoList")
+    Result<List<RecoverVehicleDTO>> getRecoverVehicleDtosByDeliverNoList(@RequestParam("deliverNoList") List<String> deliverNoList);
 }
