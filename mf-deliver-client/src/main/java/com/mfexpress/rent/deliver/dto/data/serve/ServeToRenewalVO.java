@@ -62,4 +62,6 @@ public class ServeToRenewalVO {
     @ApiModelProperty(value = "保险信息")
     private InsuranceInfoDTO insuranceInfo;
 
+    private String[] tags;
+
 }

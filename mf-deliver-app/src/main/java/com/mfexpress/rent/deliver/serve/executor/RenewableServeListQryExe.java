@@ -17,6 +17,7 @@ import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.dto.data.CommodityDTO;
 import com.mfexpress.order.dto.data.CommodityMapDTO;
+import com.mfexpress.order.dto.data.InsuranceInfoDTO;
 import com.mfexpress.order.dto.qry.CommodityMapQry;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
@@ -185,7 +186,10 @@ public class RenewableServeListQryExe {
                     if (null != commodityDTO) {
                         serveToRenewalVO.setRentFee(commodityDTO.getRentFee() == null ? "0.00" : commodityDTO.getRentFee().toString());
                         serveToRenewalVO.setServiceFee(commodityDTO.getServiceFee() == null ? "0.00" : commodityDTO.getServiceFee().toString());
-                        serveToRenewalVO.setInsuranceInfo(commodityDTO.getInsuranceInfo());
+                        InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
+                        serveToRenewalVO.setInsuranceInfo(insuranceInfo);
+                        serveToRenewalVO.setTags(insuranceInfo.getTags() == null ? new String[0]:insuranceInfo.getTags());
+
                     }
                 }
             } else if (serveNoListWithOrderCommodity.contains(serveES.getServeNo())) {
@@ -194,7 +198,9 @@ public class RenewableServeListQryExe {
                     if (null != commodityDTO) {
                         serveToRenewalVO.setRentFee(commodityDTO.getRentFee() == null ? "0.00" : commodityDTO.getRentFee().toString());
                         serveToRenewalVO.setServiceFee(commodityDTO.getServiceFee() == null ? "0.00" : commodityDTO.getServiceFee().toString());
-                        serveToRenewalVO.setInsuranceInfo(commodityDTO.getInsuranceInfo());
+                        InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
+                        serveToRenewalVO.setInsuranceInfo(insuranceInfo);
+                        serveToRenewalVO.setTags(insuranceInfo.getTags() == null ? new String[0]:insuranceInfo.getTags());
                     }
                 }
             }
