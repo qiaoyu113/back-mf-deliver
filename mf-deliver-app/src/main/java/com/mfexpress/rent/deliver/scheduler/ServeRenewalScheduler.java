@@ -91,10 +91,10 @@ public class ServeRenewalScheduler {
                 List<Serve> serves = pagePagination.getList();
                 Date finalNowDate = nowDate;
                 serves.forEach(serve -> {
-                    String leaseEndDateChar = serve.getLeaseEndDate();
-                    if (!StringUtils.isEmpty(leaseEndDateChar)) {
-                        Date leaseEndDate = DateUtil.parse(leaseEndDateChar);
-                        if (leaseEndDate.before(finalNowDate)) {
+                    String expectRecoverDateChar = serve.getExpectRecoverDate();
+                    if (!StringUtils.isEmpty(expectRecoverDateChar)) {
+                        Date expectRecoverDate = DateUtil.parse(expectRecoverDateChar);
+                        if (expectRecoverDate.before(finalNowDate)) {
                             // 租赁结束日期在当前日期之前，那么此服务单需要被自动续约，只判断到天
                             needPassiveRenewalServeList.add(serve);
                             if(ServeEnum.REPAIR.getCode().equals(serve.getStatus())){
