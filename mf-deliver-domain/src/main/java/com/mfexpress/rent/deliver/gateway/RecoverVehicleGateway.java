@@ -11,9 +11,11 @@ public interface RecoverVehicleGateway {
 
     int updateRecoverVehicle(RecoverVehicle recoverVehicle);
 
-    List<RecoverVehicle> selectRecoverByServeNoList(List<String>serveNoList);
+    List<RecoverVehicle> selectRecoverByServeNoList(List<String> serveNoList);
 
     RecoverVehicle getRecoverVehicleByDeliverNo(String deliverNo);
+
+    List<RecoverVehicle> getRecoverVehicleDtosByDeliverNoList(List<String> deliverNoList);
 
 
 }

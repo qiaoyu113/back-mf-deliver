@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.recovervehicle;
 
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.entity.RecoverVehicle;
 import com.mfexpress.rent.deliver.gateway.RecoverVehicleGateway;
 import com.mfexpress.rent.deliver.recovervehicle.repository.RecoverVehicleMapper;
@@ -47,6 +48,14 @@ public class RecoverGatewayImpl implements RecoverVehicleGateway {
         Example example = new Example(RecoverVehicle.class);
         example.createCriteria().andEqualTo("deliverNo", deliverNo).andEqualTo("status", ValidStatusEnum.VALID.getCode());
         return recoverVehicleMapper.selectOneByExample(example);
+    }
+
+    @Override
+    public List<RecoverVehicle> getRecoverVehicleDtosByDeliverNoList(List<String> deliverNoList) {
+        Example example = new Example(RecoverVehicle.class);
+        example.createCriteria()
+                .andIn("deliverNo", deliverNoList);
+        return recoverVehicleMapper.selectByExample(example);
     }
 
 
