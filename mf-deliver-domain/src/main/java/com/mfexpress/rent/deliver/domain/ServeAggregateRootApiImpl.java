@@ -41,7 +41,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Function;
@@ -710,6 +709,18 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     public Result<List<ServeDTO>> getServeByCustomerIdAndDeliver(@RequestBody List<Integer> customerIdList) {
         List<Serve> serveList = serveGateway.getServeByCustomerIdDeliver(customerIdList);
+        if (CollectionUtil.isEmpty(serveList)) {
+            return Result.getInstance((List<ServeDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+        }
+        List<ServeDTO> serveDTOList = BeanUtil.copyToList(serveList, ServeDTO.class, new CopyOptions().ignoreError());
+        return Result.getInstance(serveDTOList).success();
+    }
+
+    @Override
+    @PostMapping("/getServeByCustomerIdAndRecover")
+    @PrintParam
+    public Result<List<ServeDTO>> getServeByCustomerIdAndRecover(@RequestBody List<Integer> customerIdList) {
+        List<Serve> serveList = serveGateway.getServeByCustomerIdRecover(customerIdList);
         if (CollectionUtil.isEmpty(serveList)) {
             return Result.getInstance((List<ServeDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }

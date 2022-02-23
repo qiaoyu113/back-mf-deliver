@@ -33,4 +33,5 @@ public interface ServeGateway {
 
     void batchUpdate(List<Serve> serveToUpdateList);
     List<Serve>getServeByCustomerIdDeliver(List<Integer>customerIdList);
+    List<Serve>getServeByCustomerIdRecover(List<Integer>customerIdList);
 }

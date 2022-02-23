@@ -93,6 +93,9 @@ public interface ServeAggregateRootApi {
     @PostMapping("/getServeByCustomerIdAndDeliver")
     Result<List<ServeDTO>>getServeByCustomerIdAndDeliver(@RequestBody List<Integer>customerIdList);
 
+    @PostMapping("/getServeByCustomerIdAndRecover")
+    Result<List<ServeDTO>>getServeByCustomerIdAndRecover(@RequestBody List<Integer>customerIdList);
+
     @PostMapping("/getCountByQry")
     Result<Long> getCountByQry(@RequestBody ServeListQry qry);
 
