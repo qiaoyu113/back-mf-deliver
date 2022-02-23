@@ -69,7 +69,7 @@ public class RecoverEsDataQryExe {
         }
 
         if (StringUtils.isNotEmpty(recoverQryListCmd.getPlateNumber())) {
-            boolQueryBuilder.must(QueryBuilders.matchQuery("carNum", recoverQryListCmd.getPlateNumber()));
+            boolQueryBuilder.must(QueryBuilders.termQuery("carNum.keyword", recoverQryListCmd.getPlateNumber()));
         }
 
         int start = (recoverQryListCmd.getPage() - 1) * recoverQryListCmd.getLimit();
