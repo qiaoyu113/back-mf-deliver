@@ -148,7 +148,19 @@ public class ServeGatewayImpl implements ServeGateway {
         Example.Criteria criteria2 = example.createCriteria();
 
         criteria1.andIn("customerId", customerIdList);
-        criteria2.orEqualTo("status", 2).andEqualTo("status", 5);
+        criteria2.orEqualTo("status", 2).orEqualTo("status", 5);
+        example.and(criteria2);
+        return serveMapper.selectByExample(example);
+    }
+
+    @Override
+    public List<Serve> getServeByCustomerIdRecover(List<Integer> customerIdList) {
+        Example example = new Example(Serve.class);
+        Example.Criteria criteria1 = example.createCriteria();
+        Example.Criteria criteria2 = example.createCriteria();
+
+        criteria1.andIn("customerId", customerIdList);
+        criteria2.orEqualTo("status", 3).orEqualTo("status", 4);
         example.and(criteria2);
         return serveMapper.selectByExample(example);
     }
