@@ -265,9 +265,9 @@ public class CreateRecoverContractCmdExe {
         DateTime endDate = DateUtil.endOfMonth(new Date());
         DateTime startDate = DateUtil.beginOfMonth(new Date());
         //增加收车日期限制
-//        if (!endDate.isAfter(recoverVehicleTime) || recoverVehicleTime.before(startDate)) {
-//            throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "收车日期请选择在当月内");
-//        }
+        if (!endDate.isAfter(recoverVehicleTime) || recoverVehicleTime.before(startDate)) {
+            throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "收车日期请选择在当月内");
+        }
 
         CreateRecoverContractCmd createRecoverContractCmd = new CreateRecoverContractCmd();
 
