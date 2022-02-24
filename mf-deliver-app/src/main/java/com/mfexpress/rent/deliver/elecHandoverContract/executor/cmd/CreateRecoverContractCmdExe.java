@@ -265,9 +265,9 @@ public class CreateRecoverContractCmdExe {
         DateTime endDate = DateUtil.endOfMonth(new Date());
         DateTime startDate = DateUtil.beginOfMonth(new Date());
         //增加收车日期限制
-        if (!endDate.isAfter(recoverVehicleTime) || recoverVehicleTime.before(startDate)) {
-            throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "收车日期请选择在当月内");
-        }
+//        if (!endDate.isAfter(recoverVehicleTime) || recoverVehicleTime.before(startDate)) {
+//            throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "收车日期请选择在当月内");
+//        }
 
         CreateRecoverContractCmd createRecoverContractCmd = new CreateRecoverContractCmd();
 
@@ -332,7 +332,7 @@ public class CreateRecoverContractCmdExe {
 
         Result<MaintenanceDTO> maintenanceByServeNo = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getRecoverInfo().getServeNo());
         if (ResultValidUtils.checkResult(maintenanceByServeNo)) {
-            if (cmd.getRecoverInfo().getRecoverVehicleTime().getTime() < maintenanceByServeNo.getData().getConfirmDate().getTime()) {
+            if (cmd.getRecoverInfo().getRecoverVehicleTime().before(maintenanceByServeNo.getData().getConfirmDate())) {
                 log.info("收车日期超出可选范围  参数:{}", cmd);
                 throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "收车日期小于维修交车日期");
             }
@@ -340,9 +340,9 @@ public class CreateRecoverContractCmdExe {
 
         Result<DeliverVehicleDTO> deliverVehicleDto = deliverVehicleAggregateRootApi.getDeliverVehicleDto(cmd.getRecoverInfo().getDeliverNo());
         if (ResultValidUtils.checkResult(deliverVehicleDto)) {
-            if (cmd.getRecoverInfo().getRecoverVehicleTime().getTime() < deliverVehicleDto.getData().getDeliverVehicleTime().getTime()) {
+            if (cmd.getRecoverInfo().getRecoverVehicleTime().before(deliverVehicleDto.getData().getDeliverVehicleTime())) {
                 log.info("收车日期超出可选范围  参数:{}", cmd);
-                throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "收车日期小于维修交车日期");
+                throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "收车日期小于发车日期");
             }
         }
 
