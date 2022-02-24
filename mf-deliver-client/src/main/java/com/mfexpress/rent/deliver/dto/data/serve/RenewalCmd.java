@@ -13,6 +13,10 @@ import java.util.List;
 @ApiModel("服务单续约命令")
 public class RenewalCmd {
 
+    @ApiModelProperty(value = "合同全局id")
+    @NotNull(message = "合同全局id不能为空")
+    private Long contractId;
+
     @ApiModelProperty(value = "oa合同编号")
     @NotEmpty(message = "oa合同编号不能为空")
     private String oaContractCode;

@@ -141,4 +141,12 @@ public class DeliverGatewayImpl implements DeliverGateway {
 
     }
 
+    @Override
+    public List<Deliver> getDeliverDTOSByCarIdList(List<Integer> carIds) {
+        Example example = new Example(Deliver.class);
+        example.createCriteria()
+                .andIn("carId", carIds);
+        return deliverMapper.selectByExample(example);
+    }
+
 }

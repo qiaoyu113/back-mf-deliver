@@ -1,8 +1,9 @@
 package com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.json.JSONUtil;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
@@ -23,12 +24,15 @@ import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
 import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateDeliverContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.utils.CommonUtil;
@@ -44,10 +48,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -92,7 +93,13 @@ public class CreateDeliverContractCmdExe {
     @Resource
     private EsSyncHandlerI syncServiceI;
 
+    @Resource
+    private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
+
     public String execute(CreateDeliverContractCmd cmd, TokenInfo tokenInfo) {
+        //发车日期校验
+        checkDate(cmd);
+
         // 初始化字典数据
         initDictData();
 
@@ -100,7 +107,7 @@ public class CreateDeliverContractCmdExe {
         // 获取数据的orgId
         List<String> serveNos = deliverImgInfos.stream().map(DeliverImgInfo::getServeNo).collect(Collectors.toList());
         Result<Map<String, Serve>> serveMapResult = serveAggregateRootApi.getServeMapByServeNoList(serveNos);
-        if(ResultErrorEnum.SUCCESSED.getCode() != serveMapResult.getCode() || null == serveMapResult.getData() || serveMapResult.getData().isEmpty()){
+        if (ResultErrorEnum.SUCCESSED.getCode() != serveMapResult.getCode() || null == serveMapResult.getData() || serveMapResult.getData().isEmpty()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单查询失败");
         }
         Map<String, Serve> serveMap = serveMapResult.getData();
@@ -120,7 +127,7 @@ public class CreateDeliverContractCmdExe {
         // 验车信息获取
         List<Integer> vehicleIds = deliverImgInfos.stream().map(DeliverImgInfo::getCarId).collect(Collectors.toList());
         Result<List<VehicleValidationFullInfoDTO>> fullInfoDTOSResult = vehicleValidationAggregateRootApi.getVehicleValidationFullInfoDTOSByIds(vehicleIds);
-        if(ResultErrorEnum.SUCCESSED.getCode() != fullInfoDTOSResult.getCode() || null == fullInfoDTOSResult.getData() || fullInfoDTOSResult.getData().isEmpty()){
+        if (ResultErrorEnum.SUCCESSED.getCode() != fullInfoDTOSResult.getCode() || null == fullInfoDTOSResult.getData() || fullInfoDTOSResult.getData().isEmpty()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "验车信息获取失败");
         }
         // 验车信息需要验证是否和车辆id匹配，看看有没有缺
@@ -138,7 +145,7 @@ public class CreateDeliverContractCmdExe {
 
         // 访问契约锁域创建合同
         Result<Boolean> createElecContractResult = createElecContract(cmd, contractIdWithDocIds, docInfos, orderDTO);
-        if(ResultErrorEnum.SUCCESSED.getCode() != createElecContractResult.getCode() || null == createElecContractResult.getData()){
+        if (ResultErrorEnum.SUCCESSED.getCode() != createElecContractResult.getCode() || null == createElecContractResult.getData()) {
             log.error("创建合同时调用契约锁域失败，返回msg：{}", createElecContractResult.getMsg());
             // 调用契约锁失败还得将本地创建的合同置为无效
             makeContractInvalid(contractIdWithDocIds.getContractId());
@@ -146,9 +153,9 @@ public class CreateDeliverContractCmdExe {
         }
 
         // 什么时候改变交付单的状态，调用完契约锁域后，免得失败后还得改回来
-        try{
+        try {
             makeDeliverContractGenerating(serveNos, DeliverTypeEnum.DELIVER.getCode());
-        }catch (Exception e){
+        } catch (Exception e) {
             // 操作交付单失败，合同应置为无效
             CancelContractCmd cancelContractCmd = new CancelContractCmd();
             cancelContractCmd.setContractId(contractIdWithDocIds.getContractId());
@@ -194,7 +201,7 @@ public class CreateDeliverContractCmdExe {
     }
 
     // 收集各种数据去创建电子交接单对象
-    private List<ContractDocumentInfoDTO> collectDataToCreateDocs(CreateDeliverContractCmd cmd, Map<String, Serve> serveMap, Map<Integer, VehicleValidationFullInfoDTO> fullInfoDTOMap){
+    private List<ContractDocumentInfoDTO> collectDataToCreateDocs(CreateDeliverContractCmd cmd, Map<String, Serve> serveMap, Map<Integer, VehicleValidationFullInfoDTO> fullInfoDTOMap) {
         Map<Integer, Customer> customerMap = getCustomerMap(serveMap);
         List<DeliverImgInfo> deliverImgInfos = cmd.getDeliverImgInfos();
 
@@ -212,7 +219,7 @@ public class CreateDeliverContractCmdExe {
             docInfo.setLeaseModelType(leaseModeMap.get(serveMap.get(deliverImgInfo.getServeNo()).getLeaseModelId().toString()));
 
             Result<VehicleInfoDto> vehicleInfoDtoResult = vehicleAggregateRootApi.getVehicleInfoVOById(deliverImgInfo.getCarId());
-            if(ResultErrorEnum.SUCCESSED.getCode() != vehicleInfoDtoResult.getCode() || null == vehicleInfoDtoResult.getData()){
+            if (ResultErrorEnum.SUCCESSED.getCode() != vehicleInfoDtoResult.getCode() || null == vehicleInfoDtoResult.getData()) {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "车辆信息查询失败");
             }
             VehicleInfoDto vehicleInfoDto = vehicleInfoDtoResult.getData();
@@ -226,7 +233,7 @@ public class CreateDeliverContractCmdExe {
             ReviewOrderQry qry = new ReviewOrderQry();
             qry.setId(serveMap.get(deliverImgInfo.getServeNo()).getOrderId().toString());
             Result<OrderDTO> orderDTOResult = orderAggregateRootApi.getOrderInfo(qry);
-            if(ResultErrorEnum.SUCCESSED.getCode() != orderDTOResult.getCode() || null == orderDTOResult.getData()){
+            if (ResultErrorEnum.SUCCESSED.getCode() != orderDTOResult.getCode() || null == orderDTOResult.getData()) {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "订单信息查询失败");
             }
             docInfo.setOrderContactsPhone(orderDTOResult.getData().getConsigneeMobile());
@@ -242,15 +249,15 @@ public class CreateDeliverContractCmdExe {
     }
 
     public void initDictData() {
-        if(null == leaseModeMap){
+        if (null == leaseModeMap) {
             leaseModeMap = CommonUtil.getDictDataDTOMapByDictType(dictAggregateRootApi, "lease_mode");
         }
-        if(null == vehicleColorMap){
+        if (null == vehicleColorMap) {
             vehicleColorMap = CommonUtil.getDictDataDTOMapByDictType(dictAggregateRootApi, "vehicle_color");
         }
-        if(null == vehicleTypeMap){
+        if (null == vehicleTypeMap) {
             Result<Map<Integer, String>> vehicleTypeResult = vehicleAggregateRootApi.getAllVehicleBrandTypeList();
-            if(ResultErrorEnum.SUCCESSED.getCode() == vehicleTypeResult.getCode() && null != vehicleTypeResult.getData()){
+            if (ResultErrorEnum.SUCCESSED.getCode() == vehicleTypeResult.getCode() && null != vehicleTypeResult.getData()) {
                 vehicleTypeMap = vehicleTypeResult.getData();
             }
         }
@@ -268,7 +275,7 @@ public class CreateDeliverContractCmdExe {
         cmd.setOrgId(orgId);
         cmd.setOrderId(orderId);
         Result<ContractIdWithDocIds> createContractResult = contractAggregateRootApi.createDeliverContract(cmd);
-        if(ResultErrorEnum.SUCCESSED.getCode() != createContractResult.getCode() || null == createContractResult.getData()){
+        if (ResultErrorEnum.SUCCESSED.getCode() != createContractResult.getCode() || null == createContractResult.getData()) {
             // 前端创建时没有电子合同的概念
             log.error("创建合同失败，返回msg：{}", createContractResult.getMsg());
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "创建电子交接单失败");
@@ -279,7 +286,7 @@ public class CreateDeliverContractCmdExe {
     private Map<Integer, Customer> getCustomerMap(Map<String, Serve> serveMap) {
         List<Integer> customerId = serveMap.values().stream().map(Serve::getCustomerId).collect(Collectors.toList());
         Result<List<Customer>> customersResult = customerAggregateRootApi.getCustomerByIdList(customerId);
-        if(ResultErrorEnum.SUCCESSED.getCode() != customersResult.getCode() || null == customersResult.getData()){
+        if (ResultErrorEnum.SUCCESSED.getCode() != customersResult.getCode() || null == customersResult.getData()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "客户查询失败");
         }
         List<Customer> customers = customersResult.getData();
@@ -300,4 +307,30 @@ public class CreateDeliverContractCmdExe {
         cmd.setFailureReason(ContractFailureReasonEnum.OTHER.getCode());
         contractAggregateRootApi.cancelContract(cmd);
     }
+
+    private void checkDate(CreateDeliverContractCmd cmd) {
+        if (DateUtil.between(cmd.getDeliverInfo().getDeliverVehicleTime(), new Date(), DateUnit.DAY) > 6) {
+            log.info("发车日期超出可选范围  参数:{}", cmd);
+            throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "发车日期超出可选范围");
+        }
+        List<Integer> vehicleId = cmd.getDeliverImgInfos().stream().map(DeliverImgInfo::getCarId).distinct().collect(Collectors.toList());
+        if (CollectionUtil.isEmpty(vehicleId)) {
+            log.error("判断车辆最晚收车日期出错 未查询到车辆Id  参数:{}", cmd);
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到车辆Id");
+        }
+
+        Result<List<DeliverDTO>> deliverDTOSResult = deliverAggregateRootApi.getDeliverDTOSByCarIdList(vehicleId);
+        if (CollectionUtil.isNotEmpty(deliverDTOSResult.getData())) {
+            List<String> deliverNo = deliverDTOSResult.getData().stream().map(DeliverDTO::getDeliverNo).distinct().collect(Collectors.toList());
+            Result<List<RecoverVehicleDTO>> recoverVehicleDtosResult = recoverVehicleAggregateRootApi.getRecoverVehicleDtosByDeliverNoList(deliverNo);
+            if (CollectionUtil.isNotEmpty(recoverVehicleDtosResult.getData())) {
+                List<RecoverVehicleDTO> recoverVehicleDTOS = recoverVehicleDtosResult.getData().stream().sorted(Comparator.comparing(RecoverVehicleDTO::getRecoverVehicleTime).reversed()).collect(Collectors.toList());
+                if (cmd.getDeliverInfo().getDeliverVehicleTime().getTime() < recoverVehicleDTOS.get(0).getRecoverVehicleTime().getTime()) {
+                    log.error("发车日小于上次租赁收车日期  参数:{}", cmd);
+                    throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "发车日小于上次租赁收车日期");
+                }
+            }
+        }
+    }
+
 }

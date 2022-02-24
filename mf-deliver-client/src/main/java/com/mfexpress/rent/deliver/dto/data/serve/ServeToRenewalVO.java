@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.dto.data.serve;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.mfexpress.order.dto.data.InsuranceInfoDTO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -43,10 +44,24 @@ public class ServeToRenewalVO {
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date leaseEndDate;
 
+    @ApiModelProperty(value = "租赁方式id")
+    private Integer purpose;
+
     @ApiModelProperty(value = "租赁方式")
     private String leaseModelDisplay;
 
     @ApiModelProperty(value = "状态")
     private String statusDisplay;
+
+    @ApiModelProperty(value = "租赁价格，不含服务费")
+    private String rentFee;
+
+    @ApiModelProperty(value = "服务费")
+    private String serviceFee;
+
+    @ApiModelProperty(value = "保险信息")
+    private InsuranceInfoDTO insuranceInfo;
+
+    private String[] tags;
 
 }

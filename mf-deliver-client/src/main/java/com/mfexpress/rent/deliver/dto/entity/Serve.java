@@ -60,6 +60,8 @@ public class Serve {
     private Integer goodsId;
 
     // 续签合同迭代增加的字段-----------start
+    private Long contractId;
+
     private String oaContractCode;
 
     private Double deposit;

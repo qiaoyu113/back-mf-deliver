@@ -62,6 +62,10 @@
             <groupId>com.mfexpress</groupId>
             <artifactId>mf-common-client</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.mfexpress.rent.order</groupId>
+            <artifactId>mf-order-client</artifactId>
+        </dependency>
         <!--        测试使用-->
 
         <!--        测试使用-->
