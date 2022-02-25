@@ -275,8 +275,8 @@ public class ElecContractStatusMqCommand {
                 expectRecoverDateMap.put(serveNo, expectRecoverDate);
             }
         }
-        //生成发车单 交付单状态更新已发车并初始化操作状态  服务单状态更新为已发车
         contractDTO.setExpectRecoverDateMap(expectRecoverDateMap);
+        //生成发车单 交付单状态更新已发车并初始化操作状态  服务单状态更新为已发车
         Result<Integer> result = deliverVehicleAggregateRootApi.deliverVehicles(contractDTO);
         ResultValidUtils.checkResultException(result);
         List<Integer> carIdList = new LinkedList<>();
