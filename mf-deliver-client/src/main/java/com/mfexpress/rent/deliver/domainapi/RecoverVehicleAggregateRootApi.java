@@ -50,4 +50,7 @@ public interface RecoverVehicleAggregateRootApi {
 
     @PostMapping("/getRecoverVehicleDtosByDeliverNoList")
     Result<List<RecoverVehicleDTO>> getRecoverVehicleDtosByDeliverNoList(@RequestParam("deliverNoList") List<String> deliverNoList);
+
+    @PostMapping("/getRecoverVehicleDTOByDeliverNos")
+    Result<List<RecoverVehicleDTO>> getRecoverVehicleDTOByDeliverNos(@RequestParam("deliverNoList") List<String> deliverNoList);
 }
