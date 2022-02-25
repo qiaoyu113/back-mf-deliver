@@ -27,6 +27,8 @@ public class ServeChangeRecord {
 
     private Integer newGoodsId;
 
+    private String newBillingAdjustmentDate;
+
     private String rawData;
 
     private String newData;

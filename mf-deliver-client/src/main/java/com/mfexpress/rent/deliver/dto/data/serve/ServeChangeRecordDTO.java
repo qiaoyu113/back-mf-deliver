@@ -16,6 +16,8 @@ public class ServeChangeRecordDTO {
 
     private Integer newGoodsId;
 
+    private Date newBillingAdjustmentDate;
+
     private String rawData;
 
     private String newData;
