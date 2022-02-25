@@ -267,9 +267,9 @@ public class CreateDeliverContractCmdExe {
         DateTime endDate = DateUtil.endOfMonth(new Date());
         DateTime startDate = DateUtil.beginOfMonth(new Date());
         //增加收车日期限制
-        if (!endDate.isAfter(cmd.getDeliverInfo().getDeliverVehicleTime()) || cmd.getDeliverInfo().getDeliverVehicleTime().before(startDate)) {
-            throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "发车日期请选择在当月内");
-        }
+//        if (!endDate.isAfter(cmd.getDeliverInfo().getDeliverVehicleTime()) || cmd.getDeliverInfo().getDeliverVehicleTime().before(startDate)) {
+//            throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "发车日期请选择在当月内");
+//        }
         cmd.setOperatorId(tokenInfo.getId());
         cmd.setDeliverType(DeliverTypeEnum.DELIVER.getCode());
         cmd.setOrgId(orgId);
@@ -322,10 +322,10 @@ public class CreateDeliverContractCmdExe {
         Result<List<DeliverDTO>> deliverDTOSResult = deliverAggregateRootApi.getDeliverDTOSByCarIdList(vehicleId);
         if (CollectionUtil.isNotEmpty(deliverDTOSResult.getData())) {
             List<String> deliverNo = deliverDTOSResult.getData().stream().map(DeliverDTO::getDeliverNo).distinct().collect(Collectors.toList());
-            Result<List<RecoverVehicleDTO>> recoverVehicleDtosResult = recoverVehicleAggregateRootApi.getRecoverVehicleDtosByDeliverNoList(deliverNo);
+            Result<List<RecoverVehicleDTO>> recoverVehicleDtosResult = recoverVehicleAggregateRootApi.getRecoverVehicleDTOByDeliverNos(deliverNo);
             if (CollectionUtil.isNotEmpty(recoverVehicleDtosResult.getData())) {
-                List<RecoverVehicleDTO> recoverVehicleDTOS = recoverVehicleDtosResult.getData().stream().sorted(Comparator.comparing(RecoverVehicleDTO::getRecoverVehicleTime).reversed()).collect(Collectors.toList());
-                if (cmd.getDeliverInfo().getDeliverVehicleTime().before(recoverVehicleDTOS.get(0).getRecoverVehicleTime())) {
+//                List<RecoverVehicleDTO> recoverVehicleDTOS = recoverVehicleDtosResult.getData().stream().sorted(Comparator.comparing(RecoverVehicleDTO::getRecoverVehicleTime).reversed()).collect(Collectors.toList());
+                if (cmd.getDeliverInfo().getDeliverVehicleTime().before(recoverVehicleDtosResult.getData().get(0).getRecoverVehicleTime())) {
                     log.error("发车日小于上次租赁收车日期  参数:{}", cmd);
                     throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "发车日小于上次租赁收车日期");
                 }

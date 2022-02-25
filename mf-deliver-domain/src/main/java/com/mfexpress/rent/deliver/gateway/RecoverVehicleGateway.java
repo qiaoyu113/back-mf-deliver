@@ -17,5 +17,7 @@ public interface RecoverVehicleGateway {
 
     List<RecoverVehicle> getRecoverVehicleDtosByDeliverNoList(List<String> deliverNoList);
 
+    List<RecoverVehicle> getRecoverVehicleByDeliverNos(List<String> deliverNoList);
+
 
 }

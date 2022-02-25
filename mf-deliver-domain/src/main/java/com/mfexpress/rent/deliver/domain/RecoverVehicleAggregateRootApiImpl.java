@@ -169,6 +169,16 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         return Result.getInstance(recoverVehicleDTOS).success();
     }
 
+    @Override
+    public Result<List<RecoverVehicleDTO>> getRecoverVehicleDTOByDeliverNos(@RequestParam("deliverNoList") List<String> deliverNoList) {
+        List<RecoverVehicle> recoverVehicleDtosByDeliverNoList = recoverVehicleGateway.getRecoverVehicleByDeliverNos(deliverNoList);
+        if (CollectionUtil.isEmpty(recoverVehicleDtosByDeliverNoList)) {
+            return Result.getInstance((List<RecoverVehicleDTO>)null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+        }
+        List<RecoverVehicleDTO> recoverVehicleDTOS = BeanUtil.copyToList(recoverVehicleDtosByDeliverNoList, RecoverVehicleDTO.class, CopyOptions.create());
+        return Result.getInstance(recoverVehicleDTOS).success();
+    }
+
 
     @Override
     @PostMapping("/abnormalRecover")
@@ -292,5 +302,6 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         BeanUtils.copyProperties(recoverAbnormal, recoverAbnormalDTO);
         return Result.getInstance(recoverAbnormalDTO).success();
     }
+
 
 }
