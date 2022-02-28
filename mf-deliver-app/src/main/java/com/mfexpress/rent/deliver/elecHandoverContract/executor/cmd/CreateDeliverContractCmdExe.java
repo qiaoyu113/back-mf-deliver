@@ -312,7 +312,7 @@ public class CreateDeliverContractCmdExe {
     }
 
     private void checkDate(CreateDeliverContractCmd cmd) {
-        if (DateUtil.between(cmd.getDeliverInfo().getDeliverVehicleTime(), new Date(), DateUnit.DAY) > 6) {
+        if (DateUtil.between(cmd.getDeliverInfo().getDeliverVehicleTime(), DateUtil.parseDate(DateUtil.now()), DateUnit.DAY) > 6) {
             log.info("发车日期超出可选范围  参数:{}", cmd);
             throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "发车日期超出可选范围");
         }
@@ -337,6 +337,5 @@ public class CreateDeliverContractCmdExe {
             }
         }
     }
-
 
 }
