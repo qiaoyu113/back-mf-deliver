@@ -435,7 +435,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         if (CollectionUtil.isEmpty(deliverDTOSByCarIdList)){
             return Result.getInstance((List<DeliverDTO>)null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
-        List<DeliverDTO> deliverDTOS = BeanUtil.copyToList(deliverDTOSByCarIdList, DeliverDTO.class, CopyOptions.create());
+        List<DeliverDTO> deliverDTOS = BeanUtil.copyToList(deliverDTOSByCarIdList, DeliverDTO.class,new CopyOptions().ignoreError());
         return Result.getInstance(deliverDTOS).success();
     }
 
