@@ -171,6 +171,7 @@ public class RenewableServeListQryExe {
         serveESList.forEach(serveES -> {
             ServeToRenewalVO serveToRenewalVO = new ServeToRenewalVO();
             BeanUtil.copyProperties(serveES, serveToRenewalVO);
+            serveToRenewalVO.setExpectRecoverDate(serveES.getExpectRecoverTime());
             serveToRenewalVO.setPurpose(serveES.getLeaseModelId());
             serveToRenewalVO.setOaContractCode(serveES.getContractNo());
             serveToRenewalVO.setBrandDisplay(serveES.getBrandModelDisplay());
