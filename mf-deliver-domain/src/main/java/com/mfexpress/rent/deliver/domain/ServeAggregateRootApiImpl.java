@@ -89,6 +89,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serveDTO.setLeaseEndDate(DateUtil.parseDate(serve.getLeaseEndDate()));
                 serveDTO.setLeaseBeginDate(DateUtil.parseDate(serve.getLeaseBeginDate()));
             }
+            if (!StringUtils.isEmpty(serve.getExpectRecoverDate())) {
+                serveDTO.setExpectRecoverDate(DateUtil.parseDate(serve.getExpectRecoverDate()));
+            }
             return Result.getInstance(serveDTO).success();
         }
 
