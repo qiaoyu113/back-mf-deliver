@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.consumer.sync;
 
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.common.domain.dto.DictDataDTO;
 import com.mfexpress.common.domain.dto.DictTypeDTO;
@@ -137,7 +138,9 @@ public class SyncServiceImpl implements EsSyncHandlerI {
         serveEs.setDeposit(serveDTO.getDeposit().toString());
         serveEs.setLeaseEndDate(serveDTO.getLeaseEndDate());
         serveEs.setRenewalType(serveDTO.getRenewalType());
-        serveEs.setExpectRecoverDate(serveDTO.getExpectRecoverDate());
+        if (!StringUtils.isEmpty(serveDTO.getExpectRecoverDate())) {
+            serveEs.setExpectRecoverDate(DateUtil.parseDate(serveDTO.getExpectRecoverDate()));
+        }
         //租赁方式
         serveEs.setLeaseModelDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.DELIVER_LEASE_MODE), serveEs.getLeaseModelId().toString()));
         serveEs.setExtractVehicleTime(serveDTO.getLeaseBeginDate());
