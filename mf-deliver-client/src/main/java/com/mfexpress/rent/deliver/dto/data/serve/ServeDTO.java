@@ -57,6 +57,9 @@ public class ServeDTO {
 
     private Date leaseEndDate;
 
+    private String expectRecoverDate;
+
     private Integer renewalType;
 
+    private String billingAdjustmentDate;
 }

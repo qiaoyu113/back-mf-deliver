@@ -46,6 +46,8 @@ import org.springframework.integration.redis.util.RedisLockRegistry;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
@@ -325,7 +327,7 @@ public class ElecContractStatusMqCommand {
         String endDate = DateUtil.formatDate(dateTime);
         if (deliverDate.equals(endDate)) {
             Calendar calendar = Calendar.getInstance();
-            calendar.setTime(DateUtil.endOfMonth(new Date()));
+            calendar.setTime(DateUtil.endOfMonth(dateTime));
             calendar.add(Calendar.MONTH, offset);
             calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
             return DateUtil.formatDate(calendar.getTime());
