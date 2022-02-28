@@ -179,7 +179,12 @@ public class RenewableServeListQryExe {
             if (null != serveES.getDeliverVehicleTime()) {
                 Date nowDate = new Date();
                 Date deliverVehicleTime = serveES.getDeliverVehicleTime();
-                serveToRenewalVO.setLeaseDays(String.valueOf(DateUtil.between(nowDate, deliverVehicleTime, DateUnit.DAY)));
+                if (nowDate.after(deliverVehicleTime)) {
+                    serveToRenewalVO.setLeaseDays(String.valueOf(DateUtil.between(nowDate, deliverVehicleTime, DateUnit.DAY)));
+                } else {
+                    serveToRenewalVO.setLeaseDays("0");
+                }
+
             }
             if (serveNoListWithContractCommodity.contains(serveES.getServeNo())) {
                 if (null != contractCommodityDTOMap) {
@@ -189,7 +194,7 @@ public class RenewableServeListQryExe {
                         serveToRenewalVO.setServiceFee(commodityDTO.getServiceFee() == null ? "0.00" : commodityDTO.getServiceFee().toString());
                         InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
                         serveToRenewalVO.setInsuranceInfo(insuranceInfo);
-                        serveToRenewalVO.setTags(insuranceInfo.getTags() == null ? new String[0]:insuranceInfo.getTags());
+                        serveToRenewalVO.setTags(insuranceInfo.getTags() == null ? new String[0] : insuranceInfo.getTags());
 
                     }
                 }
@@ -201,7 +206,7 @@ public class RenewableServeListQryExe {
                         serveToRenewalVO.setServiceFee(commodityDTO.getServiceFee() == null ? "0.00" : commodityDTO.getServiceFee().toString());
                         InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
                         serveToRenewalVO.setInsuranceInfo(insuranceInfo);
-                        serveToRenewalVO.setTags(insuranceInfo.getTags() == null ? new String[0]:insuranceInfo.getTags());
+                        serveToRenewalVO.setTags(insuranceInfo.getTags() == null ? new String[0] : insuranceInfo.getTags());
                     }
                 }
             }
