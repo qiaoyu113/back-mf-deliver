@@ -325,7 +325,7 @@ public class CreateRecoverContractCmdExe {
 
 
     private void checkDate(CreateRecoverContractFrontCmd cmd) {
-        if (DateUtil.between(cmd.getRecoverInfo().getRecoverVehicleTime(), DateUtil.parseDate(DateUtil.now()), DateUnit.DAY) > 6) {
+        if (DateUtil.between(DateUtil.parseDate(DateUtil.format(cmd.getRecoverInfo().getRecoverVehicleTime(), "yyyy-MM-dd")), DateUtil.parseDate(DateUtil.now()), DateUnit.DAY) > 6) {
             log.info("收车日期超出可选范围  参数:{}", cmd);
             throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "收车日期超出可选范围");
         }
@@ -347,6 +347,5 @@ public class CreateRecoverContractCmdExe {
         }
 
     }
-
 
 }
