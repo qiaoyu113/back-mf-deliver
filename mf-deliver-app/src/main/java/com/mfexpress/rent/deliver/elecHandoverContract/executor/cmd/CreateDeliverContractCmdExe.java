@@ -48,7 +48,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -320,9 +323,11 @@ public class CreateDeliverContractCmdExe {
         }
 
         Result<List<DeliverDTO>> deliverDTOSResult = deliverAggregateRootApi.getDeliverDTOSByCarIdList(vehicleId);
+        log.info("发车验车 查询deliver 参数:{},结果:{}",vehicleId,deliverDTOSResult);
         if (CollectionUtil.isNotEmpty(deliverDTOSResult.getData())) {
             List<String> deliverNo = deliverDTOSResult.getData().stream().map(DeliverDTO::getDeliverNo).distinct().collect(Collectors.toList());
             Result<List<RecoverVehicleDTO>> recoverVehicleDtosResult = recoverVehicleAggregateRootApi.getRecoverVehicleDTOByDeliverNos(deliverNo);
+            log.info("发车验车 查询发车单 参数:{},结果:{}",deliverNo,recoverVehicleDtosResult);
             if (CollectionUtil.isNotEmpty(recoverVehicleDtosResult.getData())) {
 //                List<RecoverVehicleDTO> recoverVehicleDTOS = recoverVehicleDtosResult.getData().stream().sorted(Comparator.comparing(RecoverVehicleDTO::getRecoverVehicleTime).reversed()).collect(Collectors.toList());
                 if (cmd.getDeliverInfo().getDeliverVehicleTime().before(recoverVehicleDtosResult.getData().get(0).getRecoverVehicleTime())) {
@@ -332,5 +337,6 @@ public class CreateDeliverContractCmdExe {
             }
         }
     }
+
 
 }
