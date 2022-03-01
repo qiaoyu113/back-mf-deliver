@@ -72,11 +72,14 @@ public class ServeES {
     private Double vehicleAge;
     @ApiModelProperty(value = "处理违章状态")
     private Integer isDeduction;
-    @ApiModelProperty(value = "预计还车日期")
+    @ApiModelProperty(value = "收车单预计还车日期")
     private Date expectRecoverTime;
 
     @ApiModelProperty(value = "租赁结束日期")
     private Date leaseEndDate;
+
+    @ApiModelProperty(value = "根据发车日期和租赁期限计算出来的预计收车日期")
+    private Date expectRecoverDate;
 
     @ApiModelProperty(value = "替换车标识")
     private Integer replaceFlag;
@@ -106,5 +109,8 @@ public class ServeES {
 
     @ApiModelProperty(value = "异常收车标志位")
     private Integer recoverAbnormalFlag;
+
+    @ApiModelProperty(value = "续约状态，0：未续约，1：主动续约，2：被动/自动续约")
+    private Integer renewalType;
 
 }

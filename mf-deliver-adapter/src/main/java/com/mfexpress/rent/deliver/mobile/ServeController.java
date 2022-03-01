@@ -6,7 +6,7 @@ import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.utils.TokenTools;
+import com.mfexpress.component.starter.tools.token.TokenTools;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.scheduler.ServeRenewalScheduler;

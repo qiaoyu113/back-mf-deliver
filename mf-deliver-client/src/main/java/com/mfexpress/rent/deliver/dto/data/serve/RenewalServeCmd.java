@@ -44,7 +44,11 @@ public class RenewalServeCmd {
     private String leaseEndDate;
 
     @ApiModelProperty(value = "计费调整日期")
-    @NotEmpty(message = "计费调整日期不能为空")
+    // @NotEmpty(message = "计费调整日期不能为空")
     private String billingAdjustmentDate;
+
+    @ApiModelProperty(value = "车牌号")
+    @NotEmpty(message = "车牌号不能为空")
+    private String carNum;
 
 }

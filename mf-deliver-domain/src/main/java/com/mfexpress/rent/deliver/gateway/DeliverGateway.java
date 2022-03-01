@@ -33,4 +33,6 @@ public interface DeliverGateway {
 
     List<Deliver> getDeliverByCarId(Integer carId);
 
+    List<Deliver> getDeliverDTOSByCarIdList(List<Integer> carIds);
+
 }

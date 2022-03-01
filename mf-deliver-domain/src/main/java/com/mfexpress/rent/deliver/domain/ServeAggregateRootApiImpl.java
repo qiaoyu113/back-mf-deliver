@@ -24,12 +24,15 @@ import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
+import com.mfexpress.rent.deliver.dto.entity.DeliverVehicle;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.dto.entity.ServeChangeRecord;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
+import com.mfexpress.rent.deliver.gateway.DeliverVehicleGateway;
 import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
+import com.mfexpress.rent.deliver.utils.FormatUtil;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -41,6 +44,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Function;
@@ -63,6 +67,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Resource
     private DeliverGateway deliverGateway;
+
+    @Resource
+    private DeliverVehicleGateway deliverVehicleGateway;
 
     @Resource
     private MqTools mqTools;
@@ -128,6 +135,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setRent(serveVehicleDTO.getRent());
                 serve.setGoodsId(serveVehicleDTO.getGoodsId());
 
+                serve.setContractId(serveVehicleDTO.getContractId());
                 serve.setOaContractCode(serveVehicleDTO.getOaContractCode());
                 serve.setDeposit(serveVehicleDTO.getDeposit());
                 serve.setLeaseBeginDate(serveVehicleDTO.getLeaseBeginDate());
@@ -446,9 +454,31 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     @Transactional(rollbackFor = Exception.class)
     public Result<Integer> renewalServe(@RequestBody @Validated RenewalCmd cmd) {
-        // 判断服务单是否存在，状态是否为已发车或维修中
         List<RenewalServeCmd> renewalServeCmdList = cmd.getServeCmdList();
-        List<String> serveNoList = renewalServeCmdList.stream().map(RenewalServeCmd::getServeNo).collect(Collectors.toList());
+        Map<String, RenewalServeCmd> renewalServeCmdMap = renewalServeCmdList.stream().collect(Collectors.toMap(RenewalServeCmd::getServeNo, Function.identity(), (v1, v2) -> v1));
+        List<String> serveNoList = new ArrayList<>(renewalServeCmdMap.keySet());
+
+        // 租赁开始日期必须大于发车日期校验
+        List<DeliverVehicle> deliverVehicleList = deliverVehicleGateway.getDeliverVehicleByServeNo(serveNoList);
+        if (deliverVehicleList.size() != serveNoList.size()) {
+            throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "交车单查询失败");
+        }
+        Map<String, DeliverVehicle> deliverVehicleMap = deliverVehicleList.stream().collect(Collectors.toMap(DeliverVehicle::getServeNo, Function.identity(), (v1, v2) -> v1));
+        serveNoList.forEach(serveNo -> {
+            RenewalServeCmd renewalServeCmd = renewalServeCmdMap.get(serveNo);
+            DeliverVehicle deliverVehicle = deliverVehicleMap.get(serveNo);
+            if (null == renewalServeCmd || null == deliverVehicle) {
+                throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "交车单查询失败");
+            }
+            Date deliverVehicleTime = deliverVehicle.getDeliverVehicleTime();
+            DateTime leaseBeginDate = DateUtil.parse(renewalServeCmd.getLeaseBeginDate());
+            if (leaseBeginDate.isBefore(deliverVehicleTime)) {
+                throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), renewalServeCmd.getCarNum() + "车辆在续约时租赁开始日期小于发车日期，续约失败");
+            }
+        });
+
+
+        // 判断服务单是否存在，状态是否为已发车或维修中
         List<Serve> serveList = serveGateway.getServeByServeNoList(serveNoList);
         if (serveNoList.size() != serveList.size()) {
             throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "服务单查询失败");
@@ -470,6 +500,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         List<Serve> serveListToUpdate = renewalServeCmdList.stream().map(renewalServeCmd -> {
             Serve serve = new Serve();
             BeanUtils.copyProperties(renewalServeCmd, serve);
+            serve.setContractId(cmd.getContractId());
             serve.setOaContractCode(cmd.getOaContractCode());
             serve.setRent(BigDecimal.valueOf(renewalServeCmd.getRent()));
             serve.setUpdateId(cmd.getOperatorId());
@@ -488,6 +519,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             record.setNewGoodsId(serve.getGoodsId());
             record.setNewData(JSONUtil.toJsonStr(serve));
             record.setCreatorId(cmd.getOperatorId());
+            record.setNewBillingAdjustmentDate(serve.getBillingAdjustmentDate());
             recordList.add(record);
 
             //发生计费
@@ -499,13 +531,21 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             renewalChargeCmd.setCustomerId(rawDataServe.getCustomerId());
             renewalChargeCmd.setDeliverNo(deliver.getDeliverNo());
             renewalChargeCmd.setVehicleId(deliver.getCarId());
-            if (rawDataServe.getRent().equals(serve.getRent())) {
+            // 根据计费调整日期是否有值来决定计费价格是否发生变化
+            if (StringUtils.isEmpty(renewalServeCmd.getBillingAdjustmentDate())) {
                 renewalChargeCmd.setEffectFlag(false);
             } else {
                 renewalChargeCmd.setEffectFlag(true);
                 renewalChargeCmd.setRent(serve.getRent());
                 renewalChargeCmd.setRentEffectDate(renewalServeCmd.getBillingAdjustmentDate());
             }
+            /*if (rawDataServe.getRent().equals(serve.getRent())) {
+                renewalChargeCmd.setEffectFlag(false);
+            } else {
+                renewalChargeCmd.setEffectFlag(true);
+                renewalChargeCmd.setRent(serve.getRent());
+                renewalChargeCmd.setRentEffectDate(renewalServeCmd.getBillingAdjustmentDate());
+            }*/
             renewalChargeCmd.setRenewalDate(renewalServeCmd.getLeaseEndDate());
             mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
             return serve;
@@ -560,6 +600,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             record.setNewGoodsId(serve.getGoodsId());
             record.setNewData(JSONUtil.toJsonStr(serveToUpdate));
             record.setCreatorId(cmd.getOperatorId());
+            record.setNewBillingAdjustmentDate(serve.getBillingAdjustmentDate());
             recordList.add(record);
 
             replaceServe.setExpectRecoverDate(serve.getExpectRecoverDate());
@@ -571,7 +612,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             serveGateway.updateServeByServeNo(serve.getServeNo(), serve);
         });
         // 调用计费域
-        if(!replaceServeAlreadyDeliverNoList.isEmpty()){
+        if (!replaceServeAlreadyDeliverNoList.isEmpty()) {
             List<Deliver> deliverList = deliverGateway.getDeliverByServeNoList(replaceServeAlreadyDeliverNoList);
             Map<String, Deliver> deliverMap = deliverList.stream().collect(Collectors.toMap(Deliver::getServeNo, Function.identity(), (v1, v2) -> v1));
             replaceServeAlreadyDeliverNoList.forEach(serveNo -> {
@@ -579,7 +620,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 //在这里查询交付单 后续看情况做修改
                 Deliver deliver = deliverMap.get(serveNo);
                 Serve replaceServe = replaceServeMap.get(serveNo);
-                if(null != replaceServe){
+                if (null != replaceServe) {
                     RenewalChargeCmd renewalChargeCmd = new RenewalChargeCmd();
                     renewalChargeCmd.setServeNo(serveNo);
                     renewalChargeCmd.setCreateId(cmd.getOperatorId());
@@ -639,7 +680,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             });
         }*/
         List<Serve> needPassiveRenewalServeList = cmd.getNeedPassiveRenewalServeList();
-        if(null == needPassiveRenewalServeList || needPassiveRenewalServeList.isEmpty()){
+        if (null == needPassiveRenewalServeList || needPassiveRenewalServeList.isEmpty()) {
             return Result.getInstance(0).success();
         }
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -696,9 +737,18 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         if (recordList.isEmpty()) {
             return Result.getInstance((List<ServeChangeRecordDTO>) null).success();
         }
+        SimpleDateFormat ymdFormat = new SimpleDateFormat(FormatUtil.ymdFormatChar);
         List<ServeChangeRecordDTO> recordDTOList = recordList.stream().map(record -> {
             ServeChangeRecordDTO recordDTO = new ServeChangeRecordDTO();
             BeanUtils.copyProperties(record, recordDTO);
+            if(!StringUtils.isEmpty(record.getNewBillingAdjustmentDate())){
+                try {
+                    recordDTO.setNewBillingAdjustmentDate(ymdFormat.parse(record.getNewBillingAdjustmentDate()));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+
             return recordDTO;
         }).collect(Collectors.toList());
         return Result.getInstance(recordDTOList).success();

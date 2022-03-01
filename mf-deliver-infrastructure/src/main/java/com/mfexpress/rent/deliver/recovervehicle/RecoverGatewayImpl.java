@@ -49,5 +49,23 @@ public class RecoverGatewayImpl implements RecoverVehicleGateway {
         return recoverVehicleMapper.selectOneByExample(example);
     }
 
+    @Override
+    public List<RecoverVehicle> getRecoverVehicleDtosByDeliverNoList(List<String> deliverNoList) {
+        Example example = new Example(RecoverVehicle.class);
+        example.createCriteria()
+                .andIn("deliverNo", deliverNoList);
+        return recoverVehicleMapper.selectByExample(example);
+    }
+
+    @Override
+    public List<RecoverVehicle> getRecoverVehicleByDeliverNos(List<String> deliverNoList) {
+        Example example = new Example(RecoverVehicle.class);
+        example.setOrderByClause("recover_vehicle_time DESC");
+        example.createCriteria()
+                .andIn("deliverNo", deliverNoList)
+                .andIsNotNull("recoverVehicleTime");
+        return recoverVehicleMapper.selectByExample(example);
+    }
+
 
 }

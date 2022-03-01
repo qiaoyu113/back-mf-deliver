@@ -1,6 +1,9 @@
 package com.mfexpress.rent.deliver.domain;
 
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
@@ -8,19 +11,13 @@ import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
-import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.po.ElectronicHandoverContractPO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.GroupPhotoVO;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalCmd;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalDTO;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalQry;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionCmd;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
 import com.mfexpress.rent.deliver.dto.entity.*;
 import com.mfexpress.rent.deliver.gateway.*;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
@@ -160,6 +157,28 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         return Result.getInstance(i).success();
     }
 
+    @Override
+    @PostMapping("/getRecoverVehicleDtosByDeliverNoList")
+    @PrintParam
+    public Result<List<RecoverVehicleDTO>> getRecoverVehicleDtosByDeliverNoList(@RequestParam("deliverNoList") List<String> deliverNoList) {
+        List<RecoverVehicle> recoverVehicleDtosByDeliverNoList = recoverVehicleGateway.getRecoverVehicleDtosByDeliverNoList(deliverNoList);
+        if (CollectionUtil.isEmpty(recoverVehicleDtosByDeliverNoList)) {
+            return Result.getInstance((List<RecoverVehicleDTO>)null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+        }
+        List<RecoverVehicleDTO> recoverVehicleDTOS = BeanUtil.copyToList(recoverVehicleDtosByDeliverNoList, RecoverVehicleDTO.class, CopyOptions.create());
+        return Result.getInstance(recoverVehicleDTOS).success();
+    }
+
+    @Override
+    public Result<List<RecoverVehicleDTO>> getRecoverVehicleDTOByDeliverNos(@RequestParam("deliverNoList") List<String> deliverNoList) {
+        List<RecoverVehicle> recoverVehicleDtosByDeliverNoList = recoverVehicleGateway.getRecoverVehicleByDeliverNos(deliverNoList);
+        if (CollectionUtil.isEmpty(recoverVehicleDtosByDeliverNoList)) {
+            return Result.getInstance((List<RecoverVehicleDTO>)null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+        }
+        List<RecoverVehicleDTO> recoverVehicleDTOS = BeanUtil.copyToList(recoverVehicleDtosByDeliverNoList, RecoverVehicleDTO.class, CopyOptions.create());
+        return Result.getInstance(recoverVehicleDTOS).success();
+    }
+
 
     @Override
     @PostMapping("/abnormalRecover")
@@ -283,5 +302,6 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         BeanUtils.copyProperties(recoverAbnormal, recoverAbnormalDTO);
         return Result.getInstance(recoverAbnormalDTO).success();
     }
+
 
 }

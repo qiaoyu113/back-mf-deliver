@@ -31,6 +31,8 @@ public class RecoverQryListCmd extends ListQry {
     private Date startDeliverTime;
     @ApiModelProperty(value = "发车日期时间段end")
     private Date endDeliverTime;
+    @ApiModelProperty(value = "车牌号")
+    private String plateNumber;
 
 
 }
