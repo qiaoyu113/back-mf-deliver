@@ -256,7 +256,7 @@ public class ElecContractStatusMqCommand {
 
         serveNoList.add(serveDTO.getServeNo());
         //操作日报
-        createDaily(serveNoList, contractDTO.getRecoverVehicleTime(),true);
+        createDaily(serveNoList, contractDTO.getRecoverVehicleTime(),false);
         return serveNoList;
     }
 
