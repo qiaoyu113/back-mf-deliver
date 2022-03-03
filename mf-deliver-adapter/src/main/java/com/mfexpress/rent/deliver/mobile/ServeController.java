@@ -9,6 +9,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.token.TokenTools;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
+import com.mfexpress.rent.deliver.scheduler.ServeDailyScheduler;
 import com.mfexpress.rent.deliver.scheduler.ServeRenewalScheduler;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -31,6 +32,8 @@ public class ServeController {
 
     @Resource
     private ServeRenewalScheduler serveRenewalScheduler;
+    @Resource
+    private ServeDailyScheduler serveDailyScheduler;
 
 
     //====================租赁服务单生成===============//
@@ -154,5 +157,14 @@ public class ServeController {
         serveRenewalScheduler.process();
         return Result.getInstance(0).success();
     }
+
+    @PostMapping("/dailyScheduler")
+    @ApiOperation("日报定时接口")
+    @PrintParam
+    public Result dailyScheduler() {
+        serveDailyScheduler.process();
+        return Result.getInstance(0).success();
+    }
+
 
 }
