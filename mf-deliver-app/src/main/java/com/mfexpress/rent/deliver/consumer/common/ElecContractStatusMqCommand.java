@@ -23,12 +23,14 @@ import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.consumer.sync.SyncServiceImpl;
 import com.mfexpress.rent.deliver.domainapi.*;
+import com.mfexpress.rent.deliver.dto.data.daily.DailyOperateCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
@@ -46,8 +48,6 @@ import org.springframework.integration.redis.util.RedisLockRegistry;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
@@ -80,6 +80,8 @@ public class ElecContractStatusMqCommand {
 
     @Resource
     private CustomerAggregateRootApi customerAggregateRootApi;
+    @Resource
+    private DailyAggregateRootApi dailyAggregateRootApi;
 
     @Resource
     private SyncServiceImpl syncServiceI;
@@ -230,7 +232,7 @@ public class ElecContractStatusMqCommand {
         }
 
         // 发送收车信息到mq，由合同域判断服务单所属的合同是否到已履约完成状态
-        if(JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())){
+        if (JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {
             ServeDTO serveDTOToNoticeContract = new ServeDTO();
             serveDTOToNoticeContract.setServeNo(serveDTO.getServeNo());
             serveDTOToNoticeContract.setOaContractCode(serveDTO.getOaContractCode());
@@ -253,6 +255,8 @@ public class ElecContractStatusMqCommand {
         mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(recoverVehicleCmd));
 
         serveNoList.add(serveDTO.getServeNo());
+        //操作日报
+        createDaily(serveNoList, contractDTO.getRecoverVehicleTime(),true);
         return serveNoList;
     }
 
@@ -270,7 +274,7 @@ public class ElecContractStatusMqCommand {
         for (String serveNo : serveNoList) {
             Serve serve = serveMap.get(serveNo);
             //替换车使用维修车的预计收车日期
-            if(!serve.getReplaceFlag().equals(1)){
+            if (!serve.getReplaceFlag().equals(1)) {
                 String expectRecoverDate = getExpectRecoverDate(contractDTO.getDeliverVehicleTime(), serve.getLeaseMonths());
                 expectRecoverDateMap.put(serveNo, expectRecoverDate);
             }
@@ -289,10 +293,10 @@ public class ElecContractStatusMqCommand {
             rentChargeCmd.setDeliverNo(deliverImgInfo.getDeliverNo());
             rentChargeCmd.setRent(serve.getRent());
             String expectRecoverDate = expectRecoverDateMap.get(deliverImgInfo.getServeNo());
-            if (Objects.isNull(expectRecoverDate)){
+            if (Objects.isNull(expectRecoverDate)) {
                 //替换车使用原车的预计收车日期作为计费截止日期
                 rentChargeCmd.setExpectRecoverDate(serve.getExpectRecoverDate());
-            }else {
+            } else {
                 rentChargeCmd.setExpectRecoverDate(expectRecoverDate);
             }
             rentChargeCmd.setDeliverFlag(true);
@@ -317,7 +321,8 @@ public class ElecContractStatusMqCommand {
         if (ResultErrorEnum.SUCCESSED.getCode() != vehicleResult.getCode()) {
             log.error("发车电子合同签署完成时，更改车辆状态失败。车辆id：{}", carIdList);
         }
-
+        //生成日报
+        createDaily(serveNoList, contractDTO.getDeliverVehicleTime(),true);
         return serveNoList;
     }
 
@@ -333,6 +338,24 @@ public class ElecContractStatusMqCommand {
             return DateUtil.formatDate(calendar.getTime());
         } else {
             return DateUtil.formatDate(DateUtil.offsetMonth(deliverVehicleDate, offset));
+        }
+    }
+
+
+    private void createDaily(List<String> serveNoList, Date date, boolean deliverFlag) {
+        Result<Map<String, Serve>> serveResult = serveAggregateRootApi.getServeMapByServeNoList(serveNoList);
+        Map<String, Serve> serveMap = serveResult.getData();
+        List<Serve> serveList = serveMap.values().stream().collect(Collectors.toList());
+        Result<Map<String, Deliver>> deliverResult = deliverAggregateRootApi.getDeliverByServeNoList(serveNoList);
+        Map<String, Deliver> deliverMap = deliverResult.getData();
+        DailyOperateCmd dailyCreateCmd = DailyOperateCmd.builder().serveList(serveList).deliverMap(deliverMap).date(date).build();
+        //发车标识
+        if (deliverFlag){
+            //发车
+            dailyAggregateRootApi.deliverDaily(dailyCreateCmd);
+        }else {
+            //收车
+            dailyAggregateRootApi.recoverDaily(dailyCreateCmd);
         }
     }
 

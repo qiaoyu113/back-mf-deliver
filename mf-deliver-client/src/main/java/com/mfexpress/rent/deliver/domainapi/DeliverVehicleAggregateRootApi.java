@@ -27,4 +27,7 @@ public interface DeliverVehicleAggregateRootApi {
 
     @PostMapping("/deliverVehicles")
     Result<Integer> deliverVehicles(@RequestBody ElecContractDTO contractDTO);
+
+    @PostMapping("/getDeliverVehicleByDeliverNoList")
+    Result<List<DeliverVehicleDTO>> getDeliverVehicleByDeliverNoList(@RequestBody List<String> deliverNoList);
 }
