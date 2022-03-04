@@ -122,12 +122,17 @@ public class DailyAggregateRootApiImpl implements DailyAggregateRootApi {
                 //逻辑删除日报
                 dailyGateway.deleteDailyByServeNoAndRentDate(serve.getServeNo(), DateUtil.formatDate(recoverDate));
             } else {
+
                 //补充至收车当日报
                 long diff = DateUtil.between(today, recoverDate, DateUnit.DAY);
-                for (int i = 0; i <= diff; i++) {
+                int i = 0;
+                if (!today.equals(recoverDate)) {
+                    i = 1;
+                }
+                for (int j = i; j <= diff; j++) {
                     Daily daily = getDaily(serve, deliver);
                     daily.setChargeFlag(1);
-                    daily.setRentDate(DateUtil.formatDate(DateUtil.offsetDay(today, i)));
+                    daily.setRentDate(DateUtil.formatDate(DateUtil.offsetDay(today, j)));
                     dailyList.add(daily);
                 }
             }
