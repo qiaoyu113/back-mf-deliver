@@ -12,10 +12,12 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.DailyAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.daily.DailyDTO;
+import com.mfexpress.rent.deliver.dto.data.daily.DailyMaintainDTO;
 import com.mfexpress.rent.deliver.dto.data.daily.DailyOperateCmd;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.entity.Daily;
+import com.mfexpress.rent.deliver.entity.api.DailyEntityApi;
 import com.mfexpress.rent.deliver.gateway.DailyGateway;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +38,8 @@ public class DailyAggregateRootApiImpl implements DailyAggregateRootApi {
 
     @Resource
     private DailyGateway dailyGateway;
+    @Resource
+    private DailyEntityApi dailyEntityApi;
 
 
     @Override
@@ -141,6 +145,13 @@ public class DailyAggregateRootApiImpl implements DailyAggregateRootApi {
             dailyGateway.addDailyList(dailyList);
         }
         return Result.getInstance(dailyList.size()).success();
+    }
+
+    @Override
+    @PostMapping("/maintainDaily")
+    public Result maintainDaily(@RequestBody DailyMaintainDTO dailyMaintainDTO) {
+        dailyEntityApi.operateMaintain(dailyMaintainDTO);
+        return Result.getInstance(true).success();
     }
 
 

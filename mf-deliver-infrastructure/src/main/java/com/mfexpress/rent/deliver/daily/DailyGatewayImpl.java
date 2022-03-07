@@ -39,4 +39,13 @@ public class DailyGatewayImpl implements DailyGateway {
         daily.setDelFlag(1);
         dailyMapper.updateByExample(daily, example);
     }
+
+    @Override
+    public void updateDailyRepairFlagByServeNoAndGteRentDate(String serveNo, String rentDate, Integer repairFlag) {
+        Example example = new Example(Daily.class);
+        example.createCriteria().andEqualTo("serveNo").andGreaterThanOrEqualTo("rentDate", rentDate);
+        Daily daily = new Daily();
+        daily.setReplaceFlag(repairFlag);
+        dailyMapper.updateByExample(daily, example);
+    }
 }

@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.domainapi;
 
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.daily.DailyDTO;
+import com.mfexpress.rent.deliver.dto.data.daily.DailyMaintainDTO;
 import com.mfexpress.rent.deliver.dto.data.daily.DailyOperateCmd;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,5 +22,8 @@ public interface DailyAggregateRootApi {
 
     @PostMapping("/recoverDaily")
     Result recoverDaily(@RequestBody DailyOperateCmd dailyOperateCmd);
+
+    @PostMapping("/maintainDaily")
+    Result maintainDaily(@RequestBody DailyMaintainDTO dailyMaintainDTO);
 
 }
