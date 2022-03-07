@@ -61,7 +61,9 @@ public class DailyAggregateRootApiImpl implements DailyAggregateRootApi {
             }
             dailyList.add(dailyDTO);
         }
-        dailyGateway.addDailyList(BeanUtil.copyToList(dailyList, Daily.class, new CopyOptions().ignoreError()));
+        if (CollectionUtil.isNotEmpty(dailyList)){
+            dailyGateway.addDailyList(BeanUtil.copyToList(dailyList, Daily.class, new CopyOptions().ignoreError()));
+        }
         return Result.getInstance(dailyList.size()).success();
     }
 
