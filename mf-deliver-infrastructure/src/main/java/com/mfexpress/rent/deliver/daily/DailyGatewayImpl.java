@@ -46,6 +46,6 @@ public class DailyGatewayImpl implements DailyGateway {
         example.createCriteria().andEqualTo("serveNo").andGreaterThanOrEqualTo("rentDate", rentDate);
         Daily daily = new Daily();
         daily.setReplaceFlag(repairFlag);
-        dailyMapper.updateByExample(daily, example);
+        dailyMapper.updateByExampleSelective(daily, example);
     }
 }
