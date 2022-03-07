@@ -16,15 +16,15 @@ import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.ElecHandoverContractStatus;
 import com.mfexpress.rent.deliver.consumer.sync.SyncServiceImpl;
-import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.*;
+import com.mfexpress.rent.deliver.dto.data.daily.DailyOperateCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.entity.Deliver;
+import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
 import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
@@ -41,6 +41,7 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -66,6 +67,8 @@ public class RecoverAbnormalCmdExe {
 
     @Resource
     private WarehouseAggregateRootApi warehouseAggregateRootApi;
+    @Resource
+    private DailyAggregateRootApi dailyAggregateRootApi;
 
     @Resource
     private SyncServiceImpl syncServiceI;
@@ -82,7 +85,7 @@ public class RecoverAbnormalCmdExe {
     private String event;
 
     public Integer execute(RecoverAbnormalCmd cmd, TokenInfo tokenInfo) {
-        if(null == mqTools){
+        if (null == mqTools) {
             mqTools = beanFactory.getBean(MqTools.class);
         }
         // 判断deliver中的合同状态，如果是已完成状态，不可进行此操作
@@ -140,7 +143,7 @@ public class RecoverAbnormalCmdExe {
 
         // 向契约锁域发送合同取消命令
         ContractOperateDTO contractOperateDTO = new ContractOperateDTO();
-        if(!StringUtils.isEmpty(contractDTO.getContractForeignNo())){
+        if (!StringUtils.isEmpty(contractDTO.getContractForeignNo())) {
             contractOperateDTO.setContractId(Long.valueOf(contractDTO.getContractForeignNo()));
             contractOperateDTO.setType(ContractModeEnum.DELIVER.getName());
             contractTools.invalid(contractOperateDTO);
@@ -167,12 +170,25 @@ public class RecoverAbnormalCmdExe {
         log.info("异常收车时，交付域向计费域发送的收车单信息：{}", recoverVehicleCmd);
         mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(recoverVehicleCmd));
 
+        //日报处理
+        createDaily(Collections.singletonList(cmd.getServeNo()),cmd.getRecoverTime());
         //同步
         Map<String, String> map = new HashMap<>();
         map.put("serve_no", cmd.getServeNo());
         syncServiceI.execOne(map);
 
         return 0;
+    }
+
+    private void createDaily(List<String> serveNoList, Date date) {
+        Result<Map<String, Serve>> serveResult = serveAggregateRootApi.getServeMapByServeNoList(serveNoList);
+        Map<String, Serve> serveMap = serveResult.getData();
+        List<Serve> serveList = serveMap.values().stream().collect(Collectors.toList());
+        Result<Map<String, Deliver>> deliverResult = deliverAggregateRootApi.getDeliverByServeNoList(serveNoList);
+        Map<String, Deliver> deliverMap = deliverResult.getData();
+        DailyOperateCmd dailyCreateCmd = DailyOperateCmd.builder().serveList(serveList).deliverMap(deliverMap).date(date).build();
+        //收车
+        dailyAggregateRootApi.recoverDaily(dailyCreateCmd);
     }
 
 }

@@ -11,4 +11,6 @@ public interface DailyGateway {
     void addDailyList(List<Daily>dailyList);
 
     void deleteDailyByServeNoAndRentDate(String serveNo,String rentDate);
+
+    void updateDailyRepairFlagByServeNoAndGteRentDate(String serveNo,String rentDate,Integer repairFlag);
 }
