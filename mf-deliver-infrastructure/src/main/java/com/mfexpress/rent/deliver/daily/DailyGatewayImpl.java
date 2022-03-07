@@ -37,7 +37,7 @@ public class DailyGatewayImpl implements DailyGateway {
                 .andEqualTo("delFlag", 0);
         Daily daily = new Daily();
         daily.setDelFlag(1);
-        dailyMapper.updateByExample(daily, example);
+        dailyMapper.updateByExampleSelective(daily, example);
     }
 
     @Override
