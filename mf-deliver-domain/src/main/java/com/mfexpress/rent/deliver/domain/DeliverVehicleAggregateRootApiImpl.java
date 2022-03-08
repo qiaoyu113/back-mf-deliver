@@ -1,5 +1,8 @@
 package com.mfexpress.rent.deliver.domain;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.json.JSONUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.log.PrintParam;
@@ -115,7 +118,7 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
         for (String serveNo : serveNoList) {
             Serve serve = Serve.builder().status(ServeEnum.DELIVER.getCode()).build();
             String expectRecoverDate = expectRecoverDateMap.get(serveNo);
-            if (Objects.nonNull(expectRecoverDate)){
+            if (Objects.nonNull(expectRecoverDate)) {
                 serve.setExpectRecoverDate(expectRecoverDate);
             }
             serveGateway.updateServeByServeNo(serveNo, serve);
@@ -143,6 +146,18 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
         deliverVehicleGateway.addDeliverVehicle(deliverVehicleList);
 
         return Result.getInstance(0).success();
+    }
+
+    @Override
+    @PostMapping("/getDeliverVehicleByDeliverNoList")
+    @PrintParam
+    public Result<List<DeliverVehicleDTO>> getDeliverVehicleByDeliverNoList(@RequestBody List<String> deliverNoList) {
+        List<DeliverVehicle> deliverList = deliverVehicleGateway.getDeliverVehicleByDeliverNoList(deliverNoList);
+        if (CollectionUtil.isEmpty(deliverList)) {
+            return Result.getInstance((List<DeliverVehicleDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+        }
+        List<DeliverVehicleDTO> deliverVehicleDTOList = BeanUtil.copyToList(deliverList, DeliverVehicleDTO.class, new CopyOptions().ignoreError());
+        return Result.getInstance(deliverVehicleDTOList).success();
     }
 
 }
