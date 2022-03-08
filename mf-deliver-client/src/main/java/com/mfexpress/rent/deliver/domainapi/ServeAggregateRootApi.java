@@ -55,8 +55,15 @@ public interface ServeAggregateRootApi {
     @PostMapping("/getServeDailyDTO")
     Result<PagePagination<ServeDailyDTO>> getServeDailyDTO(@RequestBody ListQry listQry);
 
+    /**
+     * @deprecated 使用 getServeDTOByServeNoList
+     * @param serveNoList 服务单编号
+     */
     @PostMapping("/getServeMapByServeNoList")
     Result<Map<String, Serve>> getServeMapByServeNoList(@RequestBody List<String> serveNoList);
+
+    @PostMapping("/getServeDTOByServeNoList")
+    Result<List<ServeDTO>>getServeDTOByServeNoList(@RequestBody List<String>serveNoList);
 
     @PostMapping("/getCycleServe")
     Result<PagePagination<ServeDTO>> getCycleServe(@RequestBody ServeCycleQryCmd serveCycleQryCmd);
@@ -101,4 +108,7 @@ public interface ServeAggregateRootApi {
 
     @PostMapping("/getPageServeByQry")
     Result<PagePagination<Serve>> getPageServeByQry(@RequestBody ServeListQry qry);
+
+    @PostMapping("/getPageServeDepositListByQry")
+    Result<PagePagination<ServeDepositDTO>>getPageServeDepositListByQry(@RequestBody ServeDepositQry serveDepositQry);
 }

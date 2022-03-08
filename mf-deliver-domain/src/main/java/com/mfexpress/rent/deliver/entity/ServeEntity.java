@@ -1,22 +1,24 @@
-package com.mfexpress.rent.deliver.dto.entity;
+package com.mfexpress.rent.deliver.entity;
 
+import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.stereotype.Component;
 
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.math.BigDecimal;
 import java.util.Date;
-
-/**@deprecated
- * 不再作为实体使用
- */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "serve")
 @Builder
-public class Serve {
-
+@Component
+public class ServeEntity implements ServeEntityApi {
+    @Id
     private Integer id;
 
     private Long orderId;
@@ -77,6 +79,4 @@ public class Serve {
     private Integer renewalType;
 
     private String expectRecoverDate;
-    // 续签合同迭代增加的字段-----------end
-
 }

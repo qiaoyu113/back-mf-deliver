@@ -1,22 +1,36 @@
-package com.mfexpress.rent.deliver.dto.entity;
+package com.mfexpress.rent.deliver.entity;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.collection.CollectionUtil;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
+import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
-/**
- * @deprecated 不再用于实体类
- */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-//@Table(name = "deliver")
+@Table(name = "deliver")
 @Builder
-public class Deliver {
+@Component
+public class DeliverEntity implements DeliverEntityApi {
+
+    @Resource
+    private DeliverGateway deliverGateway;
+
+    @Id
     private Integer id;
 
     private String deliverNo;
@@ -79,4 +93,12 @@ public class Deliver {
 
     private Integer recoverAbnormalFlag;
 
+    @Override
+    public List<DeliverDTO> getDeliverDTOListByServeNoList(List<String> serveNoList) {
+        List<DeliverEntity> deliverList = deliverGateway.getDeliverByServeNoList(serveNoList);
+        if (CollectionUtil.isEmpty(deliverList)) {
+            return null;
+        }
+        return BeanUtil.copyToList(deliverList, DeliverDTO.class, new CopyOptions().ignoreError());
+    }
 }

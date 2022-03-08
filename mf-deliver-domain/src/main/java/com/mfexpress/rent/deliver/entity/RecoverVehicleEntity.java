@@ -1,22 +1,23 @@
-package com.mfexpress.rent.deliver.dto.entity;
+package com.mfexpress.rent.deliver.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.stereotype.Component;
 
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.util.Date;
 
-/**
- * @deprecated 此类不再用于实体类
- */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-//@Table(name = "recover_vehicle")
+@Table(name = "recover_vehicle")
 @Builder
-public class RecoverVehicle {
-
+@Component
+public class RecoverVehicleEntity {
+    @Id
     private Integer id;
 
     private String deliverNo;
@@ -62,5 +63,4 @@ public class RecoverVehicle {
     private Double damageFee;
 
     private Double parkFee;
-
 }

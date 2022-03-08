@@ -63,8 +63,19 @@ public interface DeliverAggregateRootApi {
     @PostMapping("/saveCarServiceId")
     Result<String> saveCarServiceId(@RequestBody DeliverCarServiceDTO deliverCarServiceDTO);
 
+    /**
+     * @deprecated 使用 getDeliverDTOListByServeNoList
+     */
     @PostMapping("/getDeliverByServeNoList")
     Result<Map<String, Deliver>> getDeliverByServeNoList(@RequestBody List<String> serveNoList);
+
+    /**
+     * 根据服务单号 查询交付单
+     * @param serveNoList 服务单编号
+     * @return 交付单
+     */
+    @PostMapping("/getDeliverDTOListByServeNoList")
+    Result<List<DeliverDTO>>getDeliverDTOListByServeNoList(@RequestBody List<String>serveNoList);
 
     @PostMapping("/getDeduct")
     Result<List<DeliverDTO>> getDeduct(@RequestBody List<String> serveNoList);
