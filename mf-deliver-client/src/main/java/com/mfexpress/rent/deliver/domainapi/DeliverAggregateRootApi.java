@@ -91,4 +91,8 @@ public interface DeliverAggregateRootApi {
     @PostMapping("/getDeliverDTOSByCarIdList")
     Result<List<DeliverDTO>> getDeliverDTOSByCarIdList(@RequestParam("carIds") List<Integer> carIds);
 
+
+    @PostMapping("/getMakeDeliverDTOSByCarIdList")
+    Result<List<DeliverDTO>> getMakeDeliverDTOSByCarIdList(@RequestBody List<Integer> carIds,@RequestParam Integer status);
+
 }
