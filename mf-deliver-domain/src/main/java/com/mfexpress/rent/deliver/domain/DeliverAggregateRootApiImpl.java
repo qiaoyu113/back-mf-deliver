@@ -440,7 +440,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     }
 
     @Override
-    public Result<List<DeliverDTO>> getMakeDeliverDTOSByCarIdList(@RequestBody List<Integer> carIds, @RequestParam Integer status) {
+    public Result<List<DeliverDTO>> getMakeDeliverDTOSByCarIdList(@RequestBody List<Integer> carIds,@RequestParam("status") Integer status) {
         List<Deliver> deliverDTOSByCarIdList = deliverGateway.getMakeDeliverDTOSByCarIdList(carIds,status);
         if (CollectionUtil.isEmpty(deliverDTOSByCarIdList)){
             return Result.getInstance((List<DeliverDTO>)null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
