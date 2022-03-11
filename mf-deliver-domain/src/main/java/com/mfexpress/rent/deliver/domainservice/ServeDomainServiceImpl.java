@@ -5,6 +5,7 @@ import cn.hutool.core.date.DateUtil;
 import com.github.pagehelper.PageInfo;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
+import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
@@ -117,6 +118,7 @@ public class ServeDomainServiceImpl implements ServeDomainServiceI {
         for (ServeDepositDTO serveDepositDTO : serveDepositDTOList) {
             //补充车牌号、收发车时间、收车费用确认情况
             DeliverDTO deliverDTO = deliverMap.get(serveDepositDTO.getServeNo());
+            serveDepositDTO.setStatusDisplay(ServeEnum.getServeEnum(serveDepositDTO.getStatus()).getStatus());
             if (Objects.isNull(deliverDTO)) {
                 log.warn("交付单不存在，服务单编号：{},服务单状态，{}", serveDepositDTO.getServeNo(), serveDepositDTO.getStatus());
                 serveDepositDTO.setVehicleNum("");
@@ -162,6 +164,8 @@ public class ServeDomainServiceImpl implements ServeDomainServiceI {
             pagePagination.setList(depositDTOList);
             return pagePagination;
         }
+        serveDepositDTO.setStatusDisplay(ServeEnum.getServeEnum(serveDepositDTO.getStatus()).getStatus());
+
         if (deliverDTO.getDeliverStatus().equals(DeliverEnum.COMPLETED.getCode())) {
             serveDepositDTO.setRecoverFeeConfirmFlag(true);
         } else {

@@ -32,6 +32,9 @@ public class ServeDepositDTO {
     @ApiModelProperty("服务单状态")
     private Integer status;
 
+    @ApiModelProperty("服务单状态描述")
+    private String statusDisplay;
+
     @ApiModelProperty("发车时间")
     private String deliverVehicleDate;
 
