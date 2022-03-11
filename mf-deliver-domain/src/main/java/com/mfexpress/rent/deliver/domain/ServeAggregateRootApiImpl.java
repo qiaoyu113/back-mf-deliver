@@ -25,9 +25,9 @@ import com.mfexpress.rent.deliver.domainservice.ServeDomainServiceI;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
-import com.mfexpress.rent.deliver.dto.entity.ServeChangeRecord;
 import com.mfexpress.rent.deliver.entity.DeliverEntity;
 import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
+import com.mfexpress.rent.deliver.entity.ServeChangeRecordPO;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
@@ -522,7 +522,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         }
         Map<String, DeliverEntity> deliverMap = deliverList.stream().collect(Collectors.toMap(DeliverEntity::getServeNo, Function.identity(), (v1, v2) -> v1));
         // 修改服务单相关信息，顺带生成操作记录对象
-        List<ServeChangeRecord> recordList = new ArrayList<>();
+        List<ServeChangeRecordPO> recordList = new ArrayList<>();
         List<ServeEntity> serveListToUpdate = renewalServeCmdList.stream().map(renewalServeCmd -> {
             ServeEntity serve = new ServeEntity();
             BeanUtils.copyProperties(renewalServeCmd, serve);
@@ -533,7 +533,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             serve.setRenewalType(ServeRenewalTypeEnum.ACTIVE.getCode());
             serve.setExpectRecoverDate(renewalServeCmd.getLeaseEndDate());
 
-            ServeChangeRecord record = new ServeChangeRecord();
+            ServeChangeRecordPO record = new ServeChangeRecordPO();
             ServeEntity rawDataServe = serveMap.get(serve.getServeNo());
             if (null == rawDataServe) {
                 throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "服务单获取失败" + serve.getServeNo());
@@ -603,7 +603,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
         // 替换车更新预计收车日期，如果已发车，查出交付单，调用计费域
         List<String> replaceServeAlreadyDeliverNoList = new ArrayList<>();
-        List<ServeChangeRecord> recordList = new ArrayList<>();
+        List<ServeChangeRecordPO> recordList = new ArrayList<>();
         List<ServeEntity> serveToUpdateList = serveNoWithReplaceServeNoMap.keySet().stream().map(serveNo -> {
             String replaceServeNo = serveNoWithReplaceServeNoMap.get(serveNo);
             ServeEntity serve = serveMap.get(serveNo);
@@ -618,7 +618,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                     .expectRecoverDate(serve.getExpectRecoverDate())
                     .updateId(cmd.getOperatorId())
                     .build();
-            ServeChangeRecord record = new ServeChangeRecord();
+            ServeChangeRecordPO record = new ServeChangeRecordPO();
             record.setServeNo(replaceServe.getServeNo());
             record.setRenewalType(ServeRenewalTypeEnum.ACTIVE.getCode());
             record.setRawGoodsId(replaceServe.getGoodsId());
@@ -712,7 +712,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
         // 自动续约，收车日期顺延一个月，租赁期限不变，并发送mq到计费域(逻辑暂无)，自动续约不传计费调整日期
-        List<ServeChangeRecord> recordList = new ArrayList<>();
+        List<ServeChangeRecordPO> recordList = new ArrayList<>();
         List<ServeEntity> serveToUpdateList = needPassiveRenewalServeList.stream().map(serve -> {
             ServeEntity serveToUpdate = new ServeEntity();
             serveToUpdate.setId(serve.getId());
@@ -723,7 +723,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             serveToUpdate.setRenewalType(ServeRenewalTypeEnum.PASSIVE.getCode());
             serveToUpdate.setUpdateId(cmd.getOperatorId());
 
-            ServeChangeRecord record = new ServeChangeRecord();
+            ServeChangeRecordPO record = new ServeChangeRecordPO();
             record.setServeNo(serve.getServeNo());
             record.setRenewalType(ServeRenewalTypeEnum.PASSIVE.getCode());
             record.setRawData(JSONUtil.toJsonStr(serve));
@@ -759,7 +759,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/getServeChangeRecordList")
     @PrintParam
     public Result<List<ServeChangeRecordDTO>> getServeChangeRecordList(@RequestParam("serveNo") String serveNo) {
-        List<ServeChangeRecord> recordList = serveChangeRecordGateway.getList(serveNo);
+        List<ServeChangeRecordPO> recordList = serveChangeRecordGateway.getList(serveNo);
         if (recordList.isEmpty()) {
             return Result.getInstance((List<ServeChangeRecordDTO>) null).success();
         }

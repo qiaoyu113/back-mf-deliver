@@ -5,11 +5,11 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSON;
 import com.mfexpress.component.response.PagePagination;
+import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
-import com.mfexpress.rent.deliver.dto.entity.ServeChangeRecord;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
 import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
@@ -157,7 +157,7 @@ public class ServeEntity implements ServeEntityApi {
     public void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId) {
         List<String> serveNoList = new ArrayList<>(updateDepositMap.keySet());
         List<ServeEntity> serveList = serveGateway.getServeByServeNoList(serveNoList);
-        List<ServeChangeRecord> recordList = new ArrayList<>();
+        List<ServeChangeRecordPO> recordList = new ArrayList<>();
         for (ServeEntity serveEntity : serveList) {
             ServeEntity updateDeposit = new ServeEntity();
             BeanUtil.copyProperties(serveEntity, updateDeposit);
@@ -166,7 +166,7 @@ public class ServeEntity implements ServeEntityApi {
             updateDeposit.setPaidInDeposit(paidInDeposit.add(updateDepositMap.get(serveEntity.getServeNo())));
             updateDeposit.setStatus(updateDeposit.getPaidInDeposit().compareTo(BigDecimal.ZERO) == 0 ? ServeEnum.COMPLETED.getCode() : updateDeposit.getStatus());
             serveGateway.updateServeByServeNo(serveEntity.getServeNo(), updateDeposit);
-            ServeChangeRecord serveChangeRecord = new ServeChangeRecord();
+            ServeChangeRecordPO serveChangeRecord = new ServeChangeRecordPO();
             serveChangeRecord.setServeNo(serveEntity.getServeNo());
             String rawData = JSON.toJSONString(serveEntity);
             String newData = JSON.toJSONString(updateDeposit);
@@ -178,6 +178,11 @@ public class ServeEntity implements ServeEntityApi {
             serveChangeRecord.setRenewalType(0);
             serveChangeRecord.setCreatorId(creatorId);
             serveChangeRecord.setNewBillingAdjustmentDate("");
+            serveChangeRecord.setDeliverNo("");
+            serveChangeRecord.setReactiveReason(0);
+            serveChangeRecord.setRemark("");
+            serveChangeRecord.setType(updateDeposit.getStatus().equals(ServeEnum.COMPLETED.getCode()) ?
+                    ServeChangeRecordEnum.DEPOSIT_UNLOCK.getCode() : ServeChangeRecordEnum.DEPOSIT_LOCK.getCode());
             recordList.add(serveChangeRecord);
         }
         changeRecordGateway.insertList(recordList);

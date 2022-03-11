@@ -1,7 +1,7 @@
 package com.mfexpress.rent.deliver.serve;
 
-import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.dto.entity.ServeChangeRecord;
+import com.mfexpress.rent.deliver.entity.ServeChangeRecordPO;
 import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
 import com.mfexpress.rent.deliver.serve.repository.ServeChangeRecordMapper;
 import org.springframework.stereotype.Component;
@@ -17,14 +17,14 @@ public class ServeChangeRecordGatewayImpl implements ServeChangeRecordGateway {
     private ServeChangeRecordMapper serveChangeRecordMapper;
 
     @Override
-    public void insertList(List<ServeChangeRecord> recordList) {
+    public void insertList(List<ServeChangeRecordPO> recordList) {
         recordList.forEach(serveChangeRecord -> {
             serveChangeRecordMapper.insertSelective(serveChangeRecord);
         });
     }
 
     @Override
-    public List<ServeChangeRecord> getList(String serveNo) {
+    public List<ServeChangeRecordPO> getList(String serveNo) {
         Example example = new Example(ServeChangeRecord.class);
         example.createCriteria().andEqualTo("serveNo", serveNo);
 
