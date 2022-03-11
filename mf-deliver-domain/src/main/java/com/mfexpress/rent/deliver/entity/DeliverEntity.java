@@ -106,7 +106,12 @@ public class DeliverEntity implements DeliverEntityApi {
     @Override
     public DeliverDTO getDeliverDTOByCarId(Integer carId) {
         DeliverEntity deliverEntity = deliverGateway.getDeliverByCarId(carId);
-        return Objects.isNull(deliverEntity) ? null : BeanUtil.copyProperties(deliverEntity, DeliverDTO.class);
+        if (Objects.isNull(deliverEntity)) {
+            return null;
+        }
+        DeliverDTO deliverDTO = new DeliverDTO();
+        BeanUtil.copyProperties(deliverEntity, deliverDTO, new CopyOptions().ignoreError());
+        return deliverDTO;
     }
 
 
@@ -126,6 +131,8 @@ public class DeliverEntity implements DeliverEntityApi {
         if (Objects.isNull(deliverEntity)) {
             return null;
         }
-        return BeanUtil.copyProperties(deliverEntity, DeliverDTO.class);
+        DeliverDTO deliverDTO = new DeliverDTO();
+        BeanUtil.copyProperties(deliverEntity, deliverDTO, new CopyOptions().ignoreError());
+        return deliverDTO;
     }
 }

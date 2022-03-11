@@ -139,18 +139,18 @@ public class ServeDomainServiceImpl implements ServeDomainServiceI {
     private PagePagination<ServeDepositDTO> getServeDepositByCarId(CustomerDepositListDTO customerDepositLisDTO) {
         List<ServeDepositDTO> depositDTOList = new ArrayList<>();
         PageInfo<ServeDepositDTO> pageInfo = new PageInfo<>();
-        PagePagination<ServeDepositDTO> pagePagination = new PagePagination<>();
+
         //存在车牌号查询 先查询交付单
-        pageInfo.setPrePage(1);
-        pageInfo.setPages(1);
-        pageInfo.setPageSize(1);
+        pageInfo.setPrePage(0);
+        pageInfo.setPages(0);
+        pageInfo.setPageSize(0);
         pageInfo.setTotal(0);
-        pageInfo.setPageNum(0);
+        pageInfo.setPageNum(1);
         pageInfo.setTotal(0);
         DeliverDTO deliverDTO = deliverEntityApi.getDeliverDTOByCarId(customerDepositLisDTO.getCarId());
         if (Objects.isNull(deliverDTO)) {
             log.warn("交付单不存在，车辆id：{}", customerDepositLisDTO.getCarId());
-            pagePagination.setPageInfo(pageInfo);
+            PagePagination<ServeDepositDTO> pagePagination = new PagePagination<>(pageInfo);
             pagePagination.setList(depositDTOList);
             return pagePagination;
         }
@@ -160,7 +160,7 @@ public class ServeDomainServiceImpl implements ServeDomainServiceI {
 
         if (Objects.isNull(serveDepositDTO)) {
             log.error("服务单不存在，服务单编号：{}", deliverDTO.getServeNo());
-            pagePagination.setPageInfo(pageInfo);
+            PagePagination<ServeDepositDTO> pagePagination = new PagePagination<>(pageInfo);
             pagePagination.setList(depositDTOList);
             return pagePagination;
         }
@@ -184,7 +184,7 @@ public class ServeDomainServiceImpl implements ServeDomainServiceI {
         pageInfo.setTotal(1);
         pageInfo.setPageNum(1);
         pageInfo.setTotal(1);
-        pagePagination.setPageInfo(pageInfo);
+        PagePagination<ServeDepositDTO> pagePagination = new PagePagination<>(pageInfo);
         pagePagination.setList(depositDTOList);
         return pagePagination;
     }
