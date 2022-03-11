@@ -436,12 +436,12 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/getLastDeliverByCarId")
     @PrintParam
     public Result<DeliverDTO> getLastDeliverByCarId(@RequestParam("carId") Integer carId) {
-        List<DeliverEntity> deliverByCarId = deliverGateway.getDeliverByCarId(carId);
-        if (CollectionUtil.isEmpty(deliverByCarId)) {
+        DeliverEntity deliverEntity = deliverGateway.getDeliverByCarId(carId);
+        if (Objects.isNull(deliverEntity)) {
             return Result.getInstance((DeliverDTO) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
         DeliverDTO deliverDTO = new DeliverDTO();
-        BeanUtils.copyProperties(deliverByCarId.get(0), deliverDTO);
+        BeanUtils.copyProperties(deliverEntity, deliverDTO);
         return Result.getInstance(deliverDTO).success();
     }
 

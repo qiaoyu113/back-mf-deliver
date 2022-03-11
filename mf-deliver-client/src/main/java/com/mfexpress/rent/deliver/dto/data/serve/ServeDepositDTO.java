@@ -7,21 +7,22 @@ import java.math.BigDecimal;
 
 @ApiModel("服务单押金信息")
 @Data
-public class ServeDepositDTO{
+public class ServeDepositDTO {
 
     private String serveNo;
 
-    private String customerName;
 
-    private String officeName;
+    private Integer customerId;
 
-    private String leaseModelDisplay;
+    private Integer orgId;
+
+    private Integer leaseModelId;
 
     private String vehicleNum;
 
-    private String brandDisplay;
+    private Integer brandId;
 
-    private String serveStatusDisplay;
+    private Integer status;
 
     private String deliverVehicleDate;
 
@@ -31,7 +32,7 @@ public class ServeDepositDTO{
 
     private BigDecimal paidInDeposit;
 
-    private Boolean maintainConfirmFlag;
+    private Boolean maintainFeeConfirmFlag;
+    private Boolean recoverFeeConfirmFlag;
 
-    private Boolean recoverConfirmFlag;
 }

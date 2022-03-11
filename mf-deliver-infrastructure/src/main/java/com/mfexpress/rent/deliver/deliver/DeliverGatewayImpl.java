@@ -132,12 +132,14 @@ public class DeliverGatewayImpl implements DeliverGateway {
     }
 
     @Override
-    public List<DeliverEntity> getDeliverByCarId(Integer carId) {
+    public DeliverEntity getDeliverByCarId(Integer carId) {
+
         Example example = new Example(DeliverEntity.class);
         example.createCriteria()
-                .andEqualTo("carId",carId);
-        example.setOrderByClause("create_time desc");
-        return deliverMapper.selectByCondition(example);
+                .andEqualTo("carId", carId).andEqualTo("status", ValidStatusEnum.VALID.getCode());
+        DeliverEntity deliverEntity = deliverMapper.selectOneByExample(example);
+
+        return deliverEntity;
 
 
     }
@@ -147,6 +149,16 @@ public class DeliverGatewayImpl implements DeliverGateway {
         Example example = new Example(DeliverEntity.class);
         example.createCriteria()
                 .andIn("carId", carIds);
+        return deliverMapper.selectByExample(example);
+    }
+
+    @Override
+    public List<DeliverEntity> getDeliverNotCompleteByServeNoList(List<String> serveNoList) {
+        Example example = new Example(DeliverEntity.class);
+        example.createCriteria()
+                .andIn("serveNo", serveNoList)
+                .andNotEqualTo("deliverStatus", DeliverEnum.COMPLETED.getCode())
+                .andNotEqualTo("status", ValidStatusEnum.INVALID.getCode());
         return deliverMapper.selectByExample(example);
     }
 

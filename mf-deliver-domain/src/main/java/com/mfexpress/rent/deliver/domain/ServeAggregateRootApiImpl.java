@@ -21,6 +21,7 @@ import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.constant.ServeRenewalTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.domainservice.ServeDomainServiceI;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
@@ -28,6 +29,8 @@ import com.mfexpress.rent.deliver.dto.entity.ServeChangeRecord;
 import com.mfexpress.rent.deliver.entity.DeliverEntity;
 import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
+import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
+import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.gateway.DeliverVehicleGateway;
 import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
@@ -72,6 +75,12 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @Resource
     private DeliverVehicleGateway deliverVehicleGateway;
 
+    @Resource
+    private DeliverEntityApi deliverEntityApi;
+    @Resource
+    private ServeEntityApi serveEntityApi;
+    @Resource
+    private ServeDomainServiceI serveDomainServiceI;
     @Resource
     private MqTools mqTools;
 
@@ -818,10 +827,45 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     }
 
     @Override
-    @PostMapping("/getPageServeDepositListByQry")
-    public Result<PagePagination<ServeDepositDTO>> getPageServeDepositListByQry(@RequestBody ServeDepositQry serveDepositQry) {
-        return null;
+    @PostMapping("/getPageServeDepositList")
+    @PrintParam
+    public Result<PagePagination<ServeDepositDTO>> getPageServeDepositList(@RequestBody CustomerDepositListDTO customerDepositLisDTO) {
+        return Result.getInstance(serveDomainServiceI.getPageServeDeposit(customerDepositLisDTO)).success();
     }
+
+    @Override
+    @PostMapping("/unLockDeposit")
+    @PrintParam
+    public Result unLockDeposit(@RequestParam("serveNoList") List<String> serveNoList, @RequestParam("creatorId") Integer creatorId) {
+        //查询需要解锁得服务单押金列表
+        List<ServeDTO> serveList = serveEntityApi.getServeListByServeNoList(serveNoList);
+        Map<String, BigDecimal> updateDepositMap = new HashMap<>();
+        serveList.stream().forEach(serveDTO -> {
+            updateDepositMap.put(serveDTO.getServeNo(), serveDTO.getPaidInDeposit().negate());
+        });
+        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, creatorId);
+        return Result.getInstance(true).success();
+    }
+
+    @Override
+    @PostMapping("/getCustomerDepositLockList")
+    @PrintParam
+    public Result<List<CustomerDepositLockListDTO>> getCustomerDepositLockList(@RequestParam("serveNoList") List<String> serveNoList) {
+        return Result.getInstance(serveDomainServiceI.getCustomerDepositLockList(serveNoList));
+    }
+
+    @Override
+    @PostMapping("/lockDeposit")
+    @PrintParam
+    public Result lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList) {
+        Map<String, BigDecimal> updateDepositMap = new HashMap<>();
+        confirmDTOList.stream().forEach(confirmDTO -> {
+            updateDepositMap.put(confirmDTO.getServeNo(), confirmDTO.getLockAmount());
+        });
+        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, confirmDTOList.get(0).getCreatorId());
+        return Result.getInstance(true).success();
+    }
+
 
     private String getExpectRecoverDate(Date deliverVehicleDate, int offset) {
         DateTime dateTime = DateUtil.endOfMonth(deliverVehicleDate);

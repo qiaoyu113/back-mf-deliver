@@ -31,8 +31,10 @@ public interface DeliverGateway {
 
     List<DeliverEntity> getDeliverByDeliverNoList(List<String> deliverNos);
 
-    List<DeliverEntity> getDeliverByCarId(Integer carId);
+    DeliverEntity getDeliverByCarId(Integer carId);
 
     List<DeliverEntity> getDeliverDTOSByCarIdList(List<Integer> carIds);
+
+    List<DeliverEntity>getDeliverNotCompleteByServeNoList(List<String>serveNoList);
 
 }
