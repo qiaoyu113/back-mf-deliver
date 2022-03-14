@@ -42,6 +42,15 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     @Resource
     private RecoverAbnormalQryExe recoverAbnormalQryExe;
 
+    @Resource
+    private RecoverBackInsureByDeliverExe recoverBackInsureByDeliverExe;
+
+    @Resource
+    private RecoverCancelByDeliverExe recoverCancelByDeliverExe;
+
+    @Resource
+    private RecoverDeductionByDeliverExe recoverDeductionByDeliverExe;
+
     @Override
     public List<RecoverApplyVO> getRecoverVehicleListVO(RecoverApplyQryCmd recoverApplyQryCmd, TokenInfo tokenInfo) {
         return recoverVehicleQryExe.execute(recoverApplyQryCmd,tokenInfo);
@@ -103,5 +112,20 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     @Override
     public RecoverAbnormalVO getRecoverAbnormalInfo(RecoverAbnormalQry cmd) {
         return recoverAbnormalQryExe.execute(cmd);
+    }
+
+    @Override
+    public Integer toBackInsureByDeliver(RecoverBackInsureByDeliverCmd cmd, TokenInfo tokenInfo) {
+        return recoverBackInsureByDeliverExe.execute(cmd, tokenInfo);
+    }
+
+    @Override
+    public Integer cancelRecoverByDeliver(RecoverCancelByDeliverCmd cmd, TokenInfo tokenInfo) {
+        return recoverCancelByDeliverExe.execute(cmd, tokenInfo);
+    }
+
+    @Override
+    public Integer toDeductionByDeliver(RecoverDeductionByDeliverCmd cmd, TokenInfo tokenInfo) {
+        return recoverDeductionByDeliverExe.execute(cmd, tokenInfo);
     }
 }

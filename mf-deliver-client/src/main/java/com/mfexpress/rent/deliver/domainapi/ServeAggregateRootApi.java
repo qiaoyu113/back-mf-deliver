@@ -111,4 +111,10 @@ public interface ServeAggregateRootApi {
 
     @PostMapping("/getPageServeDepositListByQry")
     Result<PagePagination<ServeDepositDTO>>getPageServeDepositListByQry(@RequestBody ServeDepositQry serveDepositQry);
+
+    @PostMapping("/reactiveServe")
+    Result<Integer> reactiveServe(@RequestBody ReactivateServeCmd cmd);
+
+    @PostMapping("/getServeNoListByPage")
+    Result<List<String>> getServeNoListByPage(@RequestBody ListQry listQry);
 }

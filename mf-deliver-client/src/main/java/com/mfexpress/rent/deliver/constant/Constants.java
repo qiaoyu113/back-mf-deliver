@@ -16,7 +16,10 @@ public class Constants {
     public static final String TRAFFIC_PECCANCY_DEALING_METHOD = "traffic_peccancy_dealing_method";
     public static final String REASONS_FOR_NOT_INSURANCE_RETURN = "reasons_for_not_insurance_return";
 
+    public static final String ES_SERVE_INDEX = "serve";
+    public static final String ES_SERVE_TYPE = "serve";
     public static final String ES_DELIVER_INDEX = "deliver";
+    public static final String ES_DELIVER_TYPE = "deliver";
     public static final String REDIS_DELIVER_KEY = "mf:deliver";
     public static final String REDIS_DELIVER_CONTRACT_KEY = "mf:deliver:contract";
     public static final String REDIS_SERVE_KEY = "mf:serve";

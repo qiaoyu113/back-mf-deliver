@@ -1,6 +1,10 @@
 package com.mfexpress.rent.deliver.dto.data;
 
 
+import com.mfexpress.component.starter.elasticsearch.mapper.annotations.enums.StringType;
+import com.mfexpress.component.starter.elasticsearch.mapper.annotations.fieldtype.MultiField;
+import com.mfexpress.component.starter.elasticsearch.mapper.annotations.fieldtype.MultiNestedField;
+import com.mfexpress.component.starter.elasticsearch.mapper.annotations.fieldtype.StringField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

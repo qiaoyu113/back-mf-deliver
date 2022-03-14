@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
@@ -33,6 +34,6 @@ public class RecoverTaskListCheckQryExe implements RecoverQryServiceI {
 
         fieldSortBuilderList.add(expectRecoverTimeSortBuilder);
         fieldSortBuilderList.add(updateTimeSortBuilder);
-        return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
+        return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo, Constants.ES_SERVE_INDEX, Constants.ES_SERVE_TYPE);
     }
 }

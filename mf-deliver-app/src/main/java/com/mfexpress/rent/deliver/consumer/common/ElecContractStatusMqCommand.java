@@ -21,7 +21,7 @@ import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.consumer.sync.SyncServiceImpl;
+import com.mfexpress.rent.deliver.consumer.sync.ServeSyncServiceImpl;
 import com.mfexpress.rent.deliver.domainapi.*;
 import com.mfexpress.rent.deliver.dto.data.daily.DailyOperateCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
@@ -84,7 +84,7 @@ public class ElecContractStatusMqCommand {
     private DailyAggregateRootApi dailyAggregateRootApi;
 
     @Resource
-    private SyncServiceImpl syncServiceI;
+    private ServeSyncServiceImpl syncServiceI;
 
     private MqTools mqTools;
 

@@ -62,4 +62,6 @@ public class ServeDTO {
     private Integer renewalType;
 
     private String billingAdjustmentDate;
+
+    private Integer reactiveFlag;
 }

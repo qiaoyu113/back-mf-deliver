@@ -10,6 +10,9 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import java.util.Date;
 
+/**
+ * @deprecated 此类是PO，不是entity
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

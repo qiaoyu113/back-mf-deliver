@@ -5,6 +5,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
@@ -16,22 +17,13 @@ import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
-import com.mfexpress.rent.deliver.constant.ServeRenewalTypeEnum;
+import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
-import com.mfexpress.rent.deliver.dto.entity.ServeChangeRecord;
-import com.mfexpress.rent.deliver.entity.DeliverEntity;
-import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
-import com.mfexpress.rent.deliver.entity.ServeEntity;
-import com.mfexpress.rent.deliver.gateway.DeliverGateway;
-import com.mfexpress.rent.deliver.gateway.DeliverVehicleGateway;
-import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
-import com.mfexpress.rent.deliver.gateway.ServeGateway;
+import com.mfexpress.rent.deliver.entity.*;
+import com.mfexpress.rent.deliver.gateway.*;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import io.swagger.annotations.Api;
@@ -71,6 +63,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Resource
     private DeliverVehicleGateway deliverVehicleGateway;
+
+    @Resource
+    private RecoverVehicleGateway recoverVehicleGateway;
 
     @Resource
     private MqTools mqTools;
@@ -331,7 +326,26 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         if (CollectionUtil.isEmpty(serveList)) {
             return Result.getInstance((List<ServeDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
-        List<ServeDTO> serveDTOList = BeanUtil.copyToList(serveList, ServeDTO.class, new CopyOptions().ignoreError());
+
+        // 补充是否为重新激活标志位
+        Map<String, ServeChangeRecordPO> serveReactiveFlagMap = null;
+        List<ServeChangeRecordPO> recordPOS = serveChangeRecordGateway.getListByServeNoListAndType(serveNoList, ServeChangeRecordEnum.REACTIVE.getCode());
+        if (!recordPOS.isEmpty()) {
+            serveReactiveFlagMap = recordPOS.stream().collect(Collectors.toMap(ServeChangeRecordPO::getServeNo, Function.identity(), (v1, v2) -> v1));
+        }
+
+        Map<String, ServeChangeRecordPO> finalServeReactiveFlagMap = serveReactiveFlagMap;
+        List<ServeDTO> serveDTOList = serveList.stream().map(serveEntity -> {
+            ServeDTO serveDTO = new ServeDTO();
+            BeanUtils.copyProperties(serveEntity, serveDTO);
+            if (null != finalServeReactiveFlagMap && null != finalServeReactiveFlagMap.get(serveEntity.getServeNo())) {
+                serveDTO.setReactiveFlag(JudgeEnum.YES.getCode());
+            } else {
+                serveDTO.setReactiveFlag(JudgeEnum.NO.getCode());
+            }
+            return serveDTO;
+        }).collect(Collectors.toList());
+
         return Result.getInstance(serveDTOList).success();
     }
 
@@ -513,7 +527,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         }
         Map<String, DeliverEntity> deliverMap = deliverList.stream().collect(Collectors.toMap(DeliverEntity::getServeNo, Function.identity(), (v1, v2) -> v1));
         // 修改服务单相关信息，顺带生成操作记录对象
-        List<ServeChangeRecord> recordList = new ArrayList<>();
+        List<ServeChangeRecordPO> recordList = new ArrayList<>();
         List<ServeEntity> serveListToUpdate = renewalServeCmdList.stream().map(renewalServeCmd -> {
             ServeEntity serve = new ServeEntity();
             BeanUtils.copyProperties(renewalServeCmd, serve);
@@ -524,12 +538,13 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             serve.setRenewalType(ServeRenewalTypeEnum.ACTIVE.getCode());
             serve.setExpectRecoverDate(renewalServeCmd.getLeaseEndDate());
 
-            ServeChangeRecord record = new ServeChangeRecord();
+            ServeChangeRecordPO record = new ServeChangeRecordPO();
             ServeEntity rawDataServe = serveMap.get(serve.getServeNo());
             if (null == rawDataServe) {
                 throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "服务单获取失败" + serve.getServeNo());
             }
             record.setServeNo(serve.getServeNo());
+            record.setType(ServeChangeRecordEnum.RENEWAL.getCode());
             record.setRenewalType(ServeRenewalTypeEnum.ACTIVE.getCode());
             record.setRawGoodsId(rawDataServe.getGoodsId());
             record.setRawData(JSONUtil.toJsonStr(rawDataServe));
@@ -594,7 +609,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
         // 替换车更新预计收车日期，如果已发车，查出交付单，调用计费域
         List<String> replaceServeAlreadyDeliverNoList = new ArrayList<>();
-        List<ServeChangeRecord> recordList = new ArrayList<>();
+        List<ServeChangeRecordPO> recordList = new ArrayList<>();
         List<ServeEntity> serveToUpdateList = serveNoWithReplaceServeNoMap.keySet().stream().map(serveNo -> {
             String replaceServeNo = serveNoWithReplaceServeNoMap.get(serveNo);
             ServeEntity serve = serveMap.get(serveNo);
@@ -609,8 +624,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                     .expectRecoverDate(serve.getExpectRecoverDate())
                     .updateId(cmd.getOperatorId())
                     .build();
-            ServeChangeRecord record = new ServeChangeRecord();
+            ServeChangeRecordPO record = new ServeChangeRecordPO();
             record.setServeNo(replaceServe.getServeNo());
+            record.setType(ServeChangeRecordEnum.RENEWAL.getCode());
             record.setRenewalType(ServeRenewalTypeEnum.ACTIVE.getCode());
             record.setRawGoodsId(replaceServe.getGoodsId());
             record.setRawData(JSONUtil.toJsonStr(replaceServe));
@@ -703,7 +719,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
         // 自动续约，收车日期顺延一个月，租赁期限不变，并发送mq到计费域(逻辑暂无)，自动续约不传计费调整日期
-        List<ServeChangeRecord> recordList = new ArrayList<>();
+        List<ServeChangeRecordPO> recordList = new ArrayList<>();
         List<ServeEntity> serveToUpdateList = needPassiveRenewalServeList.stream().map(serve -> {
             ServeEntity serveToUpdate = new ServeEntity();
             serveToUpdate.setId(serve.getId());
@@ -714,8 +730,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             serveToUpdate.setRenewalType(ServeRenewalTypeEnum.PASSIVE.getCode());
             serveToUpdate.setUpdateId(cmd.getOperatorId());
 
-            ServeChangeRecord record = new ServeChangeRecord();
+            ServeChangeRecordPO record = new ServeChangeRecordPO();
             record.setServeNo(serve.getServeNo());
+            record.setType(ServeChangeRecordEnum.RENEWAL.getCode());
             record.setRenewalType(ServeRenewalTypeEnum.PASSIVE.getCode());
             record.setRawData(JSONUtil.toJsonStr(serve));
             record.setNewData(JSONUtil.toJsonStr(serveToUpdate));
@@ -750,7 +767,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/getServeChangeRecordList")
     @PrintParam
     public Result<List<ServeChangeRecordDTO>> getServeChangeRecordList(@RequestParam("serveNo") String serveNo) {
-        List<ServeChangeRecord> recordList = serveChangeRecordGateway.getList(serveNo);
+        List<ServeChangeRecordPO> recordList = serveChangeRecordGateway.getList(serveNo, ServeChangeRecordEnum.RENEWAL.getCode());
         if (recordList.isEmpty()) {
             return Result.getInstance((List<ServeChangeRecordDTO>) null).success();
         }
@@ -821,6 +838,50 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/getPageServeDepositListByQry")
     public Result<PagePagination<ServeDepositDTO>> getPageServeDepositListByQry(@RequestBody ServeDepositQry serveDepositQry) {
         return null;
+    }
+
+    @Override
+    @PostMapping("/reactiveServe")
+    @PrintParam
+    @Transactional
+    public Result<Integer> reactiveServe(@RequestBody @Validated ReactivateServeCmd cmd) {
+        ServeEntity serveEntity = serveGateway.getServeByServeNo(cmd.getServeNo());
+        if (null == serveEntity || !ServeEnum.RECOVER.getCode().equals(serveEntity.getStatus())) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单状态异常");
+        }
+        if (LeaseModelEnum.NORMAL.getCode() != serveEntity.getLeaseModelId() || LeaseModelEnum.TRIAL.getCode() != serveEntity.getLeaseModelId()) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单当前租赁方式不允许重新激活");
+        }
+        DeliverEntity deliverEntity = deliverGateway.getDeliverByServeNo(serveEntity.getServeNo());
+        if (null == deliverEntity || (!DeliverEnum.RECOVER.getCode().equals(deliverEntity.getStatus()) && DeliverEnum.COMPLETED.getCode().equals(deliverEntity.getDeliverStatus()))) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
+        }
+        RecoverVehicleEntity recoverVehicleEntity = recoverVehicleGateway.getRecoverVehicleByDeliverNo(deliverEntity.getDeliverNo());
+        if (null == recoverVehicleEntity) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "收车单查询失败");
+        }
+
+        long betweenDays = DateUtil.between(recoverVehicleEntity.getRecoverVehicleTime(), DateUtil.parse(serveEntity.getExpectRecoverDate()), DateUnit.DAY);
+        if (betweenDays <= 15) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "收车日期与预计收车日期过近，服务单不允许激活");
+        }
+
+        // 重新激活服务单，置服务单状态为待预选
+        cmd.setDeliverNo(deliverEntity.getDeliverNo());
+        serveEntity.reactiveServe(cmd);
+        // 置交付单状态为历史所属
+        deliverEntity.toHistory(cmd);
+        return Result.getInstance(0).success();
+    }
+
+    @Override
+    public Result<List<String>> getServeNoListByPage(ListQry listQry) {
+        List<ServeEntity> serveEntityList = serveGateway.getServeNoListByPage(listQry);
+        if(serveEntityList.isEmpty()){
+            return Result.getInstance((List<String>) null).success();
+        }
+        List<String> serveNoList = serveEntityList.stream().map(ServeEntity::getServeNo).collect(Collectors.toList());
+        return Result.getInstance(serveNoList);
     }
 
     private String getExpectRecoverDate(Date deliverVehicleDate, int offset) {

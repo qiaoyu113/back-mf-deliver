@@ -36,7 +36,7 @@ public class RecoverDeductionExe {
     private ServeAggregateRootApi serveAggregateRootApi;
     @Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
-    @Resource
+    @Resource(name = "serveSyncServiceImpl")
     private EsSyncHandlerI syncServiceI;
     @Resource
     private MqTools mqTools;

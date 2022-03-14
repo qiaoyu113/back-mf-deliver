@@ -14,6 +14,7 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.dto.entity.RecoverVehicle;
 import com.mfexpress.rent.deliver.recovervehicle.RecoverQryServiceI;
+import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -42,6 +43,9 @@ public class RecoverTaskListAllQryExe implements RecoverQryServiceI {
     public RecoverTaskListVO execute(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverStatus").gte(DeliverEnum.IS_RECOVER.getCode()));
+        // 只查询sort为7、8、9、24、25、26的数据，详见DeliverSyncServiceImpl和ServeSyncServiceImpl类中的getSort方法
+        boolQueryBuilder.must(QueryBuilders.termsQuery("sort", Arrays.asList(DeliverSortEnum.SEVEN.getSort(), DeliverSortEnum.EIGHT.getSort(), DeliverSortEnum.NINE.getSort(), DeliverSortEnum.TWENTY_FOUR.getSort(),
+                DeliverSortEnum.TWENTY_FIVE.getSort(), DeliverSortEnum.TWENTY_SIX.getSort())));
 
         FieldSortBuilder sortBuilder = SortBuilders.fieldSort("sort").order(SortOrder.ASC);
         // 收车任务1.4迭代
@@ -51,7 +55,7 @@ public class RecoverTaskListAllQryExe implements RecoverQryServiceI {
         FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
 
         List<FieldSortBuilder> fieldSortBuilderList = Arrays.asList(sortBuilder, expectRecoverTimeBuilder, updateTimeSortBuilder);
-        RecoverTaskListVO esData = recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
+        RecoverTaskListVO esData = recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo, "recover_list_all", null);
 
         List<String> deliverNos = new ArrayList<>();
         List<RecoverVehicleVO> recoverVehicleVOList = esData.getRecoverVehicleVOList();

@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.serve;
 
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.serve.executor.*;
@@ -39,6 +40,15 @@ public class ServeServiceImpl implements ServeServiceI {
 
     @Resource
     private RenewableServeListQryExe renewableServeListQryExe;
+
+    @Resource
+    private ReactivateServeCmdExe reactivateServeCmdExe;
+
+    @Resource
+    private ServeRecoverDetailQryByDeliverExe serveRecoverDetailQryByDeliverExe;
+
+    @Resource
+    private ServeLeaseTermAmountQryExe serveLeaseTermAmountQryExe;
 
     @Override
     public ServeListVO getServeListVoByOrderNoAll(ServeQryListCmd serveQryListCmd) {
@@ -101,6 +111,26 @@ public class ServeServiceImpl implements ServeServiceI {
     @Override
     public List<ServeToRenewalVO> getRenewableServeList(RenewableServeQry qry, TokenInfo tokenInfo) {
         return renewableServeListQryExe.execute(qry, tokenInfo);
+    }
+
+    @Override
+    public PagePagination<ServeAllLeaseTermAmountVO> getServeLeaseTermAmountVOList(ServeLeaseTermAmountQry qry, TokenInfo tokenInfo) {
+        return serveLeaseTermAmountQryExe.execute(qry, tokenInfo);
+    }
+
+    @Override
+    public Integer exportServeLeaseTermAmount(ServeLeaseTermAmountQry qry, TokenInfo tokenInfo) {
+        return null;
+    }
+
+    @Override
+    public Integer reactivate(ReactivateServeCmd cmd, TokenInfo tokenInfo) {
+        return reactivateServeCmdExe.execute(cmd, tokenInfo);
+    }
+
+    @Override
+    public ServeRecoverDetailVO getServeRecoverDetailByDeliver(ServeQryByDeliverCmd cmd) {
+        return serveRecoverDetailQryByDeliverExe.execute(cmd);
     }
 
 }

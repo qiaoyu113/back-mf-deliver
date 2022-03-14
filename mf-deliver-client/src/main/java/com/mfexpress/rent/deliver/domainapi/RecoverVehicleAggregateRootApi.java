@@ -1,11 +1,7 @@
 package com.mfexpress.rent.deliver.domainapi;
 
 import com.mfexpress.component.response.Result;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalCmd;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalDTO;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalQry;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionCmd;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
 import com.mfexpress.rent.deliver.dto.entity.RecoverVehicle;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
@@ -49,6 +45,7 @@ public interface RecoverVehicleAggregateRootApi {
 
     @PostMapping("/getRecoverAbnormalByQry")
     Result<RecoverAbnormalDTO> getRecoverAbnormalByQry(@RequestBody RecoverAbnormalQry qry);
+
     @PostMapping("/updateDeductionFee")
     Result<Integer> updateDeductionFee(@RequestBody RecoverDeductionCmd cmd);
 
@@ -57,4 +54,10 @@ public interface RecoverVehicleAggregateRootApi {
 
     @PostMapping("/getRecoverVehicleDTOByDeliverNos")
     Result<List<RecoverVehicleDTO>> getRecoverVehicleDTOByDeliverNos(@RequestParam("deliverNoList") List<String> deliverNoList);
+
+    @PostMapping("/getRecentlyHistoryMapByServeNoList")
+    Result<Map<String, RecoverVehicleDTO>> getRecentlyHistoryMapByServeNoList(@RequestParam("reactiveServeNoList") List<String> reactiveServeNoList);
+
+    @PostMapping("/updateDeductionFeeByDeliver")
+    Result<Integer> updateDeductionFeeByDeliver(@RequestBody RecoverDeductionByDeliverCmd cmd);
 }

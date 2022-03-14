@@ -26,7 +26,7 @@ public class RecoverBackInsureExe {
     private DeliverAggregateRootApi deliverAggregateRootApi;
     @Resource
     private VehicleInsuranceAggregateRootApi vehicleInsuranceAggregateRootApi;
-    @Resource
+    @Resource(name = "serveSyncServiceImpl")
     private EsSyncHandlerI syncServiceI;
 
 

@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 public class RecoverDeductionCmd {
 
     @ApiModelProperty(value = "租赁服务单编号")
-    @NotEmpty(message = "租赁服务单编号不能为空")
+    //@NotEmpty(message = "租赁服务单编号不能为空")
     private String serveNo;
 
     @ApiModelProperty(value = "退保处理方式", example = "1:车辆无违章，2:客户自行处理，3:代客户处理")

@@ -26,7 +26,7 @@ public class RecoverApplyExe {
     private DeliverAggregateRootApi deliverAggregateRootApi;
     @Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
-    @Resource
+    @Resource(name = "serveSyncServiceImpl")
     private EsSyncHandlerI syncServiceI;
 
 

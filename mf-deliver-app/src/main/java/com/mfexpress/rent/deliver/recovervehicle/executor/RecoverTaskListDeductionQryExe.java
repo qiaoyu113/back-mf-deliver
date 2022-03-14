@@ -2,11 +2,8 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
-import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
+import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.rent.deliver.constant.DeliverEnum;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.RecoverVehicleType;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
@@ -47,7 +44,7 @@ public class RecoverTaskListDeductionQryExe implements RecoverQryServiceI {
         FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
         fieldSortBuilderList.add(timeSortBuilder);
         fieldSortBuilderList.add(updateTimeSortBuilder);
-        RecoverTaskListVO esData = recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
+        RecoverTaskListVO esData = recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo, Constants.ES_DELIVER_INDEX, Constants.ES_DELIVER_TYPE);
         List<RecoverVehicleVO> recoverVehicleVOList = esData.getRecoverVehicleVOList();
         if (!recoverVehicleVOList.isEmpty()) {
             List<String> serveNoList = recoverVehicleVOList.stream().map(RecoverVehicleVO::getServeNo).collect(Collectors.toList());

@@ -2,9 +2,12 @@ package com.mfexpress.rent.deliver.serve;
 
 import com.github.pagehelper.PageHelper;
 import com.mfexpress.component.response.PagePagination;
+import com.mfexpress.rent.deliver.constant.DeliverStatusEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
+import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
+import com.mfexpress.rent.deliver.entity.DeliverEntity;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.serve.repository.ServeMapper;
@@ -162,6 +165,24 @@ public class ServeGatewayImpl implements ServeGateway {
         criteria1.andIn("customerId", customerIdList);
         criteria2.orEqualTo("status", 3).orEqualTo("status", 4);
         example.and(criteria2);
+        return serveMapper.selectByExample(example);
+    }
+
+    @Override
+    public List<ServeEntity> getServeNoListByPage(ListQry qry) {
+        if(qry.getPage() == 0){
+            qry.setPage(1);
+        }
+        if(qry.getLimit() == 0){
+            qry.setLimit(5);
+        }
+        PageHelper.clearPage();
+        PageHelper.startPage(qry.getPage(), qry.getLimit());
+
+        Example example = new Example(ServeEntity.class);
+        // example.createCriteria().andEqualTo("status", 5);
+        example.selectProperties("serveNo");
+
         return serveMapper.selectByExample(example);
     }
 

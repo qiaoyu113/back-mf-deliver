@@ -15,7 +15,7 @@ import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.ElecHandoverContractStatus;
-import com.mfexpress.rent.deliver.consumer.sync.SyncServiceImpl;
+import com.mfexpress.rent.deliver.consumer.sync.ServeSyncServiceImpl;
 import com.mfexpress.rent.deliver.domainapi.*;
 import com.mfexpress.rent.deliver.dto.data.daily.DailyOperateCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
@@ -71,7 +71,7 @@ public class RecoverAbnormalCmdExe {
     private DailyAggregateRootApi dailyAggregateRootApi;
 
     @Resource
-    private SyncServiceImpl syncServiceI;
+    private ServeSyncServiceImpl syncServiceI;
 
     @Resource
     private MFContractTools contractTools;
