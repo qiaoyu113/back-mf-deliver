@@ -128,7 +128,7 @@ public interface ServeAggregateRootApi {
      * @return 锁定押金数据
      */
     @PostMapping("/getCustomerDepositLockList")
-    Result<List<CustomerDepositLockListDTO>> getCustomerDepositLockList(@RequestParam("serveNoList") List<String> serveNoList);
+    Result<List<CustomerDepositLockListDTO>> getCustomerDepositLockList(@RequestBody List<String> serveNoList);
 
     /**
      * 锁定押金

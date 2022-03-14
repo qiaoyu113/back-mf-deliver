@@ -166,6 +166,7 @@ public class ServeEntity implements ServeEntityApi {
             updateDeposit.setPaidInDeposit(paidInDeposit.add(updateDepositMap.get(serveEntity.getServeNo())));
             updateDeposit.setStatus(updateDeposit.getPaidInDeposit().compareTo(BigDecimal.ZERO) == 0 ? ServeEnum.COMPLETED.getCode() : updateDeposit.getStatus());
             serveGateway.updateServeByServeNo(serveEntity.getServeNo(), updateDeposit);
+            //变更记录
             ServeChangeRecordPO serveChangeRecord = new ServeChangeRecordPO();
             serveChangeRecord.setServeNo(serveEntity.getServeNo());
             String rawData = JSON.toJSONString(serveEntity);

@@ -850,7 +850,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @Override
     @PostMapping("/getCustomerDepositLockList")
     @PrintParam
-    public Result<List<CustomerDepositLockListDTO>> getCustomerDepositLockList(@RequestParam("serveNoList") List<String> serveNoList) {
+    public Result<List<CustomerDepositLockListDTO>> getCustomerDepositLockList(@RequestBody List<String> serveNoList) {
         return Result.getInstance(serveDomainServiceI.getCustomerDepositLockList(serveNoList));
     }
 
