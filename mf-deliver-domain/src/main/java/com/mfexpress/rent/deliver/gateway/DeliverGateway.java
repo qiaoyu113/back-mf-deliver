@@ -37,4 +37,8 @@ public interface DeliverGateway {
 
     List<DeliverEntity>getDeliverNotCompleteByServeNoList(List<String>serveNoList);
 
+    List<DeliverEntity> getMakeDeliverDTOSByCarIdList(List<Integer> carIds, Integer type);
+
+
+
 }

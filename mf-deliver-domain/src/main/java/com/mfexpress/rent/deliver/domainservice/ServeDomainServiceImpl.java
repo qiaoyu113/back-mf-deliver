@@ -165,12 +165,9 @@ public class ServeDomainServiceImpl implements ServeDomainServiceI {
             return pagePagination;
         }
         serveDepositDTO.setStatusDisplay(ServeEnum.getServeEnum(serveDepositDTO.getStatus()).getStatus());
+        //收车费用状态
+        serveDepositDTO.setRecoverFeeConfirmFlag(deliverDTO.getDeliverStatus().equals(DeliverEnum.COMPLETED.getCode()));
 
-        if (deliverDTO.getDeliverStatus().equals(DeliverEnum.COMPLETED.getCode())) {
-            serveDepositDTO.setRecoverFeeConfirmFlag(true);
-        } else {
-            serveDepositDTO.setRecoverFeeConfirmFlag(false);
-        }
         serveDepositDTO.setVehicleNum(deliverDTO.getCarNum());
         DeliverVehicleDTO deliverVehicleDTO = deliverVehicleEntityApi.getDeliverVehicleByDeliverNo(deliverDTO.getDeliverNo());
         RecoverVehicleDTO recoverVehicleDTO = recoverVehicleEntityApi.getRecoverVehicleByDeliverNo(deliverDTO.getDeliverNo());

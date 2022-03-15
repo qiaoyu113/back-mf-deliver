@@ -68,7 +68,7 @@ public class DeliverGatewayImpl implements DeliverGateway {
         example.createCriteria().andIn("carId", carId).andEqualTo("deliverStatus", DeliverEnum.IS_DELIVER.getCode());
         DeliverEntity deliver = DeliverEntity.builder().isInsurance(status1).build();
         int i = deliverMapper.updateByExampleSelective(deliver, example);
-        Example example1 = new Example(DeliverEntity.class);
+        Example example1 = new Example(Deliver.class);
         //收车中交付单
         example1.createCriteria().andIn("carId", carId).andNotEqualTo("deliverStatus", DeliverEnum.IS_DELIVER.getCode());
         DeliverEntity deliver1 = DeliverEntity.builder().isInsurance(status2).build();
@@ -119,7 +119,7 @@ public class DeliverGatewayImpl implements DeliverGateway {
 
     @Override
     public int updateDeliverByDeliverNos(List<String> deliverNos, DeliverEntity deliver) {
-        Example example = new Example(Deliver.class);
+        Example example = new Example(DeliverEntity.class);
         example.createCriteria().andIn("deliverNo", deliverNos).andEqualTo("status", ValidStatusEnum.VALID.getCode());
         return deliverMapper.updateByExampleSelective(deliver, example);
     }
@@ -133,13 +133,11 @@ public class DeliverGatewayImpl implements DeliverGateway {
 
     @Override
     public DeliverEntity getDeliverByCarId(Integer carId) {
-
         Example example = new Example(DeliverEntity.class);
         example.createCriteria()
                 .andEqualTo("carId", carId).andEqualTo("status", ValidStatusEnum.VALID.getCode());
         DeliverEntity deliverEntity = deliverMapper.selectOneByExample(example);
-
-        return deliverEntity;
+        return deliverMapper.selectOneByExample(example);
 
 
     }
@@ -159,6 +157,15 @@ public class DeliverGatewayImpl implements DeliverGateway {
                 .andIn("serveNo", serveNoList)
                 .andNotEqualTo("deliverStatus", DeliverEnum.COMPLETED.getCode())
                 .andNotEqualTo("status", ValidStatusEnum.INVALID.getCode());
+        return deliverMapper.selectByExample(example);
+    }
+
+    @Override
+    public List<DeliverEntity> getMakeDeliverDTOSByCarIdList(List<Integer> carIds, Integer type) {
+
+        Example example = new Example(DeliverEntity.class);
+        example.createCriteria().andEqualTo("status",type)
+                .andIn("carId", carIds);
         return deliverMapper.selectByExample(example);
     }
 

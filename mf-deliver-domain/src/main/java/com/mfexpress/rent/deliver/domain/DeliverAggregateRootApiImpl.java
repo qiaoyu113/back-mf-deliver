@@ -457,4 +457,15 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         return Result.getInstance(deliverDTOS).success();
     }
 
+    @Override
+    @PostMapping("/getMakeDeliverDTOSByCarIdList")
+    public Result<List<DeliverDTO>> getMakeDeliverDTOSByCarIdList(@RequestBody List<Integer> carIds,@RequestParam("status") Integer status) {
+        List<DeliverEntity> deliverDTOSByCarIdList = deliverGateway.getMakeDeliverDTOSByCarIdList(carIds,status);
+        if (CollectionUtil.isEmpty(deliverDTOSByCarIdList)){
+            return Result.getInstance((List<DeliverDTO>)null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+        }
+        List<DeliverDTO> deliverDTOS = BeanUtil.copyToList(deliverDTOSByCarIdList, DeliverDTO.class,new CopyOptions().ignoreError());
+        return Result.getInstance(deliverDTOS).success();
+    }
+
 }
