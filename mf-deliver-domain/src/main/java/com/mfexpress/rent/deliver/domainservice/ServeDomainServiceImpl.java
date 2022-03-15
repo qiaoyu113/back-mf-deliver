@@ -129,8 +129,8 @@ public class ServeDomainServiceImpl implements ServeDomainServiceI {
                 DeliverVehicleDTO deliverVehicleDTO = deliverVehicleMap.get(deliverDTO.getDeliverNo());
                 RecoverVehicleDTO recoverVehicleDTO = recoverVehicleMap.get(deliverDTO.getDeliverNo());
                 supplyDepositData(serveDepositDTO, deliverDTO, deliverVehicleDTO, recoverVehicleDTO);
+                serveDepositDTO.setRecoverFeeConfirmFlag(!CollectionUtil.isNotEmpty(deliverNotCompletedMap.get(deliverDTO.getDeliverNo())));
             }
-            serveDepositDTO.setRecoverFeeConfirmFlag(!CollectionUtil.isNotEmpty(deliverNotCompletedMap.get(deliverDTO.getDeliverNo())));
 
         }
         return depositPagePagination;
