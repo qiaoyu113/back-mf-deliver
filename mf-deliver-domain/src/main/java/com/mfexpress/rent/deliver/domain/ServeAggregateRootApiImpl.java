@@ -154,6 +154,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setBillingAdjustmentDate("");
                 serve.setRenewalType(0);
                 serve.setExpectRecoverDate("");
+                serve.setPayableDeposit(BigDecimal.ZERO);
+                serve.setPaidInDeposit(BigDecimal.ZERO);
                 serveList.add(serve);
             }
         }
