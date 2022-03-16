@@ -79,12 +79,12 @@ public class ServeDomainServiceImpl implements ServeDomainServiceI {
                 lockListDTO.setDeliverVehicleDate("");
             } else {
                 lockListDTO.setVehicleNum(deliverDTO.getCarNum());
-            }
-            DeliverVehicleDTO deliverVehicleDTO = deliverVehicleMap.get(deliverDTO.getDeliverNo());
-            if (Objects.isNull(deliverVehicleDTO)) {
-                lockListDTO.setDeliverVehicleDate("");
-            } else {
-                lockListDTO.setDeliverVehicleDate(DateUtil.formatDate(deliverVehicleDTO.getDeliverVehicleTime()));
+                DeliverVehicleDTO deliverVehicleDTO = deliverVehicleMap.get(deliverDTO.getDeliverNo());
+                if (Objects.isNull(deliverVehicleDTO)) {
+                    lockListDTO.setDeliverVehicleDate("");
+                } else {
+                    lockListDTO.setDeliverVehicleDate(DateUtil.formatDate(deliverVehicleDTO.getDeliverVehicleTime()));
+                }
             }
             depositLockListDTOS.add(lockListDTO);
 
