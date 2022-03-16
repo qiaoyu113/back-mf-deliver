@@ -2,7 +2,7 @@ package com.mfexpress.rent.deliver.delivervehicle;
 
 
 import com.mfexpress.rent.deliver.delivervehicle.repository.DeliverVehicleMapper;
-import com.mfexpress.rent.deliver.dto.entity.DeliverVehicle;
+import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
 import com.mfexpress.rent.deliver.gateway.DeliverVehicleGateway;
 import org.springframework.stereotype.Component;
 import tk.mybatis.mapper.entity.Example;
@@ -17,9 +17,9 @@ public class DeliverVehicleGatewayImpl implements DeliverVehicleGateway {
     private DeliverVehicleMapper deliverVehicleMapper;
 
     @Override
-    public int addDeliverVehicle(List<DeliverVehicle> deliverVehicleList) {
+    public int addDeliverVehicle(List<DeliverVehicleEntity> deliverVehicleList) {
         int i = 0;
-        for (DeliverVehicle deliverVehicle : deliverVehicleList) {
+        for (DeliverVehicleEntity deliverVehicle : deliverVehicleList) {
             i += deliverVehicleMapper.insertSelective(deliverVehicle);
         }
         return i;
@@ -27,24 +27,24 @@ public class DeliverVehicleGatewayImpl implements DeliverVehicleGateway {
     }
 
     @Override
-    public DeliverVehicle getDeliverVehicleByDeliverNo(String deliverNo) {
+    public DeliverVehicleEntity getDeliverVehicleByDeliverNo(String deliverNo) {
 
-        Example example = new Example(DeliverVehicle.class);
+        Example example = new Example(DeliverVehicleEntity.class);
         example.createCriteria().andEqualTo("deliverNo", deliverNo);
         return deliverVehicleMapper.selectOneByExample(example);
     }
 
     @Override
-    public List<DeliverVehicle> getDeliverVehicleByServeNo(List<String> serveNoList) {
-        Example example = new Example(DeliverVehicle.class);
+    public List<DeliverVehicleEntity> getDeliverVehicleByServeNo(List<String> serveNoList) {
+        Example example = new Example(DeliverVehicleEntity.class);
         example.createCriteria().andIn("serveNo", serveNoList);
 
         return deliverVehicleMapper.selectByExample(example);
     }
 
     @Override
-    public List<DeliverVehicle> getDeliverVehicleByDeliverNoList(List<String> deliverNoList) {
-        Example example = new Example(DeliverVehicle.class);
+    public List<DeliverVehicleEntity> getDeliverVehicleByDeliverNoList(List<String> deliverNoList) {
+        Example example = new Example(DeliverVehicleEntity.class);
         example.createCriteria().andIn("deliverNo", deliverNoList);
         return deliverVehicleMapper.selectByExample(example);
 

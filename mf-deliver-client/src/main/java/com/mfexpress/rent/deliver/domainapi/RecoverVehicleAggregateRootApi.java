@@ -34,6 +34,10 @@ public interface RecoverVehicleAggregateRootApi {
     @PostMapping("/toBackInsure")
     Result<List<RecoverVehicleDTO>> toBackInsure(@RequestBody List<String> serveNo);
 
+    /**
+     * @deprecated  废弃方法 查询收车单只能使用交付单
+     * getRecoverVehicleDtosByDeliverNoList
+     */
     @PostMapping("/getRecoverVehicleByServeNo")
     Result<Map<String, RecoverVehicle>> getRecoverVehicleByServeNo(@RequestBody List<String> serveNoList);
 

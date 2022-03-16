@@ -5,14 +5,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Table;
 import java.math.BigDecimal;
 import java.util.Date;
 
+/**
+ * @deprecated 不再用于实体类
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "deliver")
+//@Table(name = "deliver")
 @Builder
 public class Deliver {
     private Integer id;

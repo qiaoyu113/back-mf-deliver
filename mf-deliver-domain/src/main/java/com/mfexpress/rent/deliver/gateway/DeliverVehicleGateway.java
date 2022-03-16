@@ -1,15 +1,15 @@
 package com.mfexpress.rent.deliver.gateway;
 
-import com.mfexpress.rent.deliver.dto.entity.DeliverVehicle;
+import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
 
 import java.util.List;
 
 public interface DeliverVehicleGateway {
 
-    int addDeliverVehicle(List<DeliverVehicle> deliverVehicleList);
+    int addDeliverVehicle(List<DeliverVehicleEntity> deliverVehicleList);
 
-    DeliverVehicle getDeliverVehicleByDeliverNo(String deliverNo);
-    List<DeliverVehicle>getDeliverVehicleByServeNo(List<String>serveNoList);
+    DeliverVehicleEntity getDeliverVehicleByDeliverNo(String deliverNo);
+    List<DeliverVehicleEntity>getDeliverVehicleByServeNo(List<String>serveNoList);
 
-    List<DeliverVehicle>getDeliverVehicleByDeliverNoList(List<String>deliverNoList);
+    List<DeliverVehicleEntity>getDeliverVehicleByDeliverNoList(List<String>deliverNoList);
 }

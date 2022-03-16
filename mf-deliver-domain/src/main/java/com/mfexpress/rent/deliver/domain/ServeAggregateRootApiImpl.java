@@ -21,12 +21,16 @@ import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.constant.ServeRenewalTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.domainservice.ServeDomainServiceI;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
-import com.mfexpress.rent.deliver.dto.entity.Deliver;
-import com.mfexpress.rent.deliver.dto.entity.DeliverVehicle;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
-import com.mfexpress.rent.deliver.dto.entity.ServeChangeRecord;
+import com.mfexpress.rent.deliver.entity.DeliverEntity;
+import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
+import com.mfexpress.rent.deliver.entity.ServeChangeRecordPO;
+import com.mfexpress.rent.deliver.entity.ServeEntity;
+import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
+import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.gateway.DeliverVehicleGateway;
 import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
@@ -72,6 +76,12 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     private DeliverVehicleGateway deliverVehicleGateway;
 
     @Resource
+    private DeliverEntityApi deliverEntityApi;
+    @Resource
+    private ServeEntityApi serveEntityApi;
+    @Resource
+    private ServeDomainServiceI serveDomainServiceI;
+    @Resource
     private MqTools mqTools;
 
     @Value("${rocketmq.listenEventTopic}")
@@ -81,7 +91,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/getServeDtoByServeNo")
     @PrintParam
     public Result<ServeDTO> getServeDtoByServeNo(@RequestParam("serveNo") String serveNo) {
-        Serve serve = serveGateway.getServeByServeNo(serveNo);
+        ServeEntity serve = serveGateway.getServeByServeNo(serveNo);
         ServeDTO serveDTO = new ServeDTO();
         if (serve != null) {
             BeanUtils.copyProperties(serve, serveDTO);
@@ -99,7 +109,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/addServe")
     @PrintParam
     public Result<String> addServe(@RequestBody ServeAddDTO serveAddDTO) {
-        List<Serve> serveList = new LinkedList<>();
+        List<ServeEntity> serveList = new LinkedList<>();
         List<ServeVehicleDTO> vehicleDTOList = serveAddDTO.getVehicleDTOList();
         if (vehicleDTOList == null) {
             return Result.getInstance(ResultErrorEnum.VILAD_ERROR.getName()).fail(ResultErrorEnum.VILAD_ERROR.getCode(), "车辆信息为空");
@@ -109,7 +119,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         for (ServeVehicleDTO serveVehicleDTO : vehicleDTOList) {
             Integer num = serveVehicleDTO.getNum();
             for (int i = 0; i < num; i++) {
-                Serve serve = new Serve();
+                ServeEntity serve = new ServeEntity();
                 long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_SERVE_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
                 String serveNo = DeliverUtils.getNo(Constants.REDIS_SERVE_KEY, incr);
                 Long bizId = redisTools.getBizId(Constants.REDIS_BIZ_ID_SERVER);
@@ -160,7 +170,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/toPreselected")
     @PrintParam
     public Result<String> toPreselected(@RequestBody List<String> serveNoList) {
-        Serve serve = Serve.builder().status(ServeEnum.PRESELECTED.getCode()).build();
+        ServeEntity serve = ServeEntity.builder().status(ServeEnum.PRESELECTED.getCode()).build();
         try {
             serveGateway.updateServeByServeNoList(serveNoList, serve);
             return Result.getInstance("预选成功").success();
@@ -176,7 +186,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     public Result<String> toReplace(@RequestParam("serveNo") String serveNo) {
         try {
-            Serve serve = Serve.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
+            ServeEntity serve = ServeEntity.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
             serveGateway.updateServeByServeNo(serveNo, serve);
             return Result.getInstance(ResultErrorEnum.SUCCESSED.getName()).success();
         } catch (Exception e) {
@@ -190,7 +200,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     public Result<String> deliver(@RequestBody List<String> serveNoList) {
         try {
-            Serve serve = Serve.builder().status(ServeEnum.DELIVER.getCode()).build();
+            ServeEntity serve = ServeEntity.builder().status(ServeEnum.DELIVER.getCode()).build();
             serveGateway.updateServeByServeNoList(serveNoList, serve);
             return Result.getInstance(ResultErrorEnum.SUCCESSED.getName()).success();
         } catch (Exception e) {
@@ -203,7 +213,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/recover")
     @PrintParam
     public Result<String> recover(@RequestBody List<String> serveNoList) {
-        Serve serve = Serve.builder().status(ServeEnum.RECOVER.getCode()).build();
+        ServeEntity serve = ServeEntity.builder().status(ServeEnum.RECOVER.getCode()).build();
         try {
             serveGateway.updateServeByServeNoList(serveNoList, serve);
             return Result.getInstance("收车完成").success();
@@ -217,7 +227,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/completed")
     @PrintParam
     public Result<String> completed(@RequestParam("serveNo") String serveNo) {
-        Serve serve = Serve.builder().status(ServeEnum.COMPLETED.getCode()).build();
+        ServeEntity serve = ServeEntity.builder().status(ServeEnum.COMPLETED.getCode()).build();
         try {
             serveGateway.updateServeByServeNo(serveNo, serve);
             return Result.getInstance("处理违章完成").success();
@@ -240,7 +250,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     public Result<String> cancelSelected(@RequestParam("serveNo") String serveNo) {
 
-        Serve serve = Serve.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
+        ServeEntity serve = ServeEntity.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
         try {
             serveGateway.updateServeByServeNo(serveNo, serve);
             return Result.getInstance("取消预选成功").success();
@@ -254,7 +264,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/cancelSelectedList")
     @PrintParam
     public Result<String> cancelSelectedList(@RequestBody List<String> serveNoList) {
-        Serve serve = Serve.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
+        ServeEntity serve = ServeEntity.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
         try {
             serveGateway.updateServeByServeNoList(serveNoList, serve);
             return Result.getInstance("取消预选成功").success();
@@ -284,7 +294,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             }
             PageHelper.startPage(listQry.getPage(), listQry.getLimit());
             //查询当前状态为已发车或维修中
-            List<Serve> serveList = serveGateway.getServeByStatus();
+            List<ServeEntity> serveList = serveGateway.getServeByStatus();
             if (serveList != null) {
                 List<ServeDailyDTO> serveDailyDTOList = serveList.stream().map(serve -> {
                     ServeDailyDTO serveDailyDTO = new ServeDailyDTO();
@@ -292,7 +302,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                     serveDailyDTO.setCustomerId(serve.getCustomerId());
                     return serveDailyDTO;
                 }).collect(Collectors.toList());
-                PagePagination<Serve> pagePagination1 = PagePagination.getInstance(serveList);
+                PagePagination<ServeEntity> pagePagination1 = PagePagination.getInstance(serveList);
                 PagePagination<ServeDailyDTO> pagePagination = new PagePagination<>();
                 BeanUtils.copyProperties(pagePagination1, pagePagination);
                 pagePagination.setList(serveDailyDTOList);
@@ -309,13 +319,29 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/getServeMapByServeNoList")
     public Result<Map<String, Serve>> getServeMapByServeNoList(@RequestBody List<String> serveNoList) {
         try {
-            List<Serve> serveList = serveGateway.getServeByServeNoList(serveNoList);
-            Map<String, Serve> map = serveList.stream().collect(Collectors.toMap(Serve::getServeNo, Function.identity()));
-            return Result.getInstance(map).success();
+            List<ServeEntity> serveList = serveGateway.getServeByServeNoList(serveNoList);
+            Map<String, Serve> serveMap = new HashMap<>(serveList.size());
+            serveList.stream().forEach(serveEntity -> {
+                Serve serve = BeanUtil.copyProperties(serveEntity, Serve.class);
+                serveMap.put(serveEntity.getServeNo(), serve);
+
+            });
+            return Result.getInstance(serveMap).success();
         } catch (Exception e) {
             log.error(e.getMessage());
             return Result.getInstance((Map<String, Serve>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
+    }
+
+    @Override
+    @PostMapping("/getServeDTOByServeNoList")
+    public Result<List<ServeDTO>> getServeDTOByServeNoList(@RequestBody List<String> serveNoList) {
+        List<ServeEntity> serveList = serveGateway.getServeByServeNoList(serveNoList);
+        if (CollectionUtil.isEmpty(serveList)) {
+            return Result.getInstance((List<ServeDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+        }
+        List<ServeDTO> serveDTOList = BeanUtil.copyToList(serveList, ServeDTO.class, new CopyOptions().ignoreError());
+        return Result.getInstance(serveDTOList).success();
     }
 
     @Override
@@ -330,14 +356,14 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             }
             PageHelper.startPage(serveCycleQryCmd.getPage(), serveCycleQryCmd.getLimit());
             //查询当前状态为已发车或维修中
-            List<Serve> serveList = serveGateway.getCycleServe(serveCycleQryCmd.getCustomerIdList());
+            List<ServeEntity> serveList = serveGateway.getCycleServe(serveCycleQryCmd.getCustomerIdList());
             if (serveList != null) {
                 List<ServeDTO> serveDailyDTOList = serveList.stream().map(serve -> {
                     ServeDTO serveDTO = new ServeDTO();
                     BeanUtils.copyProperties(serve, serveDTO);
                     return serveDTO;
                 }).collect(Collectors.toList());
-                PagePagination<Serve> pagePagination = PagePagination.getInstance(serveList);
+                PagePagination<ServeEntity> pagePagination = PagePagination.getInstance(serveList);
                 PagePagination<ServeDTO> pagePagination1 = new PagePagination<>();
                 BeanUtils.copyProperties(pagePagination, pagePagination1);
                 pagePagination1.setList(serveDailyDTOList);
@@ -356,14 +382,14 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/toRepair")
     @PrintParam
     public Result<String> toRepair(@RequestParam("serveNo") String serveNo) {
-        Serve serve = serveGateway.getServeByServeNo(serveNo);
+        ServeEntity serve = serveGateway.getServeByServeNo(serveNo);
         if (null == serve) {
             return Result.getInstance("服务单不存在").fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单不存在");
         }
         if (!ServeEnum.DELIVER.getCode().equals(serve.getStatus())) {
             return Result.getInstance("服务单状态异常").fail(ResultErrorEnum.UPDATE_ERROR.getCode(), "服务单状态异常");
         }
-        Serve serveToUpdate = new Serve();
+        ServeEntity serveToUpdate = new ServeEntity();
         serveToUpdate.setStatus(ServeEnum.REPAIR.getCode());
         try {
             serveGateway.updateServeByServeNo(serveNo, serveToUpdate);
@@ -378,14 +404,14 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/cancelOrCompleteRepair")
     @PrintParam
     public Result<String> cancelOrCompleteRepair(@RequestParam("serveNo") String serveNo) {
-        Serve serve = serveGateway.getServeByServeNo(serveNo);
+        ServeEntity serve = serveGateway.getServeByServeNo(serveNo);
         if (null == serve) {
             return Result.getInstance("").fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单不存在");
         }
         if (!ServeEnum.REPAIR.getCode().equals(serve.getStatus())) {
             return Result.getInstance("").fail(ResultErrorEnum.UPDATE_ERROR.getCode(), "服务单状态异常");
         }
-        Serve serveToUpdate = new Serve();
+        ServeEntity serveToUpdate = new ServeEntity();
         serveToUpdate.setStatus(ServeEnum.DELIVER.getCode());
         try {
             serveGateway.updateServeByServeNo(serveNo, serveToUpdate);
@@ -403,7 +429,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     public Result<String> addServeForReplaceVehicle(@RequestBody ServeReplaceVehicleAddDTO serveAddDTO) {
 
         String serveNo = serveAddDTO.getServeNo();
-        Serve serve = serveGateway.getServeByServeNo(serveNo);
+        ServeEntity serve = serveGateway.getServeByServeNo(serveNo);
         if (null == serve) {
             return Result.getInstance("原服务单不存在").fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "原服务单不存在");
         }
@@ -441,7 +467,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/getServeListByOrderIds")
     @PrintParam
     public Result<List<ServeDTO>> getServeListByOrderIds(@RequestBody List<Long> orderIds) {
-        List<Serve> serveListByOrderIds = serveGateway.getServeListByOrderIds(orderIds);
+        List<ServeEntity> serveListByOrderIds = serveGateway.getServeListByOrderIds(orderIds);
         if (CollectionUtil.isEmpty(serveListByOrderIds)) {
             return Result.getInstance((List<ServeDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
@@ -459,14 +485,14 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         List<String> serveNoList = new ArrayList<>(renewalServeCmdMap.keySet());
 
         // 租赁开始日期必须大于发车日期校验
-        List<DeliverVehicle> deliverVehicleList = deliverVehicleGateway.getDeliverVehicleByServeNo(serveNoList);
+        List<DeliverVehicleEntity> deliverVehicleList = deliverVehicleGateway.getDeliverVehicleByServeNo(serveNoList);
         if (deliverVehicleList.size() != serveNoList.size()) {
             throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "交车单查询失败");
         }
-        Map<String, DeliverVehicle> deliverVehicleMap = deliverVehicleList.stream().collect(Collectors.toMap(DeliverVehicle::getServeNo, Function.identity(), (v1, v2) -> v1));
+        Map<String, DeliverVehicleEntity> deliverVehicleMap = deliverVehicleList.stream().collect(Collectors.toMap(DeliverVehicleEntity::getServeNo, Function.identity(), (v1, v2) -> v1));
         serveNoList.forEach(serveNo -> {
             RenewalServeCmd renewalServeCmd = renewalServeCmdMap.get(serveNo);
-            DeliverVehicle deliverVehicle = deliverVehicleMap.get(serveNo);
+            DeliverVehicleEntity deliverVehicle = deliverVehicleMap.get(serveNo);
             if (null == renewalServeCmd || null == deliverVehicle) {
                 throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "交车单查询失败");
             }
@@ -479,26 +505,26 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
 
         // 判断服务单是否存在，状态是否为已发车或维修中
-        List<Serve> serveList = serveGateway.getServeByServeNoList(serveNoList);
+        List<ServeEntity> serveList = serveGateway.getServeByServeNoList(serveNoList);
         if (serveNoList.size() != serveList.size()) {
             throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "服务单查询失败");
         }
-        Map<String, Serve> serveMap = serveList.stream().peek(serve -> {
+        Map<String, ServeEntity> serveMap = serveList.stream().peek(serve -> {
             // 只有状态为已发车或维修中的服务单才能被续签
             if (!Objects.equals(ServeEnum.DELIVER.getCode(), serve.getStatus()) && !Objects.equals(ServeEnum.REPAIR.getCode(), serve.getStatus())) {
                 throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "服务单状态异常");
             }
-        }).collect(Collectors.toMap(Serve::getServeNo, Function.identity(), (v1, v2) -> v1));
+        }).collect(Collectors.toMap(ServeEntity::getServeNo, Function.identity(), (v1, v2) -> v1));
 
-        List<Deliver> deliverList = deliverGateway.getDeliverByServeNoList(serveNoList);
+        List<DeliverEntity> deliverList = deliverGateway.getDeliverByServeNoList(serveNoList);
         if (serveNoList.size() != deliverList.size()) {
             throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "交付单查询失败");
         }
-        Map<String, Deliver> deliverMap = deliverList.stream().collect(Collectors.toMap(Deliver::getServeNo, Function.identity(), (v1, v2) -> v1));
+        Map<String, DeliverEntity> deliverMap = deliverList.stream().collect(Collectors.toMap(DeliverEntity::getServeNo, Function.identity(), (v1, v2) -> v1));
         // 修改服务单相关信息，顺带生成操作记录对象
-        List<ServeChangeRecord> recordList = new ArrayList<>();
-        List<Serve> serveListToUpdate = renewalServeCmdList.stream().map(renewalServeCmd -> {
-            Serve serve = new Serve();
+        List<ServeChangeRecordPO> recordList = new ArrayList<>();
+        List<ServeEntity> serveListToUpdate = renewalServeCmdList.stream().map(renewalServeCmd -> {
+            ServeEntity serve = new ServeEntity();
             BeanUtils.copyProperties(renewalServeCmd, serve);
             serve.setContractId(cmd.getContractId());
             serve.setOaContractCode(cmd.getOaContractCode());
@@ -507,8 +533,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             serve.setRenewalType(ServeRenewalTypeEnum.ACTIVE.getCode());
             serve.setExpectRecoverDate(renewalServeCmd.getLeaseEndDate());
 
-            ServeChangeRecord record = new ServeChangeRecord();
-            Serve rawDataServe = serveMap.get(serve.getServeNo());
+            ServeChangeRecordPO record = new ServeChangeRecordPO();
+            ServeEntity rawDataServe = serveMap.get(serve.getServeNo());
             if (null == rawDataServe) {
                 throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "服务单获取失败" + serve.getServeNo());
             }
@@ -524,7 +550,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
             //发生计费
             //在这里查询交付单 后续看情况做修改
-            Deliver deliver = deliverMap.get(serve.getServeNo());
+            DeliverEntity deliver = deliverMap.get(serve.getServeNo());
             RenewalChargeCmd renewalChargeCmd = new RenewalChargeCmd();
             renewalChargeCmd.setServeNo(serve.getServeNo());
             renewalChargeCmd.setCreateId(cmd.getOperatorId());
@@ -565,34 +591,34 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     public Result<Integer> renewalReplaceServe(@RequestBody @Validated RenewalReplaceServeCmd cmd) {
         Map<String, String> serveNoWithReplaceServeNoMap = cmd.getServeNoWithReplaceServeNoMap();
-        List<Serve> serveList = serveGateway.getServeByServeNoList(new ArrayList<>(serveNoWithReplaceServeNoMap.keySet()));
-        List<Serve> replaceServeList = serveGateway.getServeByServeNoList(new ArrayList<>(serveNoWithReplaceServeNoMap.values()));
+        List<ServeEntity> serveList = serveGateway.getServeByServeNoList(new ArrayList<>(serveNoWithReplaceServeNoMap.keySet()));
+        List<ServeEntity> replaceServeList = serveGateway.getServeByServeNoList(new ArrayList<>(serveNoWithReplaceServeNoMap.values()));
         if (serveList.isEmpty() || replaceServeList.isEmpty()) {
             return Result.getInstance(0).success();
         }
 
         // 找出服务单和替换车服务单
-        Map<String, Serve> serveMap = serveList.stream().collect(Collectors.toMap(Serve::getServeNo, Function.identity(), (v1, v2) -> v1));
-        Map<String, Serve> replaceServeMap = replaceServeList.stream().collect(Collectors.toMap(Serve::getServeNo, Function.identity(), (v1, v2) -> v1));
+        Map<String, ServeEntity> serveMap = serveList.stream().collect(Collectors.toMap(ServeEntity::getServeNo, Function.identity(), (v1, v2) -> v1));
+        Map<String, ServeEntity> replaceServeMap = replaceServeList.stream().collect(Collectors.toMap(ServeEntity::getServeNo, Function.identity(), (v1, v2) -> v1));
 
         // 替换车更新预计收车日期，如果已发车，查出交付单，调用计费域
         List<String> replaceServeAlreadyDeliverNoList = new ArrayList<>();
-        List<ServeChangeRecord> recordList = new ArrayList<>();
-        List<Serve> serveToUpdateList = serveNoWithReplaceServeNoMap.keySet().stream().map(serveNo -> {
+        List<ServeChangeRecordPO> recordList = new ArrayList<>();
+        List<ServeEntity> serveToUpdateList = serveNoWithReplaceServeNoMap.keySet().stream().map(serveNo -> {
             String replaceServeNo = serveNoWithReplaceServeNoMap.get(serveNo);
-            Serve serve = serveMap.get(serveNo);
-            Serve replaceServe = replaceServeMap.get(replaceServeNo);
+            ServeEntity serve = serveMap.get(serveNo);
+            ServeEntity replaceServe = replaceServeMap.get(replaceServeNo);
             if (ServeEnum.DELIVER.getCode().equals(replaceServe.getStatus())) {
                 replaceServeAlreadyDeliverNoList.add(replaceServe.getServeNo());
             }
 
-            Serve serveToUpdate = Serve.builder().serveNo(replaceServe.getServeNo())
+            ServeEntity serveToUpdate = ServeEntity.builder().serveNo(replaceServe.getServeNo())
                     .oaContractCode(serve.getOaContractCode())
                     .goodsId(serve.getGoodsId())
                     .expectRecoverDate(serve.getExpectRecoverDate())
                     .updateId(cmd.getOperatorId())
                     .build();
-            ServeChangeRecord record = new ServeChangeRecord();
+            ServeChangeRecordPO record = new ServeChangeRecordPO();
             record.setServeNo(replaceServe.getServeNo());
             record.setRenewalType(ServeRenewalTypeEnum.ACTIVE.getCode());
             record.setRawGoodsId(replaceServe.getGoodsId());
@@ -613,13 +639,13 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         });
         // 调用计费域
         if (!replaceServeAlreadyDeliverNoList.isEmpty()) {
-            List<Deliver> deliverList = deliverGateway.getDeliverByServeNoList(replaceServeAlreadyDeliverNoList);
-            Map<String, Deliver> deliverMap = deliverList.stream().collect(Collectors.toMap(Deliver::getServeNo, Function.identity(), (v1, v2) -> v1));
+            List<DeliverEntity> deliverList = deliverGateway.getDeliverByServeNoList(replaceServeAlreadyDeliverNoList);
+            Map<String, DeliverEntity> deliverMap = deliverList.stream().collect(Collectors.toMap(DeliverEntity::getServeNo, Function.identity(), (v1, v2) -> v1));
             replaceServeAlreadyDeliverNoList.forEach(serveNo -> {
                 //发生计费
                 //在这里查询交付单 后续看情况做修改
-                Deliver deliver = deliverMap.get(serveNo);
-                Serve replaceServe = replaceServeMap.get(serveNo);
+                DeliverEntity deliver = deliverMap.get(serveNo);
+                ServeEntity replaceServe = replaceServeMap.get(serveNo);
                 if (null != replaceServe) {
                     RenewalChargeCmd renewalChargeCmd = new RenewalChargeCmd();
                     renewalChargeCmd.setServeNo(serveNo);
@@ -686,9 +712,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
         // 自动续约，收车日期顺延一个月，租赁期限不变，并发送mq到计费域(逻辑暂无)，自动续约不传计费调整日期
-        List<ServeChangeRecord> recordList = new ArrayList<>();
-        List<Serve> serveToUpdateList = needPassiveRenewalServeList.stream().map(serve -> {
-            Serve serveToUpdate = new Serve();
+        List<ServeChangeRecordPO> recordList = new ArrayList<>();
+        List<ServeEntity> serveToUpdateList = needPassiveRenewalServeList.stream().map(serve -> {
+            ServeEntity serveToUpdate = new ServeEntity();
             serveToUpdate.setId(serve.getId());
             DateTime expectRecoverDate = DateUtil.parse(serve.getExpectRecoverDate());
             String updatedExpectRecoverDate = getExpectRecoverDate(expectRecoverDate, 1);
@@ -697,7 +723,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             serveToUpdate.setRenewalType(ServeRenewalTypeEnum.PASSIVE.getCode());
             serveToUpdate.setUpdateId(cmd.getOperatorId());
 
-            ServeChangeRecord record = new ServeChangeRecord();
+            ServeChangeRecordPO record = new ServeChangeRecordPO();
             record.setServeNo(serve.getServeNo());
             record.setRenewalType(ServeRenewalTypeEnum.PASSIVE.getCode());
             record.setRawData(JSONUtil.toJsonStr(serve));
@@ -707,7 +733,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
             //发生计费
             //在这里查询交付单 后续看情况做修改
-            Deliver deliver = deliverGateway.getDeliverByServeNo(serve.getServeNo());
+            DeliverEntity deliver = deliverGateway.getDeliverByServeNo(serve.getServeNo());
             RenewalChargeCmd renewalChargeCmd = new RenewalChargeCmd();
             renewalChargeCmd.setServeNo(serve.getServeNo());
             renewalChargeCmd.setCreateId(cmd.getOperatorId());
@@ -733,7 +759,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/getServeChangeRecordList")
     @PrintParam
     public Result<List<ServeChangeRecordDTO>> getServeChangeRecordList(@RequestParam("serveNo") String serveNo) {
-        List<ServeChangeRecord> recordList = serveChangeRecordGateway.getList(serveNo);
+        List<ServeChangeRecordPO> recordList = serveChangeRecordGateway.getList(serveNo);
         if (recordList.isEmpty()) {
             return Result.getInstance((List<ServeChangeRecordDTO>) null).success();
         }
@@ -741,7 +767,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         List<ServeChangeRecordDTO> recordDTOList = recordList.stream().map(record -> {
             ServeChangeRecordDTO recordDTO = new ServeChangeRecordDTO();
             BeanUtils.copyProperties(record, recordDTO);
-            if(!StringUtils.isEmpty(record.getNewBillingAdjustmentDate())){
+            if (!StringUtils.isEmpty(record.getNewBillingAdjustmentDate())) {
                 try {
                     recordDTO.setNewBillingAdjustmentDate(ymdFormat.parse(record.getNewBillingAdjustmentDate()));
                 } catch (ParseException e) {
@@ -758,7 +784,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/getServeByCustomerIdAndDeliver")
     @PrintParam
     public Result<List<ServeDTO>> getServeByCustomerIdAndDeliver(@RequestBody List<Integer> customerIdList) {
-        List<Serve> serveList = serveGateway.getServeByCustomerIdDeliver(customerIdList);
+        List<ServeEntity> serveList = serveGateway.getServeByCustomerIdDeliver(customerIdList);
         if (CollectionUtil.isEmpty(serveList)) {
             return Result.getInstance((List<ServeDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
@@ -770,7 +796,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/getServeByCustomerIdAndRecover")
     @PrintParam
     public Result<List<ServeDTO>> getServeByCustomerIdAndRecover(@RequestBody List<Integer> customerIdList) {
-        List<Serve> serveList = serveGateway.getServeByCustomerIdRecover(customerIdList);
+        List<ServeEntity> serveList = serveGateway.getServeByCustomerIdRecover(customerIdList);
         if (CollectionUtil.isEmpty(serveList)) {
             return Result.getInstance((List<ServeDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
@@ -790,8 +816,56 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/getPageServeByQry")
     @PrintParam
     public Result<PagePagination<Serve>> getPageServeByQry(@RequestBody ServeListQry qry) {
-        return Result.getInstance(serveGateway.getPageServeByQry(qry)).success();
+
+        PagePagination<ServeEntity> pagePagination = serveGateway.getPageServeByQry(qry);
+        PagePagination<Serve> servePagePagination = new PagePagination<>();
+        BeanUtil.copyProperties(pagePagination, servePagePagination);
+        List<ServeEntity> serveEntityList = pagePagination.getList();
+        List<Serve> serveList = BeanUtil.copyToList(serveEntityList, Serve.class, new CopyOptions().ignoreError());
+        servePagePagination.setList(serveList);
+        return Result.getInstance(servePagePagination).success();
     }
+
+    @Override
+    @PostMapping("/getPageServeDepositList")
+    @PrintParam
+    public Result<PagePagination<ServeDepositDTO>> getPageServeDepositList(@RequestBody CustomerDepositListDTO customerDepositLisDTO) {
+        return Result.getInstance(serveDomainServiceI.getPageServeDeposit(customerDepositLisDTO)).success();
+    }
+
+    @Override
+    @PostMapping("/unLockDeposit")
+    @PrintParam
+    public Result unLockDeposit(@RequestParam("serveNoList") List<String> serveNoList, @RequestParam("creatorId") Integer creatorId) {
+        //查询需要解锁得服务单押金列表
+        List<ServeDTO> serveList = serveEntityApi.getServeListByServeNoList(serveNoList);
+        Map<String, BigDecimal> updateDepositMap = new HashMap<>();
+        serveList.stream().forEach(serveDTO -> {
+            updateDepositMap.put(serveDTO.getServeNo(), serveDTO.getPaidInDeposit().negate());
+        });
+        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, creatorId);
+        return Result.getInstance(true).success();
+    }
+
+    @Override
+    @PostMapping("/getCustomerDepositLockList")
+    @PrintParam
+    public Result<List<CustomerDepositLockListDTO>> getCustomerDepositLockList(@RequestBody List<String> serveNoList) {
+        return Result.getInstance(serveDomainServiceI.getCustomerDepositLockList(serveNoList));
+    }
+
+    @Override
+    @PostMapping("/lockDeposit")
+    @PrintParam
+    public Result lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList) {
+        Map<String, BigDecimal> updateDepositMap = new HashMap<>();
+        confirmDTOList.stream().forEach(confirmDTO -> {
+            updateDepositMap.put(confirmDTO.getServeNo(), confirmDTO.getLockAmount());
+        });
+        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, confirmDTOList.get(0).getCreatorId());
+        return Result.getInstance(true).success();
+    }
+
 
     private String getExpectRecoverDate(Date deliverVehicleDate, int offset) {
         DateTime dateTime = DateUtil.endOfMonth(deliverVehicleDate);

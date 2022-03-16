@@ -5,18 +5,18 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Id;
-import javax.persistence.Table;
 import java.math.BigDecimal;
 import java.util.Date;
 
+/**@deprecated
+ * 不再作为实体使用
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "serve")
 @Builder
 public class Serve {
-    @Id
+
     private Integer id;
 
     private Long orderId;

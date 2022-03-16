@@ -1,7 +1,7 @@
 package com.mfexpress.rent.deliver.recovervehicle;
 
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
-import com.mfexpress.rent.deliver.dto.entity.RecoverVehicle;
+import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
 import com.mfexpress.rent.deliver.gateway.RecoverVehicleGateway;
 import com.mfexpress.rent.deliver.recovervehicle.repository.RecoverVehicleMapper;
 import org.springframework.stereotype.Component;
@@ -17,16 +17,16 @@ public class RecoverGatewayImpl implements RecoverVehicleGateway {
     private RecoverVehicleMapper recoverVehicleMapper;
 
     @Override
-    public void addRecoverVehicle(List<RecoverVehicle> recoverVehicleList) {
-        for (RecoverVehicle recoverVehicle : recoverVehicleList) {
+    public void addRecoverVehicle(List<RecoverVehicleEntity> recoverVehicleList) {
+        for (RecoverVehicleEntity recoverVehicle : recoverVehicleList) {
             recoverVehicleMapper.insertSelective(recoverVehicle);
         }
 
     }
 
     @Override
-    public int updateRecoverVehicle(RecoverVehicle recoverVehicle) {
-        Example example = new Example(RecoverVehicle.class);
+    public int updateRecoverVehicle(RecoverVehicleEntity recoverVehicle) {
+        Example example = new Example(RecoverVehicleEntity.class);
         example.createCriteria().andEqualTo("serveNo", recoverVehicle.getServeNo())
                 .andEqualTo("status", ValidStatusEnum.VALID.getCode());
         int i = recoverVehicleMapper.updateByExampleSelective(recoverVehicle, example);
@@ -34,32 +34,32 @@ public class RecoverGatewayImpl implements RecoverVehicleGateway {
     }
 
     @Override
-    public List<RecoverVehicle> selectRecoverByServeNoList(List<String> serveNoList) {
-        Example example = new Example(RecoverVehicle.class);
+    public List<RecoverVehicleEntity> selectRecoverByServeNoList(List<String> serveNoList) {
+        Example example = new Example(RecoverVehicleEntity.class);
         example.createCriteria().andIn("serveNo", serveNoList)
                 .andEqualTo("status", ValidStatusEnum.VALID.getCode());
         return recoverVehicleMapper.selectByExample(example);
     }
 
     @Override
-    public RecoverVehicle getRecoverVehicleByDeliverNo(String deliverNo) {
+    public RecoverVehicleEntity getRecoverVehicleByDeliverNo(String deliverNo) {
 
-        Example example = new Example(RecoverVehicle.class);
+        Example example = new Example(RecoverVehicleEntity.class);
         example.createCriteria().andEqualTo("deliverNo", deliverNo).andEqualTo("status", ValidStatusEnum.VALID.getCode());
         return recoverVehicleMapper.selectOneByExample(example);
     }
 
     @Override
-    public List<RecoverVehicle> getRecoverVehicleDtosByDeliverNoList(List<String> deliverNoList) {
-        Example example = new Example(RecoverVehicle.class);
+    public List<RecoverVehicleEntity> getRecoverVehicleDtosByDeliverNoList(List<String> deliverNoList) {
+        Example example = new Example(RecoverVehicleEntity.class);
         example.createCriteria()
                 .andIn("deliverNo", deliverNoList);
         return recoverVehicleMapper.selectByExample(example);
     }
 
     @Override
-    public List<RecoverVehicle> getRecoverVehicleByDeliverNos(List<String> deliverNoList) {
-        Example example = new Example(RecoverVehicle.class);
+    public List<RecoverVehicleEntity> getRecoverVehicleByDeliverNos(List<String> deliverNoList) {
+        Example example = new Example(RecoverVehicleEntity.class);
         example.setOrderByClause("recover_vehicle_time DESC");
         example.createCriteria()
                 .andIn("deliverNo", deliverNoList)
