@@ -154,8 +154,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setBillingAdjustmentDate("");
                 serve.setRenewalType(0);
                 serve.setExpectRecoverDate("");
-                serve.setPayableDeposit(BigDecimal.ZERO);
-                serve.setPaidInDeposit(BigDecimal.ZERO);
+                serve.setPayableDeposit(BigDecimal.valueOf(serveVehicleDTO.getDeposit()));
+                serve.setPaidInDeposit(BigDecimal.valueOf(serveVehicleDTO.getDeposit()));
                 serveList.add(serve);
             }
         }
@@ -842,7 +842,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         //查询需要解锁得服务单押金列表
         List<ServeDTO> serveList = serveEntityApi.getServeListByServeNoList(serveNoList);
         Map<String, BigDecimal> updateDepositMap = new HashMap<>();
-        serveList.stream().forEach(serveDTO -> {
+        serveList.forEach(serveDTO -> {
             updateDepositMap.put(serveDTO.getServeNo(), serveDTO.getPaidInDeposit().negate());
         });
         serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, creatorId);
@@ -861,7 +861,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     public Result lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList) {
         Map<String, BigDecimal> updateDepositMap = new HashMap<>();
-        confirmDTOList.stream().forEach(confirmDTO -> {
+        confirmDTOList.forEach(confirmDTO -> {
             updateDepositMap.put(confirmDTO.getServeNo(), confirmDTO.getLockAmount());
         });
         serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, confirmDTOList.get(0).getCreatorId());
