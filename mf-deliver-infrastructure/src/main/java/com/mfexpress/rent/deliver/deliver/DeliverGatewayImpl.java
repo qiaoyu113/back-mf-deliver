@@ -132,14 +132,12 @@ public class DeliverGatewayImpl implements DeliverGateway {
     }
 
     @Override
-    public DeliverEntity getDeliverByCarId(Integer carId) {
+    public List<DeliverEntity> getDeliverByCarId(Integer carId) {
         Example example = new Example(DeliverEntity.class);
         example.createCriteria()
                 .andEqualTo("carId", carId).andEqualTo("status", ValidStatusEnum.VALID.getCode());
-        DeliverEntity deliverEntity = deliverMapper.selectOneByExample(example);
-        return deliverMapper.selectOneByExample(example);
-
-
+        example.setOrderByClause("create_time desc");
+        return deliverMapper.selectByExample(example);
     }
 
     @Override
