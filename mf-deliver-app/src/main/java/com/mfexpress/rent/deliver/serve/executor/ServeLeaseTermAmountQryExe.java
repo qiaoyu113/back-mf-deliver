@@ -72,10 +72,10 @@ public class ServeLeaseTermAmountQryExe {
         BoolQueryBuilder boolQueryBuilder = assembleEsQryCondition(qry);
         List<FieldSortBuilder> fieldSortList = getSortConditions();
 
-        if (0 <= qry.getLimit()) {
+        if (0 >= qry.getLimit()) {
             qry.setLimit(10);
         }
-        if (0 <= qry.getPage()) {
+        if (0 >= qry.getPage()) {
             qry.setPage(1);
         }
         int start = (qry.getPage() - 1) * qry.getLimit();

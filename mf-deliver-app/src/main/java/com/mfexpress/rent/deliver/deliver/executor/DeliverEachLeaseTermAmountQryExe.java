@@ -86,7 +86,8 @@ public class DeliverEachLeaseTermAmountQryExe {
         Result<Map<Long, SubBillItemDTO>> detailIdWithSubBillItemDTOMapResult = subBillItemAggregateRootApi.getSubBillItemByDetailList(detailIdList);
         Map<Long, SubBillItemDTO> detailIdWithSubBillItemDTOMap = ResultDataUtils.getInstance(detailIdWithSubBillItemDTOMapResult).getDataOrNull();
         if (null == detailIdWithSubBillItemDTOMap || detailIdWithSubBillItemDTOMap.isEmpty()) {
-            throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "查询租期费用失败");
+            log.error("查询租期费用失败，详单id：{}",detailIdList);
+            return PagePagination.getInstance(new ArrayList<>());
         }
         List<String> subBillItemIdList = detailIdWithSubBillItemDTOMap.values().stream().map(subBillItemDTO -> String.valueOf(subBillItemDTO.getSubBillItemId())).collect(Collectors.toList());
         Result<List<SubBillItemDTO.SubBillItemRecordDTO>> subBillItemAdjustRecordResult = subBillItemAggregateRootApi.getSubBillItemAdjustRecord(subBillItemIdList);
