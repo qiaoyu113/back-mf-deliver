@@ -21,10 +21,10 @@ public class ServeAllLeaseTermAmountVO {
     private String plateNumber;
 
     @ApiModelProperty(value = "车型id")
-    private Integer modelId;
+    private Integer carModelId;
 
     @ApiModelProperty(value = "车型含义")
-    private String modelDisplay;
+    private String carModelDisplay;
 
     @ApiModelProperty(value = "租赁价格")
     private String rentFee;
@@ -66,7 +66,7 @@ public class ServeAllLeaseTermAmountVO {
     private Integer orgId;
 
     @ApiModelProperty(value = "所属大区名称")
-    private Integer orgName;
+    private String orgName;
 
     @ApiModelProperty(value = "收车时间")
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
@@ -74,9 +74,12 @@ public class ServeAllLeaseTermAmountVO {
 
     @ApiModelProperty(value = "预计收车时间")
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
-    private Date expectRecoverTime;
+    private Date expectRecoverDate;
 
     @ApiModelProperty(value = "是否允许重新激活，1：真，0：假")
     private Integer enableReactivate;
+
+    @ApiModelProperty(value = "合同商品id")
+    private Integer contractCommodityId;
 
 }

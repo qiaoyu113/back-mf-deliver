@@ -44,13 +44,16 @@ public class DeliverEachLeaseTermAmountVO {
     private String rent;
 
     @ApiModelProperty(value = "租期/租赁月份")
-    private Date leaseMonth;
+    private String leaseMonth;
 
     @ApiModelProperty(value = "租赁月份开始日期")
-    private Date leaseMonthStartDay;
+    private String leaseMonthStartDay;
 
     @ApiModelProperty(value = "租赁月份结束日期")
-    private Date leaseMonthEndDay;
+    private String leaseMonthEndDay;
+
+    @ApiModelProperty(value = "具体租赁周期")
+    private String leaseMonthStartWithEndDay;
 
     @ApiModelProperty(value = "费用金额")
     private String unitPrice;

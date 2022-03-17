@@ -42,4 +42,6 @@ public interface DeliverGateway {
     List<DeliverEntity> getHistoryListByServeNoList(List<String> reactiveServeNoList);
 
     List<DeliverEntity> getDeliverNoListByPage(DeliverQry listQry);
+
+    List<DeliverEntity> getDeliverListByQry(DeliverQry deliverQry);
 }

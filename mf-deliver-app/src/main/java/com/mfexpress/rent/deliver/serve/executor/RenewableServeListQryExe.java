@@ -118,6 +118,58 @@ public class RenewableServeListQryExe {
 
     private void assembleServeToRenewalVO(List<ServeES> serveESList, List<ServeToRenewalVO> serveToRenewalVOList) {
         ArrayList<Integer> contractCommodityIdList = new ArrayList<>();
+
+        // 判断serve是主动续签还是被动续签，找出其实际的goodsId
+        serveESList.forEach(serveES -> {
+            contractCommodityIdList.add(serveES.getContractCommodityId());
+        });
+
+        // 访问订单域，根据goodsId查出合同商品信息
+        CommodityMapQry commodityMapQry = new CommodityMapQry();
+        commodityMapQry.setContractCommodityIdList(contractCommodityIdList);
+        Result<CommodityMapDTO> commodityMapResult = contractAggregateRootApi.getCommodityMapByQry(commodityMapQry);
+        CommodityMapDTO commodityMapDTO = ResultDataUtils.getInstance(commodityMapResult).getDataOrNull();
+        if (null == commodityMapDTO) {
+            return;
+        }
+        Map<Integer, CommodityDTO> contractCommodityDTOMap = commodityMapDTO.getContractCommodityDTOMap();
+
+        // 将查到的商品信息的部分属性设置到serveToRenewalVO中
+        serveESList.forEach(serveES -> {
+            ServeToRenewalVO serveToRenewalVO = new ServeToRenewalVO();
+            BeanUtil.copyProperties(serveES, serveToRenewalVO);
+            serveToRenewalVO.setExpectRecoverDate(serveES.getExpectRecoverDate());
+            serveToRenewalVO.setPurpose(serveES.getLeaseModelId());
+            serveToRenewalVO.setOaContractCode(serveES.getContractNo());
+            serveToRenewalVO.setBrandDisplay(serveES.getBrandModelDisplay());
+            serveToRenewalVO.setStatusDisplay(Objects.requireNonNull(ServeEnum.getServeEnum(serveES.getServeStatus())).getStatus());
+            if (null != serveES.getDeliverVehicleTime()) {
+                Date nowDate = new Date();
+                Date deliverVehicleTime = serveES.getDeliverVehicleTime();
+                if (nowDate.after(deliverVehicleTime)) {
+                    serveToRenewalVO.setLeaseDays(String.valueOf(DateUtil.between(nowDate, deliverVehicleTime, DateUnit.DAY)));
+                } else {
+                    serveToRenewalVO.setLeaseDays("0");
+                }
+
+            }
+            if (null != contractCommodityDTOMap) {
+                CommodityDTO commodityDTO = contractCommodityDTOMap.get(serveES.getContractCommodityId());
+                if (null != commodityDTO) {
+                    serveToRenewalVO.setRentFee(commodityDTO.getRentFee() == null ? "0.00" : commodityDTO.getRentFee().toString());
+                    serveToRenewalVO.setServiceFee(commodityDTO.getServiceFee() == null ? "0.00" : commodityDTO.getServiceFee().toString());
+                    InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
+                    serveToRenewalVO.setInsuranceInfo(insuranceInfo);
+                    serveToRenewalVO.setTags(insuranceInfo.getTags() == null ? new String[0] : insuranceInfo.getTags());
+
+                }
+            }
+            serveToRenewalVOList.add(serveToRenewalVO);
+        });
+    }
+
+    /*private void assembleServeToRenewalVO(List<ServeES> serveESList, List<ServeToRenewalVO> serveToRenewalVOList) {
+        ArrayList<Integer> contractCommodityIdList = new ArrayList<>();
         ArrayList<Integer> orderCommodityIdList = new ArrayList<>();
         ArrayList<String> serveNoListWithContractCommodity = new ArrayList<>();
         ArrayList<String> serveNoListWithOrderCommodity = new ArrayList<>();
@@ -212,6 +264,6 @@ public class RenewableServeListQryExe {
             }
             serveToRenewalVOList.add(serveToRenewalVO);
         });
-    }
+    }*/
 
 }

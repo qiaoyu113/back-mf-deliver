@@ -140,21 +140,28 @@ public class ServeES {
 
     @ApiModelProperty(value = "排序规则")
     private Integer sort;
+
     @ApiModelProperty(value = "预选状态")
     private Integer isPreselected;
+
     @ApiModelProperty(value = "验车状态")
     private Integer isCheck;
+
     @ApiModelProperty(value = "保险状态")
     private Integer isInsurance;
+
     @ApiModelProperty(value = "交付状态")
     private Integer deliverStatus;
 
     @ApiModelProperty(value = "服务单状态")
     private Integer serveStatus;
+
     @ApiModelProperty(value = "里程")
     private Double mileage;
+
     @ApiModelProperty(value = "车龄")
     private Double vehicleAge;
+
     @ApiModelProperty(value = "处理违章状态")
     private Integer isDeduction;
 
@@ -170,8 +177,11 @@ public class ServeES {
     @ApiModelProperty(value = "替换车标识")
     private Integer replaceFlag;
 
-    @ApiModelProperty(value = "商品id")
+    @ApiModelProperty(value = "订单商品id")
     private Integer goodsId;
+
+    @ApiModelProperty(value = "合同商品id")
+    private Integer contractCommodityId;
 
     @ApiModelProperty(value = "租金")
     @MultiField(
@@ -196,6 +206,7 @@ public class ServeES {
     private Integer orgId;
 
     private Integer saleId;
+
     private Integer carServiceId;
 
     private Date updateTime;

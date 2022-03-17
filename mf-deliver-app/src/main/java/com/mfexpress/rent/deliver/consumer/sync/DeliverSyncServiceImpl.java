@@ -84,6 +84,7 @@ public class DeliverSyncServiceImpl implements EsSyncHandlerI {
         qry.setLimit(100);
         // 只维护状态为代收车和已收车和已完成的交付单
         qry.setDeliverStatus(Arrays.asList(DeliverEnum.IS_RECOVER.getCode(), DeliverEnum.RECOVER.getCode(), DeliverEnum.COMPLETED.getCode()));
+        qry.setStatus(Arrays.asList(DeliverStatusEnum.VALID.getCode(), DeliverStatusEnum.HISTORICAL.getCode()));
         for (int page = 1; ; page++) {
             qry.setPage(page);
             Result<List<String>> deliverNoListResult = deliverAggregateRootApi.getDeliverNoListByQry(qry);

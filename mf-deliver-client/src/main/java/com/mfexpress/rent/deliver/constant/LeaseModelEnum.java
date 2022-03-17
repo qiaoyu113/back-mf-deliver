@@ -22,4 +22,13 @@ public enum LeaseModelEnum {
     public String getName() {
         return this.name;
     }
+
+    public static LeaseModelEnum getEnum(Integer code) {
+        for (LeaseModelEnum singleEnum : LeaseModelEnum.values()) {
+            if (singleEnum.getCode() == code) {
+                return singleEnum;
+            }
+        }
+        return null;
+    }
 }

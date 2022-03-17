@@ -18,6 +18,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
 
 @RestController("serveWebController")
 @RequestMapping("/api/deliver/v3/serve/web")
@@ -47,6 +49,13 @@ public class ServeController {
             throw new CommonException(ResultErrorEnum.LOGIN_OVERDUE.getCode(), ResultErrorEnum.LOGIN_OVERDUE.getName());
         }
         return Result.getInstance(serveServiceI.exportServeLeaseTermAmount(qry, tokenInfo)).success();
+    }
+
+    @ApiOperation("服务单全部租期费用列表导出数据")
+    @PostMapping("/exportServeLeaseTermAmountData")
+    @PrintParam
+    public Result<List<Map<String,Object>>> exportServeLeaseTermAmountData(@RequestBody Map<String,Object> map) {
+        return Result.getInstance(serveServiceI.exportServeLeaseTermAmountData(map)).success();
     }
 
     @ApiOperation("重新激活")

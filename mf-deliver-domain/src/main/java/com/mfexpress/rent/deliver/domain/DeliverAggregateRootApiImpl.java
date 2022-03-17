@@ -523,4 +523,16 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         return Result.getInstance(0).success();
     }
 
+    @Override
+    @PostMapping("/getDeliverListByQry")
+    @PrintParam
+    public Result<List<DeliverDTO>> getDeliverListByQry(@RequestBody DeliverQry deliverQry) {
+        List<DeliverEntity> deliverEntityList = deliverGateway.getDeliverListByQry(deliverQry);
+        if(deliverEntityList.isEmpty()){
+            return Result.getInstance((List<DeliverDTO>)null).success();
+        }
+        List<DeliverDTO> deliverDTOS = BeanUtil.copyToList(deliverEntityList, DeliverDTO.class, new CopyOptions().ignoreError());
+        return Result.getInstance(deliverDTOS).success();
+    }
+
 }

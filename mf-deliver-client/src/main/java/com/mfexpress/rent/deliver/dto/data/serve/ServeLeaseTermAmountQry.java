@@ -18,7 +18,7 @@ public class ServeLeaseTermAmountQry extends ListQry {
     private Integer carId;
 
     @ApiModelProperty(value = "车型id")
-    private Integer modelId;
+    private Integer carModelId;
 
     @ApiModelProperty(value = "大区id")
     private Integer orgId;
@@ -31,5 +31,7 @@ public class ServeLeaseTermAmountQry extends ListQry {
 
     @ApiModelProperty(value = "租赁服务单状态")
     private Integer serveStatus;
+
+    private Integer userOfficeId;
 
 }

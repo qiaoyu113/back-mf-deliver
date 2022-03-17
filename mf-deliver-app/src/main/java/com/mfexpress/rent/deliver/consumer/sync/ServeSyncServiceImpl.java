@@ -341,30 +341,33 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
         } else if (serveEs.getServeStatus().equals(ServeEnum.PRESELECTED.getCode()) && JudgeEnum.YES.getCode().equals(serveEs.getIsCheck())) {
             // 待投保
             sort = DeliverSortEnum.FIVE.getSort();
-        } else if ((serveEs.getServeStatus().equals(ServeEnum.DELIVER.getCode()) || serveEs.getServeStatus().equals(ServeEnum.REPAIR.getCode())) && serveEs.getDeliverStatus().equals(DeliverEnum.DELIVER.getCode())) {
+        } else if (serveEs.getServeStatus().equals(ServeEnum.DELIVER.getCode()) && serveEs.getDeliverStatus().equals(DeliverEnum.DELIVER.getCode())) {
             // 发车已完成
             sort = DeliverSortEnum.SIX.getSort();
+        } else if (serveEs.getServeStatus().equals(ServeEnum.REPAIR.getCode()) && serveEs.getDeliverStatus().equals(DeliverEnum.DELIVER.getCode())){
+            // 发车已完成
+            sort = DeliverSortEnum.SEVEN.getSort();
         } else if (serveEs.getServeStatus().equals(ServeEnum.COMPLETED.getCode())) {
-            // 收车已完成
-            sort = DeliverSortEnum.TWELVE.getSort();
+            // 服务单已完成
+            sort = DeliverSortEnum.FIFTEEN.getSort();
         }else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())
                 && serveEs.getIsCheck().equals(JudgeEnum.NO.getCode())) {
             //收车中 待验车
-            sort = DeliverSortEnum.SEVEN.getSort();
+            sort = DeliverSortEnum.TEN.getSort();
         } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
                 && serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.NOSIGN.getCode()){
             // 收车中 待收车
-            sort = DeliverSortEnum.EIGHT.getSort();
+            sort = DeliverSortEnum.ELEVEN.getSort();
         } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())
                 && (serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.GENERATING.getCode() || serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.SIGNING.getCode())){
             // 收车中 签署中
-            sort = DeliverSortEnum.NINE.getSort();
+            sort = DeliverSortEnum.TWELVE.getSort();
         } else if (serveEs.getServeStatus().equals(ServeEnum.RECOVER.getCode()) && DeliverEnum.RECOVER.getCode().equals(serveEs.getDeliverStatus()) && JudgeEnum.NO.getCode().equals(serveEs.getIsInsurance())) {
             // 已收车  待退保
-            sort = DeliverSortEnum.TEN.getSort();
+            sort = DeliverSortEnum.THIRTEEN.getSort();
         } else if (serveEs.getServeStatus().equals(ServeEnum.RECOVER.getCode()) && DeliverEnum.RECOVER.getCode().equals(serveEs.getDeliverStatus()) && JudgeEnum.YES.getCode().equals(serveEs.getIsInsurance())) {
             // 已收车  待处理违章
-            sort = DeliverSortEnum.ELEVEN.getSort();
+            sort = DeliverSortEnum.FOURTEEN.getSort();
         }
 
         return sort;

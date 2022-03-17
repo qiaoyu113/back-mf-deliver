@@ -22,7 +22,7 @@ public class SyncController {
     private EsSyncHandlerI serveSyncServiceI;
 
     @Resource(name = "deliverSyncServiceImpl")
-    private EsSyncHandlerI deliverSyncServiceImpl;
+    private EsSyncHandlerI deliverSyncServiceI;
 
     @GetMapping("/execServeAll")
     @ApiOperation("同步全部服务单")
@@ -49,14 +49,14 @@ public class SyncController {
     @GetMapping("/execDeliverAll")
     @ApiOperation("同步全部交付单")
     public Result<Boolean> execDeliverAll(@RequestParam("indexVersionName") String indexVersionName) {
-        boolean isSuccess = deliverSyncServiceImpl.execAll(indexVersionName);
+        boolean isSuccess = deliverSyncServiceI.execAll(indexVersionName);
         return isSuccess ?Result.getInstance(true).success():Result.getInstance(false).fail(ResultErrorEnum.SERRVER_ERROR.getCode(), "全量同步可能全部失败或部分失败，详情请查看日志");
     }
 
     @GetMapping("/switchDeliverAlias")
     @ApiOperation("切换交付单索引的别名")
     public Result<Boolean> switchDeliverAlias(@RequestParam("alias") String alias, @RequestParam("indexVersion") String indexVersionName){
-        return Result.getInstance(deliverSyncServiceImpl.switchAliasIndex(alias, indexVersionName)).success();
+        return Result.getInstance(deliverSyncServiceI.switchAliasIndex(alias, indexVersionName)).success();
     }
 
 }

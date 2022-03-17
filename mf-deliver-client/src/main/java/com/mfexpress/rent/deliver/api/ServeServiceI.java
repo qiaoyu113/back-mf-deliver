@@ -6,6 +6,7 @@ import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ServeServiceI {
 
@@ -41,4 +42,6 @@ public interface ServeServiceI {
     Integer reactivate(ReactivateServeCmd cmd, TokenInfo tokenInfo);
 
     ServeRecoverDetailVO getServeRecoverDetailByDeliver(ServeQryByDeliverCmd cmd);
+
+    List<Map<String,Object>> exportServeLeaseTermAmountData(Map<String, Object> map);
 }

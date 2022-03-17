@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ServeServiceImpl implements ServeServiceI {
@@ -49,6 +50,12 @@ public class ServeServiceImpl implements ServeServiceI {
 
     @Resource
     private ServeLeaseTermAmountQryExe serveLeaseTermAmountQryExe;
+
+    @Resource
+    private ExportServeLeaseTermAmountCmdExe exportServeLeaseTermAmountCmdExe;
+
+    @Resource
+    private ExportServeLeaseTermAmountDataQryExe exportServeLeaseTermAmountDataQryExe;
 
     @Override
     public ServeListVO getServeListVoByOrderNoAll(ServeQryListCmd serveQryListCmd) {
@@ -120,7 +127,7 @@ public class ServeServiceImpl implements ServeServiceI {
 
     @Override
     public Integer exportServeLeaseTermAmount(ServeLeaseTermAmountQry qry, TokenInfo tokenInfo) {
-        return null;
+        return exportServeLeaseTermAmountCmdExe.execute(qry, tokenInfo);
     }
 
     @Override
@@ -131,6 +138,11 @@ public class ServeServiceImpl implements ServeServiceI {
     @Override
     public ServeRecoverDetailVO getServeRecoverDetailByDeliver(ServeQryByDeliverCmd cmd) {
         return serveRecoverDetailQryByDeliverExe.execute(cmd);
+    }
+
+    @Override
+    public List<Map<String, Object>> exportServeLeaseTermAmountData(Map<String, Object> map) {
+        return exportServeLeaseTermAmountDataQryExe.execute(map);
     }
 
 }

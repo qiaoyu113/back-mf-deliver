@@ -372,6 +372,11 @@
                 <artifactId>elasticsearch-rest-client</artifactId>
                 <version>${elasticsearch.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.mfexpress.billing.customer</groupId>
+                <artifactId>mf-customer-billing-client</artifactId>
+                <version>${project.dependents.version}</version>
+            </dependency>
 
             <!--阿里云任务调度相关-->
             <!--<dependency>

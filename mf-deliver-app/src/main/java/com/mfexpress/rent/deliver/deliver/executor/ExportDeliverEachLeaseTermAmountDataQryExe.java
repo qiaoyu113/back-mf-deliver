@@ -1,0 +1,26 @@
+package com.mfexpress.rent.deliver.deliver.executor;
+
+import cn.hutool.core.bean.BeanUtil;
+import com.mfexpress.component.response.PagePagination;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverEachLeaseTermAmountVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeQryCmd;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Component
+public class ExportDeliverEachLeaseTermAmountDataQryExe {
+
+    @Resource
+    private DeliverEachLeaseTermAmountQryExe qryExe;
+
+    public List<Map<String, Object>> execute(Map<String, Object> map) {
+        ServeQryCmd qry = (ServeQryCmd) map.get("ServeQryCmd");
+        PagePagination<DeliverEachLeaseTermAmountVO> result = qryExe.execute(qry);
+        return result.getList().stream().map(BeanUtil::beanToMap).collect(Collectors.toList());
+    }
+
+}

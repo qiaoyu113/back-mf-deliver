@@ -116,4 +116,7 @@ public interface DeliverAggregateRootApi {
 
     @PostMapping("/toDeductionByDeliver")
     Result<Integer> toDeductionByDeliver(@RequestBody DeliverDTO deliverDTOToUpdate);
+
+    @PostMapping("/getDeliverListByQry")
+    Result<List<DeliverDTO>> getDeliverListByQry(@RequestBody DeliverQry deliverQry);
 }

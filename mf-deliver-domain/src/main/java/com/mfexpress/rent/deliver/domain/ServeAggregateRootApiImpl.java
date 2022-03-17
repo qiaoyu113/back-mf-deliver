@@ -130,6 +130,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setRemark("");
                 serve.setRent(serveVehicleDTO.getRent());
                 serve.setGoodsId(serveVehicleDTO.getGoodsId());
+                serve.setContractCommodityId(serveVehicleDTO.getContractCommodityId());
 
                 serve.setContractId(serveVehicleDTO.getContractId());
                 serve.setOaContractCode(serveVehicleDTO.getOaContractCode());
@@ -537,6 +538,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             serve.setUpdateId(cmd.getOperatorId());
             serve.setRenewalType(ServeRenewalTypeEnum.ACTIVE.getCode());
             serve.setExpectRecoverDate(renewalServeCmd.getLeaseEndDate());
+            // goodsId为合同商品id，不应更改服务单的商品id字段
+            serve.setContractCommodityId(renewalServeCmd.getGoodsId());
+            serve.setGoodsId(null);
 
             ServeChangeRecordPO record = new ServeChangeRecordPO();
             ServeEntity rawDataServe = serveMap.get(serve.getServeNo());
@@ -546,9 +550,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             record.setServeNo(serve.getServeNo());
             record.setType(ServeChangeRecordEnum.RENEWAL.getCode());
             record.setRenewalType(ServeRenewalTypeEnum.ACTIVE.getCode());
-            record.setRawGoodsId(rawDataServe.getGoodsId());
+            record.setRawGoodsId(rawDataServe.getContractCommodityId());
             record.setRawData(JSONUtil.toJsonStr(rawDataServe));
-            record.setNewGoodsId(serve.getGoodsId());
+            record.setNewGoodsId(serve.getContractCommodityId());
             record.setNewData(JSONUtil.toJsonStr(serve));
             record.setCreatorId(cmd.getOperatorId());
             record.setNewBillingAdjustmentDate(serve.getBillingAdjustmentDate());
@@ -862,7 +866,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         }
 
         long betweenDays = DateUtil.between(recoverVehicleEntity.getRecoverVehicleTime(), DateUtil.parse(serveEntity.getExpectRecoverDate()), DateUnit.DAY);
-        if (betweenDays <= 15) {
+        if (betweenDays < 15) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "收车日期与预计收车日期过近，服务单不允许激活");
         }
 

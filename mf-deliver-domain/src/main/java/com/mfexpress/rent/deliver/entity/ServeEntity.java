@@ -73,6 +73,8 @@ public class ServeEntity implements ServeEntityApi {
 
     private Integer goodsId;
 
+    private Integer contractCommodityId;
+
     // 续签合同迭代增加的字段-----------start
     private Long contractId;
 
