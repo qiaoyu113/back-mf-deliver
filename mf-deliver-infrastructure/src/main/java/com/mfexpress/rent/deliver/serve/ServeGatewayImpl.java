@@ -202,7 +202,7 @@ public class ServeGatewayImpl implements ServeGateway {
         }
         if (Objects.nonNull(qry.getHasPaidDeposit()) && !qry.getHasPaidDeposit()) {
             criteria.andEqualTo("paidInDeposit", 0);
-        } else {
+        } else if (Objects.nonNull(qry.getHasPaidDeposit()) && qry.getHasPaidDeposit()) {
             criteria.andGreaterThan("paidInDeposit", 0);
         }
         if (CollectionUtil.isNotEmpty(qry.getStatusList())) {

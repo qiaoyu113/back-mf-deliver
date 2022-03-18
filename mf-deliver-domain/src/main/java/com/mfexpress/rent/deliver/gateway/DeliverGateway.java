@@ -31,7 +31,7 @@ public interface DeliverGateway {
 
     List<DeliverEntity> getDeliverByDeliverNoList(List<String> deliverNos);
 
-    DeliverEntity getDeliverByCarId(Integer carId);
+    List<DeliverEntity> getDeliverByCarId(Integer carId);
 
     List<DeliverEntity> getDeliverDTOSByCarIdList(List<Integer> carIds);
 
