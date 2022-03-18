@@ -200,9 +200,8 @@ public class ServeEntity implements ServeEntityApi {
         List<ServeChangeRecordPO> recordList = new ArrayList<>();
         for (ServeEntity serveEntity : serveList) {
             ServeEntity updateDeposit = new ServeEntity();
-            BeanUtil.copyProperties(serveEntity, updateDeposit);
             BigDecimal paidInDeposit = serveEntity.getPaidInDeposit();
-
+            updateDeposit.setServeNo(serveEntity.getServeNo());
             updateDeposit.setPaidInDeposit(paidInDeposit.add(updateDepositMap.get(serveEntity.getServeNo())));
             updateDeposit.setStatus(updateDeposit.getPaidInDeposit().compareTo(BigDecimal.ZERO) == 0 ? ServeEnum.COMPLETED.getCode() : updateDeposit.getStatus());
             serveGateway.updateServeByServeNo(serveEntity.getServeNo(), updateDeposit);

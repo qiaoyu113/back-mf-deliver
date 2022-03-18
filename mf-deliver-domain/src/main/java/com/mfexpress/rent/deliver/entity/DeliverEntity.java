@@ -107,12 +107,12 @@ public class DeliverEntity implements DeliverEntityApi {
 
     @Override
     public DeliverDTO getDeliverDTOByCarId(Integer carId) {
-        DeliverEntity deliverEntity = deliverGateway.getDeliverByCarId(carId);
-        if (Objects.isNull(deliverEntity)) {
+        List<DeliverEntity> deliverEntityList = deliverGateway.getDeliverByCarId(carId);
+        if (CollectionUtil.isEmpty(deliverEntityList)) {
             return null;
         }
         DeliverDTO deliverDTO = new DeliverDTO();
-        BeanUtil.copyProperties(deliverEntity, deliverDTO, new CopyOptions().ignoreError());
+        BeanUtil.copyProperties(deliverEntityList.get(0), deliverDTO, new CopyOptions().ignoreError());
         return deliverDTO;
     }
 
