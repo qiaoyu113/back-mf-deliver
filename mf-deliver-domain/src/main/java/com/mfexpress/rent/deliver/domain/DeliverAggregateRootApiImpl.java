@@ -445,12 +445,12 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/getLastDeliverByCarId")
     @PrintParam
     public Result<DeliverDTO> getLastDeliverByCarId(@RequestParam("carId") Integer carId) {
-        List<DeliverEntity> deliverByCarId = deliverGateway.getDeliverByCarId(carId);
-        if (CollectionUtil.isEmpty(deliverByCarId)) {
+        DeliverEntity deliverEntity = deliverGateway.getDeliverByCarId(carId);
+        if (Objects.isNull(deliverEntity)) {
             return Result.getInstance((DeliverDTO) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
         DeliverDTO deliverDTO = new DeliverDTO();
-        BeanUtils.copyProperties(deliverByCarId.get(0), deliverDTO);
+        BeanUtils.copyProperties(deliverEntity, deliverDTO);
         return Result.getInstance(deliverDTO).success();
     }
 
@@ -532,6 +532,17 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
             return Result.getInstance((List<DeliverDTO>)null).success();
         }
         List<DeliverDTO> deliverDTOS = BeanUtil.copyToList(deliverEntityList, DeliverDTO.class, new CopyOptions().ignoreError());
+        return Result.getInstance(deliverDTOS).success();
+    }
+
+    @Override
+    @PostMapping("/getMakeDeliverDTOSByCarIdList")
+    public Result<List<DeliverDTO>> getMakeDeliverDTOSByCarIdList(@RequestBody List<Integer> carIds,@RequestParam("status") Integer status) {
+        List<DeliverEntity> deliverDTOSByCarIdList = deliverGateway.getMakeDeliverDTOSByCarIdList(carIds,status);
+        if (CollectionUtil.isEmpty(deliverDTOSByCarIdList)){
+            return Result.getInstance((List<DeliverDTO>)null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+        }
+        List<DeliverDTO> deliverDTOS = BeanUtil.copyToList(deliverDTOSByCarIdList, DeliverDTO.class,new CopyOptions().ignoreError());
         return Result.getInstance(deliverDTOS).success();
     }
 

@@ -119,4 +119,8 @@ public interface DeliverAggregateRootApi {
 
     @PostMapping("/getDeliverListByQry")
     Result<List<DeliverDTO>> getDeliverListByQry(@RequestBody DeliverQry deliverQry);
+
+    @PostMapping("/getMakeDeliverDTOSByCarIdList")
+    Result<List<DeliverDTO>> getMakeDeliverDTOSByCarIdList(@RequestBody List<Integer> carIds,@RequestParam("status") Integer status);
+
 }

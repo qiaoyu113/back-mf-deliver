@@ -6,5 +6,7 @@ import java.util.List;
 
 public interface DeliverVehicleEntityApi {
 
-    List<DeliverVehicleDTO>getDeliverVehicleListByDeliverNoList(List<String>deliverNoList);
+    List<DeliverVehicleDTO> getDeliverVehicleListByDeliverNoList(List<String> deliverNoList);
+
+    DeliverVehicleDTO getDeliverVehicleByDeliverNo(String deliverNo);
 }

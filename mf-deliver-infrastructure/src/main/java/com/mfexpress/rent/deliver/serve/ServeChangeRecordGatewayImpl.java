@@ -1,6 +1,8 @@
 package com.mfexpress.rent.deliver.serve;
 
 import com.mfexpress.rent.deliver.entity.ServeChangeRecordPO;
+import com.mfexpress.rent.deliver.dto.entity.ServeChangeRecord;
+import com.mfexpress.rent.deliver.entity.ServeChangeRecordPO;
 import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
 import com.mfexpress.rent.deliver.serve.repository.ServeChangeRecordMapper;
 import org.springframework.stereotype.Component;

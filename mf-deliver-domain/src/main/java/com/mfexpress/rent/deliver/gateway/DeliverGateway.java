@@ -33,7 +33,7 @@ public interface DeliverGateway {
 
     List<DeliverEntity> getDeliverByDeliverNoList(List<String> deliverNos);
 
-    List<DeliverEntity> getDeliverByCarId(Integer carId);
+    DeliverEntity getDeliverByCarId(Integer carId);
 
     List<DeliverEntity> getDeliverDTOSByCarIdList(List<Integer> carIds);
 
@@ -44,4 +44,10 @@ public interface DeliverGateway {
     List<DeliverEntity> getDeliverNoListByPage(DeliverQry listQry);
 
     List<DeliverEntity> getDeliverListByQry(DeliverQry deliverQry);
+    List<DeliverEntity>getDeliverNotCompleteByServeNoList(List<String>serveNoList);
+
+    List<DeliverEntity> getMakeDeliverDTOSByCarIdList(List<Integer> carIds, Integer type);
+
+
+
 }

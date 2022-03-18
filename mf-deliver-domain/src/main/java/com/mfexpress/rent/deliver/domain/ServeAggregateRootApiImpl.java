@@ -19,11 +19,22 @@ import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.domainservice.ServeDomainServiceI;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.entity.*;
 import com.mfexpress.rent.deliver.gateway.*;
+import com.mfexpress.rent.deliver.entity.DeliverEntity;
+import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
+import com.mfexpress.rent.deliver.entity.ServeChangeRecordPO;
+import com.mfexpress.rent.deliver.entity.ServeEntity;
+import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
+import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
+import com.mfexpress.rent.deliver.gateway.DeliverGateway;
+import com.mfexpress.rent.deliver.gateway.DeliverVehicleGateway;
+import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
+import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import io.swagger.annotations.Api;
@@ -64,6 +75,12 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @Resource
     private DeliverVehicleGateway deliverVehicleGateway;
 
+    @Resource
+    private DeliverEntityApi deliverEntityApi;
+    @Resource
+    private ServeEntityApi serveEntityApi;
+    @Resource
+    private ServeDomainServiceI serveDomainServiceI;
     @Resource
     private RecoverVehicleGateway recoverVehicleGateway;
 
@@ -141,6 +158,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setBillingAdjustmentDate("");
                 serve.setRenewalType(0);
                 serve.setExpectRecoverDate("");
+                serve.setPayableDeposit(BigDecimal.valueOf(serveVehicleDTO.getDeposit()));
+                serve.setPaidInDeposit(BigDecimal.valueOf(serveVehicleDTO.getDeposit()));
                 serveList.add(serve);
             }
         }
@@ -839,10 +858,45 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     }
 
     @Override
-    @PostMapping("/getPageServeDepositListByQry")
-    public Result<PagePagination<ServeDepositDTO>> getPageServeDepositListByQry(@RequestBody ServeDepositQry serveDepositQry) {
-        return null;
+    @PostMapping("/getPageServeDepositList")
+    @PrintParam
+    public Result<PagePagination<ServeDepositDTO>> getPageServeDepositList(@RequestBody CustomerDepositListDTO customerDepositLisDTO) {
+        return Result.getInstance(serveDomainServiceI.getPageServeDeposit(customerDepositLisDTO)).success();
     }
+
+    @Override
+    @PostMapping("/unLockDeposit")
+    @PrintParam
+    public Result unLockDeposit(@RequestParam("serveNoList") List<String> serveNoList, @RequestParam("creatorId") Integer creatorId) {
+        //查询需要解锁得服务单押金列表
+        List<ServeDTO> serveList = serveEntityApi.getServeListByServeNoList(serveNoList);
+        Map<String, BigDecimal> updateDepositMap = new HashMap<>();
+        serveList.forEach(serveDTO -> {
+            updateDepositMap.put(serveDTO.getServeNo(), serveDTO.getPaidInDeposit().negate());
+        });
+        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, creatorId);
+        return Result.getInstance(true).success();
+    }
+
+    @Override
+    @PostMapping("/getCustomerDepositLockList")
+    @PrintParam
+    public Result<List<CustomerDepositLockListDTO>> getCustomerDepositLockList(@RequestBody List<String> serveNoList) {
+        return Result.getInstance(serveDomainServiceI.getCustomerDepositLockList(serveNoList));
+    }
+
+    @Override
+    @PostMapping("/lockDeposit")
+    @PrintParam
+    public Result lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList) {
+        Map<String, BigDecimal> updateDepositMap = new HashMap<>();
+        confirmDTOList.forEach(confirmDTO -> {
+            updateDepositMap.put(confirmDTO.getServeNo(), confirmDTO.getLockAmount());
+        });
+        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, confirmDTOList.get(0).getCreatorId());
+        return Result.getInstance(true).success();
+    }
+
 
     @Override
     @PostMapping("/reactiveServe")

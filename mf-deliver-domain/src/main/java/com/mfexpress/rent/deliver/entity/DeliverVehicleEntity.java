@@ -16,6 +16,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 @Data
 @AllArgsConstructor
@@ -51,7 +52,19 @@ public class DeliverVehicleEntity implements DeliverVehicleEntityApi {
 
     @Override
     public List<DeliverVehicleDTO> getDeliverVehicleListByDeliverNoList(List<String> deliverNoList) {
+        if (CollectionUtil.isEmpty(deliverNoList)) {
+            return CollectionUtil.newArrayList();
+        }
         List<DeliverVehicleEntity> deliverList = deliverVehicleGateway.getDeliverVehicleByDeliverNoList(deliverNoList);
-        return CollectionUtil.isEmpty(deliverList) ? null : BeanUtil.copyToList(deliverList, DeliverVehicleDTO.class, new CopyOptions().ignoreError());
+        return CollectionUtil.isEmpty(deliverList) ? CollectionUtil.newArrayList() : BeanUtil.copyToList(deliverList, DeliverVehicleDTO.class, new CopyOptions().ignoreError());
+    }
+
+    @Override
+    public DeliverVehicleDTO getDeliverVehicleByDeliverNo(String deliverNo) {
+        DeliverVehicleEntity deliverVehicle = deliverVehicleGateway.getDeliverVehicleByDeliverNo(deliverNo);
+        if (Objects.isNull(deliverNo)) {
+            return null;
+        }
+        return BeanUtil.copyProperties(deliverVehicle, DeliverVehicleDTO.class);
     }
 }

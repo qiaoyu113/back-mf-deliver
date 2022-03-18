@@ -56,14 +56,14 @@ public interface ServeAggregateRootApi {
     Result<PagePagination<ServeDailyDTO>> getServeDailyDTO(@RequestBody ListQry listQry);
 
     /**
-     * @deprecated 使用 getServeDTOByServeNoList
      * @param serveNoList 服务单编号
+     * @deprecated 使用 getServeDTOByServeNoList
      */
     @PostMapping("/getServeMapByServeNoList")
     Result<Map<String, Serve>> getServeMapByServeNoList(@RequestBody List<String> serveNoList);
 
     @PostMapping("/getServeDTOByServeNoList")
-    Result<List<ServeDTO>>getServeDTOByServeNoList(@RequestBody List<String>serveNoList);
+    Result<List<ServeDTO>> getServeDTOByServeNoList(@RequestBody List<String> serveNoList);
 
     @PostMapping("/getCycleServe")
     Result<PagePagination<ServeDTO>> getCycleServe(@RequestBody ServeCycleQryCmd serveCycleQryCmd);
@@ -94,14 +94,15 @@ public interface ServeAggregateRootApi {
 
     /**
      * 根据客户查询租赁中的服务单
+     *
      * @param customerIdList 客户
      * @return 服务单
      */
     @PostMapping("/getServeByCustomerIdAndDeliver")
-    Result<List<ServeDTO>>getServeByCustomerIdAndDeliver(@RequestBody List<Integer>customerIdList);
+    Result<List<ServeDTO>> getServeByCustomerIdAndDeliver(@RequestBody List<Integer> customerIdList);
 
     @PostMapping("/getServeByCustomerIdAndRecover")
-    Result<List<ServeDTO>>getServeByCustomerIdAndRecover(@RequestBody List<Integer>customerIdList);
+    Result<List<ServeDTO>> getServeByCustomerIdAndRecover(@RequestBody List<Integer> customerIdList);
 
     @PostMapping("/getCountByQry")
     Result<Long> getCountByQry(@RequestBody ServeListQry qry);
@@ -109,8 +110,33 @@ public interface ServeAggregateRootApi {
     @PostMapping("/getPageServeByQry")
     Result<PagePagination<Serve>> getPageServeByQry(@RequestBody ServeListQry qry);
 
-    @PostMapping("/getPageServeDepositListByQry")
-    Result<PagePagination<ServeDepositDTO>>getPageServeDepositListByQry(@RequestBody ServeDepositQry serveDepositQry);
+    @PostMapping("/getPageServeDepositList")
+    Result<PagePagination<ServeDepositDTO>> getPageServeDepositList(@RequestBody CustomerDepositListDTO customerDepositLisDTO);
+
+    /**
+     * 解锁押金
+     *
+     * @param serveNoList 服务单编号
+     */
+    @PostMapping("/unLockDeposit")
+    Result<Boolean> unLockDeposit(@RequestParam("serveNoList") List<String> serveNoList, @RequestParam("creatorId") Integer creatorId);
+
+    /**
+     * 获取批量锁定数据页面
+     *
+     * @param serveNoList 选中服务单号
+     * @return 锁定押金数据
+     */
+    @PostMapping("/getCustomerDepositLockList")
+    Result<List<CustomerDepositLockListDTO>> getCustomerDepositLockList(@RequestBody List<String> serveNoList);
+
+    /**
+     * 锁定押金
+     * @param confirmDTOList 锁定押金列表
+     * @return
+     */
+    @PostMapping("/lockDeposit")
+    Result <Boolean>lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList);
 
     @PostMapping("/reactiveServe")
     Result<Integer> reactiveServe(@RequestBody ReactivateServeCmd cmd);

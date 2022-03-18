@@ -20,6 +20,7 @@ import javax.persistence.Table;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 @Data
 @AllArgsConstructor
@@ -97,11 +98,44 @@ public class DeliverEntity implements DeliverEntityApi {
 
     @Override
     public List<DeliverDTO> getDeliverDTOListByServeNoList(List<String> serveNoList) {
+        if (CollectionUtil.isEmpty(serveNoList)) {
+            return CollectionUtil.newArrayList();
+        }
         List<DeliverEntity> deliverList = deliverGateway.getDeliverByServeNoList(serveNoList);
-        if (CollectionUtil.isEmpty(deliverList)) {
+        return CollectionUtil.isEmpty(deliverList) ? CollectionUtil.newArrayList() : BeanUtil.copyToList(deliverList, DeliverDTO.class, new CopyOptions().ignoreError());
+    }
+
+    @Override
+    public DeliverDTO getDeliverDTOByCarId(Integer carId) {
+        DeliverEntity deliverEntity = deliverGateway.getDeliverByCarId(carId);
+        if (Objects.isNull(deliverEntity)) {
             return null;
         }
-        return BeanUtil.copyToList(deliverList, DeliverDTO.class, new CopyOptions().ignoreError());
+        DeliverDTO deliverDTO = new DeliverDTO();
+        BeanUtil.copyProperties(deliverEntity, deliverDTO, new CopyOptions().ignoreError());
+        return deliverDTO;
+    }
+
+
+    @Override
+    public List<DeliverDTO> getDeliverNotComplete(List<String> serveNoList) {
+        if (CollectionUtil.isEmpty(serveNoList)) {
+            return CollectionUtil.newArrayList();
+        }
+        List<DeliverEntity> deliverList = deliverGateway.getDeliverNotCompleteByServeNoList(serveNoList);
+
+        return CollectionUtil.isEmpty(deliverList) ? CollectionUtil.newArrayList() : BeanUtil.copyToList(deliverList, DeliverDTO.class, new CopyOptions().ignoreError());
+    }
+
+    @Override
+    public DeliverDTO getDeliverByDeliverNo(String deliverNo) {
+        DeliverEntity deliverEntity = deliverGateway.getDeliverByDeliverNo(deliverNo);
+        if (Objects.isNull(deliverEntity)) {
+            return null;
+        }
+        DeliverDTO deliverDTO = new DeliverDTO();
+        BeanUtil.copyProperties(deliverEntity, deliverDTO, new CopyOptions().ignoreError());
+        return deliverDTO;
     }
 
     public void toHistory(ReactivateServeCmd cmd) {

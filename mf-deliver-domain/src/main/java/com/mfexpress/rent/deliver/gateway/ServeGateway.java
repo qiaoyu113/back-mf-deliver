@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.gateway;
 
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
+import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
@@ -37,4 +38,8 @@ public interface ServeGateway {
     List<ServeEntity>getServeByCustomerIdRecover(List<Integer>customerIdList);
 
     List<ServeEntity> getServeNoListByPage(ListQry listQry);
+
+    ServeEntity getServeDepositByServeNo(CustomerDepositListDTO qry);
+
+    PagePagination<ServeEntity>pageServeDeposit(CustomerDepositListDTO qry);
 }

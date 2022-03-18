@@ -66,4 +66,8 @@ public class ServeDTO {
     private Integer reactiveFlag;
 
     private Integer contractCommodityId;
+
+    private BigDecimal payableDeposit;
+
+    private BigDecimal paidInDeposit;
 }

@@ -15,4 +15,5 @@ public interface ServeChangeRecordGateway {
 
     List<ServeChangeRecordPO> getListByServeNoListAndType(List<String> serveNoList, Integer type);
 
+    List<ServeChangeRecordPO> getList(String serveNo);
 }

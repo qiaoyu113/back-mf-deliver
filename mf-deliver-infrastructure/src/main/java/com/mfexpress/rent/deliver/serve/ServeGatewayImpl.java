@@ -1,12 +1,12 @@
 package com.mfexpress.rent.deliver.serve;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.github.pagehelper.PageHelper;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.constant.DeliverStatusEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
-import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.entity.DeliverEntity;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
@@ -16,6 +16,7 @@ import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component
@@ -132,6 +133,7 @@ public class ServeGatewayImpl implements ServeGateway {
         if (null != qry.getReplaceFlag()) {
             criteria.andEqualTo("replaceFlag", qry.getReplaceFlag());
         }
+
         criteria.andIn("status", qry.getStatuses());
         List<ServeEntity> serveList = serveMapper.selectByExample(example);
         return PagePagination.getInstance(serveList);
@@ -185,5 +187,52 @@ public class ServeGatewayImpl implements ServeGateway {
 
         return serveMapper.selectByExample(example);
     }
+
+    @Override
+    public ServeEntity getServeDepositByServeNo(CustomerDepositListDTO qry) {
+        Example example = new Example(ServeEntity.class);
+        Example.Criteria criteria = example.createCriteria();
+        if (CollectionUtil.isNotEmpty(qry.getOrgIdList())) {
+            criteria.andIn("orgId", qry.getOrgIdList());
+        }
+        if (Objects.nonNull(qry.getCustomerId()) && qry.getCustomerId() != 0) {
+            criteria.andEqualTo("customerId", qry.getCustomerId());
+        }
+        if (Objects.nonNull(qry.getHasPaidDeposit()) && !qry.getHasPaidDeposit()) {
+            criteria.andEqualTo("paidInDeposit", 0);
+        } else {
+            criteria.andGreaterThan("paidInDeposit", 0);
+        }
+        if (CollectionUtil.isNotEmpty(qry.getStatusList())) {
+            criteria.andIn("status", qry.getStatusList());
+        }
+        criteria.andEqualTo("serveNo", qry.getServeNo());
+        return serveMapper.selectOneByExample(example);
+    }
+
+    @Override
+    public PagePagination<ServeEntity> pageServeDeposit(CustomerDepositListDTO qry) {
+        PageHelper.startPage(qry.getPage(), qry.getLimit());
+        Example example = new Example(ServeEntity.class);
+        Example.Criteria criteria = example.createCriteria();
+        if (CollectionUtil.isNotEmpty(qry.getOrgIdList())) {
+            criteria.andIn("orgId", qry.getOrgIdList());
+        }
+        if (Objects.nonNull(qry.getCustomerId()) && qry.getCustomerId() != 0) {
+            criteria.andEqualTo("customerId", qry.getCustomerId());
+        }
+        if (Objects.nonNull(qry.getHasPaidDeposit()) && !qry.getHasPaidDeposit()) {
+            criteria.andEqualTo("paidInDeposit", 0);
+        } else if (Objects.nonNull(qry.getHasPaidDeposit()) && qry.getHasPaidDeposit()) {
+            criteria.andGreaterThan("paidInDeposit", 0);
+        }
+        if (CollectionUtil.isNotEmpty(qry.getStatusList())) {
+            criteria.andIn("status", qry.getStatusList());
+        }
+        example.setOrderByClause("create_time DESC,paid_in_deposit DESC");
+        List<ServeEntity> serveEntityList = serveMapper.selectByExample(example);
+        return PagePagination.getInstance(serveEntityList);
+    }
+
 
 }
