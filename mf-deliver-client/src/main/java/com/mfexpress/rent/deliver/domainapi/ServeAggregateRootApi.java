@@ -137,4 +137,7 @@ public interface ServeAggregateRootApi {
      */
     @PostMapping("/lockDeposit")
     Result <Boolean>lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList);
+
+    @PostMapping("/getReplaceNumByCustomerIds")
+    Result<Map<Integer,Integer>> getReplaceNumByCustomerIds(@RequestBody List<Integer> customerIds);
 }
