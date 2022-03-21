@@ -18,6 +18,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.persistence.Id;
@@ -159,6 +160,7 @@ public class ServeEntity implements ServeEntityApi {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId) {
         List<String> serveNoList = new ArrayList<>(updateDepositMap.keySet());
         List<ServeEntity> serveList = serveGateway.getServeByServeNoList(serveNoList);
@@ -168,7 +170,7 @@ public class ServeEntity implements ServeEntityApi {
             BigDecimal paidInDeposit = serveEntity.getPaidInDeposit();
             updateDeposit.setServeNo(serveEntity.getServeNo());
             updateDeposit.setPaidInDeposit(paidInDeposit.add(updateDepositMap.get(serveEntity.getServeNo())));
-            updateDeposit.setStatus(updateDeposit.getPaidInDeposit().compareTo(BigDecimal.ZERO) == 0 ? ServeEnum.COMPLETED.getCode() : updateDeposit.getStatus());
+            updateDeposit.setStatus(updateDeposit.getPaidInDeposit().compareTo(BigDecimal.ZERO) == 0 ? ServeEnum.COMPLETED.getCode() : serveEntity.getStatus());
             serveGateway.updateServeByServeNo(serveEntity.getServeNo(), updateDeposit);
             //变更记录
             ServeChangeRecordPO serveChangeRecord = new ServeChangeRecordPO();
