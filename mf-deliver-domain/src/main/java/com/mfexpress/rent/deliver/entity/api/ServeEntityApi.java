@@ -31,5 +31,5 @@ public interface ServeEntityApi {
 
     ServeDTO getServeByServeNo(String serveNo);
 
-    void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId);
+    void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId,Boolean isLockFlag);
 }
