@@ -161,7 +161,7 @@ public class ServeEntity implements ServeEntityApi {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId) {
+    public void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId, Boolean isLockFlag) {
         List<String> serveNoList = new ArrayList<>(updateDepositMap.keySet());
         List<ServeEntity> serveList = serveGateway.getServeByServeNoList(serveNoList);
         List<ServeChangeRecordPO> recordList = new ArrayList<>();
@@ -170,7 +170,7 @@ public class ServeEntity implements ServeEntityApi {
             BigDecimal paidInDeposit = serveEntity.getPaidInDeposit();
             updateDeposit.setServeNo(serveEntity.getServeNo());
             updateDeposit.setPaidInDeposit(paidInDeposit.add(updateDepositMap.get(serveEntity.getServeNo())));
-            updateDeposit.setStatus(updateDeposit.getPaidInDeposit().compareTo(BigDecimal.ZERO) == 0 ? ServeEnum.COMPLETED.getCode() : serveEntity.getStatus());
+            updateDeposit.setStatus(isLockFlag ? serveEntity.getStatus() : ServeEnum.COMPLETED.getCode());
             serveGateway.updateServeByServeNo(serveEntity.getServeNo(), updateDeposit);
             //变更记录
             ServeChangeRecordPO serveChangeRecord = new ServeChangeRecordPO();
