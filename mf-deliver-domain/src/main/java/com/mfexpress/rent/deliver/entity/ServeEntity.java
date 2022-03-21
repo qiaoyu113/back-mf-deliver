@@ -115,10 +115,11 @@ public class ServeEntity implements ServeEntityApi {
             return null;
         }
         ServeDepositDTO serveDepositDTO = BeanUtil.copyProperties(serveEntity, ServeDepositDTO.class);
-        if (serveEntity.getStatus().equals(ServeEnum.REPAIR.getCode())) {
-            serveDepositDTO.setMaintainFeeConfirmFlag(false);
+        //维修费用确认情况
+        if (serveEntity.getStatus() < ServeEnum.DELIVER.getCode()) {
+            serveDepositDTO.setMaintainFeeConfirmFlag(null);
         } else {
-            serveDepositDTO.setMaintainFeeConfirmFlag(true);
+            serveDepositDTO.setMaintainFeeConfirmFlag(!serveEntity.getStatus().equals(ServeEnum.REPAIR.getCode()));
         }
         return serveDepositDTO;
 
@@ -132,7 +133,11 @@ public class ServeEntity implements ServeEntityApi {
         for (ServeEntity serveEntity : serveList) {
             ServeDepositDTO serveDepositDTO = BeanUtil.copyProperties(serveEntity, ServeDepositDTO.class);
             //维修费用确认情况
-            serveDepositDTO.setMaintainFeeConfirmFlag(!serveEntity.getStatus().equals(ServeEnum.REPAIR.getCode()));
+            if (serveEntity.getStatus() < ServeEnum.DELIVER.getCode()) {
+                serveDepositDTO.setMaintainFeeConfirmFlag(null);
+            } else {
+                serveDepositDTO.setMaintainFeeConfirmFlag(!serveEntity.getStatus().equals(ServeEnum.REPAIR.getCode()));
+            }
             depositDTOList.add(serveDepositDTO);
         }
         PagePagination<ServeDepositDTO> depositPagePagination = new PagePagination<>();
