@@ -28,6 +28,8 @@ public class ServeDepositDTO {
 
     @ApiModelProperty("品牌id")
     private Integer brandId;
+    @ApiModelProperty("车型id")
+    private Integer carModelId;
 
     @ApiModelProperty("服务单状态")
     private Integer status;
