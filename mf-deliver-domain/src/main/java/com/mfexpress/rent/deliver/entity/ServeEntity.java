@@ -168,7 +168,7 @@ public class ServeEntity implements ServeEntityApi {
             BigDecimal paidInDeposit = serveEntity.getPaidInDeposit();
             updateDeposit.setServeNo(serveEntity.getServeNo());
             updateDeposit.setPaidInDeposit(paidInDeposit.add(updateDepositMap.get(serveEntity.getServeNo())));
-            updateDeposit.setStatus(updateDeposit.getPaidInDeposit().compareTo(BigDecimal.ZERO) == 0 ? ServeEnum.COMPLETED.getCode() : updateDeposit.getStatus());
+            updateDeposit.setStatus(updateDeposit.getPaidInDeposit().compareTo(BigDecimal.ZERO) == 0 ? ServeEnum.COMPLETED.getCode() : serveEntity.getStatus());
             serveGateway.updateServeByServeNo(serveEntity.getServeNo(), updateDeposit);
             //变更记录
             ServeChangeRecordPO serveChangeRecord = new ServeChangeRecordPO();
