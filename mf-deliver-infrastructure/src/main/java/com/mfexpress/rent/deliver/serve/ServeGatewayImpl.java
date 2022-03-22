@@ -3,16 +3,20 @@ package com.mfexpress.rent.deliver.serve;
 import cn.hutool.core.collection.CollectionUtil;
 import com.github.pagehelper.PageHelper;
 import com.mfexpress.component.response.PagePagination;
+import com.mfexpress.order.dto.vo.ContractVO;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.serve.repository.ServeMapper;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -211,6 +215,27 @@ public class ServeGatewayImpl implements ServeGateway {
         example.setOrderByClause("create_time DESC,paid_in_deposit DESC");
         List<ServeEntity> serveEntityList = serveMapper.selectByExample(example);
         return PagePagination.getInstance(serveEntityList);
+    }
+
+    @Override
+    public Map<Integer, Integer> getReplaceNumByCustomerIds(List<Integer> customerIds) {
+        Example example = new Example(ServeEntity.class);
+        example.createCriteria().andEqualTo("replaceFlag",1).andIn("customerId",customerIds);
+        List<ServeEntity> serveEntities = serveMapper.selectByExample(example);
+        if (CollectionUtils.isEmpty(serveEntities)){
+            return new HashMap<>();
+        }
+
+        Map<Integer, List<ServeEntity>> integerListMap = serveEntities.stream().collect(Collectors.groupingBy(
+                ServeEntity::getCustomerId));
+
+        Map<Integer, Integer> mapAll = new HashMap<>();
+
+        for (Map.Entry<Integer, List<ServeEntity>> map : integerListMap.entrySet()){
+            mapAll.put(map.getKey(),map.getValue().size());
+        }
+
+        return mapAll;
     }
 
 

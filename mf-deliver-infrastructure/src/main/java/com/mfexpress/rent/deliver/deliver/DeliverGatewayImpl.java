@@ -12,6 +12,7 @@ import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class DeliverGatewayImpl implements DeliverGateway {

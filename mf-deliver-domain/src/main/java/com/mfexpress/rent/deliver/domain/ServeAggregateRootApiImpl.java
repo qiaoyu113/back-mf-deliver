@@ -868,6 +868,12 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         return Result.getInstance(true).success();
     }
 
+    @Override
+    @PostMapping("/getReplaceNumByCustomerIds")
+    public Result<Map<Integer, Integer>> getReplaceNumByCustomerIds(@RequestBody  List<Integer> customerIds) {
+        return Result.getInstance(serveGateway.getReplaceNumByCustomerIds(customerIds)).success();
+    }
+
 
     private String getExpectRecoverDate(Date deliverVehicleDate, int offset) {
         DateTime dateTime = DateUtil.endOfMonth(deliverVehicleDate);
