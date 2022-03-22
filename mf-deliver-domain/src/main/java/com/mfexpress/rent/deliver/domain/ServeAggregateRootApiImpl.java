@@ -455,6 +455,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         serve.setReplaceFlag(JudgeEnum.YES.getCode());
         // 替换车申请的服务单 其月租金应为0
         serve.setRent(BigDecimal.ZERO);
+        serve.setDeposit(0.0);
+        serve.setPaidInDeposit(BigDecimal.ZERO);
+        serve.setPayableDeposit(BigDecimal.ZERO);
 
         try {
             serveGateway.addServeList(Collections.singletonList(serve));
@@ -870,7 +873,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Override
     @PostMapping("/getReplaceNumByCustomerIds")
-    public Result<Map<Integer, Integer>> getReplaceNumByCustomerIds(@RequestBody  List<Integer> customerIds) {
+    public Result<Map<Integer, Integer>> getReplaceNumByCustomerIds(@RequestBody List<Integer> customerIds) {
         return Result.getInstance(serveGateway.getReplaceNumByCustomerIds(customerIds)).success();
     }
 
