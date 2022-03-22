@@ -126,7 +126,7 @@ public class ServeDomainServiceImpl implements ServeDomainServiceI {
                 RecoverVehicleDTO recoverVehicleDTO = recoverVehicleMap.get(deliverDTO.getDeliverNo());
                 supplyDepositData(serveDepositDTO, deliverDTO, deliverVehicleDTO, recoverVehicleDTO);
             }
-            if (serveDepositDTO.getStatus() < ServeEnum.RECOVER.getCode()) {
+            if (serveDepositDTO.getStatus() < ServeEnum.RECOVER.getCode() || serveDepositDTO.getStatus().equals(ServeEnum.REPAIR.getCode())) {
                 serveDepositDTO.setRecoverFeeConfirmFlag(null);
             } else {
                 serveDepositDTO.setRecoverFeeConfirmFlag(CollectionUtil.isEmpty(deliverNotCompletedMap.get(serveDepositDTO.getServeNo())));
@@ -169,7 +169,7 @@ public class ServeDomainServiceImpl implements ServeDomainServiceI {
         serveDepositDTO.setStatusDisplay(ServeEnum.getServeEnum(serveDepositDTO.getStatus()).getStatus());
         List<DeliverDTO> deliverNotCompleteList = deliverEntityApi.getDeliverNotComplete(Collections.singletonList(deliverDTO.getServeNo()));
         //收车费用状态
-        if (serveDepositDTO.getStatus() < ServeEnum.RECOVER.getCode()) {
+        if (serveDepositDTO.getStatus() < ServeEnum.RECOVER.getCode() || serveDepositDTO.getStatus().equals(ServeEnum.REPAIR.getCode())) {
             serveDepositDTO.setRecoverFeeConfirmFlag(null);
         } else {
             serveDepositDTO.setRecoverFeeConfirmFlag(CollectionUtil.isEmpty(deliverNotCompleteList));
