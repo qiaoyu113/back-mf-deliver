@@ -63,10 +63,11 @@ public class RecoverDeductionExe {
             throw new CommonException(result.getCode(), result.getMsg());
 
         }
-        Result<String> serveResult = serveAggregateRootApi.completed(recoverDeductionCmd.getServeNo());
-        if (serveResult.getCode() != 0) {
-            throw new CommonException(serveResult.getCode(), serveResult.getMsg());
-        }
+        //处理完违章不更新服务单状态
+//        Result<String> serveResult = serveAggregateRootApi.completed(recoverDeductionCmd.getServeNo());
+//        if (serveResult.getCode() != 0) {
+//            throw new CommonException(serveResult.getCode(), serveResult.getMsg());
+//        }
         //生成消分代办金额扣罚项
         DeductFeeCmd deductFeeCmd = new DeductFeeCmd();
         deductFeeCmd.setDamage(BigDecimal.valueOf(recoverDeductionCmd.getDamageFee() == null ? 0 : recoverDeductionCmd.getDamageFee()));
@@ -140,6 +141,6 @@ public class RecoverDeductionExe {
         map.put("serve_no", recoverDeductionCmd.getServeNo());
         syncServiceI.execOne(map);
 
-        return serveResult.getData();
+        return result.getData();
     }
 }
