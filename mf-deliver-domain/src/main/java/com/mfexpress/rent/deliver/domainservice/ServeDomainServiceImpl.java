@@ -4,7 +4,6 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUtil;
 import com.github.pagehelper.PageInfo;
 import com.mfexpress.component.response.PagePagination;
-import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
@@ -21,10 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -130,7 +126,11 @@ public class ServeDomainServiceImpl implements ServeDomainServiceI {
                 RecoverVehicleDTO recoverVehicleDTO = recoverVehicleMap.get(deliverDTO.getDeliverNo());
                 supplyDepositData(serveDepositDTO, deliverDTO, deliverVehicleDTO, recoverVehicleDTO);
             }
-            serveDepositDTO.setRecoverFeeConfirmFlag(CollectionUtil.isEmpty(deliverNotCompletedMap.get(serveDepositDTO.getServeNo())));
+            if (serveDepositDTO.getStatus() < ServeEnum.DELIVER.getCode()) {
+                serveDepositDTO.setRecoverFeeConfirmFlag(null);
+            } else {
+                serveDepositDTO.setRecoverFeeConfirmFlag(CollectionUtil.isEmpty(deliverNotCompletedMap.get(serveDepositDTO.getServeNo())));
+            }
 
 
         }
@@ -165,9 +165,15 @@ public class ServeDomainServiceImpl implements ServeDomainServiceI {
             pagePagination.setList(depositDTOList);
             return pagePagination;
         }
+
         serveDepositDTO.setStatusDisplay(ServeEnum.getServeEnum(serveDepositDTO.getStatus()).getStatus());
+        List<DeliverDTO> deliverNotCompleteList = deliverEntityApi.getDeliverNotComplete(Collections.singletonList(deliverDTO.getServeNo()));
         //收车费用状态
-        serveDepositDTO.setRecoverFeeConfirmFlag(deliverDTO.getDeliverStatus().equals(DeliverEnum.COMPLETED.getCode()));
+        if (serveDepositDTO.getStatus() < ServeEnum.DELIVER.getCode()) {
+            serveDepositDTO.setRecoverFeeConfirmFlag(null);
+        } else {
+            serveDepositDTO.setRecoverFeeConfirmFlag(CollectionUtil.isEmpty(deliverNotCompleteList));
+        }
 
         serveDepositDTO.setVehicleNum(deliverDTO.getCarNum());
         DeliverVehicleDTO deliverVehicleDTO = deliverVehicleEntityApi.getDeliverVehicleByDeliverNo(deliverDTO.getDeliverNo());

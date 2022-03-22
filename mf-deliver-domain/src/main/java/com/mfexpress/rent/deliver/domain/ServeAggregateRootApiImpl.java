@@ -845,7 +845,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         serveList.forEach(serveDTO -> {
             updateDepositMap.put(serveDTO.getServeNo(), serveDTO.getPaidInDeposit().negate());
         });
-        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, creatorId);
+        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, creatorId, false);
         return Result.getInstance(true).success();
     }
 
@@ -864,7 +864,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         confirmDTOList.forEach(confirmDTO -> {
             updateDepositMap.put(confirmDTO.getServeNo(), confirmDTO.getLockAmount());
         });
-        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, confirmDTOList.get(0).getCreatorId());
+        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, confirmDTOList.get(0).getCreatorId(), true);
         return Result.getInstance(true).success();
     }
 

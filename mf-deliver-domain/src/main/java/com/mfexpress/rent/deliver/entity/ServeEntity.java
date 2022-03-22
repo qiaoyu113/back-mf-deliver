@@ -18,6 +18,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.persistence.Id;
@@ -115,10 +116,11 @@ public class ServeEntity implements ServeEntityApi {
             return null;
         }
         ServeDepositDTO serveDepositDTO = BeanUtil.copyProperties(serveEntity, ServeDepositDTO.class);
-        if (serveEntity.getStatus().equals(ServeEnum.REPAIR.getCode())) {
-            serveDepositDTO.setMaintainFeeConfirmFlag(false);
+        //维修费用确认情况
+        if (serveEntity.getStatus() < ServeEnum.DELIVER.getCode()) {
+            serveDepositDTO.setMaintainFeeConfirmFlag(null);
         } else {
-            serveDepositDTO.setMaintainFeeConfirmFlag(true);
+            serveDepositDTO.setMaintainFeeConfirmFlag(!serveEntity.getStatus().equals(ServeEnum.REPAIR.getCode()));
         }
         return serveDepositDTO;
 
@@ -132,7 +134,11 @@ public class ServeEntity implements ServeEntityApi {
         for (ServeEntity serveEntity : serveList) {
             ServeDepositDTO serveDepositDTO = BeanUtil.copyProperties(serveEntity, ServeDepositDTO.class);
             //维修费用确认情况
-            serveDepositDTO.setMaintainFeeConfirmFlag(!serveEntity.getStatus().equals(ServeEnum.REPAIR.getCode()));
+            if (serveEntity.getStatus() < ServeEnum.DELIVER.getCode()) {
+                serveDepositDTO.setMaintainFeeConfirmFlag(null);
+            } else {
+                serveDepositDTO.setMaintainFeeConfirmFlag(!serveEntity.getStatus().equals(ServeEnum.REPAIR.getCode()));
+            }
             depositDTOList.add(serveDepositDTO);
         }
         PagePagination<ServeDepositDTO> depositPagePagination = new PagePagination<>();
@@ -154,17 +160,17 @@ public class ServeEntity implements ServeEntityApi {
     }
 
     @Override
-    public void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId) {
+    @Transactional(rollbackFor = Exception.class)
+    public void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId, Boolean isLockFlag) {
         List<String> serveNoList = new ArrayList<>(updateDepositMap.keySet());
         List<ServeEntity> serveList = serveGateway.getServeByServeNoList(serveNoList);
         List<ServeChangeRecordPO> recordList = new ArrayList<>();
         for (ServeEntity serveEntity : serveList) {
             ServeEntity updateDeposit = new ServeEntity();
-            BeanUtil.copyProperties(serveEntity, updateDeposit);
             BigDecimal paidInDeposit = serveEntity.getPaidInDeposit();
-
+            updateDeposit.setServeNo(serveEntity.getServeNo());
             updateDeposit.setPaidInDeposit(paidInDeposit.add(updateDepositMap.get(serveEntity.getServeNo())));
-            updateDeposit.setStatus(updateDeposit.getPaidInDeposit().compareTo(BigDecimal.ZERO) == 0 ? ServeEnum.COMPLETED.getCode() : updateDeposit.getStatus());
+            updateDeposit.setStatus(isLockFlag ? serveEntity.getStatus() : ServeEnum.COMPLETED.getCode());
             serveGateway.updateServeByServeNo(serveEntity.getServeNo(), updateDeposit);
             //变更记录
             ServeChangeRecordPO serveChangeRecord = new ServeChangeRecordPO();
