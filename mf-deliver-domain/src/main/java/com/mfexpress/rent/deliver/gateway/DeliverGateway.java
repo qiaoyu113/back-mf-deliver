@@ -3,6 +3,7 @@ package com.mfexpress.rent.deliver.gateway;
 import com.mfexpress.rent.deliver.entity.DeliverEntity;
 
 import java.util.List;
+import java.util.Map;
 
 public interface DeliverGateway {
     int addDeliver(List<DeliverEntity> deliverList);

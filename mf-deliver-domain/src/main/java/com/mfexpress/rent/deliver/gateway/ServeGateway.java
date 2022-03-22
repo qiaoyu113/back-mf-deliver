@@ -7,6 +7,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ServeGateway {
 
@@ -39,4 +40,6 @@ public interface ServeGateway {
     ServeEntity getServeDepositByServeNo(CustomerDepositListDTO qry);
 
     PagePagination<ServeEntity>pageServeDeposit(CustomerDepositListDTO qry);
+
+    Map<Integer,Integer> getReplaceNumByCustomerIds(List<Integer> customerIds);
 }
