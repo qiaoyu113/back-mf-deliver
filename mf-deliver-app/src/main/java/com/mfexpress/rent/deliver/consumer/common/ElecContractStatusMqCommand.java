@@ -233,7 +233,7 @@ public class ElecContractStatusMqCommand {
         }
 
         // 发送收车信息到mq，由合同域判断服务单所属的合同是否到已履约完成状态
-        // 租赁服务单1.1迭代，改为当服务单状态未已完成时，再向合同域发送此消息
+        // 租赁服务单1.1迭代，改为当服务单状态到已完成时，再向合同域发送此消息
         /*if (JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {
             ServeDTO serveDTOToNoticeContract = new ServeDTO();
             serveDTOToNoticeContract.setServeNo(serveDTO.getServeNo());

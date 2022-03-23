@@ -44,7 +44,7 @@ public class RecoverDeductionByDeliverExe {
     private String topic;
 
     public Integer execute(RecoverDeductionByDeliverCmd cmd, TokenInfo tokenInfo) {
-        Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(cmd.getDeliverNo());
+        Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByDeliverNo(cmd.getDeliverNo());
         if (ResultErrorEnum.SUCCESSED.getCode() != deliverDTOResult.getCode() || deliverDTOResult.getData() == null) {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "查询交付单失败");
         }

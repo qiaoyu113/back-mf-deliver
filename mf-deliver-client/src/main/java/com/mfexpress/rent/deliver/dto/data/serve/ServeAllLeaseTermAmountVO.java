@@ -76,6 +76,8 @@ public class ServeAllLeaseTermAmountVO {
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date expectRecoverDate;
 
+    private String expectRecoverDateChar;
+
     @ApiModelProperty(value = "是否允许重新激活，1：真，0：假")
     private Integer enableReactivate;
 

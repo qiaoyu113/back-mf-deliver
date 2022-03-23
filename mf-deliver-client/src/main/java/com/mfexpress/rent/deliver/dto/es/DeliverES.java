@@ -1,12 +1,8 @@
 package com.mfexpress.rent.deliver.dto.es;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.mfexpress.component.starter.elasticsearch.mapper.annotations.Document;
-import com.mfexpress.component.starter.elasticsearch.mapper.annotations.enums.StringType;
-import com.mfexpress.component.starter.elasticsearch.mapper.annotations.fieldtype.MultiField;
-import com.mfexpress.component.starter.elasticsearch.mapper.annotations.fieldtype.MultiNestedField;
-import com.mfexpress.component.starter.elasticsearch.mapper.annotations.fieldtype.StringField;
-import com.mfexpress.component.starter.elasticsearch.mapper.annotations.meta.MetaField_All;
+import com.mfexpress.component.starter.elasticsearch.mapping.mapper.annotations.Document;
+import com.mfexpress.component.starter.elasticsearch.mapping.mapper.annotations.meta.MetaField_All;
 import com.mfexpress.rent.deliver.constant.Constants;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

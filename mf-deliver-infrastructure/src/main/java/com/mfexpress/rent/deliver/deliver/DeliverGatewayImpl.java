@@ -1,12 +1,12 @@
 package com.mfexpress.rent.deliver.deliver;
 
 import com.github.pagehelper.PageHelper;
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.DeliverStatusEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.deliver.repository.DeliverMapper;
-import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverQry;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.entity.DeliverEntity;
@@ -107,7 +107,7 @@ public class DeliverGatewayImpl implements DeliverGateway {
     @Override
     public List<DeliverEntity> getDeliverByDeliverNoList(List<String> deliverNos) {
         Example example = new Example(DeliverEntity.class);
-        example.createCriteria().andIn("deliverNo", deliverNos).andEqualTo("status", DeliverStatusEnum.VALID.getCode());
+        example.createCriteria().andIn("deliverNo", deliverNos).andNotEqualTo("status", DeliverStatusEnum.INVALID.getCode());
         return deliverMapper.selectByExample(example);
     }
 
@@ -125,14 +125,14 @@ public class DeliverGatewayImpl implements DeliverGateway {
     @Override
     public int updateDeliverByDeliverNos(List<String> deliverNos, DeliverEntity deliver) {
         Example example = new Example(DeliverEntity.class);
-        example.createCriteria().andIn("deliverNo", deliverNos).andEqualTo("status", DeliverStatusEnum.VALID.getCode());
+        example.createCriteria().andIn("deliverNo", deliverNos).andNotEqualTo("status", DeliverStatusEnum.INVALID.getCode());
         return deliverMapper.updateByExampleSelective(deliver, example);
     }
 
     @Override
     public DeliverEntity getDeliverByDeliverNo(String deliverNo) {
         Example example = new Example(DeliverEntity.class);
-        example.createCriteria().andEqualTo("deliverNo", deliverNo).andEqualTo("status", DeliverStatusEnum.VALID.getCode());
+        example.createCriteria().andEqualTo("deliverNo", deliverNo).andNotEqualTo("status", DeliverStatusEnum.INVALID.getCode());
         return deliverMapper.selectOneByExample(example);
     }
 
@@ -140,7 +140,7 @@ public class DeliverGatewayImpl implements DeliverGateway {
     public List<DeliverEntity> getDeliverByCarId(Integer carId) {
         Example example = new Example(DeliverEntity.class);
         example.createCriteria()
-                .andEqualTo("carId", carId).andEqualTo("status", ValidStatusEnum.VALID.getCode());
+                .andEqualTo("carId", carId).andNotEqualTo("status", ValidStatusEnum.INVALID.getCode());
         example.setOrderByClause("create_time desc");
         return deliverMapper.selectByExample(example);
     }
@@ -190,7 +190,7 @@ public class DeliverGatewayImpl implements DeliverGateway {
     }
 
     @Override
-    public List<DeliverEntity> getDeliverNoListByPage(DeliverQry qry) {
+    public PagePagination<DeliverEntity> getDeliverNoListByPage(DeliverQry qry) {
         if(qry.getPage() == 0){
             qry.setPage(1);
         }
@@ -211,7 +211,8 @@ public class DeliverGatewayImpl implements DeliverGateway {
         }
         example.selectProperties("deliverNo");
 
-        return deliverMapper.selectByExample(example);
+        List<DeliverEntity> deliverEntityList = deliverMapper.selectByExample(example);
+        return PagePagination.getInstance(deliverEntityList);
     }
 
     @Override

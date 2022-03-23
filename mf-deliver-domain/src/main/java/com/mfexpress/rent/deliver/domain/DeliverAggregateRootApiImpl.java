@@ -7,6 +7,7 @@ import cn.hutool.json.JSONUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
 import com.mfexpress.rent.deliver.constant.*;
@@ -18,6 +19,7 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliver
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.entity.DeliverEntity;
 import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
+import com.mfexpress.rent.deliver.entity.ServeEntity;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.gateway.RecoverVehicleGateway;
@@ -467,15 +469,18 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     }
 
     @Override
-    @PostMapping("/getDeliverNoListByQry")
+    @PostMapping("/getDeliverNoListByPage")
     @PrintParam
-    public Result<List<String>> getDeliverNoListByQry(@RequestBody DeliverQry qry) {
-        List<DeliverEntity> deliverEntityList = deliverGateway.getDeliverNoListByPage(qry);
-        if(deliverEntityList.isEmpty()){
-            return Result.getInstance((List<String>) null).success();
-        }
+    public Result<PagePagination<String>> getDeliverNoListByPage(@RequestBody DeliverQry qry) {
+        PagePagination<DeliverEntity> pagePagination = deliverGateway.getDeliverNoListByPage(qry);
+        List<DeliverEntity> deliverEntityList = pagePagination.getList();
         List<String> deliverNoList = deliverEntityList.stream().map(DeliverEntity::getDeliverNo).collect(Collectors.toList());
-        return Result.getInstance(deliverNoList);
+
+        PagePagination<String> serveNoListPagePagination = new PagePagination<>();
+        serveNoListPagePagination.setPage(pagePagination.getPage());
+        serveNoListPagePagination.setPagination(pagePagination.getPagination());
+        serveNoListPagePagination.setList(deliverNoList);
+        return Result.getInstance(serveNoListPagePagination).success();
     }
 
     @Override
@@ -518,6 +523,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         DeliverEntity deliver = new DeliverEntity();
         BeanUtil.copyProperties(deliverDTOToUpdate, deliver);
         deliver.setIsDeduction(JudgeEnum.YES.getCode());
+        deliver.setDeliverStatus(DeliverEnum.COMPLETED.getCode());
         deliverGateway.updateDeliverByDeliverNo(deliver.getDeliverNo(), deliver);
 
         return Result.getInstance(0).success();

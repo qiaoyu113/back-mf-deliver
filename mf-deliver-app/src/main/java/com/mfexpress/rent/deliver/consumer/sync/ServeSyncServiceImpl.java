@@ -10,15 +10,15 @@ import com.mfexpress.common.domain.dto.DictDataDTO;
 import com.mfexpress.common.domain.dto.DictTypeDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.elasticsearch.mapper.builder.ESMappingBuilder;
+import com.mfexpress.component.starter.elasticsearch.mapping.mapper.builder.ESMappingBuilder;
 import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogRelation;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogTableFullName;
 import com.mfexpress.component.starter.tools.es.ESBatchSyncTools;
 import com.mfexpress.component.starter.tools.es.ElasticsearchTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
-import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.data.ProductDTO;
@@ -40,10 +40,7 @@ import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
-import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.BeanUtils;
@@ -92,16 +89,19 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
 
         // 批量同步
         esBatchSyncTools = new ESBatchSyncTools(elasticsearchTools, this, 5, indexVersionName, Constants.ES_SERVE_TYPE);
-        for(int page = 1;;page++){
+        for (int page = 1; ; page++) {
             ListQry listQry = new ListQry();
             listQry.setPage(page);
-            listQry.setLimit(20);
-            Result<List<String>> serveNoListResult = serveAggregateRootApi.getServeNoListByPage(listQry);
-            List<String> serveNoList = ResultDataUtils.getInstance(serveNoListResult).getDataOrException();
-            if(null == serveNoList || serveNoList.isEmpty()){
+            listQry.setLimit(100);
+            Result<PagePagination<String>> serveNoListPageResult = serveAggregateRootApi.getServeNoListByPage(listQry);
+            PagePagination<String> pagePagination = ResultDataUtils.getInstance(serveNoListPageResult).getDataOrException();
+            List<String> serveNoList = pagePagination.getList();
+            esBatchSyncTools.submit(serveNoList);
+
+            int totalPages = pagePagination.getPagination().getTotalPages();
+            if (page >= totalPages) {
                 break;
             }
-            esBatchSyncTools.submit(serveNoList);
         }
 
         esBatchSyncTools.syncClose();
@@ -109,26 +109,14 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
         return true;
     }
 
-    public static void main(String[] args) {
-        Map<String, String> indexMappingMap = null;
-        try {
-            indexMappingMap = ESMappingBuilder.getInstance().buildMappingAsString(ServeES.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "创建index失败，解析es对象出错");
-        }
-        String mapping = indexMappingMap.get(Constants.ES_SERVE_TYPE);
-        System.out.println(mapping);
-    }
-
-    private String createIndex(String indexVersionName){
+    private String createIndex(String indexVersionName) {
         if (StringUtils.isEmpty(indexVersionName)) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "indexName不能为空");
         }
         // 拼接环境信息到indexName中
         indexVersionName = DeliverUtils.getEnvVariable(indexVersionName);
         boolean exist = elasticsearchTools.existIndex(indexVersionName);
-        if(exist){
+        if (exist) {
             return indexVersionName;
         }
 
@@ -146,7 +134,7 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
                 .put("index.number_of_shards", 3)
                 .put("index.number_of_replicas", 1);
         boolean result = elasticsearchTools.createIndexWithMappingAndSetting(indexVersionName, Constants.ES_SERVE_TYPE, mapping, setting);
-        if(!result){
+        if (!result) {
             log.error("创建别名失败");
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "创建index失败，详情请查看日志");
         }
@@ -196,7 +184,7 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
     public Object assembleEsData(Map<String, String> map) {
         ServeES serveEs = new ServeES();
         String serveNo = map.get("serve_no");
-        if(StringUtils.isEmpty(serveNo)){
+        if (StringUtils.isEmpty(serveNo)) {
             return false;
         }
         Result<ServeDTO> serveResult = serveAggregateRootApi.getServeDtoByServeNo(serveNo);
@@ -207,6 +195,7 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
         BeanUtils.copyProperties(serveDTO, serveEs);
         serveEs.setContractNo(serveDTO.getOaContractCode());
         serveEs.setServeStatus(serveDTO.getStatus());
+        serveEs.setServeStatusSort(getServeStatusSort(serveEs));
         serveEs.setOrderId(serveDTO.getOrderId().toString());
         serveEs.setRent(serveDTO.getRent().toString());
         serveEs.setDeposit(serveDTO.getDeposit().toString());
@@ -319,16 +308,42 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
         esBatchSyncTools.addIndexRequest(indexRequest);
     }
 
+    private Integer getServeStatusSort(ServeES serveES) {
+        // 待预选＞已预选＞租赁中＞维修中＞已收车＞已完成
+        if (ServeEnum.NOT_PRESELECTED.getCode().equals(serveES.getServeStatus())) {
+            // 待预选
+            return 1;
+        } else if (ServeEnum.PRESELECTED.getCode().equals(serveES.getServeStatus())) {
+            // 已预选
+            return 2;
+        } else if (ServeEnum.DELIVER.getCode().equals(serveES.getServeStatus())) {
+            // 租赁中
+            return 3;
+        } else if (ServeEnum.REPAIR.getCode().equals(serveES.getServeStatus())) {
+            // 维修中
+            return 4;
+        } else if (ServeEnum.RECOVER.getCode().equals(serveES.getServeStatus())) {
+            // 已收车
+            return 5;
+        } else if (ServeEnum.COMPLETED.getCode().equals(serveES.getServeStatus())) {
+            // 已完成
+            return 6;
+        } else {
+            // 意外情况
+            return 0;
+        }
+    }
+
     private Integer getSort(ServeES serveEs) {
         int sort = DeliverSortEnum.ZERO.getSort();
         boolean deliverFlag = serveEs.getIsCheck().equals(JudgeEnum.NO.getCode()) || serveEs.getIsInsurance().equals(JudgeEnum.NO.getCode());
         boolean recoverFlag = serveEs.getIsInsurance().equals(JudgeEnum.NO.getCode()) || serveEs.getIsDeduction().equals(JudgeEnum.NO.getCode());
         if (serveEs.getServeStatus().equals(ServeEnum.PRESELECTED.getCode()) && serveEs.getDeliverStatus().equals(DeliverEnum.IS_DELIVER.getCode()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
                 && serveEs.getIsInsurance().equals(JudgeEnum.YES.getCode())) {
-            if(DeliverContractStatusEnum.NOSIGN.getCode() == serveEs.getDeliverContractStatus()){
+            if (DeliverContractStatusEnum.NOSIGN.getCode() == serveEs.getDeliverContractStatus()) {
                 // 待发车
                 sort = DeliverSortEnum.ONE.getSort();
-            }else{
+            } else {
                 // 签署中
                 sort = DeliverSortEnum.TWO.getSort();
             }
@@ -344,22 +359,22 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
         } else if (serveEs.getServeStatus().equals(ServeEnum.DELIVER.getCode()) && serveEs.getDeliverStatus().equals(DeliverEnum.DELIVER.getCode())) {
             // 发车已完成
             sort = DeliverSortEnum.SIX.getSort();
-        } else if (serveEs.getServeStatus().equals(ServeEnum.REPAIR.getCode()) && serveEs.getDeliverStatus().equals(DeliverEnum.DELIVER.getCode())){
+        } else if (serveEs.getServeStatus().equals(ServeEnum.REPAIR.getCode()) && serveEs.getDeliverStatus().equals(DeliverEnum.DELIVER.getCode())) {
             // 发车已完成
             sort = DeliverSortEnum.SEVEN.getSort();
         } else if (serveEs.getServeStatus().equals(ServeEnum.COMPLETED.getCode())) {
             // 服务单已完成
-            sort = DeliverSortEnum.FIFTEEN.getSort();
-        }else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())
+            sort = DeliverSortEnum.SIXTEEN.getSort();
+        } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())
                 && serveEs.getIsCheck().equals(JudgeEnum.NO.getCode())) {
             //收车中 待验车
             sort = DeliverSortEnum.TEN.getSort();
         } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
-                && serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.NOSIGN.getCode()){
+                && serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.NOSIGN.getCode()) {
             // 收车中 待收车
             sort = DeliverSortEnum.ELEVEN.getSort();
         } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())
-                && (serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.GENERATING.getCode() || serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.SIGNING.getCode())){
+                && (serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.GENERATING.getCode() || serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.SIGNING.getCode())) {
             // 收车中 签署中
             sort = DeliverSortEnum.TWELVE.getSort();
         } else if (serveEs.getServeStatus().equals(ServeEnum.RECOVER.getCode()) && DeliverEnum.RECOVER.getCode().equals(serveEs.getDeliverStatus()) && JudgeEnum.NO.getCode().equals(serveEs.getIsInsurance())) {
@@ -368,6 +383,9 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
         } else if (serveEs.getServeStatus().equals(ServeEnum.RECOVER.getCode()) && DeliverEnum.RECOVER.getCode().equals(serveEs.getDeliverStatus()) && JudgeEnum.YES.getCode().equals(serveEs.getIsInsurance())) {
             // 已收车  待处理违章
             sort = DeliverSortEnum.FOURTEEN.getSort();
+        } else if (serveEs.getServeStatus().equals(ServeEnum.RECOVER.getCode()) && DeliverEnum.COMPLETED.getCode().equals(serveEs.getDeliverStatus())) {
+            // 已收车  待处理违章
+            sort = DeliverSortEnum.FIFTEEN.getSort();
         }
 
         return sort;

@@ -1,8 +1,7 @@
 package com.mfexpress.rent.deliver.entity;
 
 import cn.hutool.json.JSONUtil;
-import com.mfexpress.component.constants.ResultErrorEnum;
-import com.mfexpress.component.exception.CommonException;
+import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
@@ -11,8 +10,6 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSON;
 import com.mfexpress.component.response.PagePagination;
-import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
@@ -23,14 +20,16 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.Objects;
+import java.util.*;
 
 @Data
 @AllArgsConstructor
@@ -38,14 +37,8 @@ import java.util.Objects;
 @Table(name = "serve")
 @Builder
 @Component
+@Slf4j
 public class ServeEntity implements ServeEntityApi {
-
-
-    @Resource
-    private ServeGateway serveGateway;
-    @Resource
-    private ServeChangeRecordGateway changeRecordGateway;
-
 
     @Id
     private Integer id;
@@ -123,6 +116,14 @@ public class ServeEntity implements ServeEntityApi {
     @Resource
     private ServeChangeRecordGateway serveChangeRecordGateway;
 
+    @Resource
+    private MqTools mqTools;
+
+    @Value("${rocketmq.listenEventTopic}")
+
+    @Transient
+    private String event;
+
     @Override
     public void reactiveServe(ReactivateServeCmd cmd) {
         ServeEntity newServe = new ServeEntity();
@@ -139,6 +140,7 @@ public class ServeEntity implements ServeEntityApi {
         ServeChangeRecordPO serveChangeRecordPO = new ServeChangeRecordPO();
         serveChangeRecordPO.setServeNo(rawServe.getServeNo());
         serveChangeRecordPO.setType(ServeChangeRecordEnum.REACTIVE.getCode());
+        serveChangeRecordPO.setRenewalType(0);
         serveChangeRecordPO.setRawData(JSONUtil.toJsonStr(rawServe));
         serveChangeRecordPO.setNewData(JSONUtil.toJsonStr(newServe));
         serveChangeRecordPO.setDeliverNo(cmd.getDeliverNo());
@@ -161,7 +163,6 @@ public class ServeEntity implements ServeEntityApi {
             serveDepositDTO.setMaintainFeeConfirmFlag(true);
         }
         return serveDepositDTO;
-
     }
 
     @Override
@@ -205,6 +206,19 @@ public class ServeEntity implements ServeEntityApi {
             updateDeposit.setPaidInDeposit(paidInDeposit.add(updateDepositMap.get(serveEntity.getServeNo())));
             updateDeposit.setStatus(updateDeposit.getPaidInDeposit().compareTo(BigDecimal.ZERO) == 0 ? ServeEnum.COMPLETED.getCode() : updateDeposit.getStatus());
             serveGateway.updateServeByServeNo(serveEntity.getServeNo(), updateDeposit);
+
+            if(updateDeposit.getStatus().equals(ServeEnum.COMPLETED.getCode())){
+                // 向合同域发送服务单已完成消息
+                ServeDTO serveDTOToNoticeContract = new ServeDTO();
+                serveDTOToNoticeContract.setServeNo(serveEntity.getServeNo());
+                serveDTOToNoticeContract.setOaContractCode(serveEntity.getOaContractCode());
+                serveDTOToNoticeContract.setGoodsId(serveEntity.getContractCommodityId());
+                serveDTOToNoticeContract.setCarServiceId(creatorId);
+                serveDTOToNoticeContract.setRenewalType(serveEntity.getRenewalType());
+                log.info("异常收车时，交付域向合同域发送的收车单信息：{}", serveDTOToNoticeContract);
+                mqTools.send(event, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));
+            }
+
             //变更记录
             ServeChangeRecordPO serveChangeRecord = new ServeChangeRecordPO();
             serveChangeRecord.setServeNo(serveEntity.getServeNo());
@@ -225,7 +239,7 @@ public class ServeEntity implements ServeEntityApi {
                     ServeChangeRecordEnum.DEPOSIT_UNLOCK.getCode() : ServeChangeRecordEnum.DEPOSIT_LOCK.getCode());
             recordList.add(serveChangeRecord);
         }
-        changeRecordGateway.insertList(recordList);
+        serveChangeRecordGateway.insertList(recordList);
     }
 
 }

@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.domainapi;
 
 
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.deliver.*;
@@ -105,8 +106,8 @@ public interface DeliverAggregateRootApi {
     @PostMapping("/getDeliverDTOSByCarIdList")
     Result<List<DeliverDTO>> getDeliverDTOSByCarIdList(@RequestParam("carIds") List<Integer> carIds);
 
-    @PostMapping("/getDeliverNoListByQry")
-    Result<List<String>> getDeliverNoListByQry(@RequestBody DeliverQry qry);
+    @PostMapping("/getDeliverNoListByPage")
+    Result<PagePagination<String>> getDeliverNoListByPage(@RequestBody DeliverQry qry);
 
     @PostMapping("/cancelRecoverByDeliver")
     Result<Integer> cancelRecoverByDeliver(@RequestBody RecoverCancelByDeliverCmd cmd);

@@ -476,8 +476,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         serve.setCreateTime(new Date());
         serve.setUpdateTime(new Date());
         serve.setReplaceFlag(JudgeEnum.YES.getCode());
-        // 替换车申请的服务单 其月租金应为0
+        // 替换车申请的服务单 其月租金和押金应为0
         serve.setRent(BigDecimal.ZERO);
+        serve.setDeposit(0.0);
 
         try {
             serveGateway.addServeList(Collections.singletonList(serve));
@@ -907,7 +908,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         if (null == serveEntity || !ServeEnum.RECOVER.getCode().equals(serveEntity.getStatus())) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单状态异常");
         }
-        if (LeaseModelEnum.NORMAL.getCode() != serveEntity.getLeaseModelId() || LeaseModelEnum.TRIAL.getCode() != serveEntity.getLeaseModelId()) {
+        if (LeaseModelEnum.NORMAL.getCode() != serveEntity.getLeaseModelId() && LeaseModelEnum.TRIAL.getCode() != serveEntity.getLeaseModelId()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单当前租赁方式不允许重新激活");
         }
         DeliverEntity deliverEntity = deliverGateway.getDeliverByServeNo(serveEntity.getServeNo());
@@ -926,20 +927,23 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
         // 重新激活服务单，置服务单状态为待预选
         cmd.setDeliverNo(deliverEntity.getDeliverNo());
-        serveEntity.reactiveServe(cmd);
+        serveEntityApi.reactiveServe(cmd);
         // 置交付单状态为历史所属
-        deliverEntity.toHistory(cmd);
+        deliverEntityApi.toHistory(cmd);
         return Result.getInstance(0).success();
     }
 
     @Override
-    public Result<List<String>> getServeNoListByPage(ListQry listQry) {
-        List<ServeEntity> serveEntityList = serveGateway.getServeNoListByPage(listQry);
-        if(serveEntityList.isEmpty()){
-            return Result.getInstance((List<String>) null).success();
-        }
+    public Result<PagePagination<String>> getServeNoListByPage(ListQry listQry) {
+        PagePagination<ServeEntity> pagePagination = serveGateway.getServeNoListByPage(listQry);
+        List<ServeEntity> serveEntityList = pagePagination.getList();
         List<String> serveNoList = serveEntityList.stream().map(ServeEntity::getServeNo).collect(Collectors.toList());
-        return Result.getInstance(serveNoList);
+
+        PagePagination<String> serveNoListPagePagination = new PagePagination<>();
+        serveNoListPagePagination.setPage(pagePagination.getPage());
+        serveNoListPagePagination.setPagination(pagePagination.getPagination());
+        serveNoListPagePagination.setList(serveNoList);
+        return Result.getInstance(serveNoListPagePagination).success();
     }
 
     private String getExpectRecoverDate(Date deliverVehicleDate, int offset) {

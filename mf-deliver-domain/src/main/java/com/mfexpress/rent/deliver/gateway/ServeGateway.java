@@ -37,7 +37,7 @@ public interface ServeGateway {
     List<ServeEntity>getServeByCustomerIdDeliver(List<Integer>customerIdList);
     List<ServeEntity>getServeByCustomerIdRecover(List<Integer>customerIdList);
 
-    List<ServeEntity> getServeNoListByPage(ListQry listQry);
+    PagePagination<ServeEntity> getServeNoListByPage(ListQry listQry);
 
     ServeEntity getServeDepositByServeNo(CustomerDepositListDTO qry);
 

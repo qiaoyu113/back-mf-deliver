@@ -171,7 +171,7 @@ public class ServeGatewayImpl implements ServeGateway {
     }
 
     @Override
-    public List<ServeEntity> getServeNoListByPage(ListQry qry) {
+    public PagePagination<ServeEntity> getServeNoListByPage(ListQry qry) {
         if(qry.getPage() == 0){
             qry.setPage(1);
         }
@@ -185,7 +185,8 @@ public class ServeGatewayImpl implements ServeGateway {
         // example.createCriteria().andEqualTo("status", 5);
         example.selectProperties("serveNo");
 
-        return serveMapper.selectByExample(example);
+        List<ServeEntity> serveEntityList = serveMapper.selectByExample(example);
+        return PagePagination.getInstance(serveEntityList);
     }
 
     @Override

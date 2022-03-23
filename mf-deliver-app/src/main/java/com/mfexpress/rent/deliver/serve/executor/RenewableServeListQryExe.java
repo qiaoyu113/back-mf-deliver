@@ -103,7 +103,7 @@ public class RenewableServeListQryExe {
         fieldSortList.add(SortBuilders.fieldSort("serveStatus").unmappedType("integer").order(SortOrder.ASC));
         fieldSortList.add(SortBuilders.fieldSort("deliverVehicleTime").unmappedType("date").order(SortOrder.ASC));
 
-        Map<String, Object> map = elasticsearchTools.searchByQuerySort(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), Utils.getEnvVariable(Constants.ES_DELIVER_INDEX), 0, 0, boolQueryBuilder, fieldSortList);
+        Map<String, Object> map = elasticsearchTools.searchByQuerySort(DeliverUtils.getEnvVariable(Constants.ES_SERVE_INDEX), Utils.getEnvVariable(Constants.ES_SERVE_TYPE), 0, 0, boolQueryBuilder, fieldSortList);
         List<Map<String, Object>> data = (List<Map<String, Object>>) map.get("data");
         List<ServeToRenewalVO> serveToRenewalVOList = new LinkedList<>();
         if (data.isEmpty()) {

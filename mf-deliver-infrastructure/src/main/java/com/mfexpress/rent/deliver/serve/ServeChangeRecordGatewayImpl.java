@@ -1,6 +1,5 @@
 package com.mfexpress.rent.deliver.serve;
 
-import com.mfexpress.rent.deliver.entity.ServeChangeRecordPO;
 import com.mfexpress.rent.deliver.dto.entity.ServeChangeRecord;
 import com.mfexpress.rent.deliver.entity.ServeChangeRecordPO;
 import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
@@ -9,11 +8,7 @@ import org.springframework.stereotype.Component;
 import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Component
 public class ServeChangeRecordGatewayImpl implements ServeChangeRecordGateway {
@@ -47,6 +42,14 @@ public class ServeChangeRecordGatewayImpl implements ServeChangeRecordGateway {
         Example example = new Example(ServeChangeRecordPO.class);
         example.createCriteria().andIn("serveNo", serveNoList)
                 .andEqualTo("type", type);
+        return serveChangeRecordMapper.selectByExample(example);
+    }
+
+    @Override
+    public List<ServeChangeRecordPO> getList(String serveNo) {
+        Example example = new Example(ServeChangeRecordPO.class);
+        example.createCriteria().andEqualTo("serveNo", serveNo);
+
         return serveChangeRecordMapper.selectByExample(example);
     }
 

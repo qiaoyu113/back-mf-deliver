@@ -22,6 +22,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeQryCmd;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleDto;
+import com.mfexpress.rent.vehicle.data.dto.vehiclebrand.VehicleBrandDto;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.entity.Customer;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +56,10 @@ public class DeliverEachLeaseTermAmountQryExe {
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
 
+    private Map<Integer, String> vehicleTypeMap;
+
     public PagePagination<DeliverEachLeaseTermAmountVO> execute(ServeQryCmd qry) {
+        initDictData();
         /*DeliverQry deliverQry = new DeliverQry();
         deliverQry.setStatus((Arrays.asList(DeliverStatusEnum.VALID.getCode(), DeliverStatusEnum.HISTORICAL.getCode())));
         deliverQry.setServeNo(qry.getServeNo());
@@ -86,7 +90,7 @@ public class DeliverEachLeaseTermAmountQryExe {
         Result<Map<Long, SubBillItemDTO>> detailIdWithSubBillItemDTOMapResult = subBillItemAggregateRootApi.getSubBillItemByDetailList(detailIdList);
         Map<Long, SubBillItemDTO> detailIdWithSubBillItemDTOMap = ResultDataUtils.getInstance(detailIdWithSubBillItemDTOMapResult).getDataOrNull();
         if (null == detailIdWithSubBillItemDTOMap || detailIdWithSubBillItemDTOMap.isEmpty()) {
-            log.error("查询租期费用失败，详单id：{}",detailIdList);
+            log.error("查询租期费用失败，详单id：{}", detailIdList);
             return PagePagination.getInstance(new ArrayList<>());
         }
         List<String> subBillItemIdList = detailIdWithSubBillItemDTOMap.values().stream().map(subBillItemDTO -> String.valueOf(subBillItemDTO.getSubBillItemId())).collect(Collectors.toList());
@@ -95,7 +99,7 @@ public class DeliverEachLeaseTermAmountQryExe {
         Map<Long, List<SubBillItemDTO.SubBillItemRecordDTO>> subBillItemRecordDTOMap = null;
         if (null == subBillItemRecordDTOList || subBillItemRecordDTOList.isEmpty()) {
             log.error("查询调账金额失败，子帐项id：{}", subBillItemIdList);
-        }else{
+        } else {
             subBillItemRecordDTOMap = subBillItemRecordDTOList.stream().collect(Collectors.groupingBy(SubBillItemDTO.SubBillItemRecordDTO::getSubBillItemId));
         }
 
@@ -122,11 +126,10 @@ public class DeliverEachLeaseTermAmountQryExe {
                 VehicleDto vehicleDto = finalVehicleDtoMap.get(deliverEachLeaseTermAmountVO.getCarId());
                 if (null != vehicleDto) {
                     deliverEachLeaseTermAmountVO.setPlateNumber(vehicleDto.getPlateNumber());
-                    deliverEachLeaseTermAmountVO.setModelId(vehicleDto.getTypeId());
+                    deliverEachLeaseTermAmountVO.setCarModelId(vehicleDto.getTypeId());
                     // 车型
-                    //deliverEachLeaseTermAmountVO.setModelDisplay();
+                    deliverEachLeaseTermAmountVO.setCarModelDisplay(vehicleTypeMap.get(vehicleDto.getBrandId()));
                 }
-
             }
             deliverEachLeaseTermAmountVO.setLeaseModelId(serveDTO.getLeaseModelId());
             LeaseModelEnum leaseModelEnum = LeaseModelEnum.getEnum(deliverEachLeaseTermAmountVO.getLeaseModelId());
@@ -139,6 +142,7 @@ public class DeliverEachLeaseTermAmountQryExe {
             deliverEachLeaseTermAmountVO.setUnitPrice(serveLeaseTermInfoDTO.getUnitPrice().toString());
 
             // 回款状态和待还金额
+            BigDecimal amount = BigDecimal.ZERO;
             SubBillItemDTO subBillItemDTO = detailIdWithSubBillItemDTOMap.get(detailId);
             if (null != subBillItemDTO) {
                 deliverEachLeaseTermAmountVO.setUnpaidAmount(subBillItemDTO.getUnpaidAmount().toString());
@@ -147,24 +151,37 @@ public class DeliverEachLeaseTermAmountQryExe {
                 if (null != paymentStatusEnum) {
                     deliverEachLeaseTermAmountVO.setRepaymentStatusDisplay(paymentStatusEnum.getName());
                 }
-            }
 
-            // 累计调账金额
-            if(null != finalSubBillItemRecordDTOMap){
-                List<SubBillItemDTO.SubBillItemRecordDTO> subBillItemRecordDTOS = finalSubBillItemRecordDTOMap.get(detailId);
-                if (null != subBillItemRecordDTOS && !subBillItemRecordDTOS.isEmpty()) {
-                    BigDecimal amount = BigDecimal.ZERO;
-                    for (SubBillItemDTO.SubBillItemRecordDTO subBillItemRecordDTO : subBillItemRecordDTOS) {
-                        amount = amount.add(subBillItemRecordDTO.getAdjustAmount());
+                // 累计调账金额
+                if (null != finalSubBillItemRecordDTOMap) {
+                    List<SubBillItemDTO.SubBillItemRecordDTO> subBillItemRecordDTOS = finalSubBillItemRecordDTOMap.get(subBillItemDTO.getSubBillItemId());
+                    if (null != subBillItemRecordDTOS && !subBillItemRecordDTOS.isEmpty()) {
+                        for (SubBillItemDTO.SubBillItemRecordDTO subBillItemRecordDTO : subBillItemRecordDTOS) {
+                            amount = amount.add(subBillItemRecordDTO.getAdjustAmount());
+                        }
                     }
-                    deliverEachLeaseTermAmountVO.setTotalAdjustAmount(amount.toString());
                 }
+                deliverEachLeaseTermAmountVO.setTotalAdjustAmount(amount.toString());
+            } else {
+                deliverEachLeaseTermAmountVO.setUnpaidAmount(deliverEachLeaseTermAmountVO.getUnitPrice());
+                deliverEachLeaseTermAmountVO.setRepaymentStatus(CyclicBillPaymentStatusEnum.INIT.getCode());
+                deliverEachLeaseTermAmountVO.setRepaymentStatusDisplay(CyclicBillPaymentStatusEnum.INIT.getName());
+                deliverEachLeaseTermAmountVO.setTotalAdjustAmount(amount.toString());
             }
 
             return deliverEachLeaseTermAmountVO;
         }).collect(Collectors.toList());
 
         return PagePagination.getInstance(voList);
+    }
+
+    public void initDictData() {
+        if (null == vehicleTypeMap) {
+            Result<Map<Integer, String>> vehicleTypeResult = vehicleAggregateRootApi.getAllVehicleBrandTypeList();
+            if (ResultErrorEnum.SUCCESSED.getCode() == vehicleTypeResult.getCode() && null != vehicleTypeResult.getData()) {
+                vehicleTypeMap = vehicleTypeResult.getData();
+            }
+        }
     }
 
 }

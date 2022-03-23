@@ -4,8 +4,10 @@ import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.elasticsearch.mapper.builder.ESMappingBuilder;
+import com.mfexpress.component.starter.elasticsearch.mapping.mapper.builder.ESMappingBuilder;
+import com.mfexpress.component.starter.elasticsearch.setting.ESIndexSettingEnum;
 import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogRelation;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogTableFullName;
@@ -33,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -87,12 +88,15 @@ public class DeliverSyncServiceImpl implements EsSyncHandlerI {
         qry.setStatus(Arrays.asList(DeliverStatusEnum.VALID.getCode(), DeliverStatusEnum.HISTORICAL.getCode()));
         for (int page = 1; ; page++) {
             qry.setPage(page);
-            Result<List<String>> deliverNoListResult = deliverAggregateRootApi.getDeliverNoListByQry(qry);
-            List<String> deliverNoList = ResultDataUtils.getInstance(deliverNoListResult).getDataOrException();
-            if (null == deliverNoList || deliverNoList.isEmpty()) {
+            Result<PagePagination<String>> deliverNoListPageResult = deliverAggregateRootApi.getDeliverNoListByPage(qry);
+            PagePagination<String> pagePagination = ResultDataUtils.getInstance(deliverNoListPageResult).getDataOrException();
+            List<String> deliverNoList = pagePagination.getList();
+            esBatchSyncTools.submit(deliverNoList);
+
+            int totalPages = pagePagination.getPagination().getTotalPages();
+            if (page >= totalPages) {
                 break;
             }
-            esBatchSyncTools.submit(deliverNoList);
         }
 
         esBatchSyncTools.syncClose();
@@ -107,7 +111,7 @@ public class DeliverSyncServiceImpl implements EsSyncHandlerI {
         // 拼接环境信息到indexName中
         indexVersionName = DeliverUtils.getEnvVariable(indexVersionName);
         boolean exist = elasticsearchTools.existIndex(indexVersionName);
-        if(exist){
+        if (exist) {
             return indexVersionName;
         }
 
@@ -120,8 +124,8 @@ public class DeliverSyncServiceImpl implements EsSyncHandlerI {
         }
         String mapping = indexMappingMap.get(Constants.ES_SERVE_TYPE);
         Settings.Builder setting = Settings.builder()
-                .put("index.number_of_shards", 3)
-                .put("index.number_of_replicas", 1);
+                .put(ESIndexSettingEnum.NUMBER_OF_SHARDS.getKey(), (int) ESIndexSettingEnum.NUMBER_OF_SHARDS.getDefaultValue())
+                .put(ESIndexSettingEnum.NUMBER_OF_REPLICAS.getKey(), (int) ESIndexSettingEnum.NUMBER_OF_REPLICAS.getDefaultValue());
         boolean result = elasticsearchTools.createIndexWithMappingAndSetting(indexVersionName, Constants.ES_DELIVER_TYPE, mapping, setting);
         if (!result) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "创建index失败，详情请查看日志");
@@ -279,9 +283,9 @@ public class DeliverSyncServiceImpl implements EsSyncHandlerI {
             return 0;
         }
 
-        if(DeliverEnum.IS_RECOVER.getCode().equals(deliverES.getDeliverStatus())){
+        if (DeliverEnum.IS_RECOVER.getCode().equals(deliverES.getDeliverStatus())) {
             return DeliverSortEnum.TWENTY_THREE.getSort();
-        }else if (DeliverEnum.RECOVER.getCode().equals(deliverES.getDeliverStatus())) {
+        } else if (DeliverEnum.RECOVER.getCode().equals(deliverES.getDeliverStatus())) {
             if (JudgeEnum.NO.getCode().equals(deliverES.getIsInsurance()) && JudgeEnum.NO.getCode().equals(deliverES.getIsDeduction())) {
                 return DeliverSortEnum.TWENTY_FOUR.getSort();
             } else if (JudgeEnum.YES.getCode().equals(deliverES.getIsInsurance()) && JudgeEnum.NO.getCode().equals(deliverES.getIsDeduction())) {

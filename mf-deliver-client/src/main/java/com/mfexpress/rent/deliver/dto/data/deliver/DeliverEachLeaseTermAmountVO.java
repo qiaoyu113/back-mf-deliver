@@ -29,10 +29,10 @@ public class DeliverEachLeaseTermAmountVO {
     private String plateNumber;
 
     @ApiModelProperty(value = "车型id")
-    private Integer modelId;
+    private Integer carModelId;
 
     @ApiModelProperty(value = "车型含义")
-    private String modelDisplay;
+    private String carModelDisplay;
 
     @ApiModelProperty(value = "租赁方式id")
     private Integer leaseModelId;

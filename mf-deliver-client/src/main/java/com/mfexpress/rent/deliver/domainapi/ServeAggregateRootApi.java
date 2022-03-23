@@ -142,5 +142,5 @@ public interface ServeAggregateRootApi {
     Result<Integer> reactiveServe(@RequestBody ReactivateServeCmd cmd);
 
     @PostMapping("/getServeNoListByPage")
-    Result<List<String>> getServeNoListByPage(@RequestBody ListQry listQry);
+    Result<PagePagination<String>> getServeNoListByPage(@RequestBody ListQry listQry);
 }

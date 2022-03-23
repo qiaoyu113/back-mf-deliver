@@ -1,7 +1,9 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.mfexpress.component.response.PagePagination;
+import com.mfexpress.order.dto.qry.OrderListVOQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeAllLeaseTermAmountVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
 import org.springframework.stereotype.Component;
@@ -19,7 +21,8 @@ public class ExportServeLeaseTermAmountDataQryExe {
     private ServeLeaseTermAmountQryExe serveLeaseTermAmountQryExe;
 
     public List<Map<String, Object>> execute(Map<String, Object> map) {
-        ServeLeaseTermAmountQry qry = (ServeLeaseTermAmountQry) map.get("qry");
+        Map<String, Object> qryMap = (Map<String, Object>) map.get("qry");
+        ServeLeaseTermAmountQry qry = BeanUtil.mapToBean(qryMap, ServeLeaseTermAmountQry.class, true, CopyOptions.create());
         List<ServeAllLeaseTermAmountVO> result = new ArrayList<>();
         // 一次1000条
         qry.setLimit(1000);

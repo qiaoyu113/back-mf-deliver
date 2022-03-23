@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.gateway;
 
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverQry;
 import com.mfexpress.rent.deliver.entity.DeliverEntity;
@@ -41,7 +42,7 @@ public interface DeliverGateway {
 
     List<DeliverEntity> getHistoryListByServeNoList(List<String> reactiveServeNoList);
 
-    List<DeliverEntity> getDeliverNoListByPage(DeliverQry listQry);
+    PagePagination<DeliverEntity> getDeliverNoListByPage(DeliverQry listQry);
 
     List<DeliverEntity> getDeliverListByQry(DeliverQry deliverQry);
     List<DeliverEntity>getDeliverNotCompleteByServeNoList(List<String>serveNoList);

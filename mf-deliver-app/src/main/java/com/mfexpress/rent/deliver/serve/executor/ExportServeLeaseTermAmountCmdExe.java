@@ -46,7 +46,7 @@ public class ExportServeLeaseTermAmountCmdExe {
         headers.add("customerName,客户名称");
         headers.add("oaContractCode,OA合同编号");
         headers.add("orgName,所属管理区");
-        headers.add("expectRecoverDate,预计收车日期");
+        headers.add("expectRecoverDateChar,预计收车日期");
 
         map.put("header", headers);
 

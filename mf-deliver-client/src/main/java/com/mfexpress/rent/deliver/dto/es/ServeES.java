@@ -1,11 +1,11 @@
 package com.mfexpress.rent.deliver.dto.es;
 
-import com.mfexpress.component.starter.elasticsearch.mapper.annotations.Document;
-import com.mfexpress.component.starter.elasticsearch.mapper.annotations.enums.StringType;
-import com.mfexpress.component.starter.elasticsearch.mapper.annotations.fieldtype.MultiField;
-import com.mfexpress.component.starter.elasticsearch.mapper.annotations.fieldtype.MultiNestedField;
-import com.mfexpress.component.starter.elasticsearch.mapper.annotations.fieldtype.StringField;
-import com.mfexpress.component.starter.elasticsearch.mapper.annotations.meta.MetaField_All;
+import com.mfexpress.component.starter.elasticsearch.mapping.mapper.annotations.Document;
+import com.mfexpress.component.starter.elasticsearch.mapping.mapper.annotations.enums.StringType;
+import com.mfexpress.component.starter.elasticsearch.mapping.mapper.annotations.fieldtype.MultiField;
+import com.mfexpress.component.starter.elasticsearch.mapping.mapper.annotations.fieldtype.MultiNestedField;
+import com.mfexpress.component.starter.elasticsearch.mapping.mapper.annotations.fieldtype.StringField;
+import com.mfexpress.component.starter.elasticsearch.mapping.mapper.annotations.meta.MetaField_All;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.dto.data.OrderCarModelVO;
 import io.swagger.annotations.ApiModel;
@@ -138,8 +138,11 @@ public class ServeES {
     @ApiModelProperty(value = "收车日期")
     private Date recoverVehicleTime;
 
-    @ApiModelProperty(value = "排序规则")
+    @ApiModelProperty(value = "h5排序规则")
     private Integer sort;
+
+    @ApiModelProperty(value = "服务单状态排序规则")
+    private Integer serveStatusSort;
 
     @ApiModelProperty(value = "预选状态")
     private Integer isPreselected;

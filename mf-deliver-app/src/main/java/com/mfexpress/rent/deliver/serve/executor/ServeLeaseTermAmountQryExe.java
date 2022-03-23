@@ -30,6 +30,7 @@ import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeAllLeaseTermAmountVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
+import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -68,7 +69,9 @@ public class ServeLeaseTermAmountQryExe {
     private ContractAggregateRootApi contractAggregateRootApi;
 
     public PagePagination<ServeAllLeaseTermAmountVO> execute(ServeLeaseTermAmountQry qry, TokenInfo tokenInfo) {
-        qry.setUserOfficeId(tokenInfo.getOfficeId());
+        if (null != tokenInfo) {
+            qry.setUserOfficeId(tokenInfo.getOfficeId());
+        }
         BoolQueryBuilder boolQueryBuilder = assembleEsQryCondition(qry);
         List<FieldSortBuilder> fieldSortList = getSortConditions();
 
@@ -79,7 +82,7 @@ public class ServeLeaseTermAmountQryExe {
             qry.setPage(1);
         }
         int start = (qry.getPage() - 1) * qry.getLimit();
-        Map<String, Object> resultMap = elasticsearchTools.searchByQuerySort(Constants.ES_SERVE_INDEX, Constants.ES_SERVE_TYPE, start, qry.getLimit(), boolQueryBuilder, fieldSortList);
+        Map<String, Object> resultMap = elasticsearchTools.searchByQuerySort(DeliverUtils.getEnvVariable(Constants.ES_SERVE_INDEX), Constants.ES_SERVE_TYPE, start, qry.getLimit(), boolQueryBuilder, fieldSortList);
         List<Map<String, Object>> data = (List<Map<String, Object>>) resultMap.get("data");
         long total = (long) resultMap.get("total");
 
@@ -114,6 +117,7 @@ public class ServeLeaseTermAmountQryExe {
             serveAllLeaseTermAmountVO.setPlateNumber(serveES.getCarNum());
             serveAllLeaseTermAmountVO.setCarModelDisplay(serveES.getBrandModelDisplay());
             serveAllLeaseTermAmountVO.setOaContractCode(serveES.getContractNo());
+            serveAllLeaseTermAmountVO.setExpectRecoverDateChar(null == serveES.getExpectRecoverDate() ? null : DateUtil.format(serveES.getExpectRecoverDate(), "yyyy-MM-dd"));
             // 所属管理区
             orgIdSet.add(serveAllLeaseTermAmountVO.getOrgId());
             serveNoList.add(serveAllLeaseTermAmountVO.getServeNo());
@@ -151,17 +155,20 @@ public class ServeLeaseTermAmountQryExe {
             Map<Long, SubBillItemDTO> detailIdWithSubBillItemDTOMap = ResultDataUtils.getInstance(detailIdWithSubBillItemDTOResult).getDataOrNull();
 
             // 将服务单号和其对应的子账单项列表组合成map
-            if(null != detailIdWithSubBillItemDTOMap && !detailIdWithSubBillItemDTOMap.isEmpty()){
+            if (null != detailIdWithSubBillItemDTOMap && !detailIdWithSubBillItemDTOMap.isEmpty()) {
                 serveNoWithSubBillItemDTOListMap = new HashMap<>(serveWithDetailIdMap.size() + 1, 1L);
                 for (Long detailId : detailIdList) {
-                    String serveNo = detailIdWithServeNoMap.get(detailId);
-                    List<SubBillItemDTO> subBillItemDTOS = serveNoWithSubBillItemDTOListMap.get(serveNo);
-                    if(null == subBillItemDTOS){
-                        subBillItemDTOS = new ArrayList<>();
-                        subBillItemDTOS.add(detailIdWithSubBillItemDTOMap.get(detailId));
-                        serveNoWithSubBillItemDTOListMap.put(serveNo, subBillItemDTOS);
-                    }else{
-                        subBillItemDTOS.add(detailIdWithSubBillItemDTOMap.get(detailId));
+                    SubBillItemDTO subBillItemDTO = detailIdWithSubBillItemDTOMap.get(detailId);
+                    if (null != subBillItemDTO) {
+                        String serveNo = detailIdWithServeNoMap.get(detailId);
+                        List<SubBillItemDTO> subBillItemDTOS = serveNoWithSubBillItemDTOListMap.get(serveNo);
+                        if (null == subBillItemDTOS) {
+                            subBillItemDTOS = new ArrayList<>();
+                            subBillItemDTOS.add(detailIdWithSubBillItemDTOMap.get(detailId));
+                            serveNoWithSubBillItemDTOListMap.put(serveNo, subBillItemDTOS);
+                        } else {
+                            subBillItemDTOS.add(detailIdWithSubBillItemDTOMap.get(detailId));
+                        }
                     }
                 }
             }
@@ -173,7 +180,7 @@ public class ServeLeaseTermAmountQryExe {
         Result<CommodityMapDTO> commodityMapResult = contractAggregateRootApi.getCommodityMapByQry(commodityMapQry);
         CommodityMapDTO commodityMapDTO = ResultDataUtils.getInstance(commodityMapResult).getDataOrNull();
         Map<Integer, CommodityDTO> contractCommodityDTOMap = null;
-        if(null != commodityMapDTO && null != commodityMapDTO.getContractCommodityDTOMap() && !commodityMapDTO.getContractCommodityDTOMap().isEmpty()){
+        if (null != commodityMapDTO && null != commodityMapDTO.getContractCommodityDTOMap() && !commodityMapDTO.getContractCommodityDTOMap().isEmpty()) {
             contractCommodityDTOMap = commodityMapDTO.getContractCommodityDTOMap();
         }
         // 数据查询 --------------------------- end
@@ -203,26 +210,28 @@ public class ServeLeaseTermAmountQryExe {
             }
 
             // 租金、服务费补充
-            if(null != contractCommodityDTOMap){
+            if (null != contractCommodityDTOMap) {
                 CommodityDTO commodityDTO = contractCommodityDTOMap.get(vo.getContractCommodityId());
-                if(null != commodityDTO){
+                if (null != commodityDTO) {
                     vo.setRentFee(String.valueOf(commodityDTO.getRentFee()));
                     vo.setServiceFee(String.valueOf(commodityDTO.getServiceFee()));
                 }
             }
 
             // 历史租期欠费补充
-            if(null != serveNoWithSubBillItemDTOListMap){
-                for (ServeAllLeaseTermAmountVO serveAllLeaseTermAmountVO : voList) {
+            for (ServeAllLeaseTermAmountVO serveAllLeaseTermAmountVO : voList) {
+                BigDecimal unpaidAmount = BigDecimal.ZERO;
+                if (null != serveNoWithSubBillItemDTOListMap) {
                     List<SubBillItemDTO> subBillItemDTOList = serveNoWithSubBillItemDTOListMap.get(serveAllLeaseTermAmountVO.getServeNo());
-                    BigDecimal unpaidAmount = BigDecimal.ZERO;
-                    if(null != subBillItemDTOList && !subBillItemDTOList.isEmpty()){
+                    if (null != subBillItemDTOList && !subBillItemDTOList.isEmpty()) {
                         for (SubBillItemDTO subBillItemDTO : subBillItemDTOList) {
-                            unpaidAmount = unpaidAmount.add(subBillItemDTO.getUnpaidAmount());
+                            if (null != subBillItemDTO.getUnpaidAmount()) {
+                                unpaidAmount = unpaidAmount.add(subBillItemDTO.getUnpaidAmount());
+                            }
                         }
                     }
-                    serveAllLeaseTermAmountVO.setTotalArrears(unpaidAmount.toString());
                 }
+                serveAllLeaseTermAmountVO.setTotalArrears(unpaidAmount.toString());
             }
         }
         // 数据拼装 --------------------------- end
@@ -232,7 +241,7 @@ public class ServeLeaseTermAmountQryExe {
 
     private List<FieldSortBuilder> getSortConditions() {
         List<FieldSortBuilder> fieldSortList = new ArrayList<>();
-        fieldSortList.add(SortBuilders.fieldSort("sort").unmappedType("integer").order(SortOrder.ASC));
+        fieldSortList.add(SortBuilders.fieldSort("serveStatusSort").unmappedType("integer").order(SortOrder.ASC));
         fieldSortList.add(SortBuilders.fieldSort("updateTime").unmappedType("date").order(SortOrder.DESC));
         return fieldSortList;
     }

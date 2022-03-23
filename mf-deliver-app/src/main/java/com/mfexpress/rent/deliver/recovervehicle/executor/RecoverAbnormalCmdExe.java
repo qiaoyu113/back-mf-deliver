@@ -150,14 +150,14 @@ public class RecoverAbnormalCmdExe {
         }
 
         // 发送收车信息到mq，由合同域判断服务单所属的合同是否到已履约完成状态
-        ServeDTO serveDTOToNoticeContract = new ServeDTO();
+        /*ServeDTO serveDTOToNoticeContract = new ServeDTO();
         serveDTOToNoticeContract.setServeNo(serveDTO.getServeNo());
         serveDTOToNoticeContract.setOaContractCode(serveDTO.getOaContractCode());
         serveDTOToNoticeContract.setGoodsId(serveDTO.getGoodsId());
         serveDTOToNoticeContract.setCarServiceId(contractDTO.getCreatorId());
         serveDTOToNoticeContract.setRenewalType(serveDTO.getRenewalType());
         log.info("异常收车时，交付域向合同域发送的收车单信息：{}", serveDTOToNoticeContract);
-        mqTools.send(event, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));
+        mqTools.send(event, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));*/
 
         //收车计费
         RecoverVehicleCmd recoverVehicleCmd = new RecoverVehicleCmd();
