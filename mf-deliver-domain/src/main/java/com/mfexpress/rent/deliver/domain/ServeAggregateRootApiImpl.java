@@ -846,8 +846,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         if (CollectionUtil.isNotEmpty(serveDTOList)) {
             serveDTOList.forEach(serveDTO -> {
                 if (!ServeEnum.RECOVER.getCode().equals(serveDTO.getStatus())) {
-                    log.error("解锁 ------- 交付单不满足解锁条件 参数：{}",serveDTO);
-                    throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "交付单不满足解锁条件");
+                    log.error("解锁 ------- 服务单不满足解锁条件 参数：{}",serveDTO);
+                    throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "服务单不满足解锁条件");
                 }
             });
         }
@@ -879,8 +879,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 //判断服务单状态
                 serveDTOList.forEach(serveDTO -> {
                     if (ServeEnum.COMPLETED.getCode().equals(serveDTO.getStatus())||ServeEnum.RECOVER.getCode().equals(serveDTO.getStatus())) {
-                        log.error("锁定 ------- 交付单不满足锁定条件 参数：{}",serveDTO);
-                        throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "交付单不满足锁定条件");
+                        log.error("锁定 ------- 服务单不满足锁定条件 参数：{}",serveDTO);
+                        throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "服务单不满足锁定条件");
                     }
                 });
             }
