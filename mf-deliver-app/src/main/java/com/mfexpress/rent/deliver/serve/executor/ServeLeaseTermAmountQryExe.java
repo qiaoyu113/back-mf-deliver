@@ -118,6 +118,11 @@ public class ServeLeaseTermAmountQryExe {
             serveAllLeaseTermAmountVO.setCarModelDisplay(serveES.getBrandModelDisplay());
             serveAllLeaseTermAmountVO.setOaContractCode(serveES.getContractNo());
             serveAllLeaseTermAmountVO.setExpectRecoverDateChar(null == serveES.getExpectRecoverDate() ? null : DateUtil.format(serveES.getExpectRecoverDate(), "yyyy-MM-dd"));
+            // 替换租赁方式单独设置
+            if (JudgeEnum.YES.getCode().equals(serveES.getReplaceFlag())) {
+                serveAllLeaseTermAmountVO.setLeaseModelId(5);
+                serveAllLeaseTermAmountVO.setLeaseModelDisplay("替换");
+            }
             // 所属管理区
             orgIdSet.add(serveAllLeaseTermAmountVO.getOrgId());
             serveNoList.add(serveAllLeaseTermAmountVO.getServeNo());
@@ -281,12 +286,13 @@ public class ServeLeaseTermAmountQryExe {
             boolQueryBuilder.must(QueryBuilders.termQuery("carModelId", qry.getCarModelId()));
         }
 
-        if (null != qry.getLeaseModelId() && 0 != qry.getLeaseModelId()) {
+        if (null != qry.getLeaseModelId() && 0 != qry.getLeaseModelId() && 5 != qry.getLeaseModelId()) {
             boolQueryBuilder.must(QueryBuilders.termQuery("leaseModelId", qry.getLeaseModelId()));
+            boolQueryBuilder.must(QueryBuilders.termQuery("replaceFlag", JudgeEnum.NO.getCode()));
         }
 
-        if (null != qry.getLeaseModelId() && 0 != qry.getLeaseModelId()) {
-            boolQueryBuilder.must(QueryBuilders.termQuery("leaseModelId", qry.getLeaseModelId()));
+        if (null != qry.getLeaseModelId() && 5 == qry.getLeaseModelId()) {
+            boolQueryBuilder.must(QueryBuilders.termQuery("replaceFlag", JudgeEnum.YES.getCode()));
         }
 
         if (!StringUtils.isEmpty(qry.getOaContractNo())) {
