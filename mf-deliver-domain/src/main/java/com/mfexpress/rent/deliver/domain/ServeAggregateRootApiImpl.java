@@ -842,6 +842,15 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/unLockDeposit")
     @PrintParam
     public Result unLockDeposit(@RequestParam("serveNoList") List<String> serveNoList, @RequestParam("creatorId") Integer creatorId) {
+        List<ServeDTO> serveDTOList = serveEntityApi.getServeListByServeNoList(serveNoList);
+        if (CollectionUtil.isNotEmpty(serveDTOList)) {
+            serveDTOList.forEach(serveDTO -> {
+                if (!ServeEnum.RECOVER.getCode().equals(serveDTO.getStatus())) {
+                    log.error("解锁 ------- 交付单不满足解锁条件 参数：{}",serveDTO);
+                    throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "交付单不满足解锁条件");
+                }
+            });
+        }
         //查询需要解锁得服务单押金列表
         List<ServeDTO> serveList = serveEntityApi.getServeListByServeNoList(serveNoList);
         Map<String, BigDecimal> updateDepositMap = new HashMap<>();
@@ -863,6 +872,19 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PostMapping("/lockDeposit")
     @PrintParam
     public Result lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList) {
+        List<String> serveNos = confirmDTOList.stream().map(CustomerDepositLockConfirmDTO::getServeNo).distinct().collect(Collectors.toList());
+        if (CollectionUtil.isNotEmpty(serveNos)) {
+            List<ServeDTO> serveDTOList = serveEntityApi.getServeListByServeNoList(serveNos);
+            if (CollectionUtil.isNotEmpty(serveDTOList)) {
+                //判断服务单状态
+                serveDTOList.forEach(serveDTO -> {
+                    if (ServeEnum.COMPLETED.getCode().equals(serveDTO.getStatus())||ServeEnum.RECOVER.getCode().equals(serveDTO.getStatus())) {
+                        log.error("锁定 ------- 交付单不满足锁定条件 参数：{}",serveDTO);
+                        throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "交付单不满足锁定条件");
+                    }
+                });
+            }
+        }
         Map<String, BigDecimal> updateDepositMap = new HashMap<>();
         confirmDTOList.forEach(confirmDTO -> {
             updateDepositMap.put(confirmDTO.getServeNo(), confirmDTO.getLockAmount());
