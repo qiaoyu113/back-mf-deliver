@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import com.github.pagehelper.PageHelper;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.order.dto.vo.ContractVO;
+import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
@@ -220,7 +221,7 @@ public class ServeGatewayImpl implements ServeGateway {
     @Override
     public Map<Integer, Integer> getReplaceNumByCustomerIds(List<Integer> customerIds) {
         Example example = new Example(ServeEntity.class);
-        example.createCriteria().andEqualTo("replaceFlag",1).andIn("customerId",customerIds);
+        example.createCriteria().andEqualTo("replaceFlag",1).andEqualTo("status", DeliverEnum.DELIVER.getCode()).andIn("customerId",customerIds);
         List<ServeEntity> serveEntities = serveMapper.selectByExample(example);
         if (CollectionUtils.isEmpty(serveEntities)){
             return new HashMap<>();
