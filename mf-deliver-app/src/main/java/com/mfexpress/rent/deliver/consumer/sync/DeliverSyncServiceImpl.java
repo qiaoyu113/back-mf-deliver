@@ -13,6 +13,7 @@ import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogRelation;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogTableFullName;
 import com.mfexpress.component.starter.tools.es.ESBatchSyncTools;
 import com.mfexpress.component.starter.tools.es.ElasticsearchTools;
+import com.mfexpress.component.starter.tools.es.IdListPageQry;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
@@ -74,31 +75,26 @@ public class DeliverSyncServiceImpl implements EsSyncHandlerI {
     @Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
 
+    private int syncThreadNum = 5;
+
+    private int limit = 100;
+
     @Override
     public boolean execAll(String indexVersionName) {
         // 创建索引
         indexVersionName = createIndex(indexVersionName);
 
-        // 批量同步
-        esBatchSyncTools = new ESBatchSyncTools(elasticsearchTools, this, 5, indexVersionName, Constants.ES_DELIVER_TYPE);
+        // 获取数据页数
         DeliverQry qry = new DeliverQry();
-        qry.setLimit(100);
-        // 只维护状态为代收车和已收车和已完成的交付单
-        qry.setDeliverStatus(Arrays.asList(DeliverEnum.IS_RECOVER.getCode(), DeliverEnum.RECOVER.getCode(), DeliverEnum.COMPLETED.getCode()));
-        qry.setStatus(Arrays.asList(DeliverStatusEnum.VALID.getCode(), DeliverStatusEnum.HISTORICAL.getCode()));
-        for (int page = 1; ; page++) {
-            qry.setPage(page);
-            Result<PagePagination<String>> deliverNoListPageResult = deliverAggregateRootApi.getDeliverNoListByPage(qry);
-            PagePagination<String> pagePagination = ResultDataUtils.getInstance(deliverNoListPageResult).getDataOrException();
-            List<String> deliverNoList = pagePagination.getList();
-            esBatchSyncTools.submit(deliverNoList);
+        qry.setPage(1);
+        qry.setLimit(limit);
+        Result<PagePagination<String>> deliverNoListPageResult = deliverAggregateRootApi.getDeliverNoListByPage(qry);
+        PagePagination<String> pagePagination = ResultDataUtils.getInstance(deliverNoListPageResult).getDataOrException();
+        int totalPages = pagePagination.getPagination().getTotalPages();
 
-            int totalPages = pagePagination.getPagination().getTotalPages();
-            if (page >= totalPages) {
-                break;
-            }
-        }
-
+        // 执行批量同步
+        esBatchSyncTools = new ESBatchSyncTools(elasticsearchTools, this, syncThreadNum, totalPages, limit, indexVersionName, Constants.ES_DELIVER_TYPE);
+        esBatchSyncTools.execute();
         esBatchSyncTools.syncClose();
 
         return true;
@@ -271,6 +267,20 @@ public class DeliverSyncServiceImpl implements EsSyncHandlerI {
             elasticsearchTools.deleteById(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), serveES.getServeNo());
         }*/
         elasticsearchTools.saveByJson(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), Constants.ES_DELIVER_TYPE, deliverES.getDeliverNo(), JSONUtil.toJsonStr(deliverES));
+    }
+
+    @Override
+    public List<String> getIdList(IdListPageQry idListPageQry) {
+        DeliverQry qry = new DeliverQry();
+        qry.setPage(idListPageQry.getPage());
+        qry.setLimit(idListPageQry.getLimit());
+
+        Result<PagePagination<String>> deliverNoListPageResult = deliverAggregateRootApi.getDeliverNoListByPage(qry);
+        PagePagination<String> pagePagination = ResultDataUtils.getInstance(deliverNoListPageResult).getDataOrNull();
+        if(null == pagePagination){
+            return null;
+        }
+        return pagePagination.getList();
     }
 
     // 只给状态为待收车和已收车和已完成的交付单返回排序

@@ -18,6 +18,7 @@ import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogRelation;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogTableFullName;
 import com.mfexpress.component.starter.tools.es.ESBatchSyncTools;
 import com.mfexpress.component.starter.tools.es.ElasticsearchTools;
+import com.mfexpress.component.starter.tools.es.IdListPageQry;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
@@ -82,28 +83,26 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
 
     private ESBatchSyncTools esBatchSyncTools;
 
+    private int syncThreadNum = 5;
+
+    private int limit = 100;
+
     @Override
     public boolean execAll(String indexVersionName) {
         // 创建索引
         indexVersionName = createIndex(indexVersionName);
 
-        // 批量同步
-        esBatchSyncTools = new ESBatchSyncTools(elasticsearchTools, this, 5, indexVersionName, Constants.ES_SERVE_TYPE);
-        for (int page = 1; ; page++) {
-            ListQry listQry = new ListQry();
-            listQry.setPage(page);
-            listQry.setLimit(100);
-            Result<PagePagination<String>> serveNoListPageResult = serveAggregateRootApi.getServeNoListByPage(listQry);
-            PagePagination<String> pagePagination = ResultDataUtils.getInstance(serveNoListPageResult).getDataOrException();
-            List<String> serveNoList = pagePagination.getList();
-            esBatchSyncTools.submit(serveNoList);
+        // 获取数据页数
+        ListQry listQry = new ListQry();
+        listQry.setPage(1);
+        listQry.setLimit(limit);
+        Result<PagePagination<String>> serveNoListPageResult = serveAggregateRootApi.getServeNoListByPage(listQry);
+        PagePagination<String> pagePagination = ResultDataUtils.getInstance(serveNoListPageResult).getDataOrException();
+        int totalPages = pagePagination.getPagination().getTotalPages();
 
-            int totalPages = pagePagination.getPagination().getTotalPages();
-            if (page >= totalPages) {
-                break;
-            }
-        }
-
+        // 执行批量同步
+        esBatchSyncTools = new ESBatchSyncTools(elasticsearchTools, this, syncThreadNum, totalPages, limit, indexVersionName, Constants.ES_SERVE_TYPE);
+        esBatchSyncTools.execute();
         esBatchSyncTools.syncClose();
 
         return true;
@@ -143,10 +142,27 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
     }
 
     @Override
+    public List<String> getIdList(IdListPageQry idListPageQry) {
+        ListQry listQry = new ListQry();
+        listQry.setLimit(idListPageQry.getLimit());
+        listQry.setPage(idListPageQry.getPage());
+
+        Result<PagePagination<String>> serveNoListPageResult = serveAggregateRootApi.getServeNoListByPage(listQry);
+        PagePagination<String> pagePagination = ResultDataUtils.getInstance(serveNoListPageResult).getDataOrNull();
+        if(null == pagePagination){
+            return null;
+        }
+        return pagePagination.getList();
+    }
+
+    @Override
+    /**
+     * @description: 别名切换
+     * @param alias 别名
+     * @param newIndexVersionName 实际的indexName
+     */
     public boolean switchAliasIndex(String alias, String newIndexVersionName) {
-        alias = DeliverUtils.getEnvVariable(alias);
-        newIndexVersionName = DeliverUtils.getEnvVariable(newIndexVersionName);
-        return elasticsearchTools.switchAliasIndex(alias, newIndexVersionName);
+        return elasticsearchTools.switchAliasIndex(DeliverUtils.getEnvVariable(alias), DeliverUtils.getEnvVariable(newIndexVersionName));
     }
 
     @Override

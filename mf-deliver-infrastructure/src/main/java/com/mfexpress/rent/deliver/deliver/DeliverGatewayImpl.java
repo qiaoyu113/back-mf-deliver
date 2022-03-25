@@ -204,6 +204,8 @@ public class DeliverGatewayImpl implements DeliverGateway {
         Example.Criteria criteria = example.createCriteria();
         if(null != qry.getStatus() && !qry.getStatus().isEmpty()){
             criteria.andIn("status", qry.getStatus());
+        }else{
+            criteria.andNotEqualTo("status", DeliverStatusEnum.INVALID.getCode());
         }
                 // .andEqualTo("carServiceId", 36);
         if(null != qry.getDeliverStatus() && !qry.getDeliverStatus().isEmpty()){
