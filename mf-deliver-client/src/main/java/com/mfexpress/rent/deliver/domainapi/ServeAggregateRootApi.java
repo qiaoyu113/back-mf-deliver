@@ -143,4 +143,7 @@ public interface ServeAggregateRootApi {
 
     @PostMapping("/getServeNoListByPage")
     Result<PagePagination<String>> getServeNoListByPage(@RequestBody ListQry listQry);
+
+    @PostMapping("/getReplaceNumByCustomerIds")
+    Result<Map<Integer,Integer>> getReplaceNumByCustomerIds(@RequestBody List<Integer> customerIds);
 }
