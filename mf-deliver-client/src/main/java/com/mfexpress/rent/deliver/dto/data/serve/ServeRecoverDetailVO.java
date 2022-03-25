@@ -12,6 +12,9 @@ public class ServeRecoverDetailVO {
     @ApiModelProperty(value = "服务单编号")
     private String serveNo;
 
+    @ApiModelProperty(value = "交付单编号")
+    private String deliverNo;
+
     @ApiModelProperty(value = "订单信息")
     private OrderVO orderVO;
 

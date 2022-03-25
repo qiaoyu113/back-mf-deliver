@@ -63,6 +63,10 @@ public class ServeDTO {
 
     private String billingAdjustmentDate;
 
+    private Integer reactiveFlag;
+
+    private Integer contractCommodityId;
+
     private BigDecimal payableDeposit;
 
     private BigDecimal paidInDeposit;

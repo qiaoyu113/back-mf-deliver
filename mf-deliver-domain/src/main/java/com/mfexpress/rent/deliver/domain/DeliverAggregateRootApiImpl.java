@@ -7,19 +7,27 @@ import cn.hutool.json.JSONUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.deliver.*;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.entity.DeliverEntity;
+import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
+import com.mfexpress.rent.deliver.entity.ServeEntity;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
+import com.mfexpress.rent.deliver.gateway.RecoverVehicleGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -39,9 +47,12 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Resource
     private DeliverGateway deliverGateway;
+
     @Resource
     private DeliverEntityApi deliverEntityApi;
 
+    @Resource
+    private RecoverVehicleGateway recoverVehicleGateway;
 
     @Override
     @PostMapping("/getDeliverByServeNo")
@@ -454,6 +465,79 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
             return Result.getInstance((List<DeliverDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
         List<DeliverDTO> deliverDTOS = BeanUtil.copyToList(deliverDTOSByCarIdList, DeliverDTO.class, new CopyOptions().ignoreError());
+        return Result.getInstance(deliverDTOS).success();
+    }
+
+    @Override
+    @PostMapping("/getDeliverNoListByPage")
+    @PrintParam
+    public Result<PagePagination<String>> getDeliverNoListByPage(@RequestBody DeliverQry qry) {
+        PagePagination<DeliverEntity> pagePagination = deliverGateway.getDeliverNoListByPage(qry);
+        List<DeliverEntity> deliverEntityList = pagePagination.getList();
+        List<String> deliverNoList = deliverEntityList.stream().map(DeliverEntity::getDeliverNo).collect(Collectors.toList());
+
+        PagePagination<String> serveNoListPagePagination = new PagePagination<>();
+        serveNoListPagePagination.setPage(pagePagination.getPage());
+        serveNoListPagePagination.setPagination(pagePagination.getPagination());
+        serveNoListPagePagination.setList(deliverNoList);
+        return Result.getInstance(serveNoListPagePagination).success();
+    }
+
+    @Override
+    @PostMapping("/cancelRecoverByDeliver")
+    @PrintParam
+    @Transactional(rollbackFor = Exception.class)
+    public Result<Integer> cancelRecoverByDeliver(@RequestBody @Validated RecoverCancelByDeliverCmd cmd) {
+        DeliverEntity deliver = DeliverEntity.builder().deliverStatus(DeliverEnum.DELIVER.getCode())
+                .updateId(cmd.getOperatorId())
+                .build();
+        deliverGateway.updateDeliverByDeliverNo(cmd.getDeliverNo(), deliver);
+
+        RecoverVehicleEntity recoverVehicle = new RecoverVehicleEntity();
+        BeanUtils.copyProperties(cmd, recoverVehicle);
+        recoverVehicle.setStatus(ValidStatusEnum.INVALID.getCode());
+        recoverVehicle.setUpdateId(cmd.getOperatorId());
+        recoverVehicleGateway.updateRecoverVehicleByDeliverNo(recoverVehicle);
+
+        return Result.getInstance(0).success();
+    }
+
+    @Override
+    @PostMapping("/toBackInsureByDeliver")
+    @PrintParam
+    public Result<Integer> toBackInsureByDeliver(@RequestBody @Validated RecoverBackInsureByDeliverCmd cmd) {
+        DeliverEntity deliver = DeliverEntity.builder().isInsurance(JudgeEnum.YES.getCode())
+                .insuranceRemark(cmd.getInsuranceRemark())
+                .insuranceEndTime(DeliverUtils.dateToStringYyyyMMddHHmmss(cmd.getInsuranceTime()))
+                .build();
+
+        deliverGateway.updateDeliverByDeliverNos(cmd.getDeliverNoList(), deliver);
+
+        return Result.getInstance(0).success();
+    }
+
+    @Override
+    @PostMapping("/toDeductionByDeliver")
+    @PrintParam
+    public Result<Integer> toDeductionByDeliver(@RequestBody DeliverDTO deliverDTOToUpdate) {
+        DeliverEntity deliver = new DeliverEntity();
+        BeanUtil.copyProperties(deliverDTOToUpdate, deliver);
+        deliver.setIsDeduction(JudgeEnum.YES.getCode());
+        deliver.setDeliverStatus(DeliverEnum.COMPLETED.getCode());
+        deliverGateway.updateDeliverByDeliverNo(deliver.getDeliverNo(), deliver);
+
+        return Result.getInstance(0).success();
+    }
+
+    @Override
+    @PostMapping("/getDeliverListByQry")
+    @PrintParam
+    public Result<List<DeliverDTO>> getDeliverListByQry(@RequestBody DeliverQry deliverQry) {
+        List<DeliverEntity> deliverEntityList = deliverGateway.getDeliverListByQry(deliverQry);
+        if(deliverEntityList.isEmpty()){
+            return Result.getInstance((List<DeliverDTO>)null).success();
+        }
+        List<DeliverDTO> deliverDTOS = BeanUtil.copyToList(deliverEntityList, DeliverDTO.class, new CopyOptions().ignoreError());
         return Result.getInstance(deliverDTOS).success();
     }
 

@@ -12,16 +12,17 @@ import com.mfexpress.component.enums.contract.ContractFailTypeEnum;
 import com.mfexpress.component.enums.contract.ContractStatusEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessClass;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessMethod;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
+import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.consumer.sync.SyncServiceImpl;
 import com.mfexpress.rent.deliver.domainapi.*;
 import com.mfexpress.rent.deliver.dto.data.daily.DailyOperateCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
@@ -83,8 +84,8 @@ public class ElecContractStatusMqCommand {
     @Resource
     private DailyAggregateRootApi dailyAggregateRootApi;
 
-    @Resource
-    private SyncServiceImpl syncServiceI;
+    @Resource(name = "serveSyncServiceImpl")
+    private EsSyncHandlerI serveSyncServiceI;
 
     private MqTools mqTools;
 
@@ -205,7 +206,7 @@ public class ElecContractStatusMqCommand {
         Map<String, String> map = new HashMap<>();
         serveNoList.forEach(serveNo -> {
             map.put("serve_no", serveNo);
-            syncServiceI.execOne(map);
+            serveSyncServiceI.execOne(map);
         });
     }
 
@@ -232,7 +233,8 @@ public class ElecContractStatusMqCommand {
         }
 
         // 发送收车信息到mq，由合同域判断服务单所属的合同是否到已履约完成状态
-        if (JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {
+        // 租赁服务单1.1迭代，改为当服务单状态到已完成时，再向合同域发送此消息
+        /*if (JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {
             ServeDTO serveDTOToNoticeContract = new ServeDTO();
             serveDTOToNoticeContract.setServeNo(serveDTO.getServeNo());
             serveDTOToNoticeContract.setOaContractCode(serveDTO.getOaContractCode());
@@ -241,7 +243,7 @@ public class ElecContractStatusMqCommand {
             serveDTOToNoticeContract.setRenewalType(serveDTO.getRenewalType());
             log.info("正常收车时，交付域向合同域发送的收车单信息：{}", serveDTOToNoticeContract);
             mqTools.send(event, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));
-        }
+        }*/
 
         //收车计费
         RecoverVehicleCmd recoverVehicleCmd = new RecoverVehicleCmd();

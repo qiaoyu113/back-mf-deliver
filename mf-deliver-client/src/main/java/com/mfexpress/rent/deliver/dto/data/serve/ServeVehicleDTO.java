@@ -28,6 +28,9 @@ public class ServeVehicleDTO {
     @ApiModelProperty(value = "订单下的商品id")
     private Integer goodsId;
 
+    @ApiModelProperty(value = "合同下的商品id")
+    private Integer contractCommodityId;
+
     @ApiModelProperty(value = "合同全局id")
     private Long contractId;
 

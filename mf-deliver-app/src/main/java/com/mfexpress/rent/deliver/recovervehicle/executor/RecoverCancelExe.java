@@ -24,7 +24,7 @@ public class RecoverCancelExe {
     @Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
 
-    @Resource
+    @Resource(name = "serveSyncServiceImpl")
     private EsSyncHandlerI syncServiceI;
 
 

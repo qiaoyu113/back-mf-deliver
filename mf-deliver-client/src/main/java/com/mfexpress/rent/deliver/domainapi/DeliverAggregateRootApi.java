@@ -1,8 +1,12 @@
 package com.mfexpress.rent.deliver.domainapi;
 
 
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.deliver.*;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
@@ -102,6 +106,20 @@ public interface DeliverAggregateRootApi {
     @PostMapping("/getDeliverDTOSByCarIdList")
     Result<List<DeliverDTO>> getDeliverDTOSByCarIdList(@RequestParam("carIds") List<Integer> carIds);
 
+    @PostMapping("/getDeliverNoListByPage")
+    Result<PagePagination<String>> getDeliverNoListByPage(@RequestBody DeliverQry qry);
+
+    @PostMapping("/cancelRecoverByDeliver")
+    Result<Integer> cancelRecoverByDeliver(@RequestBody RecoverCancelByDeliverCmd cmd);
+
+    @PostMapping("/toBackInsureByDeliver")
+    Result<Integer> toBackInsureByDeliver(@RequestBody RecoverBackInsureByDeliverCmd cmd);
+
+    @PostMapping("/toDeductionByDeliver")
+    Result<Integer> toDeductionByDeliver(@RequestBody DeliverDTO deliverDTOToUpdate);
+
+    @PostMapping("/getDeliverListByQry")
+    Result<List<DeliverDTO>> getDeliverListByQry(@RequestBody DeliverQry deliverQry);
 
     @PostMapping("/getMakeDeliverDTOSByCarIdList")
     Result<List<DeliverDTO>> getMakeDeliverDTOSByCarIdList(@RequestBody List<Integer> carIds,@RequestParam("status") Integer status);

@@ -9,6 +9,9 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import java.util.Date;
 
+/**
+ * @deprecated 此类是PO，不是entity
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,6 +23,8 @@ public class ServeChangeRecord {
     private Integer id;
 
     private String serveNo;
+
+    private Integer type;
 
     private Integer renewalType;
 

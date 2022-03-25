@@ -24,10 +24,33 @@ public class ServeChangeRecordGatewayImpl implements ServeChangeRecordGateway {
     }
 
     @Override
+    public List<ServeChangeRecordPO> getList(String serveNo, Integer type) {
+        Example example = new Example(ServeChangeRecordPO.class);
+        example.createCriteria().andEqualTo("serveNo", serveNo)
+                .andEqualTo("type", type);
+
+        return serveChangeRecordMapper.selectByExample(example);
+    }
+
+    @Override
+    public void insert(ServeChangeRecordPO po) {
+        serveChangeRecordMapper.insertSelective(po);
+    }
+
+    @Override
+    public List<ServeChangeRecordPO> getListByServeNoListAndType(List<String> serveNoList, Integer type) {
+        Example example = new Example(ServeChangeRecordPO.class);
+        example.createCriteria().andIn("serveNo", serveNoList)
+                .andEqualTo("type", type);
+        return serveChangeRecordMapper.selectByExample(example);
+    }
+
+    @Override
     public List<ServeChangeRecordPO> getList(String serveNo) {
-        Example example = new Example(ServeChangeRecord.class);
+        Example example = new Example(ServeChangeRecordPO.class);
         example.createCriteria().andEqualTo("serveNo", serveNo);
 
         return serveChangeRecordMapper.selectByExample(example);
     }
+
 }

@@ -3,9 +3,6 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.order.api.app.OrderAggregateRootApi;
-import com.mfexpress.order.dto.data.OrderDTO;
-import com.mfexpress.order.dto.qry.ReviewOrderQry;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
@@ -38,9 +35,6 @@ public class RecoverVehicleDetailQryExe {
     private DeliverAggregateRootApi deliverAggregateRootApi;
 
     @Resource
-    private OrderAggregateRootApi orderAggregateRootApi;
-
-    @Resource
     private CustomerAggregateRootApi customerAggregateRootApi;
 
     @Resource
@@ -50,20 +44,21 @@ public class RecoverVehicleDetailQryExe {
     private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
 
     public RecoverDetailVO execute(RecoverDetailQryCmd cmd) {
-        String serveNo = cmd.getServeNo();
+        String deliverNo = cmd.getDeliverNo();
 
-        Result<ServeDTO> serveResult = serveAggregateRootApi.getServeDtoByServeNo(serveNo);
+        Result<DeliverDTO> deliverResult = deliverAggregateRootApi.getDeliverByDeliverNo(deliverNo);
+        if (!DeliverUtils.resultDataCheck(deliverResult)) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "交付单信息查询失败");
+        }
+        DeliverDTO deliverDTO = deliverResult.getData();
+
+        Result<ServeDTO> serveResult = serveAggregateRootApi.getServeDtoByServeNo(deliverDTO.getServeNo());
         if (!DeliverUtils.resultDataCheck(serveResult)) {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单信息查询失败");
         }
         ServeDTO serveDTO = serveResult.getData();
 
-        Result<DeliverDTO> deliverResult = deliverAggregateRootApi.getDeliverByServeNo(serveNo);
-        if (!DeliverUtils.resultDataCheck(deliverResult)) {
-            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "交车单信息查询失败");
-        }
         // 车牌号、车架号
-        DeliverDTO deliverDTO = deliverResult.getData();
 
         Result<RecoverVehicleDTO> recoverVehicleResult = recoverVehicleAggregateRootApi.getRecoverVehicleDtoByDeliverNo(deliverDTO.getDeliverNo());
         if (!DeliverUtils.resultDataCheck(deliverResult)) {
@@ -72,16 +67,7 @@ public class RecoverVehicleDetailQryExe {
         // 收车日期、预计还车日期
         RecoverVehicleDTO recoverVehicleDTO = recoverVehicleResult.getData();
 
-        ReviewOrderQry reviewOrderQry = new ReviewOrderQry();
-        reviewOrderQry.setId(serveDTO.getOrderId().toString());
-        Result<OrderDTO> orderResult = orderAggregateRootApi.getOrderInfo(reviewOrderQry);
-        if (!DeliverUtils.resultDataCheck(orderResult)) {
-            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "订单信息查询失败");
-        }
-        // 合同编号
-        OrderDTO orderDTO = orderResult.getData();
-
-        Result<CustomerVO> customerResult = customerAggregateRootApi.getById(orderDTO.getCustomerId());
+        Result<CustomerVO> customerResult = customerAggregateRootApi.getById(serveDTO.getCustomerId());
         if (!DeliverUtils.resultDataCheck(customerResult)) {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "客户信息查询失败");
         }

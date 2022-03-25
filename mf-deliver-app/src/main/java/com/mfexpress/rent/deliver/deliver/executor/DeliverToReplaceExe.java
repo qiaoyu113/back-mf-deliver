@@ -9,6 +9,8 @@ import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverReplaceCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleSelectCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCheckCmd;
+import com.mfexpress.rent.deliver.serve.executor.ReactiveServeCheckCmdExe;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.VehicleInsuranceAggregateRootApi;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -35,8 +38,14 @@ public class DeliverToReplaceExe {
     @Resource
     private VehicleInsuranceAggregateRootApi vehicleInsuranceAggregateRootApi;
 
+    @Resource
+    private ReactiveServeCheckCmdExe reactiveServeCheck;
 
     public String execute(DeliverReplaceCmd deliverReplaceCmd) {
+        // 重新激活的服务单在进行重新预选操作时需要的校验
+        ReactivateServeCheckCmd reactivateServeCheckCmd = ReactivateServeCheckCmd.builder().serveNoList(Collections.singletonList(deliverReplaceCmd.getServeList().get(0))).build();
+        reactiveServeCheck.execute(reactivateServeCheckCmd);
+
         List<DeliverVehicleSelectCmd> deliverVehicleSelectCmd = deliverReplaceCmd.getDeliverVehicleSelectCmd();
         DeliverDTO deliverDTO = new DeliverDTO();
         //原车辆未预选状态

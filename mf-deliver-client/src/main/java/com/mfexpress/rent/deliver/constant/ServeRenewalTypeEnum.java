@@ -18,4 +18,8 @@ public enum ServeRenewalTypeEnum {
         return this.code;
     }
 
+    public String getValue() {
+        return this.value;
+    }
+
 }

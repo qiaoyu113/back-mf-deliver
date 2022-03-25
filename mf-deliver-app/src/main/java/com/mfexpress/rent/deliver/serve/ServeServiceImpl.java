@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.serve;
 
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.serve.executor.*;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ServeServiceImpl implements ServeServiceI {
@@ -39,6 +41,21 @@ public class ServeServiceImpl implements ServeServiceI {
 
     @Resource
     private RenewableServeListQryExe renewableServeListQryExe;
+
+    @Resource
+    private ReactivateServeCmdExe reactivateServeCmdExe;
+
+    @Resource
+    private ServeRecoverDetailQryByDeliverExe serveRecoverDetailQryByDeliverExe;
+
+    @Resource
+    private ServeLeaseTermAmountQryExe serveLeaseTermAmountQryExe;
+
+    @Resource
+    private ExportServeLeaseTermAmountCmdExe exportServeLeaseTermAmountCmdExe;
+
+    @Resource
+    private ExportServeLeaseTermAmountDataQryExe exportServeLeaseTermAmountDataQryExe;
 
     @Override
     public ServeListVO getServeListVoByOrderNoAll(ServeQryListCmd serveQryListCmd) {
@@ -101,6 +118,31 @@ public class ServeServiceImpl implements ServeServiceI {
     @Override
     public List<ServeToRenewalVO> getRenewableServeList(RenewableServeQry qry, TokenInfo tokenInfo) {
         return renewableServeListQryExe.execute(qry, tokenInfo);
+    }
+
+    @Override
+    public PagePagination<ServeAllLeaseTermAmountVO> getServeLeaseTermAmountVOList(ServeLeaseTermAmountQry qry, TokenInfo tokenInfo) {
+        return serveLeaseTermAmountQryExe.execute(qry, tokenInfo);
+    }
+
+    @Override
+    public Integer exportServeLeaseTermAmount(ServeLeaseTermAmountQry qry, TokenInfo tokenInfo) {
+        return exportServeLeaseTermAmountCmdExe.execute(qry, tokenInfo);
+    }
+
+    @Override
+    public Integer reactivate(ReactivateServeCmd cmd, TokenInfo tokenInfo) {
+        return reactivateServeCmdExe.execute(cmd, tokenInfo);
+    }
+
+    @Override
+    public ServeRecoverDetailVO getServeRecoverDetailByDeliver(ServeQryByDeliverCmd cmd) {
+        return serveRecoverDetailQryByDeliverExe.execute(cmd);
+    }
+
+    @Override
+    public List<Map<String, Object>> exportServeLeaseTermAmountData(Map<String, Object> map) {
+        return exportServeLeaseTermAmountDataQryExe.execute(map);
     }
 
 }

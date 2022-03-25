@@ -81,6 +81,10 @@
             <artifactId>guava</artifactId>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.mfexpress.billing.customer</groupId>
+            <artifactId>mf-customer-billing-client</artifactId>
+        </dependency>
         <!--阿里云任务调度相关-->
         <!--<dependency>
             <groupId>com.aliyun.schedulerx</groupId>

@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.rent.deliver.api.SyncServiceI;
+import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
@@ -28,11 +29,12 @@ public class RecoverApplyListAllQryExe implements RecoverQryServiceI {
     @Override
     public RecoverTaskListVO execute(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        boolQueryBuilder.must(QueryBuilders.rangeQuery("deliverStatus").gte(DeliverEnum.IS_RECOVER.getCode()));
-        FieldSortBuilder deliverStatusSortBuilder = SortBuilders.fieldSort("sort").order(SortOrder.ASC);
+        boolQueryBuilder.must(QueryBuilders.termsQuery("deliverStatus", Arrays.asList(DeliverEnum.IS_RECOVER.getCode(), DeliverEnum.RECOVER.getCode()
+                , DeliverEnum.COMPLETED.getCode())));
+        FieldSortBuilder deliverStatusSortBuilder = SortBuilders.fieldSort("sort");
         FieldSortBuilder expectRecoverTimeSortBuilder = SortBuilders.fieldSort("expectRecoverTime").unmappedType("integer").order(SortOrder.DESC);
         FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
         List<FieldSortBuilder> fieldSortBuilderList = Arrays.asList(deliverStatusSortBuilder, expectRecoverTimeSortBuilder, updateTimeSortBuilder);
-        return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
+        return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo, Constants.ES_DELIVER_INDEX, Constants.ES_DELIVER_TYPE);
     }
 }

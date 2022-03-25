@@ -38,7 +38,7 @@ public class RecoverEsDataQryExe {
     private OfficeAggregateRootApi officeAggregateRootApi;
 
     public RecoverTaskListVO getEsData(RecoverQryListCmd recoverQryListCmd, BoolQueryBuilder boolQueryBuilder
-            , List<FieldSortBuilder> fieldSortBuilderList, TokenInfo tokenInfo) {
+            , List<FieldSortBuilder> fieldSortBuilderList, TokenInfo tokenInfo, String index, String type) {
 
         RecoverTaskListVO recoverTaskListVO = new RecoverTaskListVO();
 
@@ -75,8 +75,9 @@ public class RecoverEsDataQryExe {
         int start = (recoverQryListCmd.getPage() - 1) * recoverQryListCmd.getLimit();
 
         sortBuilderList.addAll(fieldSortBuilderList);
-        Map<String, Object> map = elasticsearchTools.searchByQuerySort(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX),
-                DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), start, recoverQryListCmd.getLimit(), boolQueryBuilder, sortBuilderList
+
+        Map<String, Object> map = elasticsearchTools.searchByQuerySort(DeliverUtils.getEnvVariable(index),
+                type, start, recoverQryListCmd.getLimit(), boolQueryBuilder, sortBuilderList
         );
         List<Map<String, Object>> data = (List<Map<String, Object>>) map.get("data");
         long total = (long) map.get("total");

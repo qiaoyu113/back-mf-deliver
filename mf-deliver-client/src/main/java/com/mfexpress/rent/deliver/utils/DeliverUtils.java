@@ -96,7 +96,7 @@ public class DeliverUtils {
             return "";
         }
         if (tag.equals(Constants.ES_DELIVER_INDEX)) {
-            return utils.envVariable + "-" + tag;
+            return utils.envVariable + "_" + tag;
         } else if (!StringUtils.isEmpty(utils.numMap.get(tag))) {
             return utils.envVariable + ":" + tag;
         } else {

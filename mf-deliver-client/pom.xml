@@ -66,6 +66,10 @@
             <groupId>com.mfexpress.rent.order</groupId>
             <artifactId>mf-order-client</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.mfexpress</groupId>
+            <artifactId>mf-component-spring-boot-starter</artifactId>
+        </dependency>
         <!--        测试使用-->
 
         <!--        测试使用-->
