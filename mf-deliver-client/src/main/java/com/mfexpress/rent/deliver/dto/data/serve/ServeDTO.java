@@ -62,4 +62,8 @@ public class ServeDTO {
     private Integer renewalType;
 
     private String billingAdjustmentDate;
+
+    private BigDecimal payableDeposit;
+
+    private BigDecimal paidInDeposit;
 }

@@ -2,13 +2,13 @@ package com.mfexpress.rent.deliver.serve.repository;
 
 import com.mfexpress.rent.deliver.base.BaseMapper;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
-import com.mfexpress.rent.deliver.dto.entity.Serve;
+import com.mfexpress.rent.deliver.entity.ServeEntity;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
-public interface ServeMapper extends BaseMapper<Serve> {
+public interface ServeMapper extends BaseMapper<ServeEntity> {
 
 
     @Select("<script>" +

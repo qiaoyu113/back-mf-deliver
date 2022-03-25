@@ -8,11 +8,13 @@ import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.utils.RedisTools;
+import com.mfexpress.component.starter.tools.redis.RedisTools;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.*;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
+import com.mfexpress.rent.deliver.entity.DeliverEntity;
+import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import io.swagger.annotations.Api;
@@ -24,7 +26,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RestController
@@ -38,6 +39,8 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Resource
     private DeliverGateway deliverGateway;
+    @Resource
+    private DeliverEntityApi deliverEntityApi;
 
 
     @Override
@@ -45,12 +48,12 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PrintParam
     public Result<DeliverDTO> getDeliverByServeNo(@RequestParam("serveNo") String serveNo) {
         DeliverDTO deliverDTO = new DeliverDTO();
-        Deliver deliver = deliverGateway.getDeliverByServeNo(serveNo);
+        DeliverEntity deliver = deliverGateway.getDeliverByServeNo(serveNo);
         if (deliver != null) {
-            if(StringUtils.isEmpty(deliver.getInsuranceStartTime())){
+            if (StringUtils.isEmpty(deliver.getInsuranceStartTime())) {
                 deliver.setInsuranceStartTime(null);
             }
-            if(StringUtils.isEmpty(deliver.getInsuranceEndTime())){
+            if (StringUtils.isEmpty(deliver.getInsuranceEndTime())) {
                 deliver.setInsuranceEndTime(null);
             }
             BeanUtil.copyProperties(deliver, deliverDTO);
@@ -63,14 +66,14 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/addDeliver")
     @PrintParam
     public Result<String> addDeliver(@RequestBody List<DeliverDTO> list) {
-        List<Deliver> deliverList = list.stream().map(deliverDTO -> {
+        List<DeliverEntity> deliverList = list.stream().map(deliverDTO -> {
             long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_DELIVER_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
-            Deliver deliver = new Deliver();
+            DeliverEntity deliver = new DeliverEntity();
             BeanUtil.copyProperties(deliverDTO, deliver);
             Long bizId = redisTools.getBizId(Constants.REDIS_BIZ_ID_DELIVER);
             deliver.setDeliverId(bizId);
             deliver.setDeliverNo(DeliverUtils.getNo(Constants.REDIS_DELIVER_KEY, incr));
-            if(null != deliverDTO.getInsuranceStartTime()){
+            if (null != deliverDTO.getInsuranceStartTime()) {
                 deliver.setInsuranceStartTime(DeliverUtils.dateToStringYyyyMMddHHmmss(deliverDTO.getInsuranceStartTime()));
             }
             return deliver;
@@ -86,7 +89,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     // 发车验车和收车验车对deliver的更改都走的是这个接口
     public Result<Integer> toCheck(@RequestParam("serveNo") String serveNo, @RequestParam("operatorId") Integer operatorId) {
         //2021-10-13修改 收车验车时交付单变更为已收车
-        Deliver deliver = deliverGateway.getDeliverByServeNo(serveNo);
+        DeliverEntity deliver = deliverGateway.getDeliverByServeNo(serveNo);
         deliver.setIsCheck(JudgeEnum.YES.getCode());
         deliver.setCarServiceId(operatorId);
         deliver.setUpdateId(operatorId);
@@ -101,7 +104,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/toReplace")
     public Result<String> toReplace(@RequestBody DeliverDTO deliverDTO) {
         //原交付单设为失效
-        Deliver deliver = Deliver.builder().status(ValidStatusEnum.INVALID.getCode()).build();
+        DeliverEntity deliver = DeliverEntity.builder().status(ValidStatusEnum.INVALID.getCode()).build();
         deliverGateway.updateDeliverByServeNo(deliverDTO.getServeNo(), deliver);
         //生成新的交付单
         List<DeliverDTO> deliverDtoList = new LinkedList<>();
@@ -114,7 +117,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/toInsure")
     @PrintParam
     public Result<String> toInsure(@RequestBody DeliverInsureCmd cmd) {
-        Deliver deliver = Deliver.builder()
+        DeliverEntity deliver = DeliverEntity.builder()
                 .isInsurance(JudgeEnum.YES.getCode())
                 .insuranceStartTime(DeliverUtils.dateToStringYyyyMMddHHmmss(cmd.getStartInsureDate()))
                 .build();
@@ -126,7 +129,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/toDeliver")
     @PrintParam
     public Result<String> toDeliver(@RequestBody List<String> serveNoList) {
-        Deliver deliver = Deliver.builder()
+        DeliverEntity deliver = DeliverEntity.builder()
                 .deliverStatus(DeliverEnum.DELIVER.getCode())
                 .isCheck(JudgeEnum.NO.getCode())
                 .isInsurance(JudgeEnum.NO.getCode())
@@ -139,7 +142,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/applyRecover")
     @PrintParam
     public Result<String> applyRecover(@RequestBody List<String> serveNoList) {
-        Deliver deliver = Deliver.builder().deliverStatus(DeliverEnum.IS_RECOVER.getCode()).build();
+        DeliverEntity deliver = DeliverEntity.builder().deliverStatus(DeliverEnum.IS_RECOVER.getCode()).build();
         int i = deliverGateway.updateDeliverByServeNoList(serveNoList, deliver);
         return i > 0 ? Result.getInstance("申请收车成功").success() : Result.getInstance("申请收车失败").fail(-1, "申请收车失败");
 
@@ -149,7 +152,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/cancelRecover")
     @PrintParam
     public Result<String> cancelRecover(@RequestParam("serveNo") String serveNo) {
-        Deliver deliver = Deliver.builder().deliverStatus(DeliverEnum.DELIVER.getCode()).build();
+        DeliverEntity deliver = DeliverEntity.builder().deliverStatus(DeliverEnum.DELIVER.getCode()).build();
         int i = deliverGateway.updateDeliverByServeNo(serveNo, deliver);
         return i > 0 ? Result.getInstance("取消收车成功").success() : Result.getInstance("取消收车失败").fail(-1, "取消收车失败");
     }
@@ -158,7 +161,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/toBackInsure")
     @PrintParam
     public Result<String> toBackInsure(@RequestBody DeliverBackInsureDTO deliverBackInsureDTO) {
-        Deliver deliver = Deliver.builder().isInsurance(JudgeEnum.YES.getCode())
+        DeliverEntity deliver = DeliverEntity.builder().isInsurance(JudgeEnum.YES.getCode())
                 .insuranceRemark(deliverBackInsureDTO.getInsuranceRemark())
                 .insuranceEndTime(DeliverUtils.dateToStringYyyyMMddHHmmss(deliverBackInsureDTO.getInsuranceTime()))
                 .build();
@@ -181,7 +184,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/toDeduction")
     @PrintParam
     public Result<String> toDeduction(@RequestBody DeliverDTO deliverDTO) {
-        Deliver deliver = new Deliver();
+        DeliverEntity deliver = new DeliverEntity();
         BeanUtil.copyProperties(deliverDTO, deliver);
         deliver.setIsDeduction(JudgeEnum.YES.getCode());
         int i = deliverGateway.updateDeliverByServeNo(deliver.getServeNo(), deliver);
@@ -202,10 +205,10 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/cancelSelected")
     @PrintParam
     public Result<String> cancelSelected(@RequestParam("carId") Integer carId) {
-        Deliver deliver = deliverGateway.getDeliverByCarIdAndDeliverStatus(carId, Collections.singletonList(DeliverEnum.IS_DELIVER.getCode()));
+        DeliverEntity deliver = deliverGateway.getDeliverByCarIdAndDeliverStatus(carId, Collections.singletonList(DeliverEnum.IS_DELIVER.getCode()));
         if (deliver != null) {
             //设为失效
-            Deliver build = Deliver.builder().status(ValidStatusEnum.INVALID.getCode()).build();
+            DeliverEntity build = DeliverEntity.builder().status(ValidStatusEnum.INVALID.getCode()).build();
             deliverGateway.updateDeliverByServeNo(deliver.getServeNo(), build);
             return Result.getInstance(deliver.getServeNo()).success();
         }
@@ -216,10 +219,10 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/cancelSelectedByServeNoList")
     @PrintParam
     public Result<List<Integer>> cancelSelectedByServeNoList(@RequestBody List<String> serveNoList) {
-        List<Deliver> deliverList = deliverGateway.getDeliverByServeNoList(serveNoList);
-        Deliver deliver = Deliver.builder().status(ValidStatusEnum.INVALID.getCode()).build();
+        List<DeliverEntity> deliverList = deliverGateway.getDeliverByServeNoList(serveNoList);
+        DeliverEntity deliver = DeliverEntity.builder().status(ValidStatusEnum.INVALID.getCode()).build();
         deliverGateway.updateDeliverByServeNoList(serveNoList, deliver);
-        List<Integer> carIdList = deliverList.stream().map(Deliver::getCarId).collect(Collectors.toList());
+        List<Integer> carIdList = deliverList.stream().map(DeliverEntity::getCarId).collect(Collectors.toList());
         return Result.getInstance(carIdList).success();
     }
 
@@ -246,16 +249,16 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     public Result<String> syncVehicleAgeAndMileage(@RequestBody List<DeliverVehicleMqDTO> deliverVehicleMqDTOList) {
         for (DeliverVehicleMqDTO deliverVehicleMqDTO : deliverVehicleMqDTOList) {
             if (deliverVehicleMqDTO.getMileage() != null) {
-                Deliver deliver = Deliver.builder().mileage(deliverVehicleMqDTO.getMileage()).build();
+                DeliverEntity deliver = DeliverEntity.builder().mileage(deliverVehicleMqDTO.getMileage()).build();
                 int i = deliverGateway.updateMileageAndVehicleAgeByCarId(deliverVehicleMqDTO.getCarId(), deliver);
 
             }
             if (deliverVehicleMqDTO.getVehicleAge() != null) {
-                Deliver deliver = Deliver.builder().mileage(deliverVehicleMqDTO.getVehicleAge()).build();
+                DeliverEntity deliver = DeliverEntity.builder().mileage(deliverVehicleMqDTO.getVehicleAge()).build();
                 int i = deliverGateway.updateMileageAndVehicleAgeByCarId(deliverVehicleMqDTO.getCarId(), deliver);
             }
             if (deliverVehicleMqDTO.getCarNum() != null) {
-                Deliver deliver = Deliver.builder().carNum(deliverVehicleMqDTO.getCarNum()).build();
+                DeliverEntity deliver = DeliverEntity.builder().carNum(deliverVehicleMqDTO.getCarNum()).build();
                 int i = deliverGateway.updateMileageAndVehicleAgeByCarId(deliverVehicleMqDTO.getCarId(), deliver);
             }
         }
@@ -267,30 +270,45 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/saveCarServiceId")
     @PrintParam
     public Result<String> saveCarServiceId(@RequestBody DeliverCarServiceDTO deliverCarServiceDTO) {
-        Deliver deliver = Deliver.builder().carServiceId(deliverCarServiceDTO.getCarServiceId()).build();
+        DeliverEntity deliver = DeliverEntity.builder().carServiceId(deliverCarServiceDTO.getCarServiceId()).build();
         deliverGateway.updateDeliverByServeNoList(deliverCarServiceDTO.getServeNoList(), deliver);
         return Result.getInstance("").success();
     }
 
     @Override
     @PostMapping("/getDeliverByServeNoList")
-    public Result<Map<String, Deliver>> getDeliverByServeNoList(List<String> serveNoList) {
-        List<Deliver> deliverList = deliverGateway.getDeliverByServeNoList(serveNoList);
-        Map<String, Deliver> map = deliverList.stream().collect(Collectors.toMap(Deliver::getServeNo, Function.identity()));
-        return Result.getInstance(map).success();
+    public Result<Map<String, Deliver>> getDeliverByServeNoList(@RequestBody List<String> serveNoList) {
+        List<DeliverEntity> deliverList = deliverGateway.getDeliverByServeNoList(serveNoList);
+        Map<String, Deliver> deliverMap = new HashMap<>(deliverList.size());
+        deliverList.forEach(deliverEntity -> {
+            Deliver deliver = BeanUtil.copyProperties(deliverEntity, Deliver.class);
+            deliverMap.put(deliverEntity.getServeNo(), deliver);
+        });
+        return Result.getInstance(deliverMap).success();
+    }
+
+    @Override
+    @PostMapping("getDeliverDTOListByServeNoList")
+    @PrintParam
+    public Result<List<DeliverDTO>> getDeliverDTOListByServeNoList(@RequestBody List<String> serveNoList) {
+        List<DeliverDTO> deliverDTOList = deliverEntityApi.getDeliverDTOListByServeNoList(serveNoList);
+        if (CollectionUtil.isEmpty(deliverDTOList)) {
+            return Result.getInstance(deliverDTOList).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+        }
+        return Result.getInstance(deliverDTOList).success();
     }
 
     @Override
     @PostMapping("/getDeduct")
     public Result<List<DeliverDTO>> getDeduct(@RequestBody List<String> serveNoList) {
-        List<Deliver> deliverList = deliverGateway.getDeliverByDeductStatus(serveNoList);
+        List<DeliverEntity> deliverList = deliverGateway.getDeliverByDeductStatus(serveNoList);
         if (deliverList != null) {
             List<DeliverDTO> deliverDTOList = deliverList.stream().map(deliver -> {
                 DeliverDTO deliverDTO = new DeliverDTO();
-                if(StringUtils.isEmpty(deliver.getInsuranceStartTime())){
+                if (StringUtils.isEmpty(deliver.getInsuranceStartTime())) {
                     deliver.setInsuranceStartTime(null);
                 }
-                if(StringUtils.isEmpty(deliver.getInsuranceEndTime())){
+                if (StringUtils.isEmpty(deliver.getInsuranceEndTime())) {
                     deliver.setInsuranceEndTime(null);
                 }
                 BeanUtils.copyProperties(deliver, deliverDTO);
@@ -308,15 +326,15 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PrintParam
     public Result<DeliverDTO> getDeliveredDeliverDTOByCarId(@RequestParam("carId") Integer carId) {
         // 状态为已发车和收车中的交车单所属的车辆都可以被维修
-        Deliver deliver = deliverGateway.getDeliverByCarIdAndDeliverStatus(carId, Arrays.asList(DeliverEnum.DELIVER.getCode(), DeliverEnum.IS_RECOVER.getCode()));
+        DeliverEntity deliver = deliverGateway.getDeliverByCarIdAndDeliverStatus(carId, Arrays.asList(DeliverEnum.DELIVER.getCode(), DeliverEnum.IS_RECOVER.getCode()));
         if (null == deliver) {
             return Result.getInstance((DeliverDTO) null).success();
         }
         DeliverDTO deliverDTO = new DeliverDTO();
-        if(StringUtils.isEmpty(deliver.getInsuranceStartTime())){
+        if (StringUtils.isEmpty(deliver.getInsuranceStartTime())) {
             deliver.setInsuranceStartTime(null);
         }
-        if(StringUtils.isEmpty(deliver.getInsuranceEndTime())){
+        if (StringUtils.isEmpty(deliver.getInsuranceEndTime())) {
             deliver.setInsuranceEndTime(null);
         }
         BeanUtils.copyProperties(deliver, deliverDTO);
@@ -327,10 +345,10 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/contractGenerating")
     @PrintParam
     public Result<Integer> contractGenerating(@RequestBody DeliverContractGeneratingCmd cmd) {
-        Deliver deliverToUpdate = new Deliver();
+        DeliverEntity deliverToUpdate = new DeliverEntity();
         List<String> serveNos = cmd.getServeNos();
-        List<Deliver> delivers = deliverGateway.getDeliverByServeNoList(serveNos);
-        if(delivers.isEmpty()){
+        List<DeliverEntity> delivers = deliverGateway.getDeliverByServeNoList(serveNos);
+        if (delivers.isEmpty()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单查询失败");
         }
         if (DeliverTypeEnum.DELIVER.getCode() == cmd.getDeliverType()) {
@@ -356,10 +374,10 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/contractSigning")
     @PrintParam
     public Result<Integer> contractSigning(@RequestBody @Validated DeliverContractSigningCmd cmd) {
-        Deliver deliverToUpdate = new Deliver();
+        DeliverEntity deliverToUpdate = new DeliverEntity();
         List<String> deliverNos = cmd.getDeliverNos();
-        List<Deliver> delivers = deliverGateway.getDeliverByDeliverNoList(deliverNos);
-        if(delivers.isEmpty()){
+        List<DeliverEntity> delivers = deliverGateway.getDeliverByDeliverNoList(deliverNos);
+        if (delivers.isEmpty()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单查询失败");
         }
         if (DeliverTypeEnum.DELIVER.getCode() == cmd.getDeliverType()) {
@@ -385,7 +403,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/makeNoSignByDeliverNo")
     @PrintParam
     public Result<Integer> makeNoSignByDeliverNo(@RequestParam("deliverNos") String deliverNos, @RequestParam("deliverType") Integer deliverType) {
-        Deliver deliverToUpdate = new Deliver();
+        DeliverEntity deliverToUpdate = new DeliverEntity();
         if (DeliverTypeEnum.DELIVER.getCode() == deliverType) {
             deliverToUpdate.setDeliverContractStatus(DeliverContractStatusEnum.NOSIGN.getCode());
         } else {
@@ -399,15 +417,15 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/getDeliverByDeliverNo")
     @PrintParam
     public Result<DeliverDTO> getDeliverByDeliverNo(@RequestParam("deliverNo") String deliverNo) {
-        Deliver deliver = deliverGateway.getDeliverByDeliverNo(deliverNo);
+        DeliverEntity deliver = deliverGateway.getDeliverByDeliverNo(deliverNo);
         if (null == deliver) {
             return Result.getInstance((DeliverDTO) null).success();
         }
         DeliverDTO deliverDTO = new DeliverDTO();
-        if(StringUtils.isEmpty(deliver.getInsuranceStartTime())){
+        if (StringUtils.isEmpty(deliver.getInsuranceStartTime())) {
             deliver.setInsuranceStartTime(null);
         }
-        if(StringUtils.isEmpty(deliver.getInsuranceEndTime())){
+        if (StringUtils.isEmpty(deliver.getInsuranceEndTime())) {
             deliver.setInsuranceEndTime(null);
         }
         BeanUtils.copyProperties(deliver, deliverDTO);
@@ -418,12 +436,12 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/getLastDeliverByCarId")
     @PrintParam
     public Result<DeliverDTO> getLastDeliverByCarId(@RequestParam("carId") Integer carId) {
-        List<Deliver> deliverByCarId = deliverGateway.getDeliverByCarId(carId);
-        if (CollectionUtil.isEmpty(deliverByCarId)){
+        List<DeliverEntity> deliverEntityList = deliverGateway.getDeliverByCarId(carId);
+        if (CollectionUtil.isEmpty(deliverEntityList)){
             return Result.getInstance((DeliverDTO)null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
         DeliverDTO deliverDTO = new DeliverDTO();
-        BeanUtils.copyProperties(deliverByCarId.get(0), deliverDTO);
+        BeanUtils.copyProperties(deliverEntityList.get(0), deliverDTO);
         return Result.getInstance(deliverDTO).success();
     }
 
@@ -431,7 +449,18 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/getDeliverDTOSByCarIdList")
     @PrintParam
     public Result<List<DeliverDTO>> getDeliverDTOSByCarIdList(@RequestParam("carIds") List<Integer> carIds) {
-        List<Deliver> deliverDTOSByCarIdList = deliverGateway.getDeliverDTOSByCarIdList(carIds);
+        List<DeliverEntity> deliverDTOSByCarIdList = deliverGateway.getDeliverDTOSByCarIdList(carIds);
+        if (CollectionUtil.isEmpty(deliverDTOSByCarIdList)) {
+            return Result.getInstance((List<DeliverDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+        }
+        List<DeliverDTO> deliverDTOS = BeanUtil.copyToList(deliverDTOSByCarIdList, DeliverDTO.class, new CopyOptions().ignoreError());
+        return Result.getInstance(deliverDTOS).success();
+    }
+
+    @Override
+    @PostMapping("/getMakeDeliverDTOSByCarIdList")
+    public Result<List<DeliverDTO>> getMakeDeliverDTOSByCarIdList(@RequestBody List<Integer> carIds,@RequestParam("status") Integer status) {
+        List<DeliverEntity> deliverDTOSByCarIdList = deliverGateway.getMakeDeliverDTOSByCarIdList(carIds,status);
         if (CollectionUtil.isEmpty(deliverDTOSByCarIdList)){
             return Result.getInstance((List<DeliverDTO>)null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }

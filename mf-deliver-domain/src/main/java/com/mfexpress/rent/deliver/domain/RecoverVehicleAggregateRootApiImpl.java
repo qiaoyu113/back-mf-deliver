@@ -11,14 +11,19 @@ import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.utils.RedisTools;
+import com.mfexpress.component.starter.tools.redis.RedisTools;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.po.ElectronicHandoverContractPO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.GroupPhotoVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
-import com.mfexpress.rent.deliver.dto.entity.*;
+import com.mfexpress.rent.deliver.dto.entity.RecoverAbnormal;
+import com.mfexpress.rent.deliver.dto.entity.RecoverVehicle;
+import com.mfexpress.rent.deliver.entity.DeliverEntity;
+import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
+import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
+import com.mfexpress.rent.deliver.entity.ServeEntity;
 import com.mfexpress.rent.deliver.gateway.*;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
@@ -30,7 +35,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RestController
@@ -63,7 +67,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @PostMapping("/getRecoverVehicleDtoByDeliverNo")
     @PrintParam
     public Result<RecoverVehicleDTO> getRecoverVehicleDtoByDeliverNo(@RequestParam("deliverNo") String deliverNo) {
-        RecoverVehicle recoverVehicle = recoverVehicleGateway.getRecoverVehicleByDeliverNo(deliverNo);
+        RecoverVehicleEntity recoverVehicle = recoverVehicleGateway.getRecoverVehicleByDeliverNo(deliverNo);
         RecoverVehicleDTO recoverVehicleDTO = new RecoverVehicleDTO();
         if (recoverVehicle != null) {
             BeanUtils.copyProperties(recoverVehicle, recoverVehicleDTO);
@@ -78,10 +82,10 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @PrintParam
     public Result<String> addRecoverVehicle(@RequestBody List<RecoverVehicleDTO> recoverVehicleDTOList) {
         if (recoverVehicleDTOList != null) {
-            List<RecoverVehicle> recoverVehicleList = recoverVehicleDTOList.stream().map(recoverVehicleDTO -> {
+            List<RecoverVehicleEntity> recoverVehicleList = recoverVehicleDTOList.stream().map(recoverVehicleDTO -> {
                 long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_RECOVER_VEHICLE_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
                 String recoverVehicleNo = DeliverUtils.getNo(Constants.REDIS_RECOVER_VEHICLE_KEY, incr);
-                RecoverVehicle recoverVehicle = new RecoverVehicle();
+                RecoverVehicleEntity recoverVehicle = new RecoverVehicleEntity();
                 BeanUtils.copyProperties(recoverVehicleDTO, recoverVehicle);
                 recoverVehicle.setRecoverVehicleNo(recoverVehicleNo);
                 return recoverVehicle;
@@ -96,7 +100,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @PostMapping("/cancelRecover")
     @PrintParam
     public Result<String> cancelRecover(@RequestBody RecoverVehicleDTO recoverVehicleDTO) {
-        RecoverVehicle recoverVehicle = new RecoverVehicle();
+        RecoverVehicleEntity recoverVehicle = new RecoverVehicleEntity();
         BeanUtils.copyProperties(recoverVehicleDTO, recoverVehicle);
         recoverVehicle.setStatus(ValidStatusEnum.INVALID.getCode());
         recoverVehicleGateway.updateRecoverVehicle(recoverVehicle);
@@ -119,7 +123,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @PostMapping("/toBackInsure")
     @PrintParam
     public Result<List<RecoverVehicleDTO>> toBackInsure(@RequestBody List<String> serveNoList) {
-        List<RecoverVehicle> recoverVehicleList = recoverVehicleGateway.selectRecoverByServeNoList(serveNoList);
+        List<RecoverVehicleEntity> recoverVehicleList = recoverVehicleGateway.selectRecoverByServeNoList(serveNoList);
         List<RecoverVehicleDTO> recoverVehicleDTOList = new LinkedList<>();
         if (recoverVehicleList != null) {
             recoverVehicleDTOList = recoverVehicleList.stream().map(recoverVehicle -> {
@@ -136,16 +140,20 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @Override
     @PostMapping("getRecoverVehicleByServeNo")
     public Result<Map<String, RecoverVehicle>> getRecoverVehicleByServeNo(@RequestBody List<String> serveNoList) {
-        List<RecoverVehicle> recoverVehicleList = recoverVehicleGateway.selectRecoverByServeNoList(serveNoList);
-        Map<String, RecoverVehicle> map = recoverVehicleList.stream().collect(Collectors.toMap(RecoverVehicle::getServeNo, Function.identity()));
+        List<RecoverVehicleEntity> recoverVehicleList = recoverVehicleGateway.selectRecoverByServeNoList(serveNoList);
+        Map<String, RecoverVehicle> recoverVehicleMap = new HashMap<>();
+        recoverVehicleList.forEach(recoverVehicleEntity -> {
+            RecoverVehicle recoverVehicle = BeanUtil.copyProperties(recoverVehicleEntity, RecoverVehicle.class);
+            recoverVehicleMap.put(recoverVehicleEntity.getServeNo(), recoverVehicle);
+        });
 
-        return Result.getInstance(map).success();
+        return Result.getInstance(recoverVehicleMap).success();
     }
 
     @Override
     @PostMapping("/updateDeductionFee")
     public Result<Integer> updateDeductionFee(@RequestBody RecoverDeductionCmd cmd) {
-        RecoverVehicle recoverVehicle = new RecoverVehicle();
+        RecoverVehicleEntity recoverVehicle = new RecoverVehicleEntity();
         recoverVehicle.setServeNo(cmd.getServeNo());
         recoverVehicle.setParkFee(cmd.getParkFee());
         recoverVehicle.setDamageFee(cmd.getDamageFee());
@@ -161,9 +169,9 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @PostMapping("/getRecoverVehicleDtosByDeliverNoList")
     @PrintParam
     public Result<List<RecoverVehicleDTO>> getRecoverVehicleDtosByDeliverNoList(@RequestParam("deliverNoList") List<String> deliverNoList) {
-        List<RecoverVehicle> recoverVehicleDtosByDeliverNoList = recoverVehicleGateway.getRecoverVehicleDtosByDeliverNoList(deliverNoList);
+        List<RecoverVehicleEntity> recoverVehicleDtosByDeliverNoList = recoverVehicleGateway.getRecoverVehicleDtosByDeliverNoList(deliverNoList);
         if (CollectionUtil.isEmpty(recoverVehicleDtosByDeliverNoList)) {
-            return Result.getInstance((List<RecoverVehicleDTO>)null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+            return Result.getInstance((List<RecoverVehicleDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
         List<RecoverVehicleDTO> recoverVehicleDTOS = BeanUtil.copyToList(recoverVehicleDtosByDeliverNoList, RecoverVehicleDTO.class, CopyOptions.create());
         return Result.getInstance(recoverVehicleDTOS).success();
@@ -171,9 +179,9 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
 
     @Override
     public Result<List<RecoverVehicleDTO>> getRecoverVehicleDTOByDeliverNos(@RequestParam("deliverNoList") List<String> deliverNoList) {
-        List<RecoverVehicle> recoverVehicleDtosByDeliverNoList = recoverVehicleGateway.getRecoverVehicleByDeliverNos(deliverNoList);
+        List<RecoverVehicleEntity> recoverVehicleDtosByDeliverNoList = recoverVehicleGateway.getRecoverVehicleByDeliverNos(deliverNoList);
         if (CollectionUtil.isEmpty(recoverVehicleDtosByDeliverNoList)) {
-            return Result.getInstance((List<RecoverVehicleDTO>)null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+            return Result.getInstance((List<RecoverVehicleDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
         List<RecoverVehicleDTO> recoverVehicleDTOS = BeanUtil.copyToList(recoverVehicleDtosByDeliverNoList, RecoverVehicleDTO.class, CopyOptions.create());
         return Result.getInstance(recoverVehicleDTOS).success();
@@ -185,18 +193,18 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @Transactional(rollbackFor = Exception.class)
     public Result<Integer> abnormalRecover(@RequestBody @Validated RecoverAbnormalCmd cmd) {
         // 判断deliver中的合同状态，如果不是签署中和生成中状态，不可进行此操作
-        Deliver deliver = deliverGateway.getDeliverByServeNo(cmd.getServeNo());
-        if(DeliverContractStatusEnum.GENERATING.getCode() != deliver.getRecoverContractStatus() && DeliverContractStatusEnum.SIGNING.getCode() != deliver.getRecoverContractStatus()){
+        DeliverEntity deliver = deliverGateway.getDeliverByServeNo(cmd.getServeNo());
+        if (DeliverContractStatusEnum.GENERATING.getCode() != deliver.getRecoverContractStatus() && DeliverContractStatusEnum.SIGNING.getCode() != deliver.getRecoverContractStatus()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单当前状态不允许异常收车");
         }
 
-        DeliverVehicle deliverVehicle = deliverVehicleGateway.getDeliverVehicleByDeliverNo(deliver.getDeliverNo());
-        if(null == deliverVehicle){
+        DeliverVehicleEntity deliverVehicle = deliverVehicleGateway.getDeliverVehicleByDeliverNo(deliver.getDeliverNo());
+        if (null == deliverVehicle) {
             throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "发车单查询失败");
         }
         Date deliverVehicleTime = deliverVehicle.getDeliverVehicleTime();
-        if(!deliverVehicleTime.equals(cmd.getRecoverTime())){
-            if(!deliverVehicleTime.before(cmd.getRecoverTime())){
+        if (!deliverVehicleTime.equals(cmd.getRecoverTime())) {
+            if (!deliverVehicleTime.before(cmd.getRecoverTime())) {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "收车日期不能早于发车日期");
             }
         }
@@ -209,7 +217,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         }
 
         // deliver 收车签署状态改为未签，并且异常收车flag改为真，状态改为已收车
-        Deliver deliverToUpdate = new Deliver();
+        DeliverEntity deliverToUpdate = new DeliverEntity();
         deliverToUpdate.setDeliverNo(deliver.getDeliverNo());
         deliverToUpdate.setRecoverContractStatus(DeliverContractStatusEnum.NOSIGN.getCode());
         deliverToUpdate.setRecoverAbnormalFlag(JudgeEnum.YES.getCode());
@@ -219,7 +227,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         deliverGateway.updateDeliverByDeliverNos(Collections.singletonList(deliver.getDeliverNo()), deliverToUpdate);
 
         // 服务单状态更改为已收车
-        Serve serve = Serve.builder().status(ServeEnum.RECOVER.getCode()).build();
+        ServeEntity serve = ServeEntity.builder().status(ServeEnum.RECOVER.getCode()).build();
         serveGateway.updateServeByServeNoList(Collections.singletonList(cmd.getServeNo()), serve);
 
         // 补充异常收车信息
@@ -234,7 +242,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
 
         // 取出合同信息修改收车单
         ElecContractDTO elecContractDTO = cmd.getElecContractDTO();
-        RecoverVehicle recoverVehicle = new RecoverVehicle();
+        RecoverVehicleEntity recoverVehicle = new RecoverVehicleEntity();
         recoverVehicle.setServeNo(cmd.getServeNo());
         recoverVehicle.setContactsName(elecContractDTO.getContactsName());
         recoverVehicle.setContactsCard(elecContractDTO.getContactsCard());
@@ -255,28 +263,28 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @Transactional(rollbackFor = Exception.class)
     public Result<Integer> recovered(@RequestParam("deliverNo") String deliverNo, @RequestParam("foreignNo") String foreignNo) {
         // 判断deliver中的合同状态，如果不是签署中状态，不可进行此操作
-        Deliver deliver = deliverGateway.getDeliverByDeliverNo(deliverNo);
+        DeliverEntity deliver = deliverGateway.getDeliverByDeliverNo(deliverNo);
         if (DeliverContractStatusEnum.SIGNING.getCode() != deliver.getRecoverContractStatus()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单当前状态不允许收车");
         }
 
         // deliver 收车签署状态改为已完成，并且状态改为已收车
-        Deliver deliverToUpdate = new Deliver();
+        DeliverEntity deliverToUpdate = new DeliverEntity();
         deliverToUpdate.setDeliverNo(deliver.getDeliverNo());
         deliverToUpdate.setRecoverContractStatus(DeliverContractStatusEnum.COMPLETED.getCode());
         deliverToUpdate.setDeliverStatus(DeliverEnum.RECOVER.getCode());
         deliverGateway.updateDeliverByDeliverNos(Collections.singletonList(deliver.getDeliverNo()), deliverToUpdate);
 
         // 服务单状态更改为已收车
-        Serve serve = Serve.builder().status(ServeEnum.RECOVER.getCode()).build();
+        ServeEntity serve = ServeEntity.builder().status(ServeEnum.RECOVER.getCode()).build();
         serveGateway.updateServeByServeNoList(Collections.singletonList(deliver.getServeNo()), serve);
 
         // 用合同信息补充收车单信息
         ElectronicHandoverContractPO contractPO = contractGateway.getContractByForeignNo(foreignNo);
-        if(null == contractPO){
+        if (null == contractPO) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "合同编号所属的合同查询失败，" + foreignNo);
         }
-        RecoverVehicle recoverVehicle = new RecoverVehicle();
+        RecoverVehicleEntity recoverVehicle = new RecoverVehicleEntity();
         recoverVehicle.setServeNo(deliver.getServeNo());
         recoverVehicle.setContactsName(contractPO.getContactsName());
         recoverVehicle.setContactsCard(contractPO.getContactsCard());

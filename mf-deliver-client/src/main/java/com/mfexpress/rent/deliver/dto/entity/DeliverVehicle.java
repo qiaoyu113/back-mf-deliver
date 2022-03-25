@@ -4,16 +4,17 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Id;
-import javax.persistence.Table;
 import java.util.Date;
 
+/**
+ * @deprecated 此类不再作为实体类
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "deliver_vehicle")
+//@Table(name = "deliver_vehicle")
 public class DeliverVehicle {
-    @Id
+
     private Integer id;
 
     private String deliverVehicleNo;

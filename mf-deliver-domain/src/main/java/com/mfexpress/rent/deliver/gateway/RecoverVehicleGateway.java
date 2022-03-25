@@ -1,23 +1,23 @@
 package com.mfexpress.rent.deliver.gateway;
 
-import com.mfexpress.rent.deliver.dto.entity.RecoverVehicle;
+import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
 
 import java.util.List;
 
 public interface RecoverVehicleGateway {
 
 
-    void addRecoverVehicle(List<RecoverVehicle> recoverVehicleList);
+    void addRecoverVehicle(List<RecoverVehicleEntity> recoverVehicleList);
 
-    int updateRecoverVehicle(RecoverVehicle recoverVehicle);
+    int updateRecoverVehicle(RecoverVehicleEntity recoverVehicle);
 
-    List<RecoverVehicle> selectRecoverByServeNoList(List<String> serveNoList);
+    List<RecoverVehicleEntity> selectRecoverByServeNoList(List<String> serveNoList);
 
-    RecoverVehicle getRecoverVehicleByDeliverNo(String deliverNo);
+    RecoverVehicleEntity getRecoverVehicleByDeliverNo(String deliverNo);
 
-    List<RecoverVehicle> getRecoverVehicleDtosByDeliverNoList(List<String> deliverNoList);
+    List<RecoverVehicleEntity> getRecoverVehicleDtosByDeliverNoList(List<String> deliverNoList);
 
-    List<RecoverVehicle> getRecoverVehicleByDeliverNos(List<String> deliverNoList);
+    List<RecoverVehicleEntity> getRecoverVehicleByDeliverNos(List<String> deliverNoList);
 
 
 }

@@ -1,21 +1,22 @@
 package com.mfexpress.rent.deliver.domain;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.json.JSONUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.utils.RedisTools;
+import com.mfexpress.component.starter.tools.redis.RedisTools;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
-import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.dto.entity.DeliverVehicle;
-import com.mfexpress.rent.deliver.dto.entity.Serve;
+import com.mfexpress.rent.deliver.entity.DeliverEntity;
+import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
+import com.mfexpress.rent.deliver.entity.ServeEntity;
+import com.mfexpress.rent.deliver.entity.api.DeliverVehicleEntityApi;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.gateway.DeliverVehicleGateway;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
@@ -27,7 +28,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RestController
@@ -45,12 +45,14 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
 
     @Resource
     private DeliverGateway deliverGateway;
+    @Resource
+    private DeliverVehicleEntityApi deliverVehicleEntityApi;
 
     @Override
     @PostMapping("/getDeliverVehicleDto")
     @PrintParam
     public Result<DeliverVehicleDTO> getDeliverVehicleDto(@RequestParam("deliverNo") String deliverNo) {
-        DeliverVehicle deliverVehicle = deliverVehicleGateway.getDeliverVehicleByDeliverNo(deliverNo);
+        DeliverVehicleEntity deliverVehicle = deliverVehicleGateway.getDeliverVehicleByDeliverNo(deliverNo);
         DeliverVehicleDTO deliverVehicleDTO = new DeliverVehicleDTO();
         if (deliverVehicle != null) {
             BeanUtils.copyProperties(deliverVehicle, deliverVehicleDTO);
@@ -65,10 +67,10 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
     public Result<String> addDeliverVehicle(@RequestBody List<DeliverVehicleDTO> deliverVehicleDTOList) {
 
         if (deliverVehicleDTOList != null) {
-            List<DeliverVehicle> deliverVehicleList = deliverVehicleDTOList.stream().map(deliverVehicleDTO -> {
+            List<DeliverVehicleEntity> deliverVehicleList = deliverVehicleDTOList.stream().map(deliverVehicleDTO -> {
                 long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_DELIVER_VEHICLE_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
                 String deliverVehicleNo = DeliverUtils.getNo(Constants.REDIS_DELIVER_VEHICLE_KEY, incr);
-                DeliverVehicle deliverVehicle = new DeliverVehicle();
+                DeliverVehicleEntity deliverVehicle = new DeliverVehicleEntity();
                 BeanUtils.copyProperties(deliverVehicleDTO, deliverVehicle);
                 deliverVehicle.setDeliverVehicleNo(deliverVehicleNo);
                 return deliverVehicle;
@@ -83,9 +85,13 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
     @PostMapping("getDeliverVehicleByServeNo")
     @PrintParam
     public Result<Map<String, DeliverVehicle>> getDeliverVehicleByServeNo(@RequestBody List<String> serveNoList) {
-        List<DeliverVehicle> deliverVehicleList = deliverVehicleGateway.getDeliverVehicleByServeNo(serveNoList);
-        Map<String, DeliverVehicle> map = deliverVehicleList.stream().collect(Collectors.toMap(DeliverVehicle::getServeNo, Function.identity()));
-        return Result.getInstance(map).success();
+        List<DeliverVehicleEntity> deliverVehicleList = deliverVehicleGateway.getDeliverVehicleByServeNo(serveNoList);
+        Map<String, DeliverVehicle> deliverVehicleMap = new HashMap<>();
+        deliverVehicleList.forEach(deliverVehicleEntity -> {
+            DeliverVehicle deliverVehicle = BeanUtil.copyProperties(deliverVehicleEntity, DeliverVehicle.class);
+            deliverVehicleMap.put(deliverVehicleEntity.getServeNo(), deliverVehicle);
+        });
+        return Result.getInstance(deliverVehicleMap).success();
     }
 
     // 发车电子合同签署完成后触发的一系列操作
@@ -116,7 +122,7 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
         // 服务单状态更新为已发车 填充预计收车日期
         Map<String, String> expectRecoverDateMap = contractDTO.getExpectRecoverDateMap();
         for (String serveNo : serveNoList) {
-            Serve serve = Serve.builder().status(ServeEnum.DELIVER.getCode()).build();
+            ServeEntity serve = ServeEntity.builder().status(ServeEnum.DELIVER.getCode()).build();
             String expectRecoverDate = expectRecoverDateMap.get(serveNo);
             if (Objects.nonNull(expectRecoverDate)) {
                 serve.setExpectRecoverDate(expectRecoverDate);
@@ -126,7 +132,7 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
 
 
         // 交付单状态更新为已发车并初始化操作状态
-        Deliver deliver = Deliver.builder()
+        DeliverEntity deliver = DeliverEntity.builder()
                 .deliverStatus(DeliverEnum.DELIVER.getCode())
                 .isCheck(JudgeEnum.NO.getCode())
                 .isInsurance(JudgeEnum.NO.getCode())
@@ -135,10 +141,10 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
         deliverGateway.updateDeliverByServeNoList(serveNoList, deliver);
 
         // 生成发车单
-        List<DeliverVehicle> deliverVehicleList = deliverVehicleDTOList.stream().map(deliverVehicleDTO -> {
+        List<DeliverVehicleEntity> deliverVehicleList = deliverVehicleDTOList.stream().map(deliverVehicleDTO -> {
             long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_DELIVER_VEHICLE_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
             String deliverVehicleNo = DeliverUtils.getNo(Constants.REDIS_DELIVER_VEHICLE_KEY, incr);
-            DeliverVehicle deliverVehicle = new DeliverVehicle();
+            DeliverVehicleEntity deliverVehicle = new DeliverVehicleEntity();
             BeanUtils.copyProperties(deliverVehicleDTO, deliverVehicle);
             deliverVehicle.setDeliverVehicleNo(deliverVehicleNo);
             return deliverVehicle;
@@ -152,11 +158,10 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
     @PostMapping("/getDeliverVehicleByDeliverNoList")
     @PrintParam
     public Result<List<DeliverVehicleDTO>> getDeliverVehicleByDeliverNoList(@RequestBody List<String> deliverNoList) {
-        List<DeliverVehicle> deliverList = deliverVehicleGateway.getDeliverVehicleByDeliverNoList(deliverNoList);
-        if (CollectionUtil.isEmpty(deliverList)) {
-            return Result.getInstance((List<DeliverVehicleDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+        List<DeliverVehicleDTO> deliverVehicleDTOList = deliverVehicleEntityApi.getDeliverVehicleListByDeliverNoList(deliverNoList);
+        if (CollectionUtil.isEmpty(deliverVehicleDTOList)) {
+            return Result.getInstance(deliverVehicleDTOList).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
-        List<DeliverVehicleDTO> deliverVehicleDTOList = BeanUtil.copyToList(deliverList, DeliverVehicleDTO.class, new CopyOptions().ignoreError());
         return Result.getInstance(deliverVehicleDTOList).success();
     }
 
