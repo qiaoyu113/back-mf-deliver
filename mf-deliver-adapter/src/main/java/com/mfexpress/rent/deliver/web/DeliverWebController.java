@@ -23,7 +23,7 @@ import java.util.Map;
 @RestController("deliverWebController")
 @RequestMapping("/api/deliver/v3/deliver/web")
 @Api(tags = "api--交付--web--1.0租赁交付单", value = "DeliverController")
-public class DeliverController {
+public class DeliverWebController {
 
     @Resource
     private DeliverServiceI deliverServiceI;
