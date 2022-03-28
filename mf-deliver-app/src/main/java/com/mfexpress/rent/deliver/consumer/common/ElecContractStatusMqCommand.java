@@ -51,6 +51,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -245,6 +246,10 @@ public class ElecContractStatusMqCommand {
             mqTools.send(event, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));
         }*/
 
+        // 判断实际收车日期和预计收车日期的前后关系，如果实际收车日期在预计收车日期之前或当天，发送收车计费消息，反之，发送自动续约消息
+        Date recoverVehicleTime = contractDTO.getRecoverVehicleTime();
+        String expectRecoverDate = serveDTO.getExpectRecoverDate();
+
         //收车计费
         RecoverVehicleCmd recoverVehicleCmd = new RecoverVehicleCmd();
         recoverVehicleCmd.setServeNo(serveDTO.getServeNo());
@@ -266,17 +271,18 @@ public class ElecContractStatusMqCommand {
         // 数据收集
         List<DeliverImgInfo> deliverImgInfos = JSONUtil.toList(contractDTO.getPlateNumberWithImgs(), DeliverImgInfo.class);
         List<String> serveNoList = deliverImgInfos.stream().map(DeliverImgInfo::getServeNo).collect(Collectors.toList());
-        Result<Map<String, Serve>> serveMapResult = serveAggregateRootApi.getServeMapByServeNoList(serveNoList);
-        if (serveMapResult.getCode() != 0 || null == serveMapResult.getData()) {
+        Result<List<ServeDTO>> serveDTOListResult = serveAggregateRootApi.getServeDTOByServeNoList(serveNoList);
+        if (serveDTOListResult.getCode() != 0 || null == serveDTOListResult.getData() || serveDTOListResult.getData().isEmpty()) {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单信息不存在");
         }
-        Map<String, Serve> serveMap = serveMapResult.getData();
+        List<ServeDTO> serveDTOList = serveDTOListResult.getData();
+        Map<String, ServeDTO> serveDTOMap = serveDTOList.stream().collect(Collectors.toMap(ServeDTO::getServeNo, Function.identity(), (v1, v2) -> v1));
         //每个服务单对应的预计收车日期
-        Map<String, String> expectRecoverDateMap = new HashMap<>(serveMap.size());
+        Map<String, String> expectRecoverDateMap = new HashMap<>(serveDTOList.size());
         for (String serveNo : serveNoList) {
-            Serve serve = serveMap.get(serveNo);
-            //替换车使用维修车的预计收车日期
-            if (!serve.getReplaceFlag().equals(1)) {
+            ServeDTO serve = serveDTOMap.get(serveNo);
+            //替换车使用维修车的预计收车日期，重新激活的服务单不更新预计收车日期
+            if (!serve.getReplaceFlag().equals(1) && JudgeEnum.YES.getCode().equals(serve.getReactiveFlag())) {
                 String expectRecoverDate = getExpectRecoverDate(contractDTO.getDeliverVehicleTime(), serve.getLeaseMonths());
                 expectRecoverDateMap.put(serveNo, expectRecoverDate);
             }
@@ -289,14 +295,14 @@ public class ElecContractStatusMqCommand {
         deliverImgInfos.forEach(deliverImgInfo -> {
             carIdList.add(deliverImgInfo.getCarId());
             //发车操作mq触发计费
-            Serve serve = serveMap.get(deliverImgInfo.getServeNo());
+            ServeDTO serve = serveDTOMap.get(deliverImgInfo.getServeNo());
             DeliverVehicleCmd rentChargeCmd = new DeliverVehicleCmd();
             rentChargeCmd.setServeNo(deliverImgInfo.getServeNo());
             rentChargeCmd.setDeliverNo(deliverImgInfo.getDeliverNo());
             rentChargeCmd.setRent(serve.getRent());
             String expectRecoverDate = expectRecoverDateMap.get(deliverImgInfo.getServeNo());
             if (Objects.isNull(expectRecoverDate)) {
-                //替换车使用原车的预计收车日期作为计费截止日期
+                //替换车使用原车的预计收车日期作为计费截止日期，重新激活服务单使用原来的预计收车日期作为计费截止日期
                 rentChargeCmd.setExpectRecoverDate(serve.getExpectRecoverDate());
             } else {
                 rentChargeCmd.setExpectRecoverDate(expectRecoverDate);

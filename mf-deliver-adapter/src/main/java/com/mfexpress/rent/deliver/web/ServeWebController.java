@@ -24,7 +24,7 @@ import java.util.Map;
 @RestController("serveWebController")
 @RequestMapping("/api/deliver/v3/serve/web")
 @Api(tags = "api--交付--web--1.0租赁服务单", value = "ServeController")
-public class ServeController {
+public class ServeWebController {
 
     @Resource
     private ServeServiceI serveServiceI;
