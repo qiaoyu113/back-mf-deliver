@@ -219,10 +219,10 @@ public class ServeEntity implements ServeEntityApi {
                 ServeDTO serveDTOToNoticeContract = new ServeDTO();
                 serveDTOToNoticeContract.setServeNo(serveEntity.getServeNo());
                 serveDTOToNoticeContract.setOaContractCode(serveEntity.getOaContractCode());
-                serveDTOToNoticeContract.setGoodsId(serveEntity.getContractCommodityId());
+                // serveDTOToNoticeContract.setGoodsId(serveEntity.getContractCommodityId());
                 serveDTOToNoticeContract.setCarServiceId(creatorId);
                 serveDTOToNoticeContract.setRenewalType(serveEntity.getRenewalType());
-                log.info("异常收车时，交付域向合同域发送的收车单信息：{}", serveDTOToNoticeContract);
+                serveDTOToNoticeContract.setContractCommodityId(serveEntity.getContractCommodityId());
                 mqTools.send(event, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));
             }
 
