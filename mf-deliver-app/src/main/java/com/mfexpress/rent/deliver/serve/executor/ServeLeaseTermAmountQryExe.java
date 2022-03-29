@@ -31,6 +31,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeAllLeaseTermAmountVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
+import com.mfexpress.rent.deliver.utils.FormatUtil;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -140,7 +141,9 @@ public class ServeLeaseTermAmountQryExe {
 
         // 服务单 1 -----------> n 费项 1 -----------> 1 详单 1 -----------> 1 子账单项
         // 根据服务单号查询其下的多个详单id
-        Result<Map<String, List<Long>>> serveWithDetailIdMapResult = detailAggregateRootApi.getDetailIdByServeNoList(serveNoList);
+        // 只查当月之前的数据，不含当月
+        String nowYm = FormatUtil.ymFormatDateToString(new Date());
+        Result<Map<String, List<Long>>> serveWithDetailIdMapResult = detailAggregateRootApi.getDetailIdByServeNoListAndLtLeaseTerm(serveNoList, nowYm);
         Map<String, List<Long>> serveWithDetailIdMap = ResultDataUtils.getInstance(serveWithDetailIdMapResult).getDataOrNull();
         Map<String, List<SubBillItemDTO>> serveNoWithSubBillItemDTOListMap = null;
         if (null != serveWithDetailIdMap && !serveWithDetailIdMap.isEmpty()) {
