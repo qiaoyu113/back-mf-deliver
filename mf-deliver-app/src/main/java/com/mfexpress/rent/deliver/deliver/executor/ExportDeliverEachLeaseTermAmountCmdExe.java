@@ -36,10 +36,10 @@ public class ExportDeliverEachLeaseTermAmountCmdExe {
         headers.add("plateNumber,车牌号");
         headers.add("carModelDisplay,品牌车型");
         headers.add("leaseModelDisplay,租赁方式");
-        headers.add("rent,月租金（元/月/台）");
+        headers.add("unitPrice,月租金（元/月/台）");
         headers.add("leaseMonth,租期");
         headers.add("leaseMonthStartWithEndDay,具体租赁周期");
-        headers.add("unitPrice,费用金额（元）");
+        headers.add("realTimeRentFee,租赁费用金额（元）");
         headers.add("unpaidAmount,待还金额（元）");
         headers.add("repaymentStatusDisplay,回款状态");
         headers.add("totalAdjustAmount,累计调账金额（元）");

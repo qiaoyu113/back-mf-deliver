@@ -115,6 +115,10 @@ public class ServeLeaseTermAmountQryExe {
             ServeAllLeaseTermAmountVO serveAllLeaseTermAmountVO = new ServeAllLeaseTermAmountVO();
             ServeES serveES = BeanUtil.mapToBean(map, ServeES.class, false, new CopyOptions());
             BeanUtils.copyProperties(serveES, serveAllLeaseTermAmountVO);
+            if(!StringUtils.isEmpty(serveAllLeaseTermAmountVO.getDeposit())){
+                // 补充金额字段精度至小数点后两位
+                serveAllLeaseTermAmountVO.setDeposit(supplementAccuracy(serveAllLeaseTermAmountVO.getDeposit()));
+            }
             serveAllLeaseTermAmountVO.setPlateNumber(serveES.getCarNum());
             serveAllLeaseTermAmountVO.setCarModelDisplay(serveES.getBrandModelDisplay());
             serveAllLeaseTermAmountVO.setOaContractCode(serveES.getContractNo());
@@ -221,8 +225,8 @@ public class ServeLeaseTermAmountQryExe {
             if (null != contractCommodityDTOMap) {
                 CommodityDTO commodityDTO = contractCommodityDTOMap.get(vo.getContractCommodityId());
                 if (null != commodityDTO) {
-                    vo.setRentFee(String.valueOf(commodityDTO.getRentFee()));
-                    vo.setServiceFee(String.valueOf(commodityDTO.getServiceFee()));
+                    vo.setRentFee(supplementAccuracy(String.valueOf(commodityDTO.getRentFee())));
+                    vo.setServiceFee(supplementAccuracy(String.valueOf(commodityDTO.getServiceFee())));
                 }
             }
 
@@ -305,8 +309,15 @@ public class ServeLeaseTermAmountQryExe {
         if (null != qry.getServeStatus()) {
             boolQueryBuilder.must(QueryBuilders.matchQuery("serveStatus", qry.getServeStatus()));
         }
-
         return boolQueryBuilder;
-
     }
+
+    // 补充精度至小数点后两位
+    public String supplementAccuracy(String num){
+        if(StringUtils.isEmpty(num)){
+            return "";
+        }
+        return new BigDecimal(num).setScale(2, RoundingMode.HALF_UP).toString();
+    }
+
 }

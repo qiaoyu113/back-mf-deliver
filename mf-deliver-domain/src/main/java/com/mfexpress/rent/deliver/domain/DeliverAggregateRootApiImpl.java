@@ -3,6 +3,7 @@ package com.mfexpress.rent.deliver.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
@@ -24,6 +25,7 @@ import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.gateway.RecoverVehicleGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
+import com.mfexpress.rent.deliver.utils.FormatUtil;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -432,14 +434,16 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         if (null == deliver) {
             return Result.getInstance((DeliverDTO) null).success();
         }
+
         DeliverDTO deliverDTO = new DeliverDTO();
-        if (StringUtils.isEmpty(deliver.getInsuranceStartTime())) {
-            deliver.setInsuranceStartTime(null);
-        }
-        if (StringUtils.isEmpty(deliver.getInsuranceEndTime())) {
-            deliver.setInsuranceEndTime(null);
-        }
         BeanUtils.copyProperties(deliver, deliverDTO);
+        if (!StringUtils.isEmpty(deliver.getInsuranceStartTime())) {
+            deliverDTO.setInsuranceStartTime(DateUtil.parse(deliver.getInsuranceStartTime()));
+        }
+        if (!StringUtils.isEmpty(deliver.getInsuranceEndTime())) {
+            deliverDTO.setInsuranceEndTime(DateUtil.parse(deliver.getInsuranceEndTime()));
+        }
+
         return Result.getInstance(deliverDTO).success();
     }
 
