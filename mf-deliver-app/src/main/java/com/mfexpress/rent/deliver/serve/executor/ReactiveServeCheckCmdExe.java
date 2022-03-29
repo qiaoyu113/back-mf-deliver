@@ -60,7 +60,7 @@ public class ReactiveServeCheckCmdExe {
     private void checkDeliverVehicleTime(Map<String, ServeDTO> serveDTOMap, List<String> reactiveServeNoList, Date deliverVehicleTime) {
         Result<Map<String, RecoverVehicleDTO>> recoverVehicleDTOMapResult = recoverVehicleAggregateRootApi.getRecentlyHistoryMapByServeNoList(reactiveServeNoList);
         Map<String, RecoverVehicleDTO> recoverVehicleDTOMap = ResultDataUtils.getInstance(recoverVehicleDTOMapResult).getDataOrException();
-        if(null == recoverVehicleDTOMap || recoverVehicleDTOMap.isEmpty()){
+        if (null == recoverVehicleDTOMap || recoverVehicleDTOMap.isEmpty()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "历史收车单查询失败");
         }
 
@@ -68,7 +68,7 @@ public class ReactiveServeCheckCmdExe {
         Date finalDeliverVehicleTime = deliverVehicleTime;
         reactiveServeNoList.forEach(reactiveServeNo -> {
             RecoverVehicleDTO recoverVehicleDTO = recoverVehicleDTOMap.get(reactiveServeNo);
-            if(null == recoverVehicleDTO){
+            if (null == recoverVehicleDTO) {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "历史收车单获取失败");
             }
 
@@ -78,13 +78,16 @@ public class ReactiveServeCheckCmdExe {
             // 判断到天，而不是时分秒
             recoverVehicleTime = getYmdDate(recoverVehicleTime);
             DateTime expectRecoverDate = DateUtil.parseDate(expectRecoverDateChar);
-            if(recoverVehicleTime.after(finalDeliverVehicleTime) || expectRecoverDate.before(finalDeliverVehicleTime)){
-                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单：" + reactiveServeNo + "发车时间小于上次收车时间或发车时间大于预计收车日期，不可进行操作");
+            if (recoverVehicleTime.after(finalDeliverVehicleTime)) {
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单：" + reactiveServeNo + "发车时间小于上次收车时间，不可进行操作");
+            }
+            if (expectRecoverDate.before(finalDeliverVehicleTime)) {
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单：" + reactiveServeNo + "发车时间大于预计收车日期，不可进行操作");
             }
         });
     }
 
-    private Date getYmdDate(Date date){
+    private Date getYmdDate(Date date) {
         long time = date.getTime();
         return new Date(time - (time % 86400000));
     }
