@@ -34,7 +34,7 @@ public class ExportDeliverEachLeaseTermAmountCmdExe {
         headers.add("customerName,客户名称");
         headers.add("oaContractCode,OA合同编号");
         headers.add("plateNumber,车牌号");
-        headers.add("modelDisplay,品牌车型");
+        headers.add("carModelDisplay,品牌车型");
         headers.add("leaseModelDisplay,租赁方式");
         headers.add("rent,月租金（元/月/台）");
         headers.add("leaseMonth,租期");
