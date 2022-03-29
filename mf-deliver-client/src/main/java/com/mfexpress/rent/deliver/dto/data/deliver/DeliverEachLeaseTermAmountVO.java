@@ -40,8 +40,8 @@ public class DeliverEachLeaseTermAmountVO {
     @ApiModelProperty(value = "租赁方式id含义")
     private String leaseModelDisplay;
 
-    @ApiModelProperty(value = "月租金 = 租赁价格+服务费")
-    private String rent;
+    @ApiModelProperty(value = "实时租金")
+    private String realTimeRentFee;
 
     @ApiModelProperty(value = "租期/租赁月份")
     private String leaseMonth;
@@ -55,7 +55,7 @@ public class DeliverEachLeaseTermAmountVO {
     @ApiModelProperty(value = "具体租赁周期")
     private String leaseMonthStartWithEndDay;
 
-    @ApiModelProperty(value = "费用金额")
+    @ApiModelProperty(value = "每月的一个租金")
     private String unitPrice;
 
     @ApiModelProperty(value = "待还金额")

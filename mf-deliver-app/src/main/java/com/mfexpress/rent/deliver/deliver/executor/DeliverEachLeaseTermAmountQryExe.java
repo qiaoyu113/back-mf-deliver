@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.deliver.executor;
 
+import cn.hutool.core.date.DateUtil;
 import com.mfexpress.billing.customer.api.aggregate.SubBillItemAggregateRootApi;
 import com.mfexpress.billing.customer.constant.CyclicBillPaymentStatusEnum;
 import com.mfexpress.billing.customer.data.dto.billitem.SubBillItemDTO;
@@ -31,6 +32,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -82,6 +84,15 @@ public class DeliverEachLeaseTermAmountQryExe {
             log.info("serveNo:{}租期数据查询失败或暂无租期数据", serveDTO.getServeNo());
             return PagePagination.getInstance(new ArrayList<>());
         }
+
+        // 刨去租期为当月及以后月的服务单租期信息
+        /*Date nowDate = new Date();
+        serveLeaseTermInfoDTOList = serveLeaseTermInfoDTOList.stream().filter(p -> DateUtil.parse(p.getLeaseTerm(), "yyyy-MM").isBefore(nowDate)).collect(Collectors.toList());
+        if(serveLeaseTermInfoDTOList.isEmpty()){
+            log.info("serveNo:{}租期数据取过滤掉当前月及以后月的数据之后为空", serveDTO.getServeNo());
+            return PagePagination.getInstance(new ArrayList<>());
+        }*/
+
         List<Integer> vehicleIdList = new ArrayList<>();
         List<Long> detailIdList = serveLeaseTermInfoDTOList.stream().map(serveLeaseTermInfoDTO -> {
             vehicleIdList.add(serveLeaseTermInfoDTO.getVehicleId());
@@ -134,7 +145,7 @@ public class DeliverEachLeaseTermAmountQryExe {
             deliverEachLeaseTermAmountVO.setLeaseModelId(serveDTO.getLeaseModelId());
             LeaseModelEnum leaseModelEnum = LeaseModelEnum.getEnum(deliverEachLeaseTermAmountVO.getLeaseModelId());
             deliverEachLeaseTermAmountVO.setLeaseModelDisplay(leaseModelEnum == null ? null : leaseModelEnum.getName());
-            deliverEachLeaseTermAmountVO.setRent(serveLeaseTermInfoDTO.getRentFee().toString());
+            deliverEachLeaseTermAmountVO.setRealTimeRentFee(serveLeaseTermInfoDTO.getRentFee().toString());
             deliverEachLeaseTermAmountVO.setLeaseMonth(serveLeaseTermInfoDTO.getLeaseTerm());
             deliverEachLeaseTermAmountVO.setLeaseMonthStartDay(serveLeaseTermInfoDTO.getStartDate());
             deliverEachLeaseTermAmountVO.setLeaseMonthEndDay(serveLeaseTermInfoDTO.getEndDate());
@@ -147,10 +158,20 @@ public class DeliverEachLeaseTermAmountQryExe {
             if (null != subBillItemDTO) {
                 deliverEachLeaseTermAmountVO.setUnpaidAmount(subBillItemDTO.getUnpaidAmount().toString());
                 deliverEachLeaseTermAmountVO.setRepaymentStatus(subBillItemDTO.getStatus());
-                CyclicBillPaymentStatusEnum paymentStatusEnum = CyclicBillPaymentStatusEnum.getCyclicBillPaymentStatusEnum(subBillItemDTO.getStatus());
-                if (null != paymentStatusEnum) {
-                    deliverEachLeaseTermAmountVO.setRepaymentStatusDisplay(paymentStatusEnum.getName());
+                // 客户账单域没有合适的枚举类，故此处先写死
+                if(0 == deliverEachLeaseTermAmountVO.getRepaymentStatus()){
+                    deliverEachLeaseTermAmountVO.setRepaymentStatusDisplay("待回款");
+                }else if(1 == deliverEachLeaseTermAmountVO.getRepaymentStatus()){
+                    deliverEachLeaseTermAmountVO.setRepaymentStatusDisplay("部分回款");
+                }else if(2 == deliverEachLeaseTermAmountVO.getRepaymentStatus()){
+                    deliverEachLeaseTermAmountVO.setRepaymentStatusDisplay("已回款");
                 }
+
+                /*CyclicBillPaymentStatusEnum paymentStatusEnum = CyclicBillPaymentStatusEnum.getCyclicBillPaymentStatusEnum(subBillItemDTO.getStatus());
+                if (null != paymentStatusEnum) {
+
+                    deliverEachLeaseTermAmountVO.setRepaymentStatusDisplay(paymentStatusEnum.getName());
+                }*/
 
                 // 累计调账金额
                 if (null != finalSubBillItemRecordDTOMap) {
@@ -165,7 +186,7 @@ public class DeliverEachLeaseTermAmountQryExe {
             } else {
                 deliverEachLeaseTermAmountVO.setUnpaidAmount(deliverEachLeaseTermAmountVO.getUnitPrice());
                 deliverEachLeaseTermAmountVO.setRepaymentStatus(CyclicBillPaymentStatusEnum.INIT.getCode());
-                deliverEachLeaseTermAmountVO.setRepaymentStatusDisplay(CyclicBillPaymentStatusEnum.INIT.getName());
+                deliverEachLeaseTermAmountVO.setRepaymentStatusDisplay("待回款");
                 deliverEachLeaseTermAmountVO.setTotalAdjustAmount(amount.toString());
             }
 
