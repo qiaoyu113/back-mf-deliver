@@ -15,9 +15,9 @@ public class RenewalServeCmd {
     @NotEmpty(message = "服务单编号不能为空")
     private String serveNo;
 
-    @ApiModelProperty(value = "商品id")
-    @NotNull(message = "商品id不能为空")
-    private Integer goodsId;
+    @ApiModelProperty(value = "合同商品id")
+    @NotNull(message = "合同商品id不能为空")
+    private Integer contractCommodityId;
 
     @ApiModelProperty(value = "租赁方式id")
     @NotNull(message = "租赁方式id不能为空")
