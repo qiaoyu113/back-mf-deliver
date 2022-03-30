@@ -24,8 +24,8 @@ public class ExportServeLeaseTermAmountDataQryExe {
         Map<String, Object> qryMap = (Map<String, Object>) map.get("qry");
         ServeLeaseTermAmountQry qry = BeanUtil.mapToBean(qryMap, ServeLeaseTermAmountQry.class, true, CopyOptions.create());
         List<ServeAllLeaseTermAmountVO> result = new ArrayList<>();
-        // 一次300条
-        qry.setLimit(300);
+        // 一次500条
+        qry.setLimit(500);
         for (int i = 1; ; i++) {
             qry.setPage(i);
             PagePagination<ServeAllLeaseTermAmountVO> pagePagination = serveLeaseTermAmountQryExe.execute(qry, null);
