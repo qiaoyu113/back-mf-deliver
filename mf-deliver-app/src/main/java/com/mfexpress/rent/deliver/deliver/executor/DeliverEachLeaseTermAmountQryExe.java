@@ -184,7 +184,7 @@ public class DeliverEachLeaseTermAmountQryExe {
                 }
                 deliverEachLeaseTermAmountVO.setTotalAdjustAmount(amount.toString());
             } else {
-                deliverEachLeaseTermAmountVO.setUnpaidAmount(deliverEachLeaseTermAmountVO.getUnitPrice());
+                deliverEachLeaseTermAmountVO.setUnpaidAmount(deliverEachLeaseTermAmountVO.getRealTimeRentFee());
                 deliverEachLeaseTermAmountVO.setRepaymentStatus(CyclicBillPaymentStatusEnum.INIT.getCode());
                 deliverEachLeaseTermAmountVO.setRepaymentStatusDisplay("待回款");
                 deliverEachLeaseTermAmountVO.setTotalAdjustAmount(amount.toString());
