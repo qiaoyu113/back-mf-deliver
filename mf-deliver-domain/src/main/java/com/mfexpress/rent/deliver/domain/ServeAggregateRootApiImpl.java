@@ -938,7 +938,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         if (null == serveEntity || !ServeEnum.RECOVER.getCode().equals(serveEntity.getStatus())) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单状态异常");
         }
-        if (LeaseModelEnum.NORMAL.getCode() != serveEntity.getLeaseModelId() && LeaseModelEnum.TRIAL.getCode() != serveEntity.getLeaseModelId()) {
+        if (LeaseModelEnum.NORMAL.getCode() != serveEntity.getLeaseModelId() && LeaseModelEnum.DISCOUNT.getCode() != serveEntity.getLeaseModelId()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单当前租赁方式不允许重新激活");
         }
         DeliverEntity deliverEntity = deliverGateway.getDeliverByServeNo(serveEntity.getServeNo());

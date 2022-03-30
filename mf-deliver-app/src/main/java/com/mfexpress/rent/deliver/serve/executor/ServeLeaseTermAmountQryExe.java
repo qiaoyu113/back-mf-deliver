@@ -8,6 +8,7 @@ import com.github.pagehelper.PageInfo;
 import com.mfexpress.billing.customer.api.aggregate.SubBillItemAggregateRootApi;
 import com.mfexpress.billing.customer.data.dto.billitem.SubBillItemDTO;
 import com.mfexpress.billing.rentcharge.api.DetailAggregateRootApi;
+import com.mfexpress.billing.rentcharge.dto.data.detail.DetailedByServeNoByLtLeaseTermDTO;
 import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
 import com.mfexpress.common.domain.dto.SysOfficeDto;
 import com.mfexpress.common.domain.enums.OfficeCodeMsgEnum;
@@ -147,13 +148,16 @@ public class ServeLeaseTermAmountQryExe {
         // 根据服务单号查询其下的多个详单id
         // 只查当月之前的数据，不含当月
         String nowYm = FormatUtil.ymFormatDateToString(new Date());
-        Result<Map<String, List<Long>>> serveWithDetailIdMapResult = detailAggregateRootApi.getDetailIdByServeNoListAndLtLeaseTerm(serveNoList, nowYm);
+        DetailedByServeNoByLtLeaseTermDTO detailedByServeNoByLtLeaseTermDTO = new DetailedByServeNoByLtLeaseTermDTO();
+        detailedByServeNoByLtLeaseTermDTO.setLeaseTerm(nowYm);
+        detailedByServeNoByLtLeaseTermDTO.setServeNoList(serveNoList);
+        Result<Map<String, List<Long>>> serveWithDetailIdMapResult = detailAggregateRootApi.getDetailIdByServeNoListAndLtLeaseTerm(detailedByServeNoByLtLeaseTermDTO);
         Map<String, List<Long>> serveWithDetailIdMap = ResultDataUtils.getInstance(serveWithDetailIdMapResult).getDataOrNull();
         Map<String, List<SubBillItemDTO>> serveNoWithSubBillItemDTOListMap = null;
         if (null != serveWithDetailIdMap && !serveWithDetailIdMap.isEmpty()) {
             // 倒排索引，以详单id为key，服务单号为value
             Map<Long, String> detailIdWithServeNoMap = new HashMap<>();
-            serveWithDetailIdMap.keySet().stream().forEach(serveNo -> {
+            serveWithDetailIdMap.keySet().forEach(serveNo -> {
                 List<Long> detailIds = serveWithDetailIdMap.get(serveNo);
                 detailIds.forEach(detailId -> {
                     detailIdWithServeNoMap.put(detailId, serveNo);
