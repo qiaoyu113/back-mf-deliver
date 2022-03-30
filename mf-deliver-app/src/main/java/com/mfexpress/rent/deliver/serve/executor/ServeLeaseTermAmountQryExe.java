@@ -247,7 +247,7 @@ public class ServeLeaseTermAmountQryExe {
                         }
                     }
                 }
-                serveAllLeaseTermAmountVO.setTotalArrears(unpaidAmount.toString());
+                serveAllLeaseTermAmountVO.setTotalArrears(supplementAccuracy(unpaidAmount.toString()));
             }
         }
         // 数据拼装 --------------------------- end
