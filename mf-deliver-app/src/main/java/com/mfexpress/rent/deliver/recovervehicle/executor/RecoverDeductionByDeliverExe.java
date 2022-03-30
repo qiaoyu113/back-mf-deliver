@@ -68,7 +68,7 @@ public class RecoverDeductionByDeliverExe {
         DeductFeeCmd deductFeeCmd = new DeductFeeCmd();
         deductFeeCmd.setDamage(BigDecimal.valueOf(cmd.getDamageFee() == null ? 0 : cmd.getDamageFee()));
         deductFeeCmd.setPark(BigDecimal.valueOf(cmd.getParkFee() == null ? 0 : cmd.getParkFee()));
-        deductFeeCmd.setCreateId(cmd.getCarServiceId());
+        deductFeeCmd.setCreateId(tokenInfo.getId());
         deductFeeCmd.setServeNo(serveDTO.getServeNo());
         deductFeeCmd.setVehicleId(deliverDTO.getCarId());
         deductFeeCmd.setDeliverNo(deliverDTO.getDeliverNo());
