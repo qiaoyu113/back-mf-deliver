@@ -513,7 +513,12 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         List<String> serveNoList = new ArrayList<>(renewalServeCmdMap.keySet());
 
         // 租赁开始日期必须大于发车日期校验
-        List<DeliverVehicleEntity> deliverVehicleList = deliverVehicleGateway.getDeliverVehicleByServeNo(serveNoList);
+        List<DeliverEntity> deliverEntityList = deliverGateway.getDeliverByServeNoList(serveNoList);
+        if (deliverEntityList.size() != serveNoList.size()) {
+            throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "交车单查询失败");
+        }
+        List<String> deliverNoList = deliverEntityList.stream().map(DeliverEntity::getDeliverNo).collect(Collectors.toList());
+        List<DeliverVehicleEntity> deliverVehicleList = deliverVehicleGateway.getDeliverVehicleByDeliverNoList(deliverNoList);
         if (deliverVehicleList.size() != serveNoList.size()) {
             throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "交车单查询失败");
         }
@@ -530,7 +535,6 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), renewalServeCmd.getCarNum() + "车辆在续约时租赁开始日期小于发车日期，续约失败");
             }
         });
-
 
         // 判断服务单是否存在，状态是否为已发车或维修中
         List<ServeEntity> serveList = serveGateway.getServeByServeNoList(serveNoList);
@@ -561,7 +565,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             serve.setRenewalType(ServeRenewalTypeEnum.ACTIVE.getCode());
             serve.setExpectRecoverDate(renewalServeCmd.getLeaseEndDate());
             // goodsId为合同商品id，不应更改服务单的商品id字段
-            serve.setContractCommodityId(renewalServeCmd.getGoodsId());
+            serve.setContractCommodityId(renewalServeCmd.getContractCommodityId());
             serve.setGoodsId(null);
 
             ServeChangeRecordPO record = new ServeChangeRecordPO();
