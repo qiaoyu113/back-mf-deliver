@@ -25,7 +25,7 @@ public class ServeChangeRecordGatewayImpl implements ServeChangeRecordGateway {
 
     @Override
     public List<ServeChangeRecordPO> getList(String serveNo) {
-        Example example = new Example(ServeChangeRecord.class);
+        Example example = new Example(ServeChangeRecordPO.class);
         example.createCriteria().andEqualTo("serveNo", serveNo);
 
         return serveChangeRecordMapper.selectByExample(example);
