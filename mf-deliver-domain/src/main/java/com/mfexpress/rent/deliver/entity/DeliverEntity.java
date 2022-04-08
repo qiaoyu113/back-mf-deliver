@@ -3,7 +3,9 @@ package com.mfexpress.rent.deliver.entity;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
+import com.mfexpress.rent.deliver.constant.DeliverStatusEnum;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import lombok.AllArgsConstructor;
@@ -134,5 +136,11 @@ public class DeliverEntity implements DeliverEntityApi {
         DeliverDTO deliverDTO = new DeliverDTO();
         BeanUtil.copyProperties(deliverEntity, deliverDTO, new CopyOptions().ignoreError());
         return deliverDTO;
+    }
+
+    public void toHistory(ReactivateServeCmd cmd) {
+        DeliverEntity deliverEntity = new DeliverEntity();
+        deliverEntity.setStatus(DeliverStatusEnum.HISTORICAL.getCode());
+        deliverGateway.updateDeliverByDeliverNo(cmd.getDeliverNo(), deliverEntity);
     }
 }

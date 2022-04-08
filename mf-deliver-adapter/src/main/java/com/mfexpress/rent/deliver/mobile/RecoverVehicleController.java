@@ -3,6 +3,7 @@ package com.mfexpress.rent.deliver.mobile;
 import com.mfexpress.component.constants.CommonConstants;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.token.TokenTools;
@@ -71,6 +72,20 @@ public class RecoverVehicleController {
 
     }
 
+    @PostMapping("/cancelRecoverByDeliver")
+    @ApiOperation("取消收车")
+    @PrintParam
+    public Result<Integer> cancelRecoverByDeliver(@RequestBody @Validated RecoverCancelByDeliverCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        // 收车单创建 对应交付单状态更新为收车中
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            throw new CommonException(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+        }
+        //交付单状态修改为已发车 将收车单设为失效
+        return Result.getInstance(recoverVehicleServiceI.cancelRecoverByDeliver(cmd, tokenInfo)).success();
+
+    }
+
     @PostMapping("/getRecoverListVO")
     @ApiOperation("收车申请列表")
     @PrintParam
@@ -129,6 +144,17 @@ public class RecoverVehicleController {
         return Result.getInstance(recoverVehicleServiceI.toBackInsure(recoverBackInsureCmd)).success();
     }
 
+    @PostMapping("/toBackInsureByDeliver")
+    @ApiOperation(value = "通过交付单进行收车退保操作")
+    @PrintParam
+    public Result<Integer> toBackInsure(@RequestBody @Validated RecoverBackInsureByDeliverCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if(null == tokenInfo || null == tokenInfo.getOfficeId() || null == tokenInfo.getId()){
+            throw new CommonException(ResultErrorEnum.LOGIN_OVERDUE.getCode(), ResultErrorEnum.LOGIN_OVERDUE.getName());
+        }
+        return Result.getInstance(recoverVehicleServiceI.toBackInsureByDeliver(cmd, tokenInfo)).success();
+    }
+
     @PostMapping("/toDeduction")
     @ApiOperation(value = "收车处理违章")
     @PrintParam
@@ -141,6 +167,17 @@ public class RecoverVehicleController {
         recoverDeductionCmd.setCarServiceId(tokenInfo.getId());
         // 服务单 交付单状态更新已收车  交付单处理违章状态更新  车辆租赁状态更新未租赁
         return Result.getInstance(recoverVehicleServiceI.toDeduction(recoverDeductionCmd)).success();
+    }
+
+    @PostMapping("/toDeductionByDeliver")
+    @ApiOperation(value = "通过交付单进行收车处理违章操作")
+    @PrintParam
+    public Result<Integer> toDeductionByDeliver(@RequestBody @Validated RecoverDeductionByDeliverCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            throw new CommonException(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+        }
+        return Result.getInstance(recoverVehicleServiceI.toDeductionByDeliver(cmd, tokenInfo)).success();
     }
 
     // ---------------------luzheng add start----------------------------

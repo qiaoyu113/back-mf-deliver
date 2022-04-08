@@ -138,6 +138,12 @@ public interface ServeAggregateRootApi {
     @PostMapping("/lockDeposit")
     Result <Boolean>lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList);
 
+    @PostMapping("/reactiveServe")
+    Result<Integer> reactiveServe(@RequestBody ReactivateServeCmd cmd);
+
+    @PostMapping("/getServeNoListByPage")
+    Result<PagePagination<String>> getServeNoListByPage(@RequestBody ListQry listQry);
+
     @PostMapping("/getReplaceNumByCustomerIds")
     Result<Map<Integer,Integer>> getReplaceNumByCustomerIds(@RequestBody List<Integer> customerIds);
 }

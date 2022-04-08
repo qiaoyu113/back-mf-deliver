@@ -1,17 +1,16 @@
 package com.mfexpress.rent.deliver.deliver;
 
+import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.api.DeliverServiceI;
-import com.mfexpress.rent.deliver.deliver.executor.DeliverToCheckExe;
-import com.mfexpress.rent.deliver.deliver.executor.DeliverToInsureExe;
-import com.mfexpress.rent.deliver.deliver.executor.DeliverToPreselectedExe;
-import com.mfexpress.rent.deliver.deliver.executor.DeliverToReplaceExe;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCheckCmd;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverInsureCmd;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverPreselectedCmd;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverReplaceCmd;
+import com.mfexpress.rent.deliver.deliver.executor.*;
+import com.mfexpress.rent.deliver.dto.data.deliver.*;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeQryCmd;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class DeliverServiceImpl implements DeliverServiceI {
@@ -25,6 +24,14 @@ public class DeliverServiceImpl implements DeliverServiceI {
     @Resource
     private DeliverToReplaceExe deliverToReplaceExe;
 
+    @Resource
+    private DeliverEachLeaseTermAmountQryExe deliverEachLeaseTermAmountQryExe;
+
+    @Resource
+    private ExportDeliverEachLeaseTermAmountCmdExe exportDeliverEachLeaseTermAmountCmdExe;
+
+    @Resource
+    private ExportDeliverEachLeaseTermAmountDataQryExe exportDeliverEachLeaseTermAmountDataQryExe;
 
     @Override
     public String toPreselected(DeliverPreselectedCmd deliverPreselectedCmd) {
@@ -48,5 +55,20 @@ public class DeliverServiceImpl implements DeliverServiceI {
     public String toInsure(DeliverInsureCmd deliverInsureCmd) {
 
         return deliverToInsureExe.execute(deliverInsureCmd);
+    }
+
+    @Override
+    public PagePagination<DeliverEachLeaseTermAmountVO> getDeliverLeaseTermAmountVOList(ServeQryCmd qry) {
+        return deliverEachLeaseTermAmountQryExe.execute(qry);
+    }
+
+    @Override
+    public Integer exportDeliverLeaseTermAmount(ServeQryCmd qry, TokenInfo tokenInfo) {
+        return exportDeliverEachLeaseTermAmountCmdExe.execute(qry, tokenInfo);
+    }
+
+    @Override
+    public List<Map<String, Object>> exportDeliverLeaseTermAmountData(Map<String, Object> map) {
+        return exportDeliverEachLeaseTermAmountDataQryExe.execute(map);
     }
 }

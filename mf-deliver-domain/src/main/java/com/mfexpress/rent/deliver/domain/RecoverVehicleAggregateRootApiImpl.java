@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RestController
@@ -169,7 +170,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @PostMapping("/getRecoverVehicleDtosByDeliverNoList")
     @PrintParam
     public Result<List<RecoverVehicleDTO>> getRecoverVehicleDtosByDeliverNoList(@RequestParam("deliverNoList") List<String> deliverNoList) {
-        List<RecoverVehicleEntity> recoverVehicleDtosByDeliverNoList = recoverVehicleGateway.getRecoverVehicleDtosByDeliverNoList(deliverNoList);
+        List<RecoverVehicleEntity> recoverVehicleDtosByDeliverNoList = recoverVehicleGateway.getRecoverVehicleByDeliverNoList(deliverNoList);
         if (CollectionUtil.isEmpty(recoverVehicleDtosByDeliverNoList)) {
             return Result.getInstance((List<RecoverVehicleDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
@@ -186,7 +187,6 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         List<RecoverVehicleDTO> recoverVehicleDTOS = BeanUtil.copyToList(recoverVehicleDtosByDeliverNoList, RecoverVehicleDTO.class, CopyOptions.create());
         return Result.getInstance(recoverVehicleDTOS).success();
     }
-
 
     @Override
     @PostMapping("/abnormalRecover")
@@ -301,7 +301,9 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     }
 
     @Override
-    public Result<RecoverAbnormalDTO> getRecoverAbnormalByQry(RecoverAbnormalQry qry) {
+    @PostMapping("/getRecoverAbnormalByQry")
+    @PrintParam
+    public Result<RecoverAbnormalDTO> getRecoverAbnormalByQry(@RequestBody RecoverAbnormalQry qry) {
         RecoverAbnormal recoverAbnormal = recoverAbnormalGateway.getRecoverAbnormalByServeNo(qry.getServeNo());
         if (null == recoverAbnormal) {
             return Result.getInstance((RecoverAbnormalDTO) null).success();
@@ -311,5 +313,36 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         return Result.getInstance(recoverAbnormalDTO).success();
     }
 
+    @Override
+    @PostMapping("/getRecentlyHistoryMapByServeNoList")
+    @PrintParam
+    public Result<Map<String, RecoverVehicleDTO>> getRecentlyHistoryMapByServeNoList(@RequestParam("reactiveServeNoList") List<String> reactiveServeNoList) {
+        if (reactiveServeNoList.isEmpty()) {
+            return Result.getInstance((Map<String, RecoverVehicleDTO>) null).fail(ResultErrorEnum.VILAD_ERROR.getCode(), ResultErrorEnum.VILAD_ERROR.getName());
+        }
+        List<DeliverEntity> deliverEntityList = deliverGateway.getHistoryListByServeNoList(reactiveServeNoList);
+        Map<String, DeliverEntity> deliverEntityMap = deliverEntityList.stream().collect(Collectors.toMap(DeliverEntity::getServeNo, Function.identity(), (v1, v2) -> v2));
+        List<String> deliverNos = deliverEntityMap.values().stream().map(DeliverEntity::getDeliverNo).collect(Collectors.toList());
+        List<RecoverVehicleEntity> recoverVehicleEntityList = recoverVehicleGateway.getRecoverVehicleByDeliverNoList(deliverNos);
+        Map<String, RecoverVehicleDTO> recoverVehicleDTOMap = recoverVehicleEntityList.stream().map(recoverVehicleEntity -> {
+            RecoverVehicleDTO recoverVehicleDTO = new RecoverVehicleDTO();
+            BeanUtils.copyProperties(recoverVehicleEntity, recoverVehicleDTO);
+            return recoverVehicleDTO;
+        }).collect(Collectors.toMap(RecoverVehicleDTO::getServeNo, Function.identity(), (v1, v2) -> v1));
+
+        return Result.getInstance(recoverVehicleDTOMap).success();
+    }
+
+    @Override
+    @PostMapping("/updateDeductionFeeByDeliver")
+    @PrintParam
+    public Result<Integer> updateDeductionFeeByDeliver(@RequestBody @Validated RecoverDeductionByDeliverCmd cmd) {
+        RecoverVehicleEntity recoverVehicle = new RecoverVehicleEntity();
+        recoverVehicle.setDeliverNo(cmd.getDeliverNo());
+        recoverVehicle.setParkFee(cmd.getParkFee());
+        recoverVehicle.setDamageFee(cmd.getDamageFee());
+        recoverVehicleGateway.updateRecoverVehicleByDeliverNo(recoverVehicle);
+        return Result.getInstance(0).success();
+    }
 
 }

@@ -1,21 +1,24 @@
 package com.mfexpress.rent.deliver.constant;
 
 public enum ServeEnum {
-    NOT_PRESELECTED(0, "未预选"),
-    PRESELECTED(1, "已预选"),
-    DELIVER(2, "已发车"),
-    RECOVER(3, "已收车"),
-    COMPLETED(4, "已完成"),
-    REPAIR(5, "维修中");
+    NOT_PRESELECTED(0, "未预选", "待预选"),
+    PRESELECTED(1, "已预选", "已预选"),
+    DELIVER(2, "已发车", "租赁中"),
+    RECOVER(3, "已收车", "已收车"),
+    COMPLETED(4, "已完成", "已完成"),
+    REPAIR(5, "维修中", "维修中");
 
 
     private Integer code;
 
     private String status;
 
-    private ServeEnum(Integer code, String status) {
+    private String alias;
+
+    private ServeEnum(Integer code, String status, String alias) {
         this.code = code;
         this.status = status;
+        this.alias = alias;
     }
 
     public Integer getCode() {
@@ -28,6 +31,10 @@ public enum ServeEnum {
 
     public String getStatus() {
         return status;
+    }
+
+    public String getAlias() {
+        return alias;
     }
 
     public void setStatus(String status) {

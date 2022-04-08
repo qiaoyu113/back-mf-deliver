@@ -33,8 +33,10 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateDelive
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCheckCmd;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
+import com.mfexpress.rent.deliver.serve.executor.ReactiveServeCheckCmdExe;
 import com.mfexpress.rent.deliver.utils.CommonUtil;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
@@ -48,10 +50,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -93,11 +92,14 @@ public class CreateDeliverContractCmdExe {
     @Resource
     private MFContractTools contractTools;
 
-    @Resource
+    @Resource(name = "serveSyncServiceImpl")
     private EsSyncHandlerI syncServiceI;
 
     @Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
+
+    @Resource
+    private ReactiveServeCheckCmdExe reactiveServeCheck;
 
     public String execute(CreateDeliverContractCmd cmd, TokenInfo tokenInfo) {
         //发车日期校验
@@ -109,6 +111,12 @@ public class CreateDeliverContractCmdExe {
         List<DeliverImgInfo> deliverImgInfos = cmd.getDeliverImgInfos();
         // 获取数据的orgId
         List<String> serveNos = deliverImgInfos.stream().map(DeliverImgInfo::getServeNo).collect(Collectors.toList());
+        // 重新激活的服务单在进行发车操作时需要的校验
+        ReactivateServeCheckCmd reactivateServeCheckCmd = ReactivateServeCheckCmd.builder().serveNoList(serveNos)
+                .deliverVehicleTime(cmd.getDeliverInfo().getDeliverVehicleTime())
+                .build();
+        reactiveServeCheck.execute(reactivateServeCheckCmd);
+
         Result<Map<String, Serve>> serveMapResult = serveAggregateRootApi.getServeMapByServeNoList(serveNos);
         if (ResultErrorEnum.SUCCESSED.getCode() != serveMapResult.getCode() || null == serveMapResult.getData() || serveMapResult.getData().isEmpty()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单查询失败");

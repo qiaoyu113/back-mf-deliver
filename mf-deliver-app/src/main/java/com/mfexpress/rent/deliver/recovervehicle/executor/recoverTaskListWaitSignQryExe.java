@@ -54,7 +54,7 @@ public class recoverTaskListWaitSignQryExe implements RecoverQryServiceI {
         FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("date").order(SortOrder.DESC);
         fieldSortBuilderList.add(updateTimeSortBuilder);
 
-        RecoverTaskListVO recoverTaskListVO = recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
+        RecoverTaskListVO recoverTaskListVO = recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo, Constants.ES_SERVE_INDEX, Constants.ES_SERVE_TYPE);
         List<RecoverVehicleVO> recoverVehicleVOList = recoverTaskListVO.getRecoverVehicleVOList();
         if(!recoverVehicleVOList.isEmpty()){
             // 查询电子交接合同信息

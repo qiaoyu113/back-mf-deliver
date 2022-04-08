@@ -112,9 +112,8 @@ public class ContractListQryExe {
         FieldSortBuilder updateTimeSortBuilders = SortBuilders.fieldSort("updateTime").unmappedType("date").order(SortOrder.DESC);
         FieldSortBuilder scoreSortBuilder = SortBuilders.fieldSort("_score").order(SortOrder.DESC);
         List<FieldSortBuilder> fieldSortBuilderList = Arrays.asList(scoreSortBuilder, updateTimeSortBuilders);
-        Map<String, Object> map = elasticsearchTools.searchByQuerySort(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX),
-                DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), 0, 0,
-                boolQueryBuilder, fieldSortBuilderList);
+        Map<String, Object> map = elasticsearchTools.searchByQuerySort(DeliverUtils.getEnvVariable(Constants.ES_SERVE_INDEX),
+                Constants.ES_SERVE_TYPE, 0, 0, boolQueryBuilder, fieldSortBuilderList);
         List<ServeVO> serveVoList = new LinkedList<>();
         List<Map<String, Object>> datas = (List<Map<String, Object>>) map.get("data");
         for (Map<String, Object> serveMap : datas) {

@@ -139,6 +139,13 @@ public class ServeController {
         return Result.getInstance(serveServiceI.getServeRecoverDetail(cmd)).success();
     }
 
+    @PostMapping("/getServeRecoverDetailByDeliver")
+    @ApiOperation("通过交付单查询收车服务单")
+    @PrintParam
+    public Result<ServeRecoverDetailVO> getServeRecoverDetailByDeliver(@RequestBody @Validated ServeQryByDeliverCmd cmd) {
+        return Result.getInstance(serveServiceI.getServeRecoverDetailByDeliver(cmd)).success();
+    }
+
     @PostMapping("/getRenewableServeList")
     @ApiOperation("续约合同时客户下的服务单列表的展示/查询")
     @PrintParam

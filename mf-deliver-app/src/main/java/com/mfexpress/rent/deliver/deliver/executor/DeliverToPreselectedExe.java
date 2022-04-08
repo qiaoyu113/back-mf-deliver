@@ -1,18 +1,26 @@
 package com.mfexpress.rent.deliver.deliver.executor;
 
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverPreselectedCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleSelectCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCheckCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.entity.Serve;
+import com.mfexpress.rent.deliver.serve.executor.ReactiveServeCheckCmdExe;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.VehicleInsuranceAggregateRootApi;
@@ -24,9 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 @Component
 @Slf4j
@@ -37,11 +43,14 @@ public class DeliverToPreselectedExe {
     private ServeAggregateRootApi serveAggregateRootApi;
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
-    @Resource
+    @Resource(name = "serveSyncServiceImpl")
     private EsSyncHandlerI syncServiceI;
 
     @Resource
     private VehicleInsuranceAggregateRootApi vehicleInsuranceAggregateRootApi;
+
+    @Resource
+    private ReactiveServeCheckCmdExe reactiveServeCheck;
 
 
     public String execute(DeliverPreselectedCmd deliverPreselectedCmd) {
@@ -56,6 +65,11 @@ public class DeliverToPreselectedExe {
             log.error("服务单选中数量与预选车辆数量不符");
             throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), ResultErrorEnum.VILAD_ERROR.getName());
         }
+
+        // 重新激活的服务单在进行预选操作时需要的校验
+        ReactivateServeCheckCmd reactivateServeCheckCmd = ReactivateServeCheckCmd.builder().serveNoList(deliverPreselectedCmd.getServeList()).build();
+        reactiveServeCheck.execute(reactivateServeCheckCmd);
+
         for (int i = 0; i < serveNoList.size(); i++) {
             DeliverDTO deliverDTO = new DeliverDTO();
             //已经生成交付单 不能重复预选
@@ -70,10 +84,10 @@ public class DeliverToPreselectedExe {
                 throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), vehicleResult.getMsg());
             }
             VehicleInfoDto vehicleInfoDto = vehicleResult.getData();
-            if(JudgeEnum.YES.getCode().equals(vehicleInfoDto.getInsuranceStatus())){
+            if (JudgeEnum.YES.getCode().equals(vehicleInfoDto.getInsuranceStatus())) {
                 deliverDTO.setIsInsurance(JudgeEnum.YES.getCode());
                 Result<VehicleInsuranceDto> vehicleInsuranceDtoResult = vehicleInsuranceAggregateRootApi.getVehicleInsuranceById(deliverVehicleSelectCmd.getId());
-                if(null != vehicleInsuranceDtoResult.getData()){
+                if (null != vehicleInsuranceDtoResult.getData()) {
                     deliverDTO.setInsuranceStartTime(DeliverUtils.getYYYYMMDDByString(vehicleInsuranceDtoResult.getData().getStartTime()));
                 }
             }

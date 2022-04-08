@@ -55,6 +55,8 @@ public class ServeDTO {
 
     private Date leaseBeginDate;
 
+    private Integer leaseMonths;
+
     private Date leaseEndDate;
 
     private String expectRecoverDate;
@@ -62,6 +64,10 @@ public class ServeDTO {
     private Integer renewalType;
 
     private String billingAdjustmentDate;
+
+    private Integer reactiveFlag;
+
+    private Integer contractCommodityId;
 
     private BigDecimal payableDeposit;
 

@@ -2,9 +2,11 @@ package com.mfexpress.rent.deliver.api;
 
 
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ServeServiceI {
 
@@ -32,4 +34,14 @@ public interface ServeServiceI {
     ServeRecoverDetailVO getServeRecoverDetail(ServeQryCmd cmd);
 
     List<ServeToRenewalVO> getRenewableServeList(RenewableServeQry qry, TokenInfo tokenInfo);
+
+    PagePagination<ServeAllLeaseTermAmountVO> getServeLeaseTermAmountVOList(ServeLeaseTermAmountQry qry, TokenInfo tokenInfo);
+
+    Integer exportServeLeaseTermAmount(ServeLeaseTermAmountQry qry, TokenInfo tokenInfo);
+
+    Integer reactivate(ReactivateServeCmd cmd, TokenInfo tokenInfo);
+
+    ServeRecoverDetailVO getServeRecoverDetailByDeliver(ServeQryByDeliverCmd cmd);
+
+    List<Map<String,Object>> exportServeLeaseTermAmountData(Map<String, Object> map);
 }

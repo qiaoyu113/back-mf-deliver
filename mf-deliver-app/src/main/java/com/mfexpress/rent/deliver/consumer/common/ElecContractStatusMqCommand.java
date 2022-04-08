@@ -12,16 +12,17 @@ import com.mfexpress.component.enums.contract.ContractFailTypeEnum;
 import com.mfexpress.component.enums.contract.ContractStatusEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessClass;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessMethod;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
+import com.mfexpress.rent.deliver.api.SyncServiceI;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.consumer.sync.SyncServiceImpl;
 import com.mfexpress.rent.deliver.domainapi.*;
 import com.mfexpress.rent.deliver.dto.data.daily.DailyOperateCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
@@ -29,6 +30,7 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.RenewalChargeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
@@ -50,6 +52,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -83,8 +86,8 @@ public class ElecContractStatusMqCommand {
     @Resource
     private DailyAggregateRootApi dailyAggregateRootApi;
 
-    @Resource
-    private SyncServiceImpl syncServiceI;
+    @Resource(name = "serveSyncServiceImpl")
+    private EsSyncHandlerI serveSyncServiceI;
 
     private MqTools mqTools;
 
@@ -205,7 +208,7 @@ public class ElecContractStatusMqCommand {
         Map<String, String> map = new HashMap<>();
         serveNoList.forEach(serveNo -> {
             map.put("serve_no", serveNo);
-            syncServiceI.execOne(map);
+            serveSyncServiceI.execOne(map);
         });
     }
 
@@ -232,7 +235,8 @@ public class ElecContractStatusMqCommand {
         }
 
         // 发送收车信息到mq，由合同域判断服务单所属的合同是否到已履约完成状态
-        if (JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {
+        // 租赁服务单1.1迭代，改为当服务单状态到已完成时，再向合同域发送此消息
+        /*if (JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {
             ServeDTO serveDTOToNoticeContract = new ServeDTO();
             serveDTOToNoticeContract.setServeNo(serveDTO.getServeNo());
             serveDTOToNoticeContract.setOaContractCode(serveDTO.getOaContractCode());
@@ -241,18 +245,37 @@ public class ElecContractStatusMqCommand {
             serveDTOToNoticeContract.setRenewalType(serveDTO.getRenewalType());
             log.info("正常收车时，交付域向合同域发送的收车单信息：{}", serveDTOToNoticeContract);
             mqTools.send(event, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));
-        }
+        }*/
 
-        //收车计费
-        RecoverVehicleCmd recoverVehicleCmd = new RecoverVehicleCmd();
-        recoverVehicleCmd.setServeNo(serveDTO.getServeNo());
-        recoverVehicleCmd.setVehicleId(deliverDTO.getCarId());
-        recoverVehicleCmd.setDeliverNo(deliverDTO.getDeliverNo());
-        recoverVehicleCmd.setCustomerId(serveDTO.getCustomerId());
-        recoverVehicleCmd.setCreateId(contractDTO.getCreatorId());
-        recoverVehicleCmd.setRecoverDate(DateUtil.formatDate(contractDTO.getRecoverVehicleTime()));
-        log.info("正常收车时，交付域向计费域发送的收车单信息：{}", recoverVehicleCmd);
-        mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(recoverVehicleCmd));
+        // 判断实际收车日期和预计收车日期的前后关系，如果实际收车日期在预计收车日期之前或当天，发送收车计费消息，反之，发送自动续约消息
+        Date recoverVehicleTime = contractDTO.getRecoverVehicleTime();
+        String expectRecoverDateChar = serveDTO.getExpectRecoverDate();
+        DateTime expectRecoverDate = DateUtil.parseDate(expectRecoverDateChar);
+        // 发送收车计费消息
+        if(expectRecoverDate.isAfterOrEquals(recoverVehicleTime)){
+            //收车计费
+            RecoverVehicleCmd recoverVehicleCmd = new RecoverVehicleCmd();
+            recoverVehicleCmd.setServeNo(serveDTO.getServeNo());
+            recoverVehicleCmd.setVehicleId(deliverDTO.getCarId());
+            recoverVehicleCmd.setDeliverNo(deliverDTO.getDeliverNo());
+            recoverVehicleCmd.setCustomerId(serveDTO.getCustomerId());
+            recoverVehicleCmd.setCreateId(contractDTO.getCreatorId());
+            recoverVehicleCmd.setRecoverDate(DateUtil.formatDate(contractDTO.getRecoverVehicleTime()));
+            log.info("正常收车时，交付域向计费域发送的收车单信息：{}", recoverVehicleCmd);
+            mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(recoverVehicleCmd));
+        }else {
+            // 发送自动续约消息
+            RenewalChargeCmd renewalChargeCmd = new RenewalChargeCmd();
+            renewalChargeCmd.setServeNo(serveDTO.getServeNo());
+            renewalChargeCmd.setCreateId(contractDTO.getCreatorId());
+            renewalChargeCmd.setCustomerId(serveDTO.getCustomerId());
+            renewalChargeCmd.setDeliverNo(deliverDTO.getDeliverNo());
+            renewalChargeCmd.setVehicleId(deliverDTO.getCarId());
+            renewalChargeCmd.setEffectFlag(false);
+            // 续约目标日期为实际收车日期
+            renewalChargeCmd.setRenewalDate(DateUtil.formatDate(recoverVehicleTime));
+            mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
+        }
 
         serveNoList.add(serveDTO.getServeNo());
         //操作日报
@@ -264,17 +287,18 @@ public class ElecContractStatusMqCommand {
         // 数据收集
         List<DeliverImgInfo> deliverImgInfos = JSONUtil.toList(contractDTO.getPlateNumberWithImgs(), DeliverImgInfo.class);
         List<String> serveNoList = deliverImgInfos.stream().map(DeliverImgInfo::getServeNo).collect(Collectors.toList());
-        Result<Map<String, Serve>> serveMapResult = serveAggregateRootApi.getServeMapByServeNoList(serveNoList);
-        if (serveMapResult.getCode() != 0 || null == serveMapResult.getData()) {
+        Result<List<ServeDTO>> serveDTOListResult = serveAggregateRootApi.getServeDTOByServeNoList(serveNoList);
+        if (serveDTOListResult.getCode() != 0 || null == serveDTOListResult.getData() || serveDTOListResult.getData().isEmpty()) {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单信息不存在");
         }
-        Map<String, Serve> serveMap = serveMapResult.getData();
+        List<ServeDTO> serveDTOList = serveDTOListResult.getData();
+        Map<String, ServeDTO> serveDTOMap = serveDTOList.stream().collect(Collectors.toMap(ServeDTO::getServeNo, Function.identity(), (v1, v2) -> v1));
         //每个服务单对应的预计收车日期
-        Map<String, String> expectRecoverDateMap = new HashMap<>(serveMap.size());
+        Map<String, String> expectRecoverDateMap = new HashMap<>(serveDTOList.size());
         for (String serveNo : serveNoList) {
-            Serve serve = serveMap.get(serveNo);
-            //替换车使用维修车的预计收车日期
-            if (!serve.getReplaceFlag().equals(1)) {
+            ServeDTO serve = serveDTOMap.get(serveNo);
+            //替换车使用维修车的预计收车日期，重新激活的服务单不更新预计收车日期
+            if (!JudgeEnum.YES.getCode().equals(serve.getReplaceFlag()) && !JudgeEnum.YES.getCode().equals(serve.getReactiveFlag())) {
                 String expectRecoverDate = getExpectRecoverDate(contractDTO.getDeliverVehicleTime(), serve.getLeaseMonths());
                 expectRecoverDateMap.put(serveNo, expectRecoverDate);
             }
@@ -287,14 +311,14 @@ public class ElecContractStatusMqCommand {
         deliverImgInfos.forEach(deliverImgInfo -> {
             carIdList.add(deliverImgInfo.getCarId());
             //发车操作mq触发计费
-            Serve serve = serveMap.get(deliverImgInfo.getServeNo());
+            ServeDTO serve = serveDTOMap.get(deliverImgInfo.getServeNo());
             DeliverVehicleCmd rentChargeCmd = new DeliverVehicleCmd();
             rentChargeCmd.setServeNo(deliverImgInfo.getServeNo());
             rentChargeCmd.setDeliverNo(deliverImgInfo.getDeliverNo());
             rentChargeCmd.setRent(serve.getRent());
             String expectRecoverDate = expectRecoverDateMap.get(deliverImgInfo.getServeNo());
             if (Objects.isNull(expectRecoverDate)) {
-                //替换车使用原车的预计收车日期作为计费截止日期
+                //替换车使用原车的预计收车日期作为计费截止日期，重新激活服务单使用原来的预计收车日期作为计费截止日期
                 rentChargeCmd.setExpectRecoverDate(serve.getExpectRecoverDate());
             } else {
                 rentChargeCmd.setExpectRecoverDate(expectRecoverDate);

@@ -3,16 +3,23 @@ package com.mfexpress.rent.deliver.consumer.sync;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSON;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.common.domain.dto.DictDataDTO;
 import com.mfexpress.common.domain.dto.DictTypeDTO;
+import com.mfexpress.component.constants.ResultErrorEnum;
+import com.mfexpress.component.exception.CommonException;
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.starter.elasticsearch.mapping.mapper.builder.ESMappingBuilder;
 import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogRelation;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogTableFullName;
+import com.mfexpress.component.starter.tools.es.ESBatchSyncTools;
 import com.mfexpress.component.starter.tools.es.ElasticsearchTools;
+import com.mfexpress.component.starter.tools.es.IdListPageQry;
 import com.mfexpress.component.utils.util.ResultDataUtils;
-import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.data.ProductDTO;
@@ -22,6 +29,7 @@ import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.OrderCarModelVO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
@@ -33,11 +41,15 @@ import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,13 +57,10 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Service
+@Service("serveSyncServiceImpl")
 @Slf4j
 @MFMqBinlogRelation
-public class SyncServiceImpl implements EsSyncHandlerI {
-
-    /*@Resource
-    private MqTools mqTools;*/
+public class ServeSyncServiceImpl implements EsSyncHandlerI {
 
     @Resource
     private ElasticsearchTools elasticsearchTools;
@@ -72,57 +81,126 @@ public class SyncServiceImpl implements EsSyncHandlerI {
     @Resource
     private DictAggregateRootApi dictAggregateRootApi;
 
-    /*@Resource
-    private ContractAggregateRootApi contractAggregateRootApi;
+    private ESBatchSyncTools esBatchSyncTools;
 
-    @Value("${rocketmq.listenBinlogTopic}")
-    private String listenBinlogTopic;
-    @Value("${rocketmq.listenEventTopic}")
-    private String listenEventTopic;
-    @Resource
-    private DeliverMqCommand deliverMqCommand;
-    @Resource
-    private DeliverVehicleMqCommand deliverVehicleMqCommand;
+    private int syncThreadNum = 5;
 
-    /*@PostConstruct
-    public void init() {
-
-        DeliverBinlogDispatch deliverBinlogDispatch = new DeliverBinlogDispatch();
-        deliverBinlogDispatch.setServiceI(this);
-        mqTools.addBinlogCommand(listenBinlogTopic, deliverBinlogDispatch);
-        deliverMqCommand.setTopic(listenEventTopic);
-        deliverMqCommand.setTags(Constants.DELIVER_ORDER_TAG);
-        mqTools.add(deliverMqCommand);
-        deliverVehicleMqCommand.setTopic(listenEventTopic);
-        deliverVehicleMqCommand.setTags(Constants.DELIVER_VEHICLE_TAG);
-        mqTools.add(deliverVehicleMqCommand);
-
-    }*/
+    private int limit = 100;
 
     @Override
-    public boolean execAll() {
-        Result<List<String>> serveNoResult = serveAggregateRootApi.getServeNoListAll();
-        boolean flag = true;
-        if (serveNoResult.getData() != null) {
-            List<String> serveNoList = serveNoResult.getData();
-            Map<String, String> data = new HashMap<>();
-            for (String serveNo : serveNoList) {
-                data.put("serve_no", serveNo);
-                boolean isSuccess = execOne(data);
-                if(!isSuccess){
-                    flag = false;
-                }
-            }
+    public boolean execAll(String indexVersionName) {
+        // 创建索引
+        indexVersionName = createIndex(indexVersionName);
+
+        // 获取数据页数
+        ListQry listQry = new ListQry();
+        listQry.setPage(1);
+        listQry.setLimit(limit);
+        Result<PagePagination<String>> serveNoListPageResult = serveAggregateRootApi.getServeNoListByPage(listQry);
+        PagePagination<String> pagePagination = ResultDataUtils.getInstance(serveNoListPageResult).getDataOrException();
+        int totalPages = pagePagination.getPagination().getTotalPages();
+
+        // 执行批量同步
+        esBatchSyncTools = new ESBatchSyncTools(elasticsearchTools, this, syncThreadNum, totalPages, limit, indexVersionName, Constants.ES_SERVE_TYPE);
+        esBatchSyncTools.execute();
+        esBatchSyncTools.syncClose();
+
+        return true;
+    }
+
+    private String createIndex(String indexVersionName) {
+        if (StringUtils.isEmpty(indexVersionName)) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "indexName不能为空");
         }
-        return flag;
+        // 拼接环境信息到indexName中
+        indexVersionName = DeliverUtils.getEnvVariable(indexVersionName);
+        boolean exist = elasticsearchTools.existIndex(indexVersionName);
+        if (exist) {
+            return indexVersionName;
+        }
+
+        // 创建index并设置mapping和setting
+        Map<String, String> indexMappingMap = null;
+        try {
+            indexMappingMap = ESMappingBuilder.getInstance().buildMappingAsString(ServeES.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "创建index失败，解析es对象出错");
+        }
+        String mapping = indexMappingMap.get(Constants.ES_SERVE_TYPE);
+        // mapping = "{\"properties\":{\"brandId\":{\"type\":\"long\"},\"brandModelDisplay\":{\"type\":\"text\",\"fields\":{\"keyword\":{\"type\":\"keyword\",\"ignore_above\":256}}},\"carId\":{\"type\":\"long\"},\"carModelId\":{\"type\":\"long\"},\"carModelVOList\":{\"properties\":{\"brandId\":{\"type\":\"long\"},\"brandModelDisplay\":{\"type\":\"text\",\"fields\":{\"keyword\":{\"type\":\"keyword\",\"ignore_above\":256}}},\"carModelId\":{\"type\":\"long\"},\"num\":{\"type\":\"long\"}}},\"carNum\":{\"type\":\"text\",\"fields\":{\"keyword\":{\"type\":\"keyword\",\"ignore_above\":256}}},\"carServiceId\":{\"type\":\"long\"},\"cityId\":{\"type\":\"long\"},\"contractNo\":{\"type\":\"text\",\"fields\":{\"keyword\":{\"type\":\"keyword\",\"ignore_above\":256}}},\"customerId\":{\"type\":\"long\"},\"customerName\":{\"type\":\"text\",\"fields\":{\"keyword\":{\"type\":\"keyword\",\"ignore_above\":256}}},\"customerPhone\":{\"type\":\"text\",\"fields\":{\"keyword\":{\"type\":\"keyword\",\"ignore_above\":256}}},\"deliverContractStatus\":{\"type\":\"long\"},\"deliverNo\":{\"type\":\"text\",\"fields\":{\"keyword\":{\"type\":\"keyword\",\"ignore_above\":256}}},\"deliverStatus\":{\"type\":\"long\"},\"deliverVehicleTime\":{\"type\":\"long\"},\"deposit\":{\"type\":\"text\",\"fields\":{\"keyword\":{\"type\":\"keyword\",\"ignore_above\":256}}},\"expectRecoverDate\":{\"type\":\"long\"},\"expectRecoverTime\":{\"type\":\"long\"},\"extractVehicleTime\":{\"type\":\"long\"},\"frameNum\":{\"type\":\"text\",\"fields\":{\"keyword\":{\"type\":\"keyword\",\"ignore_above\":256}}},\"goodsId\":{\"type\":\"long\"},\"isCheck\":{\"type\":\"long\"},\"isDeduction\":{\"type\":\"long\"},\"isInsurance\":{\"type\":\"long\"},\"isPreselected\":{\"type\":\"long\"},\"leaseEndDate\":{\"type\":\"long\"},\"leaseModelDisplay\":{\"type\":\"text\",\"fields\":{\"keyword\":{\"type\":\"keyword\",\"ignore_above\":256}}},\"leaseModelId\":{\"type\":\"long\"},\"mileage\":{\"type\":\"float\"},\"orderId\":{\"type\":\"text\",\"fields\":{\"keyword\":{\"type\":\"keyword\",\"ignore_above\":256}}},\"orgId\":{\"type\":\"long\"},\"recoverAbnormalFlag\":{\"type\":\"long\"},\"recoverContractStatus\":{\"type\":\"long\"},\"recoverVehicleTime\":{\"type\":\"long\"},\"renewalType\":{\"type\":\"long\"},\"rent\":{\"type\":\"text\",\"fields\":{\"keyword\":{\"type\":\"keyword\",\"ignore_above\":256}}},\"replaceFlag\":{\"type\":\"long\"},\"saleId\":{\"type\":\"long\"},\"serveNo\":{\"type\":\"text\",\"fields\":{\"keyword\":{\"type\":\"keyword\",\"ignore_above\":256}}},\"serveStatus\":{\"type\":\"long\"},\"sort\":{\"type\":\"long\"},\"updateTime\":{\"type\":\"long\"},\"vehicleAge\":{\"type\":\"float\"}}}";
+        Settings.Builder setting = Settings.builder()
+                .put("index.number_of_shards", 3)
+                .put("index.number_of_replicas", 1);
+        boolean result = elasticsearchTools.createIndexWithMappingAndSetting(indexVersionName, Constants.ES_SERVE_TYPE, mapping, setting);
+        if (!result) {
+            log.error("创建别名失败");
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "创建index失败，详情请查看日志");
+        }
+
+        return indexVersionName;
+    }
+
+    @Override
+    public List<String> getIdList(IdListPageQry idListPageQry) {
+        ListQry listQry = new ListQry();
+        listQry.setLimit(idListPageQry.getLimit());
+        listQry.setPage(idListPageQry.getPage());
+
+        Result<PagePagination<String>> serveNoListPageResult = serveAggregateRootApi.getServeNoListByPage(listQry);
+        PagePagination<String> pagePagination = ResultDataUtils.getInstance(serveNoListPageResult).getDataOrNull();
+        if(null == pagePagination){
+            return null;
+        }
+        return pagePagination.getList();
+    }
+
+    @Override
+    /**
+     * @description: 别名切换
+     * @param alias 别名
+     * @param newIndexVersionName 实际的indexName
+     */
+    public boolean switchAliasIndex(String alias, String newIndexVersionName) {
+        return elasticsearchTools.switchAliasIndex(DeliverUtils.getEnvVariable(alias), DeliverUtils.getEnvVariable(newIndexVersionName));
     }
 
     @Override
     @MFMqBinlogTableFullName({"mf-deliver.deliver", "mf-deliver.serve", "mf-deliver.deliver_vehicle", "mf-deliver.recover_vehicle"})
     public boolean execOne(Map<String, String> data) {
+        ServeES serveES = (ServeES) assembleEsData(data);
+        if (null != serveES) {
+            sendRequest(serveES);
+        }
+        return true;
+    }
+
+    @Override
+    public void sendRequest(Object object) {
+        ServeES serveES = (ServeES) object;
+        // 此处可加删除逻辑
+        /*if(JudgeEnum.NO.getCode().equals(serveES.getDelFlag())){
+            elasticsearchTools.saveByEntity(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), serveES.getServeNo(), serveES);
+        }else if (JudgeEnum.YES.getCode().equals(serveES.getDelFlag())){
+            elasticsearchTools.deleteById(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), serveES.getServeNo());
+        }*/
+        elasticsearchTools.saveByJson(DeliverUtils.getEnvVariable(Constants.ES_SERVE_INDEX), Constants.ES_SERVE_INDEX, serveES.getServeNo(), JSONUtil.toJsonStr(serveES));
+    }
+
+    @Override
+    public List<Object> assembleEsDataList(List<String> idList) {
+        Map<String, String> map = new HashMap<>();
+        return idList.stream().map(id -> {
+            map.put("serve_no", id);
+            return assembleEsData(map);
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public Object assembleEsData(Map<String, String> map) {
         ServeES serveEs = new ServeES();
-        String serveNo = data.get("serve_no");
-        if(StringUtils.isEmpty(serveNo)){
+        String serveNo = map.get("serve_no");
+        if (StringUtils.isEmpty(serveNo)) {
             return false;
         }
         Result<ServeDTO> serveResult = serveAggregateRootApi.getServeDtoByServeNo(serveNo);
@@ -133,6 +211,7 @@ public class SyncServiceImpl implements EsSyncHandlerI {
         BeanUtils.copyProperties(serveDTO, serveEs);
         serveEs.setContractNo(serveDTO.getOaContractCode());
         serveEs.setServeStatus(serveDTO.getStatus());
+        serveEs.setServeStatusSort(getServeStatusSort(serveEs));
         serveEs.setOrderId(serveDTO.getOrderId().toString());
         serveEs.setRent(serveDTO.getRent().toString());
         serveEs.setDeposit(serveDTO.getDeposit().toString());
@@ -226,9 +305,49 @@ public class SyncServiceImpl implements EsSyncHandlerI {
             serveEs.setIsDeduction(0);
             serveEs.setSort(DeliverSortEnum.TWO.getSort());
         }
-        elasticsearchTools.saveByEntity(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), serveNo, serveEs);
+        return serveEs;
+    }
 
-        return true;
+    @Override
+    public void addRequest(Object obj, String indexName, String typeName) {
+        ServeES serveES = (ServeES) obj;
+        /*if(JudgeEnum.NO.getCode().equals(serveES.getDelFlag())){
+            IndexRequest indexRequest = new IndexRequest(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), serveES.getServeNo());
+            indexRequest.source(JSON.toJSONString(serveES), XContentType.JSON);
+            esBatchSyncTools.addIndexRequest(indexRequest);
+        }else if (JudgeEnum.YES.getCode().equals(serveES.getDelFlag())){
+            DeleteRequest deleteRequest = new DeleteRequest(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), serveES.getServeNo());
+            esBatchSyncTools.addDeleteRequest(deleteRequest);
+        }*/
+        IndexRequest indexRequest = new IndexRequest(indexName, typeName, serveES.getServeNo());
+        indexRequest.source(JSON.toJSONString(serveES), XContentType.JSON);
+        esBatchSyncTools.addIndexRequest(indexRequest);
+    }
+
+    private Integer getServeStatusSort(ServeES serveES) {
+        // 待预选＞已预选＞租赁中＞维修中＞已收车＞已完成
+        if (ServeEnum.NOT_PRESELECTED.getCode().equals(serveES.getServeStatus())) {
+            // 待预选
+            return 1;
+        } else if (ServeEnum.PRESELECTED.getCode().equals(serveES.getServeStatus())) {
+            // 已预选
+            return 2;
+        } else if (ServeEnum.DELIVER.getCode().equals(serveES.getServeStatus())) {
+            // 租赁中
+            return 3;
+        } else if (ServeEnum.REPAIR.getCode().equals(serveES.getServeStatus())) {
+            // 维修中
+            return 4;
+        } else if (ServeEnum.RECOVER.getCode().equals(serveES.getServeStatus())) {
+            // 已收车
+            return 5;
+        } else if (ServeEnum.COMPLETED.getCode().equals(serveES.getServeStatus())) {
+            // 已完成
+            return 6;
+        } else {
+            // 意外情况
+            return 0;
+        }
     }
 
     private Integer getSort(ServeES serveEs) {
@@ -237,10 +356,10 @@ public class SyncServiceImpl implements EsSyncHandlerI {
         boolean recoverFlag = serveEs.getIsInsurance().equals(JudgeEnum.NO.getCode()) || serveEs.getIsDeduction().equals(JudgeEnum.NO.getCode());
         if (serveEs.getServeStatus().equals(ServeEnum.PRESELECTED.getCode()) && serveEs.getDeliverStatus().equals(DeliverEnum.IS_DELIVER.getCode()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
                 && serveEs.getIsInsurance().equals(JudgeEnum.YES.getCode())) {
-            if(DeliverContractStatusEnum.NOSIGN.getCode() == serveEs.getDeliverContractStatus()){
+            if (DeliverContractStatusEnum.NOSIGN.getCode() == serveEs.getDeliverContractStatus()) {
                 // 待发车
                 sort = DeliverSortEnum.ONE.getSort();
-            }else{
+            } else {
                 // 签署中
                 sort = DeliverSortEnum.TWO.getSort();
             }
@@ -253,30 +372,36 @@ public class SyncServiceImpl implements EsSyncHandlerI {
         } else if (serveEs.getServeStatus().equals(ServeEnum.PRESELECTED.getCode()) && JudgeEnum.YES.getCode().equals(serveEs.getIsCheck())) {
             // 待投保
             sort = DeliverSortEnum.FIVE.getSort();
-        } else if ((serveEs.getServeStatus().equals(ServeEnum.DELIVER.getCode()) || serveEs.getServeStatus().equals(ServeEnum.REPAIR.getCode())) && serveEs.getDeliverStatus().equals(DeliverEnum.DELIVER.getCode())) {
+        } else if (serveEs.getServeStatus().equals(ServeEnum.DELIVER.getCode()) && serveEs.getDeliverStatus().equals(DeliverEnum.DELIVER.getCode())) {
             // 发车已完成
             sort = DeliverSortEnum.SIX.getSort();
+        } else if (serveEs.getServeStatus().equals(ServeEnum.REPAIR.getCode()) && serveEs.getDeliverStatus().equals(DeliverEnum.DELIVER.getCode())) {
+            // 发车已完成
+            sort = DeliverSortEnum.SEVEN.getSort();
         } else if (serveEs.getServeStatus().equals(ServeEnum.COMPLETED.getCode())) {
-            // 收车已完成
-            sort = DeliverSortEnum.SIX.getSort();
-        }else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())
+            // 服务单已完成
+            sort = DeliverSortEnum.SIXTEEN.getSort();
+        } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())
                 && serveEs.getIsCheck().equals(JudgeEnum.NO.getCode())) {
             //收车中 待验车
-            sort = DeliverSortEnum.ONE.getSort();
+            sort = DeliverSortEnum.TEN.getSort();
         } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode()) && serveEs.getIsCheck().equals(JudgeEnum.YES.getCode())
-                && serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.NOSIGN.getCode()){
+                && serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.NOSIGN.getCode()) {
             // 收车中 待收车
-            sort = DeliverSortEnum.TWO.getSort();
+            sort = DeliverSortEnum.ELEVEN.getSort();
         } else if (serveEs.getDeliverStatus().equals(DeliverEnum.IS_RECOVER.getCode())
-                && (serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.GENERATING.getCode() || serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.SIGNING.getCode())){
+                && (serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.GENERATING.getCode() || serveEs.getRecoverContractStatus() == DeliverContractStatusEnum.SIGNING.getCode())) {
             // 收车中 签署中
-            sort = DeliverSortEnum.THREE.getSort();
+            sort = DeliverSortEnum.TWELVE.getSort();
         } else if (serveEs.getServeStatus().equals(ServeEnum.RECOVER.getCode()) && DeliverEnum.RECOVER.getCode().equals(serveEs.getDeliverStatus()) && JudgeEnum.NO.getCode().equals(serveEs.getIsInsurance())) {
-            //收车中  待退保
-            sort = DeliverSortEnum.FOUR.getSort();
+            // 已收车  待退保
+            sort = DeliverSortEnum.THIRTEEN.getSort();
         } else if (serveEs.getServeStatus().equals(ServeEnum.RECOVER.getCode()) && DeliverEnum.RECOVER.getCode().equals(serveEs.getDeliverStatus()) && JudgeEnum.YES.getCode().equals(serveEs.getIsInsurance())) {
-            //收车中  待处理违章
-            sort = DeliverSortEnum.FIVE.getSort();
+            // 已收车  待处理违章
+            sort = DeliverSortEnum.FOURTEEN.getSort();
+        } else if (serveEs.getServeStatus().equals(ServeEnum.RECOVER.getCode()) && DeliverEnum.COMPLETED.getCode().equals(serveEs.getDeliverStatus())) {
+            // 已收车  待处理违章
+            sort = DeliverSortEnum.FIFTEEN.getSort();
         }
 
         return sort;
