@@ -58,7 +58,7 @@ public class RecoverVehicleQryExe {
                     .must(QueryBuilders.rangeQuery("deliverVehicleTime").lte(recoverApplyQryCmd.getEndDeliverTime().getTime()));
 
         }
-        Map<String, Object> map = elasticsearchTools.searchByQuery(DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), DeliverUtils.getEnvVariable(Constants.ES_DELIVER_INDEX), 0, 0, boolQueryBuilder);
+        Map<String, Object> map = elasticsearchTools.searchByQuery(DeliverUtils.getEnvVariable(Constants.ES_SERVE_INDEX), Constants.ES_SERVE_TYPE, 0, 0, boolQueryBuilder);
         List<Map<String, Object>> dataList = (List<Map<String, Object>>) map.get("data");
         if (dataList != null) {
             return dataList.stream().map(data -> {

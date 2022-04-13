@@ -10,8 +10,12 @@ import javax.validation.constraints.NotEmpty;
 @ApiModel(value = "收车申请详情查询命令")
 public class RecoverDetailQryCmd {
 
-    @NotEmpty(message = "服务单编号不能为空")
+    // @NotEmpty(message = "服务单编号不能为空")
     @ApiModelProperty(value = "服务单编号")
     private String serveNo;
+
+    @NotEmpty(message = "交付单编号不能为空")
+    @ApiModelProperty(value = "交付单编号")
+    private String deliverNo;
 
 }

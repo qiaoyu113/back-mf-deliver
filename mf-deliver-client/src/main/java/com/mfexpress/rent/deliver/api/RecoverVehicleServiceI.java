@@ -30,4 +30,10 @@ public interface RecoverVehicleServiceI {
     Integer abnormalRecover(RecoverAbnormalCmd cmd, TokenInfo tokenInfo);
 
     RecoverAbnormalVO getRecoverAbnormalInfo(RecoverAbnormalQry cmd);
+
+    Integer toBackInsureByDeliver(RecoverBackInsureByDeliverCmd cmd, TokenInfo tokenInfo);
+
+    Integer cancelRecoverByDeliver(RecoverCancelByDeliverCmd cmd, TokenInfo tokenInfo);
+
+    Integer toDeductionByDeliver(RecoverDeductionByDeliverCmd cmd, TokenInfo tokenInfo);
 }

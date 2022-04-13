@@ -26,7 +26,7 @@ public class DeliverVehicleExe {
     private VehicleAggregateRootApi vehicleAggregateRootApi;
     @Resource
     private CustomerAggregateRootApi customerAggregateRootApi;
-    @Resource
+    @Resource(name = "serveSyncServiceImpl")
     private EsSyncHandlerI syncServiceI;
 
     /*@Resource

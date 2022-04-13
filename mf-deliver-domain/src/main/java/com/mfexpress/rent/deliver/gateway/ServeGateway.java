@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.gateway;
 
 import com.mfexpress.component.response.PagePagination;
+import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
@@ -36,6 +37,8 @@ public interface ServeGateway {
     void batchUpdate(List<ServeEntity> serveToUpdateList);
     List<ServeEntity>getServeByCustomerIdDeliver(List<Integer>customerIdList);
     List<ServeEntity>getServeByCustomerIdRecover(List<Integer>customerIdList);
+
+    PagePagination<ServeEntity> getServeNoListByPage(ListQry listQry);
 
     ServeEntity getServeDepositByServeNo(CustomerDepositListDTO qry);
 

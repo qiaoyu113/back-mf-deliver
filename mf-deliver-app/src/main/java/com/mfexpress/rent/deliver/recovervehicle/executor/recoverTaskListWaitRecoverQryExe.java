@@ -1,10 +1,7 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import com.mfexpress.component.dto.TokenInfo;
-import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
-import com.mfexpress.rent.deliver.constant.DeliverEnum;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
+import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
 import com.mfexpress.rent.deliver.recovervehicle.RecoverQryServiceI;
@@ -46,7 +43,7 @@ public class recoverTaskListWaitRecoverQryExe implements RecoverQryServiceI {
         // updateTime 指的是 deliver 的 updateTime
         FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("date").order(SortOrder.DESC);
         fieldSortBuilderList.add(updateTimeSortBuilder);
-        return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo);
+        return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo, Constants.ES_SERVE_INDEX, Constants.ES_SERVE_TYPE);
     }
 
 }
