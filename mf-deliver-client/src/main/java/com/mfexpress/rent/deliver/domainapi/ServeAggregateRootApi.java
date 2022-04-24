@@ -146,4 +146,8 @@ public interface ServeAggregateRootApi {
 
     @PostMapping("/getReplaceNumByCustomerIds")
     Result<Map<Integer,Integer>> getReplaceNumByCustomerIds(@RequestBody List<Integer> customerIds);
+
+    @PostMapping("/getRentingServeNumByCustomerId")
+    Result<Integer> getRentingServeNumByCustomerId(@RequestParam("customerId") Integer customerId);
+
 }

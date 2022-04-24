@@ -154,6 +154,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setDeposit(serveVehicleDTO.getDeposit());
                 serve.setLeaseBeginDate(serveVehicleDTO.getLeaseBeginDate());
                 serve.setLeaseMonths(serveVehicleDTO.getLeaseMonths());
+                serve.setLeaseDays(serveVehicleDTO.getLeaseDays());
                 serve.setLeaseEndDate(serveVehicleDTO.getLeaseEndDate());
                 serve.setBillingAdjustmentDate("");
                 serve.setRenewalType(0);
@@ -928,8 +929,16 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Override
     @PostMapping("/getReplaceNumByCustomerIds")
+    @PrintParam
     public Result<Map<Integer, Integer>> getReplaceNumByCustomerIds(@RequestBody List<Integer> customerIds) {
         return Result.getInstance(serveGateway.getReplaceNumByCustomerIds(customerIds)).success();
+    }
+
+    @Override
+    @PostMapping("/getRentingServeNumByCustomerId")
+    @PrintParam
+    public Result<Integer> getRentingServeNumByCustomerId(@RequestParam("customerId") Integer customerId) {
+        return Result.getInstance(serveGateway.getRentingServeNumByCustomerId(customerId)).success();
     }
 
 

@@ -36,8 +36,10 @@ public class RenewalServeCmd {
     private String leaseBeginDate;
 
     @ApiModelProperty(value = "租期（月）")
-    @NotNull(message = "租期不能为空")
     private Integer leaseMonths;
+
+    @ApiModelProperty(value = "租期（月）")
+    private Integer leaseDays;
 
     @ApiModelProperty(value = "租赁结束日期")
     @NotEmpty(message = "租赁结束日期不能为空")

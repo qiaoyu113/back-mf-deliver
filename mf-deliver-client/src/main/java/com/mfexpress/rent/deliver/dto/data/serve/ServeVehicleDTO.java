@@ -46,6 +46,9 @@ public class ServeVehicleDTO {
     @ApiModelProperty(value = "租赁期限（月）")
     private Integer leaseMonths;
 
+    @ApiModelProperty(value = "租赁期限（天）")
+    private Integer leaseDays;
+
     @ApiModelProperty(value = "租赁结束日期")
     private String leaseEndDate;
 

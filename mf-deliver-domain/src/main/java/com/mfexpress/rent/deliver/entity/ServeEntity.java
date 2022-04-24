@@ -97,6 +97,8 @@ public class ServeEntity implements ServeEntityApi {
 
     private Integer leaseMonths;
 
+    private Integer leaseDays;
+
     private String leaseEndDate;
 
     private String billingAdjustmentDate;
