@@ -19,10 +19,7 @@ import com.mfexpress.order.dto.data.CommodityDTO;
 import com.mfexpress.order.dto.data.CommodityMapDTO;
 import com.mfexpress.order.dto.data.InsuranceInfoDTO;
 import com.mfexpress.order.dto.qry.CommodityMapQry;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
-import com.mfexpress.rent.deliver.constant.ServeRenewalTypeEnum;
+import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.serve.RenewableServeQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeChangeRecordDTO;
@@ -95,6 +92,7 @@ public class RenewableServeListQryExe {
         } else {
             boolQueryBuilder.must(QueryBuilders.termsQuery("serveStatus", defaultServeStatus));
         }
+        boolQueryBuilder.mustNot(QueryBuilders.termQuery("deliverStatus", DeliverEnum.IS_RECOVER.getCode()));
         // 20220214新增，被续约的服务单不可是维修车的替换服务单
         boolQueryBuilder.must(QueryBuilders.termQuery("replaceFlag", JudgeEnum.NO.getCode()));
 

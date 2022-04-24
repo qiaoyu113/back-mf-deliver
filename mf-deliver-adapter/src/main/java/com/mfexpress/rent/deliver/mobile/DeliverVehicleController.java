@@ -37,7 +37,6 @@ public class DeliverVehicleController {
         }
         deliverVehicleCmd.setCarServiceId(tokenInfo.getId());
         return Result.getInstance(deliverVehicleServiceI.toDeliver(deliverVehicleCmd)).success();
-
     }
 
 }
