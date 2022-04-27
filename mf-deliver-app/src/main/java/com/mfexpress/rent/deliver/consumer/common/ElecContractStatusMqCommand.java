@@ -362,14 +362,17 @@ public class ElecContractStatusMqCommand {
                 calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
             }
             if (null != offsetDays) {
-                calendar.add(Calendar.DAY_OF_MONTH, offsetDays);
+                offsetDays -= 1;
+                if (offsetDays > 0) {
+                    calendar.add(Calendar.DAY_OF_MONTH, offsetDays);
+                }
             }
             return DateUtil.formatDate(calendar.getTime());
         } else {
-            if(null != offsetMonths){
+            if (null != offsetMonths) {
                 deliverVehicleDate = DateUtil.offsetMonth(deliverVehicleDate, offsetMonths);
             }
-            if(null != offsetDays){
+            if (null != offsetDays) {
                 deliverVehicleDate = DateUtil.offsetDay(deliverVehicleDate, offsetDays);
             }
             return DateUtil.formatDate(deliverVehicleDate);

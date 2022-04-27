@@ -92,6 +92,9 @@ public class RenewableServeListQryExe {
         } else {
             boolQueryBuilder.must(QueryBuilders.termsQuery("serveStatus", defaultServeStatus));
         }
+        if (null != qry.getLeaseMode() && !qry.getLeaseMode().isEmpty()) {
+            boolQueryBuilder.must(QueryBuilders.termsQuery("leaseModelId", qry.getLeaseMode()));
+        }
         boolQueryBuilder.mustNot(QueryBuilders.termQuery("deliverStatus", DeliverEnum.IS_RECOVER.getCode()));
         // 20220214新增，被续约的服务单不可是维修车的替换服务单
         boolQueryBuilder.must(QueryBuilders.termQuery("replaceFlag", JudgeEnum.NO.getCode()));
