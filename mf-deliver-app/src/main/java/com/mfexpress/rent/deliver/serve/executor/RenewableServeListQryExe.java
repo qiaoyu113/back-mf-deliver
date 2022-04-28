@@ -157,8 +157,9 @@ public class RenewableServeListQryExe {
             if (null != contractCommodityDTOMap) {
                 CommodityDTO commodityDTO = contractCommodityDTOMap.get(serveES.getContractCommodityId());
                 if (null != commodityDTO) {
-                    serveToRenewalVO.setRentFee(commodityDTO.getRentFee() == null ? "0.00" : commodityDTO.getRentFee().toString());
-                    serveToRenewalVO.setServiceFee(commodityDTO.getServiceFee() == null ? "0.00" : commodityDTO.getServiceFee().toString());
+                    serveToRenewalVO.setRentFee(commodityDTO.getRentFee() == null ? "0.00" : String.format("%.2f", commodityDTO.getRentFee()));
+                    serveToRenewalVO.setServiceFee(commodityDTO.getServiceFee() == null ? "0.00" : String.format("%.2f", commodityDTO.getServiceFee()));
+                    serveToRenewalVO.setDeposit(commodityDTO.getDepositFee() == null ? "0.00" : String.format("%.2f", commodityDTO.getDepositFee()));
                     InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
                     serveToRenewalVO.setInsuranceInfo(insuranceInfo);
                     serveToRenewalVO.setTags(insuranceInfo.getTags() == null ? new String[0] : insuranceInfo.getTags());
