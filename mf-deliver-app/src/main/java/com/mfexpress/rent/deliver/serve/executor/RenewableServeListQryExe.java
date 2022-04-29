@@ -93,7 +93,10 @@ public class RenewableServeListQryExe {
             boolQueryBuilder.must(QueryBuilders.termsQuery("serveStatus", defaultServeStatus));
         }
         if (null != qry.getLeaseMode() && !qry.getLeaseMode().isEmpty()) {
-            boolQueryBuilder.must(QueryBuilders.termsQuery("leaseModelId", qry.getLeaseMode()));
+            // 如果前端只传leaseModel为3（展示），进行限制查询，其他的不限制
+            if(qry.getLeaseMode().size() == 1 && qry.getLeaseMode().get(0).equals(3)){
+                boolQueryBuilder.must(QueryBuilders.termsQuery("leaseModelId", qry.getLeaseMode()));
+            }
         }
         boolQueryBuilder.mustNot(QueryBuilders.termQuery("deliverStatus", DeliverEnum.IS_RECOVER.getCode()));
         // 20220214新增，被续约的服务单不可是维修车的替换服务单
