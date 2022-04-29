@@ -362,7 +362,7 @@ public class ElecContractStatusMqCommand {
                 calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
             }
             if (null != offsetDays) {
-                offsetDays -= 1;
+                // offsetDays -= 1;
                 if (offsetDays > 0) {
                     calendar.add(Calendar.DAY_OF_MONTH, offsetDays);
                 }
