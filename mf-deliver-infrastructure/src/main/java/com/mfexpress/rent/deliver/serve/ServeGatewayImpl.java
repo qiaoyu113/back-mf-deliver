@@ -262,7 +262,8 @@ public class ServeGatewayImpl implements ServeGateway {
     @Override
     public Integer getRentingServeNumByCustomerId(Integer customerId) {
         Example example = new Example(ServeEntity.class);
-        example.createCriteria().andIn("status", Arrays.asList(ServeEnum.DELIVER.getCode(), ServeEnum.REPAIR.getCode()));
+        example.createCriteria().andIn("status", Arrays.asList(ServeEnum.DELIVER.getCode(), ServeEnum.REPAIR.getCode()))
+                .andEqualTo("customerId", customerId);
         return serveMapper.selectCountByExample(example);
     }
 
