@@ -328,7 +328,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
             RecoverVehicleDTO recoverVehicleDTO = new RecoverVehicleDTO();
             BeanUtils.copyProperties(recoverVehicleEntity, recoverVehicleDTO);
             return recoverVehicleDTO;
-        }).collect(Collectors.toMap(RecoverVehicleDTO::getServeNo, Function.identity(), (v1, v2) -> v1));
+        }).collect(Collectors.toMap(RecoverVehicleDTO::getServeNo, Function.identity(), (v1, v2) -> v2));
 
         return Result.getInstance(recoverVehicleDTOMap).success();
     }
