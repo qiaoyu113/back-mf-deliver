@@ -54,6 +54,7 @@ public class RecoverGatewayImpl implements RecoverVehicleGateway {
         Example example = new Example(RecoverVehicleEntity.class);
         example.createCriteria()
                 .andIn("deliverNo", deliverNoList);
+        example.orderBy("createTime");
         return recoverVehicleMapper.selectByExample(example);
     }
 
