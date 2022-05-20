@@ -116,7 +116,7 @@ public class ServeLeaseTermAmountQryExe {
             ServeAllLeaseTermAmountVO serveAllLeaseTermAmountVO = new ServeAllLeaseTermAmountVO();
             ServeES serveES = BeanUtil.mapToBean(map, ServeES.class, false, new CopyOptions());
             BeanUtils.copyProperties(serveES, serveAllLeaseTermAmountVO);
-            if(!StringUtils.isEmpty(serveAllLeaseTermAmountVO.getDeposit())){
+            if (!StringUtils.isEmpty(serveAllLeaseTermAmountVO.getDeposit())) {
                 // 补充金额字段精度至小数点后两位
                 serveAllLeaseTermAmountVO.setDeposit(supplementAccuracy(serveAllLeaseTermAmountVO.getDeposit()));
             }
@@ -215,12 +215,16 @@ public class ServeLeaseTermAmountQryExe {
             if (null != serveEnum) {
                 vo.setServeStatusDisplay(serveEnum.getAlias());
             }
-            // 是否展示重新激活按钮 服务单状态为已收车 && 租赁方式为正常租赁或优惠 && 预计收车日期-收车日期>=15day
+            // 是否展示重新激活按钮 服务单状态为已收车 && 租赁方式为正常租赁或优惠 && 预计收车日期-收车日期>=15day && 预计收车日期在当前日期之后
             if (ServeEnum.RECOVER.getCode().equals(vo.getServeStatus()) && (LeaseModelEnum.NORMAL.getCode() == vo.getLeaseModelId() || LeaseModelEnum.DISCOUNT.getCode() == vo.getLeaseModelId())) {
                 if (null != vo.getRecoverVehicleTime() && null != vo.getExpectRecoverDate() && vo.getExpectRecoverDate().after(vo.getRecoverVehicleTime())) {
-                    long betweenDays = DateUtil.between(vo.getRecoverVehicleTime(), vo.getExpectRecoverDate(), DateUnit.DAY);
-                    if (betweenDays >= 15) {
-                        vo.setEnableReactivate(JudgeEnum.YES.getCode());
+                    String nowDateChar = FormatUtil.ymdFormatDateToString(new Date());
+                    Date nowDate = FormatUtil.ymdFormatStringToDate(nowDateChar);
+                    if (!nowDate.after(vo.getExpectRecoverDate())) {
+                        long betweenDays = DateUtil.between(vo.getRecoverVehicleTime(), vo.getExpectRecoverDate(), DateUnit.DAY);
+                        if (betweenDays >= 15) {
+                            vo.setEnableReactivate(JudgeEnum.YES.getCode());
+                        }
                     }
                 }
             }
@@ -317,8 +321,8 @@ public class ServeLeaseTermAmountQryExe {
     }
 
     // 补充精度至小数点后两位
-    public String supplementAccuracy(String num){
-        if(StringUtils.isEmpty(num)){
+    public String supplementAccuracy(String num) {
+        if (StringUtils.isEmpty(num)) {
             return "";
         }
         return new BigDecimal(num).setScale(2, RoundingMode.HALF_UP).toString();
