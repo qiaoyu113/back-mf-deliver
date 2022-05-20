@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 @ApiModel("ServeToRenewalVO 合同续约时返回的服务单VO")
@@ -67,5 +68,17 @@ public class ServeToRenewalVO {
     private InsuranceInfoDTO insuranceInfo;
 
     private String[] tags;
+
+    @ApiModelProperty(value = "租金占比")
+    private Double rentRatio;
+
+    @ApiModelProperty(value = "客户类别")
+    private Integer category;
+
+    @ApiModelProperty(value = "客户类别描述")
+    private String  categoryDisplay;
+
+    @ApiModelProperty(value = "总月租金")
+    private BigDecimal totalRent;
 
 }
