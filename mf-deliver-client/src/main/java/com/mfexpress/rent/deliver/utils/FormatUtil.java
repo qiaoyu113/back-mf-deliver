@@ -52,4 +52,16 @@ public class FormatUtil {
         }
     }
 
+    public static Date ymdFormatStringToDate(String date) {
+        if (StringUtils.isEmpty(date))
+            return null;
+        SimpleDateFormat ymdFormat = new SimpleDateFormat(ymdFormatChar);
+        try {
+            return ymdFormat.parse(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 }
