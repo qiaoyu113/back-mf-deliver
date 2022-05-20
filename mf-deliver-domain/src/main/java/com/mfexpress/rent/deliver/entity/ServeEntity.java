@@ -129,12 +129,12 @@ public class ServeEntity implements ServeEntityApi {
 
     @Override
     public void reactiveServe(ReactivateServeCmd cmd) {
+        // 保存操作记录
+        ServeEntity rawServe = serveGateway.getServeByServeNo(cmd.getServeNo());
+
         ServeEntity newServe = new ServeEntity();
         newServe.setStatus(ServeEnum.NOT_PRESELECTED.getCode());
         serveGateway.updateServeByServeNo(cmd.getServeNo(), newServe);
-
-        // 保存操作记录
-        ServeEntity rawServe = serveGateway.getServeByServeNo(cmd.getServeNo());
         saveChangeRecordWithReactive(cmd, rawServe, newServe);
     }
 
