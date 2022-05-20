@@ -88,6 +88,7 @@ public class ServeEsDataQryExe {
                 if (customerResult.getCode() == 0 && customerResult.getData() != null) {
                     serveListVO.setCustomerName(customerResult.getData().getName());
                 }
+
                 serveListVO.setExtractVehicleTime(order.getDeliveryDate());
                 List<OrderCarModelVO> carModelList = new LinkedList<>();
                 List<ProductDTO> productList = order.getProductList();
