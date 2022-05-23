@@ -19,9 +19,11 @@ import com.mfexpress.rent.deliver.consumer.sync.ServeSyncServiceImpl;
 import com.mfexpress.rent.deliver.domainapi.*;
 import com.mfexpress.rent.deliver.dto.data.daily.DailyOperateCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
@@ -61,6 +63,8 @@ public class RecoverAbnormalCmdExe {
 
     @Resource
     private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
+    @Resource
+    private  DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
 
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
@@ -106,6 +110,7 @@ public class RecoverAbnormalCmdExe {
         cmd.setOperatorId(tokenInfo.getId());
         cmd.setElecContractDTO(contractDTO);
         Result<MaintenanceDTO> maintainResult = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getServeNo());
+
         if (ResultValidUtils.checkResult(maintainResult)) {
             MaintenanceDTO maintenanceDTO = maintainResult.getData();
             //格式化为yyyy-MM-dd
@@ -113,7 +118,18 @@ public class RecoverAbnormalCmdExe {
             if (cmd.getRecoverTime().before(DateUtil.parseDate(confirmDate))) {
                 throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "收车日期请晚于维修交车日期");
             }
+
         }
+        Result<DeliverVehicleDTO> deliverByServeNo = deliverVehicleAggregateRootApi.getDeliverVehicleOneByServeNo(cmd.getServeNo());
+        if (ResultValidUtils.checkResult(deliverByServeNo)){
+            DeliverVehicleDTO byServeNoData = deliverByServeNo.getData();
+            String confirmDate = DateUtil.formatDate(byServeNoData.getDeliverVehicleTime());
+            if (cmd.getRecoverTime().before(DateUtil.parseDate(confirmDate))) {
+                throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "收车日期请晚于发车日期");
+            }
+        }
+
+
         Result<Integer> operationResult = recoverAggregateRootApi.abnormalRecover(cmd);
         ResultValidUtils.checkResultException(operationResult);
 
@@ -125,6 +141,7 @@ public class RecoverAbnormalCmdExe {
         vehicleSaveCmd.setWarehouseId(contractDTO.getRecoverWareHouseId());
         vehicleSaveCmd.setCustomerId(0);
         Result<WarehouseDto> wareHouseResult = warehouseAggregateRootApi.getWarehouseById(vehicleSaveCmd.getWarehouseId());
+
         if (wareHouseResult.getData() != null) {
             vehicleSaveCmd.setAddress(wareHouseResult.getData().getName());
         }
@@ -190,5 +207,14 @@ public class RecoverAbnormalCmdExe {
         //收车
         dailyAggregateRootApi.recoverDaily(dailyCreateCmd);
     }
+
+    public Result<DeliverVehicleDTO> getDeliverByDeliverNo(String deliverNo){
+        return syncServiceI.getDeliverByDeliverNo(deliverNo);
+    }
+
+    public Result<RecoverVehicleDTO> getRecoverVehicleDtoByDeliverNo(String deliverNo){
+        return syncServiceI.getRecoverVehicleDtoByDeliverNo(deliverNo);
+    }
+
 
 }

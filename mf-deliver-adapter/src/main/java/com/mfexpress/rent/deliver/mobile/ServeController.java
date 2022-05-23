@@ -7,7 +7,10 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.token.TokenTools;
+import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.DeliverNoCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.scheduler.ServeDailyScheduler;
 import com.mfexpress.rent.deliver.scheduler.ServeRenewalScheduler;
@@ -34,6 +37,9 @@ public class ServeController {
     private ServeRenewalScheduler serveRenewalScheduler;
     @Resource
     private ServeDailyScheduler serveDailyScheduler;
+
+    @Resource
+    private RecoverVehicleServiceI recoverVehicleServiceI;
 
 
     //====================租赁服务单生成===============//
@@ -173,5 +179,13 @@ public class ServeController {
         return Result.getInstance(0).success();
     }
 
+
+
+    @PostMapping("/selectContactsByDeliverNo")
+    @ApiOperation("根据服务单编号查询提车人信息")
+    @PrintParam
+    public Result<DeliverVehicleDTO>  selectContactsByDeliverNo(DeliverNoCmd deliverNoCmd){
+        return recoverVehicleServiceI.getDeliverByDeliverNo(deliverNoCmd.getDeliverNo());
+    }
 
 }
