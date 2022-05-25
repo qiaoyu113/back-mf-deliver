@@ -1,6 +1,9 @@
 package com.mfexpress.rent.deliver.api;
 
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
 
 import java.util.List;
@@ -36,4 +39,8 @@ public interface RecoverVehicleServiceI {
     Integer cancelRecoverByDeliver(RecoverCancelByDeliverCmd cmd, TokenInfo tokenInfo);
 
     Integer toDeductionByDeliver(RecoverDeductionByDeliverCmd cmd, TokenInfo tokenInfo);
+
+    Result<DeliverVehicleDTO> getDeliverByDeliverNo(String deliverNo);
+
+    Result<RecoverVehicleDTO> getRecoverVehicleDtoByDeliverNo(String deliverNo);
 }

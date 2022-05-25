@@ -145,4 +145,5 @@ public class ServeServiceImpl implements ServeServiceI {
         return exportServeLeaseTermAmountDataQryExe.execute(map);
     }
 
+
 }

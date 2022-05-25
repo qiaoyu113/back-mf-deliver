@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 
@@ -78,6 +79,15 @@ public class ServeVO {
 
     @ApiModelProperty(value = "所属电子合同id")
     private String elecContractId;
+
+    //新增字段
+    @ApiModelProperty(value = "月租金")
+    private BigDecimal rent;
+
+    @ApiModelProperty(value = "押金")
+    private BigDecimal deposit;
+
+
 }
 
 

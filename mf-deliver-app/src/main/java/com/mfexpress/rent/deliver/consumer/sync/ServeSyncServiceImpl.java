@@ -36,6 +36,7 @@ import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
+import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
@@ -149,7 +150,7 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
 
         Result<PagePagination<String>> serveNoListPageResult = serveAggregateRootApi.getServeNoListByPage(listQry);
         PagePagination<String> pagePagination = ResultDataUtils.getInstance(serveNoListPageResult).getDataOrNull();
-        if(null == pagePagination){
+        if (null == pagePagination) {
             return null;
         }
         return pagePagination.getList();
@@ -436,5 +437,24 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
             return dictDataDTO.getDictLabel();
         }
         return "";
+    }
+
+    /**
+     * 根据deliverNo查询客户信息 发车
+     * @param deliverNo
+     * @return
+     */
+    public Result<DeliverVehicleDTO> getDeliverByDeliverNo(String deliverNo) {
+
+        return deliverVehicleAggregateRootApi.getDeliverVehicleDto(deliverNo);
+    }
+
+    /**
+     * 根据deliverNo查询客户信息 收车
+     * @param deliverNo
+     * @return
+     */
+    public Result<RecoverVehicleDTO> getRecoverVehicleDtoByDeliverNo(String deliverNo){
+        return recoverVehicleAggregateRootApi.getRecoverVehicleDtoByDeliverNo(deliverNo);
     }
 }

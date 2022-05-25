@@ -53,7 +53,7 @@
                 <spring.active>dev2m1</spring.active>
             </properties>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
         </profile>
         <profile>
@@ -61,7 +61,9 @@
             <properties>
                 <spring.active>dev2m2</spring.active>
             </properties>
-
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
         </profile>
         <profile>
             <id>test</id>

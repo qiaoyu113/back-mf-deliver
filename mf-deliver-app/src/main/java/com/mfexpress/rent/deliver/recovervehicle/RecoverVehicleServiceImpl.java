@@ -1,7 +1,10 @@
 package com.mfexpress.rent.deliver.recovervehicle;
 
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
 import com.mfexpress.rent.deliver.recovervehicle.executor.*;
 import org.springframework.stereotype.Component;
@@ -128,4 +131,15 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     public Integer toDeductionByDeliver(RecoverDeductionByDeliverCmd cmd, TokenInfo tokenInfo) {
         return recoverDeductionByDeliverExe.execute(cmd, tokenInfo);
     }
+
+    @Override
+    public Result<DeliverVehicleDTO> getDeliverByDeliverNo(String deliverNo) {
+        return recoverAbnormalCmdExe.getDeliverByDeliverNo(deliverNo);
+    }
+
+    @Override
+    public Result<RecoverVehicleDTO> getRecoverVehicleDtoByDeliverNo(String deliverNo) {
+        return recoverAbnormalCmdExe.getRecoverVehicleDtoByDeliverNo(deliverNo);
+    }
+
 }

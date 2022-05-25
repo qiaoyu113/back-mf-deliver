@@ -29,6 +29,10 @@
             <groupId>com.mfexpress</groupId>
             <artifactId>mf-component-dto</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.mfexpress.rent.maintain</groupId>
+            <artifactId>mf-maintain-client</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
