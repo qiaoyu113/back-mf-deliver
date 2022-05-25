@@ -245,7 +245,7 @@ public class RecoverVehicleController {
     @PostMapping("/getRecoverVehicleDtoByDeliverNo")
     @ApiOperation(value = "根据deliverNo获取收车人信息")
     @PrintParam
-    public Result<RecoverVehicleDTO> getRecoverVehicleDtoByDeliverNo(DeliverNoCmd deliverNoCmd) {
+    public Result<RecoverVehicleDTO> getRecoverVehicleDtoByDeliverNo( @RequestBody @Validated DeliverNoCmd deliverNoCmd) {
 
         return recoverVehicleServiceI.getRecoverVehicleDtoByDeliverNo(deliverNoCmd.getDeliverNo());
     }

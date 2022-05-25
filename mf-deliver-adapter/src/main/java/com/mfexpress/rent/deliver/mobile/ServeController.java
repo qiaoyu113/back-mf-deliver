@@ -184,7 +184,7 @@ public class ServeController {
     @PostMapping("/selectContactsByDeliverNo")
     @ApiOperation("根据服务单编号查询提车人信息")
     @PrintParam
-    public Result<DeliverVehicleDTO>  selectContactsByDeliverNo(DeliverNoCmd deliverNoCmd){
+    public Result<DeliverVehicleDTO>  selectContactsByDeliverNo( @RequestBody @Validated DeliverNoCmd deliverNoCmd){
         return recoverVehicleServiceI.getDeliverByDeliverNo(deliverNoCmd.getDeliverNo());
     }
 
