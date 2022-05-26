@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.recovervehicle;
 
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
@@ -25,10 +26,16 @@ public class RecoverQryContext {
     public RecoverTaskListVO execute(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo) {
         RecoverQryServiceI bean = (RecoverQryServiceI) applicationContext.getBean(RecoverEnum.getServiceName(recoverQryListCmd.getTag()) + "QryExe");
         RecoverTaskListVO recoverTaskListVO = bean.execute(recoverQryListCmd, tokenInfo);
-       List<RecoverVehicleVO> recoverVehicleVOList = recoverTaskListVO.getRecoverVehicleVOList();
+        List<RecoverVehicleVO> recoverVehicleVOList = recoverTaskListVO.getRecoverVehicleVOList();
         for (RecoverVehicleVO v : recoverVehicleVOList) {
             Result<MaintenanceDTO> maintainResult = maintenanceAggregateRootApi.getMaintenanceByServeNo(v.getServeNo());
-            v.setConfirmDate(maintainResult.getData().getConfirmDate());
+            //     MaintenanceDTO dataOrNull = ResultDataUtils.getInstance(maintainResult).getDataOrNull();
+          //  System.out.println(maintainResult.getData());
+            if (null != maintainResult.getData()) {
+          //      System.out.println("空");
+                v.setConfirmDate(maintainResult.getData().getConfirmDate());
+            }
+
         }
         return recoverTaskListVO;
 

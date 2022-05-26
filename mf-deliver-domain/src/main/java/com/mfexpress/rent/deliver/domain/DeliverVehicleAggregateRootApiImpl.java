@@ -58,7 +58,7 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
             BeanUtils.copyProperties(deliverVehicle, deliverVehicleDTO);
             return Result.getInstance(deliverVehicleDTO).success();
         }
-        return Result.getInstance((DeliverVehicleDTO) null).success();
+        return Result.getInstance(deliverVehicleDTO ).success();
     }
 
     @Override
