@@ -18,7 +18,8 @@ import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessMetho
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
-import com.mfexpress.rent.deliver.api.SyncServiceI;
+import com.mfexpress.order.api.app.ContractAggregateRootApi;
+import com.mfexpress.order.dto.data.CommodityDTO;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
@@ -85,6 +86,11 @@ public class ElecContractStatusMqCommand {
     private CustomerAggregateRootApi customerAggregateRootApi;
     @Resource
     private DailyAggregateRootApi dailyAggregateRootApi;
+
+    @Resource
+    private ContractAggregateRootApi orderContractAggregateRootApi;
+
+
 
     @Resource(name = "serveSyncServiceImpl")
     private EsSyncHandlerI serveSyncServiceI;
@@ -233,7 +239,10 @@ public class ElecContractStatusMqCommand {
         if (ResultErrorEnum.SUCCESSED.getCode() != changeVehicleStatusResult.getCode()) {
             log.error("收车电子合同签署完成时，更改车辆状态失败，serveNo：{}，车辆id：{}", serveDTO.getServeNo(), deliverDTO.getCarId());
         }
-
+        Result<CommodityDTO> commodityResult = orderContractAggregateRootApi.getCommodityById(serveDTO.getContractCommodityId());
+        if (!Objects.nonNull(commodityResult.getData())) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到商品信息");
+        }
         // 发送收车信息到mq，由合同域判断服务单所属的合同是否到已履约完成状态
         // 租赁服务单1.1迭代，改为当服务单状态到已完成时，再向合同域发送此消息
         /*if (JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {
@@ -252,7 +261,7 @@ public class ElecContractStatusMqCommand {
         String expectRecoverDateChar = serveDTO.getExpectRecoverDate();
         DateTime expectRecoverDate = DateUtil.parseDate(expectRecoverDateChar);
         // 发送收车计费消息
-        if(expectRecoverDate.isAfterOrEquals(recoverVehicleTime)){
+        if (expectRecoverDate.isAfterOrEquals(recoverVehicleTime)) {
             //收车计费
             RecoverVehicleCmd recoverVehicleCmd = new RecoverVehicleCmd();
             recoverVehicleCmd.setServeNo(serveDTO.getServeNo());
@@ -261,9 +270,10 @@ public class ElecContractStatusMqCommand {
             recoverVehicleCmd.setCustomerId(serveDTO.getCustomerId());
             recoverVehicleCmd.setCreateId(contractDTO.getCreatorId());
             recoverVehicleCmd.setRecoverDate(DateUtil.formatDate(contractDTO.getRecoverVehicleTime()));
+            recoverVehicleCmd.setRentRatio(commodityResult.getData().getRentRatio());
             log.info("正常收车时，交付域向计费域发送的收车单信息：{}", recoverVehicleCmd);
             mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(recoverVehicleCmd));
-        }else {
+        } else {
             // 发送自动续约消息
             RenewalChargeCmd renewalChargeCmd = new RenewalChargeCmd();
             renewalChargeCmd.setServeNo(serveDTO.getServeNo());
@@ -272,6 +282,7 @@ public class ElecContractStatusMqCommand {
             renewalChargeCmd.setDeliverNo(deliverDTO.getDeliverNo());
             renewalChargeCmd.setVehicleId(deliverDTO.getCarId());
             renewalChargeCmd.setEffectFlag(false);
+            renewalChargeCmd.setRentRatio(commodityResult.getData().getRentRatio());
             // 续约目标日期为实际收车日期
             renewalChargeCmd.setRenewalDate(DateUtil.formatDate(recoverVehicleTime));
             mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
@@ -279,7 +290,7 @@ public class ElecContractStatusMqCommand {
 
         serveNoList.add(serveDTO.getServeNo());
         //操作日报
-        createDaily(serveNoList, contractDTO.getRecoverVehicleTime(),false);
+        createDaily(serveNoList, contractDTO.getRecoverVehicleTime(), false);
         return serveNoList;
     }
 
@@ -292,6 +303,12 @@ public class ElecContractStatusMqCommand {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单信息不存在");
         }
         List<ServeDTO> serveDTOList = serveDTOListResult.getData();
+        List<Integer> commodityIds = serveDTOList.stream().map(ServeDTO::getContractCommodityId).distinct().collect(Collectors.toList());
+        Result<List<CommodityDTO>> commodityListResult = orderContractAggregateRootApi.getCommodityListByIdList(commodityIds);
+        if (commodityListResult.getCode() != 0 || null == commodityListResult.getData() || commodityListResult.getData().isEmpty()) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "商品信息不存在");
+        }
+        Map<Integer, CommodityDTO> commodityDTOMap = commodityListResult.getData().stream().collect(Collectors.toMap(CommodityDTO::getId, a -> a));
         Map<String, ServeDTO> serveDTOMap = serveDTOList.stream().collect(Collectors.toMap(ServeDTO::getServeNo, Function.identity(), (v1, v2) -> v1));
         //每个服务单对应的预计收车日期
         Map<String, String> expectRecoverDateMap = new HashMap<>(serveDTOList.size());
@@ -299,7 +316,7 @@ public class ElecContractStatusMqCommand {
             ServeDTO serve = serveDTOMap.get(serveNo);
             //替换车使用维修车的预计收车日期，重新激活的服务单不更新预计收车日期
             if (!JudgeEnum.YES.getCode().equals(serve.getReplaceFlag()) && !JudgeEnum.YES.getCode().equals(serve.getReactiveFlag())) {
-                String expectRecoverDate = getExpectRecoverDate(contractDTO.getDeliverVehicleTime(), serve.getLeaseMonths());
+                String expectRecoverDate = getExpectRecoverDate(contractDTO.getDeliverVehicleTime(), serve.getLeaseMonths(), serve.getLeaseDays());
                 expectRecoverDateMap.put(serveNo, expectRecoverDate);
             }
         }
@@ -328,6 +345,10 @@ public class ElecContractStatusMqCommand {
             rentChargeCmd.setCreateId(contractDTO.getCreatorId());
             rentChargeCmd.setVehicleId(deliverImgInfo.getCarId());
             rentChargeCmd.setDeliverDate(DateUtil.formatDate(contractDTO.getDeliverVehicleTime()));
+            CommodityDTO commodityDTO = commodityDTOMap.get(serve.getContractCommodityId());
+            if (Objects.nonNull(commodityDTO)) {
+                rentChargeCmd.setRentRatio(commodityDTO.getRentRatio());
+            }
             mqTools.send(event, "deliver_vehicle", null, JSON.toJSONString(rentChargeCmd));
         });
 
@@ -346,22 +367,36 @@ public class ElecContractStatusMqCommand {
             log.error("发车电子合同签署完成时，更改车辆状态失败。车辆id：{}", carIdList);
         }
         //生成日报
-        createDaily(serveNoList, contractDTO.getDeliverVehicleTime(),true);
+        createDaily(serveNoList, contractDTO.getDeliverVehicleTime(), true);
         return serveNoList;
     }
 
-    private String getExpectRecoverDate(Date deliverVehicleDate, int offset) {
+    private String getExpectRecoverDate(Date deliverVehicleDate, Integer offsetMonths, Integer offsetDays) {
         DateTime dateTime = DateUtil.endOfMonth(deliverVehicleDate);
         String deliverDate = DateUtil.formatDate(deliverVehicleDate);
         String endDate = DateUtil.formatDate(dateTime);
         if (deliverDate.equals(endDate)) {
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(DateUtil.endOfMonth(dateTime));
-            calendar.add(Calendar.MONTH, offset);
-            calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+            if (null != offsetMonths) {
+                calendar.add(Calendar.MONTH, offsetMonths);
+                calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+            }
+            if (null != offsetDays) {
+                // offsetDays -= 1;
+                if (offsetDays > 0) {
+                    calendar.add(Calendar.DAY_OF_MONTH, offsetDays);
+                }
+            }
             return DateUtil.formatDate(calendar.getTime());
         } else {
-            return DateUtil.formatDate(DateUtil.offsetMonth(deliverVehicleDate, offset));
+            if (null != offsetMonths) {
+                deliverVehicleDate = DateUtil.offsetMonth(deliverVehicleDate, offsetMonths);
+            }
+            if (null != offsetDays) {
+                deliverVehicleDate = DateUtil.offsetDay(deliverVehicleDate, offsetDays);
+            }
+            return DateUtil.formatDate(deliverVehicleDate);
         }
     }
 
@@ -374,13 +409,12 @@ public class ElecContractStatusMqCommand {
         Map<String, Deliver> deliverMap = deliverResult.getData();
         DailyOperateCmd dailyCreateCmd = DailyOperateCmd.builder().serveList(serveList).deliverMap(deliverMap).date(date).build();
         //发车标识
-        if (deliverFlag){
+        if (deliverFlag) {
             //发车
             dailyAggregateRootApi.deliverDaily(dailyCreateCmd);
-        }else {
+        } else {
             //收车
             dailyAggregateRootApi.recoverDaily(dailyCreateCmd);
         }
     }
-
 }

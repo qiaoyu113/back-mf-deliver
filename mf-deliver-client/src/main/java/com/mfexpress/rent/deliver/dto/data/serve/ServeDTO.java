@@ -57,6 +57,8 @@ public class ServeDTO {
 
     private Integer leaseMonths;
 
+    private Integer leaseDays;
+
     private Date leaseEndDate;
 
     private String expectRecoverDate;

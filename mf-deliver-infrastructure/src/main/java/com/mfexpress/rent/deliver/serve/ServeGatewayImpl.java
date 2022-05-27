@@ -19,10 +19,7 @@ import org.springframework.util.CollectionUtils;
 import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -260,6 +257,14 @@ public class ServeGatewayImpl implements ServeGateway {
         }
 
         return mapAll;
+    }
+
+    @Override
+    public Integer getRentingServeNumByCustomerId(Integer customerId) {
+        Example example = new Example(ServeEntity.class);
+        example.createCriteria().andIn("status", Arrays.asList(ServeEnum.DELIVER.getCode(), ServeEnum.REPAIR.getCode()))
+                .andEqualTo("customerId", customerId);
+        return serveMapper.selectCountByExample(example);
     }
 
 

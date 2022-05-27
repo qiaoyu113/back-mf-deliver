@@ -45,4 +45,6 @@ public interface ServeGateway {
     PagePagination<ServeEntity>pageServeDeposit(CustomerDepositListDTO qry);
 
     Map<Integer,Integer> getReplaceNumByCustomerIds(List<Integer> customerIds);
+
+    Integer getRentingServeNumByCustomerId(Integer customerId);
 }

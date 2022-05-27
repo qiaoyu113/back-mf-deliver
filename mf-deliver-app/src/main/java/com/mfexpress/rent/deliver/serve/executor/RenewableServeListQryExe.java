@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.serve.executor;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
@@ -20,16 +21,18 @@ import com.mfexpress.order.dto.data.CommodityMapDTO;
 import com.mfexpress.order.dto.data.InsuranceInfoDTO;
 import com.mfexpress.order.dto.qry.CommodityMapQry;
 import com.mfexpress.rent.deliver.constant.Constants;
+import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
-import com.mfexpress.rent.deliver.constant.ServeRenewalTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.serve.RenewableServeQry;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeChangeRecordDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeToRenewalVO;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.utils.Utils;
+import com.mfexpress.transportation.customer.api.RentalCustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.constant.CategoryEnum;
+import com.mfexpress.transportation.customer.dto.rent.RentalCustomerDTO;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -41,7 +44,6 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Component
@@ -58,6 +60,9 @@ public class RenewableServeListQryExe {
 
     @Resource
     private ContractAggregateRootApi contractAggregateRootApi;
+
+    @Resource
+    private RentalCustomerAggregateRootApi rentalCustomerAggregateRootApi;
 
     // 续约时查询的服务单的状态默认值，现在目前只能是已发车和维修中
     private final List<Integer> defaultServeStatus = Arrays.asList(ServeEnum.DELIVER.getCode(), ServeEnum.REPAIR.getCode());
@@ -95,6 +100,13 @@ public class RenewableServeListQryExe {
         } else {
             boolQueryBuilder.must(QueryBuilders.termsQuery("serveStatus", defaultServeStatus));
         }
+        if (null != qry.getLeaseMode() && !qry.getLeaseMode().isEmpty()) {
+            // 如果前端只传leaseModel为3（展示），进行限制查询，其他的不限制
+            if(qry.getLeaseMode().size() == 1 && qry.getLeaseMode().get(0).equals(3)){
+                boolQueryBuilder.must(QueryBuilders.termsQuery("leaseModelId", qry.getLeaseMode()));
+            }
+        }
+        boolQueryBuilder.mustNot(QueryBuilders.termQuery("deliverStatus", DeliverEnum.IS_RECOVER.getCode()));
         // 20220214新增，被续约的服务单不可是维修车的替换服务单
         boolQueryBuilder.must(QueryBuilders.termQuery("replaceFlag", JudgeEnum.NO.getCode()));
 
@@ -132,10 +144,19 @@ public class RenewableServeListQryExe {
         if (null == commodityMapDTO) {
             return;
         }
+        List<Integer> customerIds = serveESList.stream().map(ServeES::getCustomerId).distinct().collect(Collectors.toList());
+
+        Result<List<RentalCustomerDTO>> customerResult = rentalCustomerAggregateRootApi.getRentalCustomerByCustomerIdList(customerIds);
+        Map<Integer, RentalCustomerDTO> customerDTOMap = new HashMap<>();
+        if (CollectionUtil.isNotEmpty(customerResult.getData())) {
+            customerDTOMap = customerResult.getData().stream().collect(Collectors.toMap(RentalCustomerDTO::getId, a -> a));
+        }
+
         Map<Integer, CommodityDTO> contractCommodityDTOMap = commodityMapDTO.getContractCommodityDTOMap();
 
         // 将查到的商品信息的部分属性设置到serveToRenewalVO中
-        serveESList.forEach(serveES -> {
+        for (ServeES serveES : serveESList) {
+
             ServeToRenewalVO serveToRenewalVO = new ServeToRenewalVO();
             BeanUtil.copyProperties(serveES, serveToRenewalVO);
             serveToRenewalVO.setExpectRecoverDate(serveES.getExpectRecoverDate());
@@ -143,6 +164,11 @@ public class RenewableServeListQryExe {
             serveToRenewalVO.setOaContractCode(serveES.getContractNo());
             serveToRenewalVO.setBrandDisplay(serveES.getBrandModelDisplay());
             serveToRenewalVO.setStatusDisplay(Objects.requireNonNull(ServeEnum.getServeEnum(serveES.getServeStatus())).getStatus());
+            if (Objects.nonNull(customerDTOMap.get(serveES.getCustomerId()))) {
+                RentalCustomerDTO rentalCustomerDTO = customerDTOMap.get(serveES.getCustomerId());
+                serveToRenewalVO.setCategory(rentalCustomerDTO.getCategory());
+                serveToRenewalVO.setCategoryDisplay(CategoryEnum.getCategoryEnum(rentalCustomerDTO.getCategory()).getValue());
+            }
             if (null != serveES.getDeliverVehicleTime()) {
                 Date nowDate = new Date();
                 Date deliverVehicleTime = serveES.getDeliverVehicleTime();
@@ -156,16 +182,19 @@ public class RenewableServeListQryExe {
             if (null != contractCommodityDTOMap) {
                 CommodityDTO commodityDTO = contractCommodityDTOMap.get(serveES.getContractCommodityId());
                 if (null != commodityDTO) {
-                    serveToRenewalVO.setRentFee(commodityDTO.getRentFee() == null ? "0.00" : commodityDTO.getRentFee().toString());
-                    serveToRenewalVO.setServiceFee(commodityDTO.getServiceFee() == null ? "0.00" : commodityDTO.getServiceFee().toString());
+                    serveToRenewalVO.setRentFee(commodityDTO.getRentFee() == null ? "0.00" : String.format("%.2f", commodityDTO.getRentFee()));
+                    serveToRenewalVO.setServiceFee(commodityDTO.getServiceFee() == null ? "0.00" : String.format("%.2f", commodityDTO.getServiceFee()));
+                    serveToRenewalVO.setDeposit(commodityDTO.getDepositFee() == null ? "0.00" : String.format("%.2f", commodityDTO.getDepositFee()));
                     InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
                     serveToRenewalVO.setInsuranceInfo(insuranceInfo);
                     serveToRenewalVO.setTags(insuranceInfo.getTags() == null ? new String[0] : insuranceInfo.getTags());
+                    serveToRenewalVO.setRentRatio(commodityDTO.getRentRatio());
+                    serveToRenewalVO.setTotalRent(commodityDTO.getTotalRent());
 
                 }
             }
             serveToRenewalVOList.add(serveToRenewalVO);
-        });
+        }
     }
 
     /*private void assembleServeToRenewalVO(List<ServeES> serveESList, List<ServeToRenewalVO> serveToRenewalVOList) {
