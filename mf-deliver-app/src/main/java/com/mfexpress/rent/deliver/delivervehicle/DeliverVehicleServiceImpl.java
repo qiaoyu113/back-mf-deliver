@@ -1,12 +1,17 @@
 package com.mfexpress.rent.deliver.delivervehicle;
 
+import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.api.DeliverVehicleServiceI;
 import com.mfexpress.rent.deliver.delivervehicle.executor.DeliverVehicleExe;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleCmd;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleVO;
+import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.dto.entity.vo.LinkmanVo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class DeliverVehicleServiceImpl implements DeliverVehicleServiceI {
@@ -16,7 +21,8 @@ public class DeliverVehicleServiceImpl implements DeliverVehicleServiceI {
 
     @Resource
     private DeliverVehicleServiceI deliverVehicleServiceI;
-
+    @Resource
+    private CustomerAggregateRootApi customerAggregateRootApi;
 
     @Override
     public String toDeliver(DeliverVehicleCmd deliverVehicleCmd) {
@@ -25,7 +31,18 @@ public class DeliverVehicleServiceImpl implements DeliverVehicleServiceI {
     }
 
     @Override
-    public DeliverVehicleVO getDeliverByDeliverNo(String deliverNo) {
-        return deliverVehicleExe.getDeliverByDeliverNo(deliverNo);
+    public LinkmanVo getDeliverByDeliverNo(Integer customerId) {
+        Result<List<LinkmanVo>> customerIds = customerAggregateRootApi.getLinkMansByCusomerId(customerId);
+        List<LinkmanVo> objects = new ArrayList<>();
+        List<LinkmanVo> data = customerIds.getData();
+        if (data != null && data.size()>0) {
+            for (LinkmanVo v : data) {
+                if (v.getType() == 2) {
+                    objects.add(v);
+                }
+            }
+            return objects.get(0);
+        }
+        return new LinkmanVo();
     }
 }
