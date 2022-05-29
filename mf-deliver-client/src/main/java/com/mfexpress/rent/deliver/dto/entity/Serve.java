@@ -79,4 +79,6 @@ public class Serve {
     private String expectRecoverDate;
     // 续签合同迭代增加的字段-----------end
 
+    private Integer contractCommodityId;
+
 }
