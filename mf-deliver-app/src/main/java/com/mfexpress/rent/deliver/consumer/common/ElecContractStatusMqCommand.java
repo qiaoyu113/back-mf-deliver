@@ -234,6 +234,12 @@ public class ElecContractStatusMqCommand {
             log.error("收车电子合同签署完成时，更改车辆状态失败，serveNo：{}，车辆id：{}", serveDTO.getServeNo(), deliverDTO.getCarId());
         }
 
+        /*
+            TODO: 服务单为维修中且为故障维修&&存在已发车的替换且替换车服务单变更为正常服务单
+             需要将原车的维修单类型变更为库存账中维修，替换车开始计费，原车停止计费，如果替换车押金支付方式为使用原车押金，则将原车的服务单押金转移到替换车服务单上
+             需要和计费域确定消息格式
+         */
+
         // 发送收车信息到mq，由合同域判断服务单所属的合同是否到已履约完成状态
         // 租赁服务单1.1迭代，改为当服务单状态到已完成时，再向合同域发送此消息
         /*if (JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {

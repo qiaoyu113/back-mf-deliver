@@ -65,6 +65,11 @@ public class RecoverToCheckExe {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), ResultErrorEnum.OPER_ERROR.getName());
         }
         ServeDTO serve = serveDTOResult.getData();
+        /*
+            TODO serve.getStatus().equals(ServeEnum.REPAIR.getCode())
+                &&服务单的维修状态为维修中
+                &&(车辆维修单的维修类型为事故维修||存在未发车的替换车||存在替换车)
+         */
         if (serve.getStatus().equals(ServeEnum.REPAIR.getCode())) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单维修中不允许收车");
         }

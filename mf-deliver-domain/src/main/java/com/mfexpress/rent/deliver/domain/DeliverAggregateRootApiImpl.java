@@ -103,6 +103,16 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     public Result<Integer> toCheck(@RequestParam("serveNo") String serveNo, @RequestParam("operatorId") Integer operatorId) {
         //2021-10-13修改 收车验车时交付单变更为已收车
         DeliverEntity deliver = deliverGateway.getDeliverByServeNo(serveNo);
+
+        /*
+            TODO deliver交付状态为收车中
+                &&服务单的维修状态为维修中
+                1、&&车辆维修单的维修类型为事故维修
+                 Result.getInstance(0).fail(-1, "当前车辆处于维修中，无法进行收车")
+                2、&&(存在未发车的替换车||存在替换车)
+                 Result.getInstance(0).fail(-1, "当前车辆存在未发车的替换单或存在替换车，无法进行收车")
+         */
+
         deliver.setIsCheck(JudgeEnum.YES.getCode());
         deliver.setCarServiceId(operatorId);
         deliver.setUpdateId(operatorId);
@@ -492,6 +502,11 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PrintParam
     @Transactional(rollbackFor = Exception.class)
     public Result<Integer> cancelRecoverByDeliver(@RequestBody @Validated RecoverCancelByDeliverCmd cmd) {
+        /*
+            TODO 服务单状态为维修中&&申请了替换车&&替换车已发车&&替换车已变成正常服务单
+                 Result.getInstance("不可取消收车").fail(-1, "不可取消收车");
+         */
+
         DeliverEntity deliver = DeliverEntity.builder().deliverStatus(DeliverEnum.DELIVER.getCode())
                 .updateId(cmd.getOperatorId())
                 .build();

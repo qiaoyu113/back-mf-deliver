@@ -151,7 +151,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
                 serve.setContractId(serveVehicleDTO.getContractId());
                 serve.setOaContractCode(serveVehicleDTO.getOaContractCode());
-                serve.setDeposit(serveVehicleDTO.getDeposit());
+                serve.setDeposit(BigDecimal.valueOf(serveVehicleDTO.getDeposit()));
                 serve.setLeaseBeginDate(serveVehicleDTO.getLeaseBeginDate());
                 serve.setLeaseMonths(serveVehicleDTO.getLeaseMonths());
                 serve.setLeaseDays(serveVehicleDTO.getLeaseDays());
@@ -479,7 +479,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         serve.setReplaceFlag(JudgeEnum.YES.getCode());
         // 替换车申请的服务单 其月租金和押金应为0
         serve.setRent(BigDecimal.ZERO);
-        serve.setDeposit(0.0);
+        serve.setDeposit(BigDecimal.ZERO);
         serve.setPaidInDeposit(BigDecimal.ZERO);
         serve.setPayableDeposit(BigDecimal.ZERO);
 

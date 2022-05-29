@@ -91,7 +91,7 @@ public class ServeEntity implements ServeEntityApi {
 
     private String oaContractCode;
 
-    private Double deposit;
+    private BigDecimal deposit;
 
     private String leaseBeginDate;
 

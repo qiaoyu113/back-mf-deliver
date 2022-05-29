@@ -43,6 +43,9 @@ import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 异常收车命令
+ */
 @Component
 @Slf4j
 public class RecoverAbnormalCmdExe {
