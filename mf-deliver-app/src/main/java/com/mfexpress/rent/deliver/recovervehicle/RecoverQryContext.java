@@ -28,7 +28,9 @@ public class RecoverQryContext {
        List<RecoverVehicleVO> recoverVehicleVOList = recoverTaskListVO.getRecoverVehicleVOList();
         for (RecoverVehicleVO v : recoverVehicleVOList) {
             Result<MaintenanceDTO> maintainResult = maintenanceAggregateRootApi.getMaintenanceByServeNo(v.getServeNo());
-            v.setConfirmDate(maintainResult.getData().getConfirmDate());
+            if (maintainResult.getData()!=null){
+                v.setConfirmDate(maintainResult.getData().getConfirmDate());
+            }
         }
         return recoverTaskListVO;
 

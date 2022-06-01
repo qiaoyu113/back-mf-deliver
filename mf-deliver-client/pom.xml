@@ -32,6 +32,10 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>com.mfexpress.transportation.customer</groupId>
+            <artifactId>mf-customer-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
         </dependency>

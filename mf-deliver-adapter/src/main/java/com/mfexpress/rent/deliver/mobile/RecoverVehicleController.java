@@ -10,6 +10,7 @@ import com.mfexpress.component.starter.tools.token.TokenTools;
 import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
+import com.mfexpress.transportation.customer.dto.entity.vo.LinkmanVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiSort;
@@ -243,11 +244,11 @@ public class RecoverVehicleController {
 
 
     @PostMapping("/getRecoverVehicleDtoByDeliverNo")
-    @ApiOperation(value = "根据deliverNo获取收车人信息")
+    @ApiOperation(value = "根据customerCmd获取收车人信息")
     @PrintParam
-    public Result<RecoverVehicleDTO> getRecoverVehicleDtoByDeliverNo( @RequestBody @Validated DeliverNoCmd deliverNoCmd) {
+    public Result<LinkmanVo> getRecoverVehicleDtoByDeliverNo(@RequestBody @Validated CustomerCmd customerCmd) {
 
-        return recoverVehicleServiceI.getRecoverVehicleDtoByDeliverNo(deliverNoCmd.getDeliverNo());
+        return Result.getInstance(recoverVehicleServiceI.getRecoverVehicleDtoByDeliverNo(customerCmd.getCustomerId()));
     }
 
 

@@ -5,6 +5,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
+import com.mfexpress.transportation.customer.dto.entity.vo.LinkmanVo;
 
 import java.util.List;
 
@@ -40,7 +41,7 @@ public interface RecoverVehicleServiceI {
 
     Integer toDeductionByDeliver(RecoverDeductionByDeliverCmd cmd, TokenInfo tokenInfo);
 
-    Result<DeliverVehicleDTO> getDeliverByDeliverNo(String deliverNo);
 
-    Result<RecoverVehicleDTO> getRecoverVehicleDtoByDeliverNo(String deliverNo);
+
+    LinkmanVo getRecoverVehicleDtoByDeliverNo(Integer customerId);
 }

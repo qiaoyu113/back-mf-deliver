@@ -439,15 +439,7 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
         return "";
     }
 
-    /**
-     * 根据deliverNo查询客户信息 发车
-     * @param deliverNo
-     * @return
-     */
-    public Result<DeliverVehicleDTO> getDeliverByDeliverNo(String deliverNo) {
 
-        return deliverVehicleAggregateRootApi.getDeliverVehicleDto(deliverNo);
-    }
 
     /**
      * 根据deliverNo查询客户信息 收车

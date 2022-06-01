@@ -208,9 +208,7 @@ public class RecoverAbnormalCmdExe {
         dailyAggregateRootApi.recoverDaily(dailyCreateCmd);
     }
 
-    public Result<DeliverVehicleDTO> getDeliverByDeliverNo(String deliverNo){
-        return syncServiceI.getDeliverByDeliverNo(deliverNo);
-    }
+
 
     public Result<RecoverVehicleDTO> getRecoverVehicleDtoByDeliverNo(String deliverNo){
         return syncServiceI.getRecoverVehicleDtoByDeliverNo(deliverNo);

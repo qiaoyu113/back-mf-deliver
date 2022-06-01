@@ -10,6 +10,7 @@ import com.mfexpress.component.starter.tools.token.TokenTools;
 import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.DeliverNoCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.scheduler.ServeDailyScheduler;
@@ -181,11 +182,6 @@ public class ServeController {
 
 
 
-    @PostMapping("/selectContactsByDeliverNo")
-    @ApiOperation("根据服务单编号查询提车人信息")
-    @PrintParam
-    public Result<DeliverVehicleDTO>  selectContactsByDeliverNo( @RequestBody @Validated DeliverNoCmd deliverNoCmd){
-        return recoverVehicleServiceI.getDeliverByDeliverNo(deliverNoCmd.getDeliverNo());
-    }
+
 
 }
