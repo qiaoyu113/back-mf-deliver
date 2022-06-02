@@ -1,5 +1,10 @@
 package com.mfexpress.rent.deliver.web;
 
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
 import com.mfexpress.component.constants.CommonConstants;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
@@ -12,14 +17,17 @@ import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeAllLeaseTermAmountVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustRecordVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-
-import javax.annotation.Resource;
-import java.util.List;
-import java.util.Map;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController("serveWebController")
 @RequestMapping("/api/deliver/v3/serve/web")
@@ -69,4 +77,39 @@ public class ServeWebController {
         return Result.getInstance(serveServiceI.reactivate(cmd, tokenInfo)).success();
     }
 
+
+
+    /**
+     * 判断服务单是否可以进行服务单调整操作接口
+     */
+    @ApiOperation(value = "服务单调整判断")
+    @PostMapping(value = "/serve/adjustment/check")
+    @PrintParam
+    public Result<ServeAdjustRecordVo> serveAdjustmentCheck(@RequestBody ServeAdjustCheckCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            throw new CommonException(ResultErrorEnum.LOGIN_OVERDUE.getCode(), ResultErrorEnum.LOGIN_OVERDUE.getName());
+        }
+
+        return Result.getInstance(serveServiceI.serveAdjustCheck(cmd, tokenInfo)).success();
+    }
+
+    /**
+     * 服务单调整接口
+     */
+    @ApiOperation(value = "服务单调整")
+    @PostMapping(value = "/serve/adjustment")
+    @PrintParam
+    public Result<Integer> serveAdjustment(@RequestBody ServeAdjustCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            throw new CommonException(ResultErrorEnum.LOGIN_OVERDUE.getCode(), ResultErrorEnum.LOGIN_OVERDUE.getName());
+        }
+
+        serveServiceI.serveAdjust(cmd, tokenInfo);
+
+        return Result.getInstance(0).success();
+    }
 }

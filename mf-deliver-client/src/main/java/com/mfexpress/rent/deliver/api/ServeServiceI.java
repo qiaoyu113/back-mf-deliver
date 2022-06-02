@@ -4,6 +4,10 @@ package com.mfexpress.rent.deliver.api;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositSourceToReplaceCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustRecordVo;
 
 import java.util.List;
 import java.util.Map;
@@ -43,5 +47,15 @@ public interface ServeServiceI {
 
     ServeRecoverDetailVO getServeRecoverDetailByDeliver(ServeQryByDeliverCmd cmd);
 
-    List<Map<String,Object>> exportServeLeaseTermAmountData(Map<String, Object> map);
+    List<Map<String, Object>> exportServeLeaseTermAmountData(Map<String, Object> map);
+
+    ServeAdjustRecordVo serveAdjustCheck(ServeAdjustCheckCmd cmd, TokenInfo tokenInfo);
+
+    void serveAdjust(ServeAdjustCmd cmd, TokenInfo tokenInfo);
+
+    /**
+     * 服务单押金支付
+     * @param serveDTO
+     */
+    void serveDepositPay(ServeDTO serveDTO, Integer operatorId);
 }

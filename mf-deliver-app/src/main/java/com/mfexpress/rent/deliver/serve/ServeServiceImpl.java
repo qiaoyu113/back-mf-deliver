@@ -1,13 +1,24 @@
 package com.mfexpress.rent.deliver.serve;
 
+import com.mfexpress.billing.customer.data.dto.advince.OrderPayAdvincepaymentCmd;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositSourceToReplaceCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustRecordVo;
 import com.mfexpress.rent.deliver.serve.executor.*;
+import com.mfexpress.rent.deliver.serve.executor.cmd.ServeAdjustCheckCmdExe;
+import com.mfexpress.rent.deliver.serve.executor.cmd.ServeAdjustCmdExe;
+import com.mfexpress.rent.deliver.serve.executor.cmd.ServeDepositPayCmdExe;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -56,6 +67,16 @@ public class ServeServiceImpl implements ServeServiceI {
 
     @Resource
     private ExportServeLeaseTermAmountDataQryExe exportServeLeaseTermAmountDataQryExe;
+
+
+    @Resource
+    private ServeAdjustCheckCmdExe serveAdjustCheckCmdExe;
+
+    @Resource
+    private ServeAdjustCmdExe serveAdjustCmdExe;
+
+    @Resource
+    private ServeDepositPayCmdExe serveDepositPayCmdExe;
 
     @Override
     public ServeListVO getServeListVoByOrderNoAll(ServeQryListCmd serveQryListCmd) {
@@ -145,4 +166,20 @@ public class ServeServiceImpl implements ServeServiceI {
         return exportServeLeaseTermAmountDataQryExe.execute(map);
     }
 
+    @Override
+    public ServeAdjustRecordVo serveAdjustCheck(ServeAdjustCheckCmd cmd, TokenInfo tokenInfo) {
+        return serveAdjustCheckCmdExe.execute(cmd, tokenInfo);
+    }
+
+    @Override
+    public void serveAdjust(ServeAdjustCmd cmd, TokenInfo tokenInfo) {
+
+        serveAdjustCmdExe.execute(cmd, tokenInfo);
+    }
+
+    @Override
+    public void serveDepositPay(ServeDTO serveDTO, Integer operatorId) {
+
+        serveDepositPayCmdExe.execute(serveDTO, operatorId);
+    }
 }

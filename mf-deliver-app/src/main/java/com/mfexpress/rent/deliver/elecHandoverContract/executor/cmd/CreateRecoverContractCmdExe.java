@@ -28,10 +28,12 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateRecoverContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateRecoverContractFrontCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.RecoverInfo;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.utils.CommonUtil;
@@ -46,6 +48,7 @@ import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.entity.Customer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -90,6 +93,12 @@ public class CreateRecoverContractCmdExe {
 
     @Resource
     private MFContractTools contractTools;
+
+    /**
+     * 收车签署开关
+     */
+    @Value(value = "${contract.recover.flag}")
+    private String contractRecoverFlag;
 
     private Map<String, String> leaseModeMap;
 
@@ -166,16 +175,22 @@ public class CreateRecoverContractCmdExe {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "创建电子交接单失败");
         }
 
+        // 增加电子交接单开关
+        if ("0".equals(contractRecoverFlag)) {
+            Result<ElecContractDTO> contractDTOResult = contractAggregateRootApi.getContractDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.RECOVER.getCode());
+            ElecContractDTO elecContractDTO = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
+            ContractStatusChangeCmd contractStatusChangeCmd = new ContractStatusChangeCmd();
+            contractStatusChangeCmd.setContractId(elecContractDTO.getContractId());
+
+            contractAggregateRootApi.completed(contractStatusChangeCmd);
+        }
+
         return contractIdWithDocIds.getContractId().toString();
     }
 
     private void recoverCheck(String serveNo) {
         Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(serveNo);
         DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrException();
-
-        /*
-            TODO  增加电子交接单开关
-         */
 
         if (DeliverContractStatusEnum.NOSIGN.getCode() != deliverDTO.getRecoverContractStatus()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "选中车辆存在电子交接单，请回列表页查看");
@@ -290,11 +305,6 @@ public class CreateRecoverContractCmdExe {
         createRecoverContractCmd.setOrgId(orgId);
         createRecoverContractCmd.setRecoverInfo(recoverInfo);
         createRecoverContractCmd.setOrderId(cmd.getOrderId());
-        /*
-            TODO: 判断电子交接单开关是否打开， 如果关闭，
-             将createRecoverContractCmd的status设置为ElecHandoverContractStatus.COMPLETED
-             同时将交付单deliver_status设置为4已收车
-         */
 
         Result<ContractIdWithDocIds> createContractResult = contractAggregateRootApi.createRecoverContract(createRecoverContractCmd);
         if (ResultErrorEnum.SUCCESSED.getCode() != createContractResult.getCode() || null == createContractResult.getData()) {

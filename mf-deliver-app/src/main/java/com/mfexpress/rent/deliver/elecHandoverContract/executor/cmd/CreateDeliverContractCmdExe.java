@@ -29,9 +29,11 @@ import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateDeliverContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCheckCmd;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
@@ -47,6 +49,7 @@ import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.entity.Customer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -100,6 +103,12 @@ public class CreateDeliverContractCmdExe {
 
     @Resource
     private ReactiveServeCheckCmdExe reactiveServeCheck;
+
+    /**
+     * 发车签署开关
+     */
+    @Value(value = "${contract.deliver.flag}")
+    private String contractDeliverFlag;
 
     public String execute(CreateDeliverContractCmd cmd, TokenInfo tokenInfo) {
         //发车日期校验
@@ -180,6 +189,21 @@ public class CreateDeliverContractCmdExe {
             map.put("serve_no", serveNo);
             syncServiceI.execOne(map);
         }
+
+        // 增加电子交接单开关
+        if ("0".equals(contractDeliverFlag)) {
+            serveNos.forEach(serveNo -> {
+                Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(serveNo);
+                DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrException();
+                Result<ElecContractDTO> contractDTOResult = contractAggregateRootApi.getContractDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.DELIVER.getCode());
+                ElecContractDTO elecContractDTO = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
+                ContractStatusChangeCmd contractStatusChangeCmd = new ContractStatusChangeCmd();
+                contractStatusChangeCmd.setContractId(elecContractDTO.getContractId());
+
+                contractAggregateRootApi.completed(contractStatusChangeCmd);
+            });
+        }
+
         return contractIdWithDocIds.getContractId().toString();
     }
 

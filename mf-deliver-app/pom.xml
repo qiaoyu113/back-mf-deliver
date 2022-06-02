@@ -13,35 +13,16 @@
     <artifactId>mf-deliver-app</artifactId>
     <packaging>jar</packaging>
     <dependencies>
-
-        <dependency>
-            <groupId>com.mfexpress</groupId>
-            <artifactId>mf-common-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.mfexpress.transportation.customer</groupId>
-            <artifactId>mf-customer-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.mfexpress.rent.order</groupId>
-            <artifactId>mf-order-client</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.mfexpress.rent.deliver</groupId>
             <artifactId>mf-deliver-client</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.mfexpress.rent.vehicle</groupId>
-            <artifactId>mf-vehicle-client</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>com.mfexpress.rent.deliver</groupId>
             <artifactId>mf-deliver-infrastructure</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.mfexpress.rent.maintain</groupId>
-            <artifactId>mf-maintain-client</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>com.alibaba.cola</groupId>
             <artifactId>cola-component-catchlog-starter</artifactId>
@@ -71,10 +52,6 @@
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>elasticsearch-rest-high-level-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.mfexpress.billing.rentcharge</groupId>
-            <artifactId>mf-billing-rentcharge-client</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

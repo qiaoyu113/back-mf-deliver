@@ -3,7 +3,11 @@ package com.mfexpress.rent.deliver.domainapi;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustRecordDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustRecordQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
@@ -136,7 +140,7 @@ public interface ServeAggregateRootApi {
      * @return
      */
     @PostMapping("/lockDeposit")
-    Result <Boolean>lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList);
+    Result <Boolean> lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList);
 
     @PostMapping("/reactiveServe")
     Result<Integer> reactiveServe(@RequestBody ReactivateServeCmd cmd);
@@ -150,4 +154,24 @@ public interface ServeAggregateRootApi {
     @PostMapping("/getRentingServeNumByCustomerId")
     Result<Integer> getRentingServeNumByCustomerId(@RequestParam("customerId") Integer customerId);
 
+    @PostMapping(value = "/cancel")
+    Result<Integer> cancelServe(@RequestBody ServeCancelCmd cmd);
+
+    /**
+     * 判断是否可以收车验车
+     *
+     * @param cmd
+     * @return
+     */
+    @PostMapping(value = "/recover/check/judge")
+    Result<Integer> recoverCheckJudge(@RequestBody RecoverCheckJudgeCmd cmd);
+
+    /**
+     * 查询服务单调整记录
+     *
+     * @param qry
+     * @return
+     */
+    @PostMapping(value = "/serve/adjust/record")
+    Result<ServeAdjustRecordDTO> getServeAdjustRecord(ServeAdjustRecordQry qry);
 }

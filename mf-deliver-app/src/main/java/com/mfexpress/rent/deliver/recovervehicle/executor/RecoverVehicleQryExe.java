@@ -39,8 +39,8 @@ public class RecoverVehicleQryExe {
             Object[] orgIdList = sysOfficeResult.getData().stream().map(SysOfficeDto::getId).toArray();
             boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIdList));
         }
-        // TODO 去除维修中的服务单不可选择限制 即下面一行代码注释掉
-        boolQueryBuilder.mustNot(QueryBuilders.matchQuery("serveStatus", ServeEnum.REPAIR.getCode()));
+        // 去除维修中的服务单不可选择限制
+//        boolQueryBuilder.mustNot(QueryBuilders.matchQuery("serveStatus", ServeEnum.REPAIR.getCode()));
         boolQueryBuilder.must(QueryBuilders.matchQuery("customerId", recoverApplyQryCmd.getCustomerId()))
                 .must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.DELIVER.getCode()));
 

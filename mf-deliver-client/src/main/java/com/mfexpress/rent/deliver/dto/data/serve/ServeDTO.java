@@ -43,6 +43,8 @@ public class ServeDTO {
 
     private BigDecimal rent;
 
+    private BigDecimal rentRatio;
+
     private BigDecimal deposit;
 
     private Date createTime;
