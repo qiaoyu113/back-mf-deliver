@@ -9,6 +9,8 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.token.TokenTools;
 import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
+import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
+import com.mfexpress.transportation.customer.dto.entity.vo.LinkmanVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiSort;
@@ -26,6 +28,9 @@ public class RecoverVehicleController {
 
     @Resource
     private RecoverVehicleServiceI recoverVehicleServiceI;
+
+    @Resource
+    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
 
 
     @PostMapping("/getRecoverVehicleListVO")
@@ -149,7 +154,7 @@ public class RecoverVehicleController {
     @PrintParam
     public Result<Integer> toBackInsure(@RequestBody @Validated RecoverBackInsureByDeliverCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
-        if(null == tokenInfo || null == tokenInfo.getOfficeId() || null == tokenInfo.getId()){
+        if (null == tokenInfo || null == tokenInfo.getOfficeId() || null == tokenInfo.getId()) {
             throw new CommonException(ResultErrorEnum.LOGIN_OVERDUE.getCode(), ResultErrorEnum.LOGIN_OVERDUE.getName());
         }
         return Result.getInstance(recoverVehicleServiceI.toBackInsureByDeliver(cmd, tokenInfo)).success();
@@ -212,7 +217,7 @@ public class RecoverVehicleController {
     @PostMapping("/getRecoverDetail")
     @ApiOperation(value = "获取收车申请详情信息")
     @PrintParam
-    public Result<RecoverDetailVO> getRecoverDetail(@RequestBody @Validated RecoverDetailQryCmd cmd){
+    public Result<RecoverDetailVO> getRecoverDetail(@RequestBody @Validated RecoverDetailQryCmd cmd) {
         return Result.getInstance(recoverVehicleServiceI.getRecoverDetail(cmd)).success();
     }
 
@@ -222,7 +227,7 @@ public class RecoverVehicleController {
     @PostMapping("/abnormalRecover")
     @ApiOperation(value = "异常收车")
     @PrintParam
-    public Result<Integer> abnormalRecover(@RequestBody @Validated RecoverAbnormalCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt){
+    public Result<Integer> abnormalRecover(@RequestBody @Validated RecoverAbnormalCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             return Result.getInstance((Integer) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
@@ -233,7 +238,19 @@ public class RecoverVehicleController {
     @PostMapping("/getAbnormalRecoverInfo")
     @ApiOperation(value = "获取异常收车信息")
     @PrintParam
-    public Result<RecoverAbnormalVO> getRecoverAbnormalInfo(@RequestBody @Validated RecoverAbnormalQry cmd){
+    public Result<RecoverAbnormalVO> getRecoverAbnormalInfo(@RequestBody @Validated RecoverAbnormalQry cmd) {
         return Result.getInstance(recoverVehicleServiceI.getRecoverAbnormalInfo(cmd)).success();
     }
+
+
+    @PostMapping("/getRecoverVehicleDtoByDeliverNo")
+    @ApiOperation(value = "根据customerCmd获取收车人信息")
+    @PrintParam
+    public Result<LinkmanVo> getRecoverVehicleDtoByDeliverNo(@RequestBody @Validated CustomerCmd customerCmd) {
+
+        return Result.getInstance(recoverVehicleServiceI.getRecoverVehicleDtoByDeliverNo(customerCmd.getCustomerId()));
+    }
+
+
+
 }

@@ -8,9 +8,14 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.TokenTools;
 import com.mfexpress.rent.deliver.api.DeliverVehicleServiceI;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleCmd;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleVO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.CustomerCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.DeliverNoCmd;
+import com.mfexpress.transportation.customer.dto.entity.vo.LinkmanVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiSort;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -37,6 +42,12 @@ public class DeliverVehicleController {
         }
         deliverVehicleCmd.setCarServiceId(tokenInfo.getId());
         return Result.getInstance(deliverVehicleServiceI.toDeliver(deliverVehicleCmd)).success();
+    }
+    @PostMapping("/selectContactsByDeliverNo")
+    @ApiOperation("根据交付单编号查询提车人信息")
+    @PrintParam
+    public Result<LinkmanVo>  selectContactsByDeliverNo(@RequestBody @Validated CustomerCmd customerCmd){
+        return Result.getInstance(deliverVehicleServiceI.getDeliverByDeliverNo(customerCmd.getCustomerId()));
     }
 
 }
