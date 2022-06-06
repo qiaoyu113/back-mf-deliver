@@ -435,7 +435,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @PostMapping(value = "/recover/process")
     @Transactional(rollbackFor = Exception.class)
     @PrintParam
-    public Result<List<String>> recoverVehicleProcess(RecoverVehicleProcessCmd cmd) {
+    public Result<List<String>> recoverVehicleProcess(@RequestBody RecoverVehicleProcessCmd cmd) {
         List<String> serveNoList = new LinkedList<>();
         // 交付单、服务单修改
         Result<Integer> recoveredResult = recovered(cmd.getDeliverNo(), cmd.getContractForeignNo());

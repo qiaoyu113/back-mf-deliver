@@ -78,5 +78,5 @@ public interface RecoverVehicleAggregateRootApi {
      * @return
      */
     @PostMapping(value = "/recover/process")
-    Result<List<String>> recoverVehicleProcess(RecoverVehicleProcessCmd cmd);
+    Result<List<String>> recoverVehicleProcess(@RequestBody RecoverVehicleProcessCmd cmd);
 }

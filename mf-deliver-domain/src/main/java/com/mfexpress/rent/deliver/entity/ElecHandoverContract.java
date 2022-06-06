@@ -279,12 +279,12 @@ public class ElecHandoverContract {
         elecHandoverContractGateway.updateContractByContractForeignNo(contractPOToUpdate);
     }
 
-    @Transactional
     public void autoCompleted() {
         ElectronicHandoverContractPO contractPOToUpdate = new ElectronicHandoverContractPO();
         contractPOToUpdate.setContractId(contractId);
         contractPOToUpdate.setContractForeignNo(contractForeignNo);
         contractPOToUpdate.setStatus(status);
+        log.info("contractPOToUpdate---->{}", contractPOToUpdate);
         elecHandoverContractGateway.updateContractByContractId(contractPOToUpdate);
     }
 

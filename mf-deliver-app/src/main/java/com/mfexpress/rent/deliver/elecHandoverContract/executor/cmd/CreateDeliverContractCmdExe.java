@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -32,16 +33,20 @@ import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
 import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.AutoCompletedCmd;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.cmd.DeliverVehicleProcessCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateDeliverContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCheckCmd;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
@@ -98,14 +103,21 @@ public class CreateDeliverContractCmdExe {
     @Resource
     private MFContractTools contractTools;
 
-    @Resource(name = "serveSyncServiceImpl")
-    private EsSyncHandlerI syncServiceI;
-
     @Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
 
     @Resource
     private ReactiveServeCheckCmdExe reactiveServeCheck;
+
+
+    @Resource
+    private ElecHandoverContractAggregateRootApi elecHandoverContractAggregateRootApi;
+
+    @Resource
+    private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
+
+    @Resource(name = "serveSyncServiceImpl")
+    private EsSyncHandlerI serveSyncServiceI;
 
     /**
      * 发车签署开关
@@ -166,13 +178,15 @@ public class CreateDeliverContractCmdExe {
         // 先本地创建合同和交接单
         ContractIdWithDocIds contractIdWithDocIds = createContractWithDocInLocal(cmd, tokenInfo, serveMap.get(deliverImgInfos.get(0).getServeNo()).getOrgId(), serveMap.get(deliverImgInfos.get(0).getServeNo()).getOrderId());
 
-        // 访问契约锁域创建合同
-        Result<Boolean> createElecContractResult = createElecContract(cmd, contractIdWithDocIds, docInfos, orderDTO);
-        if (ResultErrorEnum.SUCCESSED.getCode() != createElecContractResult.getCode() || null == createElecContractResult.getData()) {
-            log.error("创建合同时调用契约锁域失败，返回msg：{}", createElecContractResult.getMsg());
-            // 调用契约锁失败还得将本地创建的合同置为无效
-            makeContractInvalid(contractIdWithDocIds.getContractId());
-            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "操作失败");
+        if ("1".equals(contractDeliverFlag)) {
+            // 访问契约锁域创建合同
+            Result<Boolean> createElecContractResult = createElecContract(cmd, contractIdWithDocIds, docInfos, orderDTO);
+            if (ResultErrorEnum.SUCCESSED.getCode() != createElecContractResult.getCode() || null == createElecContractResult.getData()) {
+                log.error("创建合同时调用契约锁域失败，返回msg：{}", createElecContractResult.getMsg());
+                // 调用契约锁失败还得将本地创建的合同置为无效
+                makeContractInvalid(contractIdWithDocIds.getContractId());
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "操作失败");
+            }
         }
 
         // 什么时候改变交付单的状态，调用完契约锁域后，免得失败后还得改回来
@@ -193,15 +207,36 @@ public class CreateDeliverContractCmdExe {
                 Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(serveNo);
                 DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrException();
 
-                AutoCompletedCmd autoCompletedCmd = new AutoCompletedCmd();
-                autoCompletedCmd.setCustomerId(deliverDTO.getCustomerId());
-                autoCompletedCmd.setCarId(deliverDTO.getCarId());
-                autoCompletedCmd.setDeliverStatus(deliverDTO.getDeliverStatus());
-                autoCompletedCmd.setDeliverNo(deliverDTO.getDeliverNo());
-                autoCompletedCmd.setServeNo(deliverDTO.getServeNo());
-                autoCompletedCmd.setDeliverType(DeliverTypeEnum.DELIVER.getCode());
+                Result<ElecContractDTO> contractDTOResult = elecHandoverContractAggregateRootApi.getContractDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.RECOVER.getCode());
+                ElecContractDTO elecContractDTO = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
 
-                contractAggregateRootApi.autoCompleted(autoCompletedCmd);
+                ContractStatusChangeCmd contractStatusChangeCmd = new ContractStatusChangeCmd();
+                contractStatusChangeCmd.setContractId(elecContractDTO.getContractId());
+                contractStatusChangeCmd.setContractForeignNo(elecContractDTO.getContractShowNo());
+
+                contractAggregateRootApi.autoCompleted(contractStatusChangeCmd);
+
+                // 修改交付单的收车签署状态
+                DeliverContractSigningCmd signingCmd = new DeliverContractSigningCmd();
+                signingCmd.setDeliverNos(Collections.singletonList(deliverDTO.getDeliverNo()));
+                signingCmd.setDeliverType(DeliverTypeEnum.DELIVER.getCode());
+                deliverAggregateRootApi.contractSigning(signingCmd);
+
+                DeliverVehicleProcessCmd deliverVehicleProcessCmd = new DeliverVehicleProcessCmd();
+                deliverVehicleProcessCmd.setCustomerId(deliverDTO.getCustomerId());
+                elecContractDTO.setContractForeignNo(elecContractDTO.getContractShowNo());
+                deliverVehicleProcessCmd.setContractDTO(elecContractDTO);
+
+                Result<List<String>> serveNoListResult = deliverVehicleAggregateRootApi.deliverVehicleProcess(deliverVehicleProcessCmd);
+
+                List<String> serveNoList = ResultDataUtils.getInstance(serveNoListResult).getDataOrException();
+
+                //同步
+                Map<String, String> map = new HashMap<>();
+                serveNoList.forEach(s -> {
+                    map.put("serve_no", s);
+                    serveSyncServiceI.execOne(map);
+                });
             });
         }
 

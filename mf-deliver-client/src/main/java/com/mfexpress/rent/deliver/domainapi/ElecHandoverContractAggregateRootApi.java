@@ -5,8 +5,6 @@ import java.util.Map;
 
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.AutoCompletedCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ConfirmFailCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
@@ -77,5 +75,5 @@ public interface ElecHandoverContractAggregateRootApi {
     Result<ElecDocDTO> getDocDTOByContractId(@RequestParam("contractId") Long contractId);
 
     @PostMapping(value = "/completed/auto")
-    Result<Integer> autoCompleted(@RequestBody @Validated AutoCompletedCmd cmd);
+    Result<Integer> autoCompleted(@RequestBody @Validated ContractStatusChangeCmd cmd);
 }
