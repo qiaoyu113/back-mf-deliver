@@ -532,7 +532,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
                 String replaceServeNo = replaceVehicleDTO.getServeNo();
                 Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceServeNo);
                 if (Optional.ofNullable(replaceServeDTOResult).map(Result::getData)
-                        .filter(serveDTO -> JudgeEnum.NO.getCode().equals(serveDTO.getStatus())).isPresent()) {
+                        .filter(serveDTO -> JudgeEnum.NO.getCode().equals(serveDTO.getReplaceFlag())).isPresent()) {
                     return Result.getInstance(0).fail(ResultStatusEnum.UNKNOWS.getCode(), "不可取消收车");
                 }
             }

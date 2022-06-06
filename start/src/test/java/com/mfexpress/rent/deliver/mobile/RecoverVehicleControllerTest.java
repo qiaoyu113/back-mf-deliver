@@ -8,6 +8,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.MfDeliveryApplication;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyQryCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyVO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -24,8 +25,13 @@ class RecoverVehicleControllerTest {
     @Resource
     RecoverVehicleController controller;
 
-    String jwt = "eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySW5mbyI6ImV5SmhZMk52ZFc1MFRtOXVSWGh3YVhKbFpDSTZkSEoxWlN3aVlXTmpiM1Z1ZEU1dmJreHZZMnRsWkNJNmRISjFaU3dpWVhWMGFHVnVkR2xqWVhSbFpDSTZkSEoxWlN3aVluVlVlWEJsSWpvd0xDSmphWFI1U1dRaU9qRXNJbU52Y25CVmMyVnlTV1FpT2lJaUxDSmpjbVZoZEdWRVlYUmxJam94TmpBNU1qRXlNelU1TURBd0xDSmpjbVZoZEdWSlpDSTZNQ3dpWTNKbFpHVnVkR2xoYkhOT2IyNUZlSEJwY21Wa0lqcDBjblZsTENKa1pXeEdiR0ZuSWpvd0xDSmtkWFI1U1dRaU9qazVPVGtzSW1WdVlXSnNaV1FpT25SeWRXVXNJbWxrSWpvdE9UazVMQ0p0YjJKcGJHVWlPaUl4TXpNd01EQXdNREF3TUNJc0ltNXBZMnRPWVcxbElqb2k1N083NTd1Zklpd2liMlptYVdObFNXUWlPakVzSW5CaGMzTjNiM0prSWpvaUlpd2ljbTlzWlVsa0lqb3dMQ0p6WlhSMGFXNW5SbXhoWnlJNk1Td2ljM1JoZEhWeklqb3hMQ0owYjJ0bGJrVjRjR2x5WldRaU9qRTJOakV6TURjek1UazBOVFFzSW5SNWNHVWlPakFzSW5Wd1pHRjBaVVJoZEdVaU9qRTJOVEl3T0RNNU16QXdNREFzSW5Wd1pHRjBaVWxrSWpvd0xDSjFjMlZ5Ym1GdFpTSTZJakV6TXpBd01EQXdNREF3SW4wPSIsInN1YiI6IjEzMzAwMDAwMDAwIiwiZXhwIjoxNjYxMzA3MzE5fQ.W8kKqkMGychXeCUUyI4zYuMkUo9cVF7caezL2zeZCmxWedu6YnccGSq7MP1TlUBUkGgcOAadl38w0XkKuHmajg";
+    String jwt = "eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySW5mbyI6ImV5SmhZMk52ZFc1MFRtOXVSWGh3YVhKbFpDSTZkSEoxWlN3aVlXTmpiM1Z1ZEU1dmJreHZZMnRsWkNJNmRISjFaU3dpWVhWMGFHVnVkR2xqWVhSbFpDSTZkSEoxWlN3aVluVlVlWEJsSWpvd0xDSmphWFI1U1dRaU9qTXNJbU52Y25CVmMyVnlTV1FpT2lJaUxDSmpjbVZoZEdWRVlYUmxJam94TmpNeE9UTXpOakF4TURBd0xDSmpjbVZoZEdWSlpDSTZNQ3dpWTNKbFpHVnVkR2xoYkhOT2IyNUZlSEJwY21Wa0lqcDBjblZsTENKa1pXeEdiR0ZuSWpvd0xDSmtkWFI1U1dRaU9qWXNJbVZ1WVdKc1pXUWlPblJ5ZFdVc0ltbGtJam95TkN3aWJXOWlhV3hsSWpvaU1UTTRNREF4TXpnd01EQWlMQ0p1YVdOclRtRnRaU0k2SXVtVWdPV1VydWU3aitlUWhsL25wNS9vdFlFbzVZeVg1THFzNzd5Sklpd2liMlptYVdObFNXUWlPakU1TENKd1lYTnpkMjl5WkNJNklpSXNJbkp2YkdWSlpDSTZNalU0TENKelpYUjBhVzVuUm14aFp5STZNU3dpYzNSaGRIVnpJam94TENKMGIydGxia1Y0Y0dseVpXUWlPakUyTmpJeU5UWTNOalkzTURnc0luUjVjR1VpT2pBc0luVndaR0YwWlVSaGRHVWlPakUyTlRJME1qUXpPVFV3TURBc0luVndaR0YwWlVsa0lqb3hMQ0oxYzJWeWJtRnRaU0k2SWpFek9EQXdNVE00TURBd0luMD0iLCJzdWIiOiIxMzgwMDEzODAwMCIsImV4cCI6MTY2MjI1Njc2Nn0.G0O0FeEKvjm9as6zQse9twxPgIViTJg1ro6ceqbaj9tQ00-HKxmCekK_cLr-js8hoQ_ypQjWTheUtear1J2ksg";
 
+    // TODO 服务单号
+    String serveNo = "";
+
+    // TODO 维修单号
+    String deliverNo = "";
     @Test
     void getRecoverVehicleListVO() {
 
@@ -46,6 +52,12 @@ class RecoverVehicleControllerTest {
 
     @Test
     void cancelRecoverByDeliver() {
+
+        // 取消收车 判断替换车是否调整为正常服务单
+        RecoverCancelByDeliverCmd cmd = new RecoverCancelByDeliverCmd();
+        cmd.setDeliverNo(deliverNo);
+
+        controller.cancelRecoverByDeliver(cmd, jwt);
     }
 
     @Test
