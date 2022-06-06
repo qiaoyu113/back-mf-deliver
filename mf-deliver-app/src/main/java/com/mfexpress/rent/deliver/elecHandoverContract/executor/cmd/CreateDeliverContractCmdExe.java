@@ -1,5 +1,14 @@
 package com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUnit;
@@ -28,12 +37,11 @@ import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.AutoCompletedCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateDeliverContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCheckCmd;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
@@ -51,11 +59,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -184,23 +187,21 @@ public class CreateDeliverContractCmdExe {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "创建电子交接单失败");
         }
 
-        HashMap<String, String> map = new HashMap<>();
-        for (String serveNo : serveNos) {
-            map.put("serve_no", serveNo);
-            syncServiceI.execOne(map);
-        }
-
         // 增加电子交接单开关
         if ("0".equals(contractDeliverFlag)) {
             serveNos.forEach(serveNo -> {
                 Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(serveNo);
                 DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrException();
-                Result<ElecContractDTO> contractDTOResult = contractAggregateRootApi.getContractDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.DELIVER.getCode());
-                ElecContractDTO elecContractDTO = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
-                ContractStatusChangeCmd contractStatusChangeCmd = new ContractStatusChangeCmd();
-                contractStatusChangeCmd.setContractId(elecContractDTO.getContractId());
 
-                contractAggregateRootApi.completed(contractStatusChangeCmd);
+                AutoCompletedCmd autoCompletedCmd = new AutoCompletedCmd();
+                autoCompletedCmd.setCustomerId(deliverDTO.getCustomerId());
+                autoCompletedCmd.setCarId(deliverDTO.getCarId());
+                autoCompletedCmd.setDeliverStatus(deliverDTO.getDeliverStatus());
+                autoCompletedCmd.setDeliverNo(deliverDTO.getDeliverNo());
+                autoCompletedCmd.setServeNo(deliverDTO.getServeNo());
+                autoCompletedCmd.setDeliverType(DeliverTypeEnum.DELIVER.getCode());
+
+                contractAggregateRootApi.autoCompleted(autoCompletedCmd);
             });
         }
 

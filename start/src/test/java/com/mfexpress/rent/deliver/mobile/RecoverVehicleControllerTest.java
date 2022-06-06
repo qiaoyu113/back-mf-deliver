@@ -5,6 +5,7 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.MfDeliveryApplication;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyQryCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyVO;
@@ -36,10 +37,11 @@ class RecoverVehicleControllerTest {
     void getRecoverVehicleListVO() {
 
         RecoverApplyQryCmd cmd = new RecoverApplyQryCmd();
+        cmd.setCustomerId(85);
 
         Result<List<RecoverApplyVO>> result = controller.getRecoverVehicleListVO(cmd, jwt);
 
-        log.info("result---->{}", result);
+        log.info("size---->{}----result---->{}", ResultDataUtils.getInstance(result).getDataOrException().size(), result);
     }
 
     @Test

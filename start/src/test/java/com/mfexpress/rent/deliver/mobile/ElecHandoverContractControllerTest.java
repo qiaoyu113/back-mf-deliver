@@ -29,13 +29,15 @@ class ElecHandoverContractControllerTest {
 
 
     // TODO 服务单号
-    String serveNo = "";
+    String serveNo = "FWD2022032900005";
 
     String contactsCard = "142702198701153245";
 
-    String contactsName = "junit test";
+    String contactsName = "junit";
 
     String contactPhone = "18634853241";
+
+    String imgUrl = "blob:http://dev.baic-mfexpress.com:8080/207295b5-0991-4e62-abda-50cba461d865";
 
     @Test
     void createDeliverContract() {
@@ -63,6 +65,7 @@ class ElecHandoverContractControllerTest {
         recoverInfo.setRecoverVehicleTime(new Date());
         recoverInfo.setDamageFee(0.00);
         recoverInfo.setWareHouseId(0);
+        recoverInfo.setImgUrl(imgUrl);
 
         cmd.setRecoverInfo(recoverInfo);
 

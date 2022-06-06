@@ -1,44 +1,67 @@
 package com.mfexpress.rent.deliver.domain;
 
-import cn.hutool.json.JSONUtil;
-import com.mfexpress.component.constants.ResultErrorEnum;
-import com.mfexpress.component.log.PrintParam;
-import com.mfexpress.component.response.PagePagination;
-import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.tools.redis.RedisTools;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.ElecHandoverContractStatus;
-import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.*;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecDocDTO;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.po.ElectronicHandoverContractPO;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.po.ElectronicHandoverDocPO;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.qry.ContractListQry;
-import com.mfexpress.rent.deliver.entity.ElecHandoverContract;
-import com.mfexpress.rent.deliver.gateway.ElecHandoverContractGateway;
-import com.mfexpress.rent.deliver.gateway.ElecHandoverDocGateway;
-import com.mfexpress.rent.deliver.utils.DeliverUtils;
-import com.mfexpress.rent.deliver.utils.FormatUtil;
-import io.swagger.annotations.Api;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-
-import javax.annotation.Resource;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.annotation.Resource;
+
+import cn.hutool.json.JSONUtil;
+import com.mfexpress.component.constants.ResultErrorEnum;
+import com.mfexpress.component.log.PrintParam;
+import com.mfexpress.component.response.PagePagination;
+import com.mfexpress.component.response.Result;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
+import com.mfexpress.component.starter.tools.redis.RedisTools;
+import com.mfexpress.component.utils.util.ResultDataUtils;
+import com.mfexpress.rent.deliver.constant.Constants;
+import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
+import com.mfexpress.rent.deliver.constant.ElecHandoverContractStatus;
+import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.cmd.DeliverVehicleProcessCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.AutoCompletedCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ConfirmFailCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateDeliverContractCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateRecoverContractCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecDocDTO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.po.ElectronicHandoverContractPO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.po.ElectronicHandoverDocPO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.qry.ContractListQry;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverVehicleProcessCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.entity.ElecHandoverContract;
+import com.mfexpress.rent.deliver.gateway.ElecHandoverContractGateway;
+import com.mfexpress.rent.deliver.gateway.ElecHandoverDocGateway;
+import com.mfexpress.rent.deliver.utils.DeliverUtils;
+import com.mfexpress.rent.deliver.utils.FormatUtil;
+import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@Slf4j
 @RestController
 @RequestMapping(value = "/domain/deliver/v3/elecHandoverContract")
 @Api(tags = "domain--交付--电子交接合同聚合", value = "ElecHandoverContractAggregateRootApiImpl")
+@RefreshScope
 public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverContractAggregateRootApi {
 
     @Resource
@@ -48,10 +71,23 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
     private ElecHandoverDocGateway docGateway;
 
     @Resource
+    private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
+
+    @Resource
+    private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
+
+    @Resource
     private BeanFactory beanFactory;
 
     @Resource
     private RedisTools redisTools;
+
+    @Resource
+    private ServeAggregateRootApi serveAggregateRootApi;
+
+    @Resource(name = "serveSyncServiceImpl")
+    private EsSyncHandlerI serveSyncServiceI;
+
 
     @Override
     @PostMapping("/createDeliverContract")
@@ -341,4 +377,63 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
         return Result.getInstance(elecDocDTO).success();
     }
 
+    @Override
+    @PostMapping(value = "/completed/auto")
+    @Transactional(rollbackFor = Exception.class)
+    @PrintParam
+    public Result<Integer> autoCompleted(@RequestBody @Validated AutoCompletedCmd cmd) {
+
+        Result<ElecContractDTO> contractDTOResult = getContractDTOByDeliverNoAndDeliverType(cmd.getDeliverNo(), cmd.getDeliverType());
+        ElecContractDTO elecContractDTO = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
+
+        // 补全三方合同编号
+        ContractStatusChangeCmd contractStatusChangeCmd = new ContractStatusChangeCmd();
+        contractStatusChangeCmd.setContractId(elecContractDTO.getContractId());
+        contractStatusChangeCmd.setContractForeignNo(elecContractDTO.getContractShowNo());
+
+
+        ElecHandoverContract elecHandoverContract = beanFactory.getBean(ElecHandoverContract.class);
+        elecHandoverContract.init(contractStatusChangeCmd, ElecHandoverContractStatus.COMPLETED.getCode());
+        // 先不加check
+        elecHandoverContract.autoCompleted();
+
+        elecContractDTO.setStatus(ElecHandoverContractStatus.COMPLETED.getCode());
+
+
+        Result<List<String>> serveNoListResult ;
+        if (DeliverTypeEnum.DELIVER.getCode() == cmd.getDeliverType()) {
+            DeliverVehicleProcessCmd deliverVehicleProcessCmd = new DeliverVehicleProcessCmd();
+            deliverVehicleProcessCmd.setCustomerId(cmd.getCustomerId());
+            deliverVehicleProcessCmd.setContractDTO(elecContractDTO);
+            serveNoListResult = deliverVehicleAggregateRootApi.deliverVehicleProcess(deliverVehicleProcessCmd);
+        } else {
+
+            ServeDTO serveDTO = ResultDataUtils.getInstance(serveAggregateRootApi.getServeDtoByServeNo(cmd.getServeNo())).getDataOrException();
+            RecoverVehicleProcessCmd recoverVehicleProcessCmd = new RecoverVehicleProcessCmd();
+            recoverVehicleProcessCmd.setContractForeignNo(elecContractDTO.getContractForeignNo());
+            recoverVehicleProcessCmd.setRecoverVehicleTime(elecContractDTO.getRecoverVehicleTime());
+            recoverVehicleProcessCmd.setCarId(cmd.getCarId());
+            recoverVehicleProcessCmd.setServeNo(serveDTO.getServeNo());
+            recoverVehicleProcessCmd.setDeliverNo(cmd.getDeliverNo());
+            recoverVehicleProcessCmd.setCustomerId(serveDTO.getCustomerId());
+            recoverVehicleProcessCmd.setExpectRecoverDate(serveDTO.getExpectRecoverDate());
+            recoverVehicleProcessCmd.setRecoverWareHouseId(elecContractDTO.getRecoverWareHouseId());
+            recoverVehicleProcessCmd.setContactId(elecContractDTO.getContractId());
+            recoverVehicleProcessCmd.setServeStatus(serveDTO.getStatus());
+            recoverVehicleProcessCmd.setOperatorId(elecContractDTO.getCreatorId());
+
+            serveNoListResult = recoverVehicleAggregateRootApi.recoverVehicleProcess(recoverVehicleProcessCmd);
+        }
+
+        List<String> serveNoList = ResultDataUtils.getInstance(serveNoListResult).getDataOrException();
+
+        //同步
+        Map<String, String> map = new HashMap<>();
+        serveNoList.forEach(serveNo -> {
+            map.put("serve_no", serveNo);
+            serveSyncServiceI.execOne(map);
+        });
+
+        return Result.getInstance(0).success();
+    }
 }

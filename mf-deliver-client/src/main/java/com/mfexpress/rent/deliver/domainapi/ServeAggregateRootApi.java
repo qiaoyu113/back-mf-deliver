@@ -1,10 +1,29 @@
 package com.mfexpress.rent.deliver.domainapi;
 
+import java.util.List;
+import java.util.Map;
+
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.*;
+import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockConfirmDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockListDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.PassiveRenewalServeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.RenewalCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.RenewalReplaceServeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeAddDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeChangeRecordDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeCycleQryCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDailyDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
+import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeReplaceVehicleAddDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustRecordDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustRecordQry;
@@ -14,9 +33,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.List;
-import java.util.Map;
 
 @FeignClient(name = "mf-deliver", path = "/domain/deliver/v3/serve", contextId = "mf-deliver-serve-aggregate-root-api")
 public interface ServeAggregateRootApi {
@@ -174,4 +190,11 @@ public interface ServeAggregateRootApi {
      */
     @PostMapping(value = "/serve/adjust/record")
     Result<ServeAdjustRecordDTO> getServeAdjustRecord(ServeAdjustRecordQry qry);
+
+    /**
+     * 替换车服务单调整
+     * @param cmd
+     */
+    @PostMapping(value = "/serve/adjust")
+    Result<Integer> serveAdjustment(ServeAdjustCmd cmd);
 }

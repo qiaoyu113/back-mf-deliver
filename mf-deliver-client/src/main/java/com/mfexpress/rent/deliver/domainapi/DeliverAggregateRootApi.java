@@ -1,10 +1,19 @@
 package com.mfexpress.rent.deliver.domainapi;
 
 
+import java.util.List;
+import java.util.Map;
+
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.rent.deliver.dto.data.ListQry;
-import com.mfexpress.rent.deliver.dto.data.deliver.*;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverBackInsureDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverInsureCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverQry;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleMqDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
@@ -13,9 +22,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.List;
-import java.util.Map;
 
 @FeignClient(name = "mf-deliver", path = "/domain/deliver/v3/deliver", contextId = "mf-deliver-aggregate-root-api")
 public interface DeliverAggregateRootApi {

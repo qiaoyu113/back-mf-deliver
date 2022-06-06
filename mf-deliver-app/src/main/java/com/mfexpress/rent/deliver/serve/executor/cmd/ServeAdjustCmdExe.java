@@ -3,6 +3,7 @@ package com.mfexpress.rent.deliver.serve.executor.cmd;
 import javax.annotation.Resource;
 
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustRecordVo;
@@ -15,7 +16,7 @@ public class ServeAdjustCmdExe {
     @Resource
     private ServeAdjustCheckCmdExe serveAdjustCheckCmdExe;
     @Resource
-    private ServeEntityApi serveEntityApi;
+    private ServeAggregateRootApi serveAggregateRootApi;
 
     public void execute(ServeAdjustCmd cmd, TokenInfo tokenInfo) {
 
@@ -27,7 +28,7 @@ public class ServeAdjustCmdExe {
         initCmd(cmd, vo);
         cmd.setOperatorId(tokenInfo.getId());
         // 服务单调整业务逻辑
-        serveEntityApi.serveAdjustment(cmd);
+        serveAggregateRootApi.serveAdjustment(cmd);
     }
 
     void initCmd(ServeAdjustCmd cmd, ServeAdjustRecordVo vo) {

@@ -65,6 +65,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeReplaceVehicleAddDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustRecordDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustRecordQry;
@@ -1128,5 +1129,13 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         BeanUtils.copyProperties(po, dto);
 
         return Result.getInstance(dto).success();
+    }
+
+    @Override
+    public Result<Integer> serveAdjustment(ServeAdjustCmd cmd) {
+
+        serveEntityApi.serveAdjustment(cmd);
+
+        return Result.getInstance(0).success();
     }
 }

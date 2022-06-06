@@ -1,8 +1,17 @@
 package com.mfexpress.rent.deliver.domainapi;
 
+import java.util.List;
+import java.util.Map;
+
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.*;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.AutoCompletedCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ConfirmFailCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateDeliverContractCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateRecoverContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecDocDTO;
@@ -12,9 +21,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.List;
-import java.util.Map;
 
 @FeignClient(name = "mf-deliver", path = "/domain/deliver/v3/elecHandoverContract")
 public interface ElecHandoverContractAggregateRootApi {
@@ -69,4 +75,7 @@ public interface ElecHandoverContractAggregateRootApi {
 
     @PostMapping("/getDocDTOByContractId")
     Result<ElecDocDTO> getDocDTOByContractId(@RequestParam("contractId") Long contractId);
+
+    @PostMapping(value = "/completed/auto")
+    Result<Integer> autoCompleted(@RequestBody @Validated AutoCompletedCmd cmd);
 }

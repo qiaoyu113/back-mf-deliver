@@ -1,6 +1,12 @@
 package com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd;
 
-import cn.hutool.core.date.DateTime;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
@@ -27,13 +33,12 @@ import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.AutoCompletedCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateRecoverContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateRecoverContractFrontCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.RecoverInfo;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.utils.CommonUtil;
@@ -50,12 +55,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 @Component
 @Slf4j
@@ -176,13 +175,17 @@ public class CreateRecoverContractCmdExe {
         }
 
         // 增加电子交接单开关
+        log.info("contractRecoverFlag---->{}", contractRecoverFlag);
         if ("0".equals(contractRecoverFlag)) {
-            Result<ElecContractDTO> contractDTOResult = contractAggregateRootApi.getContractDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.RECOVER.getCode());
-            ElecContractDTO elecContractDTO = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
-            ContractStatusChangeCmd contractStatusChangeCmd = new ContractStatusChangeCmd();
-            contractStatusChangeCmd.setContractId(elecContractDTO.getContractId());
+            AutoCompletedCmd autoCompletedCmd = new AutoCompletedCmd();
+            autoCompletedCmd.setCustomerId(deliverDTO.getCustomerId());
+            autoCompletedCmd.setCarId(deliverDTO.getCarId());
+            autoCompletedCmd.setDeliverStatus(deliverDTO.getDeliverStatus());
+            autoCompletedCmd.setDeliverNo(deliverDTO.getDeliverNo());
+            autoCompletedCmd.setServeNo(deliverDTO.getServeNo());
+            autoCompletedCmd.setDeliverType(DeliverTypeEnum.RECOVER.getCode());
 
-            contractAggregateRootApi.completed(contractStatusChangeCmd);
+            contractAggregateRootApi.autoCompleted(autoCompletedCmd);
         }
 
         return contractIdWithDocIds.getContractId().toString();
