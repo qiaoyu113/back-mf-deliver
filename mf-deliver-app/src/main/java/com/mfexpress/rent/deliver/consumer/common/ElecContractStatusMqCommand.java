@@ -339,7 +339,7 @@ public class ElecContractStatusMqCommand {
                         renewalCmd.setCustomerId(replaceServe.getCustomerId());
                         renewalCmd.setRent(replaceServe.getRent());
                         renewalCmd.setRentRatio(replaceServe.getRentRatio().doubleValue());
-                        // TODO  传值
+
 //                        renewalCmd.setRenewalDate();
                         renewalCmd.setCreateId(contractDTO.getCreatorId());
                         renewalCmd.setRentEffectDate(FormatUtil.ymdFormatDateToString(new Date()));

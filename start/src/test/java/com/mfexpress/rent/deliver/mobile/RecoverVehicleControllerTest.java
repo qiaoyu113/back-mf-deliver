@@ -1,0 +1,122 @@
+package com.mfexpress.rent.deliver.mobile;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.deliver.MfDeliveryApplication;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyQryCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyVO;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@Slf4j
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = MfDeliveryApplication.class)
+class RecoverVehicleControllerTest {
+
+    @Resource
+    RecoverVehicleController controller;
+
+    String jwt = "eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySW5mbyI6ImV5SmhZMk52ZFc1MFRtOXVSWGh3YVhKbFpDSTZkSEoxWlN3aVlXTmpiM1Z1ZEU1dmJreHZZMnRsWkNJNmRISjFaU3dpWVhWMGFHVnVkR2xqWVhSbFpDSTZkSEoxWlN3aVluVlVlWEJsSWpvd0xDSmphWFI1U1dRaU9qRXNJbU52Y25CVmMyVnlTV1FpT2lJaUxDSmpjbVZoZEdWRVlYUmxJam94TmpBNU1qRXlNelU1TURBd0xDSmpjbVZoZEdWSlpDSTZNQ3dpWTNKbFpHVnVkR2xoYkhOT2IyNUZlSEJwY21Wa0lqcDBjblZsTENKa1pXeEdiR0ZuSWpvd0xDSmtkWFI1U1dRaU9qazVPVGtzSW1WdVlXSnNaV1FpT25SeWRXVXNJbWxrSWpvdE9UazVMQ0p0YjJKcGJHVWlPaUl4TXpNd01EQXdNREF3TUNJc0ltNXBZMnRPWVcxbElqb2k1N083NTd1Zklpd2liMlptYVdObFNXUWlPakVzSW5CaGMzTjNiM0prSWpvaUlpd2ljbTlzWlVsa0lqb3dMQ0p6WlhSMGFXNW5SbXhoWnlJNk1Td2ljM1JoZEhWeklqb3hMQ0owYjJ0bGJrVjRjR2x5WldRaU9qRTJOakV6TURjek1UazBOVFFzSW5SNWNHVWlPakFzSW5Wd1pHRjBaVVJoZEdVaU9qRTJOVEl3T0RNNU16QXdNREFzSW5Wd1pHRjBaVWxrSWpvd0xDSjFjMlZ5Ym1GdFpTSTZJakV6TXpBd01EQXdNREF3SW4wPSIsInN1YiI6IjEzMzAwMDAwMDAwIiwiZXhwIjoxNjYxMzA3MzE5fQ.W8kKqkMGychXeCUUyI4zYuMkUo9cVF7caezL2zeZCmxWedu6YnccGSq7MP1TlUBUkGgcOAadl38w0XkKuHmajg";
+
+    @Test
+    void getRecoverVehicleListVO() {
+
+        RecoverApplyQryCmd cmd = new RecoverApplyQryCmd();
+
+        Result<List<RecoverApplyVO>> result = controller.getRecoverVehicleListVO(cmd, jwt);
+
+        log.info("result---->{}", result);
+    }
+
+    @Test
+    void applyRecover() {
+    }
+
+    @Test
+    void cancelRecover() {
+    }
+
+    @Test
+    void cancelRecoverByDeliver() {
+    }
+
+    @Test
+    void getRecoverListVO() {
+    }
+
+    @Test
+    void getRecoverTaskListVO() {
+    }
+
+    @Test
+    void testGetRecoverVehicleListVO() {
+    }
+
+    @Test
+    void testApplyRecover() {
+    }
+
+    @Test
+    void testCancelRecover() {
+    }
+
+    @Test
+    void testCancelRecoverByDeliver() {
+    }
+
+    @Test
+    void testGetRecoverListVO() {
+    }
+
+    @Test
+    void testGetRecoverTaskListVO() {
+    }
+
+    @Test
+    void whetherToCheck() {
+    }
+
+    @Test
+    void toBackInsure() {
+    }
+
+    @Test
+    void testToBackInsure() {
+    }
+
+    @Test
+    void toDeduction() {
+    }
+
+    @Test
+    void toDeductionByDeliver() {
+    }
+
+    @Test
+    void cacheCheckInfo() {
+    }
+
+    @Test
+    void getCachedCheckInfo() {
+    }
+
+    @Test
+    void getRecoverDetail() {
+    }
+
+    @Test
+    void abnormalRecover() {
+    }
+
+    @Test
+    void getRecoverAbnormalInfo() {
+    }
+}
