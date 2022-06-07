@@ -17,31 +17,15 @@ public class MainServeUtil {
     public static ReplaceVehicleDTO getReplaceVehicleDTOBySourceServNo(MaintenanceAggregateRootApi maintenanceAggregateRootApi, String sourceServNo) {
 
         // 查找维修单
-        Result<MaintenanceDTO> maintenanceDTOResult = maintenanceAggregateRootApi.getMaintenanceByServeNo(sourceServNo);
-        MaintenanceDTO maintenanceDTO = ResultDataUtils.getInstance(maintenanceDTOResult).getDataOrException();
-        // 查找替换单
-        Result<List<ReplaceVehicleDTO>> replaceVehicleDTOListResult = maintenanceAggregateRootApi.getReplaceVehicleDTOByMaintenanceId(maintenanceDTO.getMaintenanceId());
-        List<ReplaceVehicleDTO> replaceVehicleDTOList = ResultDataUtils.getInstance(replaceVehicleDTOListResult).getDataOrException();
-        if (CollectionUtils.isNotEmpty(replaceVehicleDTOList)) {
-            ReplaceVehicleDTO replaceVehicleDTO = replaceVehicleDTOList.stream().sorted(Comparator.comparing(ReplaceVehicleDTO::getCreateTime).reversed()).collect(Collectors.toList()).get(0);
-            return replaceVehicleDTO;
-        }
+        Result<ReplaceVehicleDTO> replaceVehicleDTOResult = maintenanceAggregateRootApi.getReplaceVehicleDTObyMaintenanceServeNo(sourceServNo);
 
-        return null;
+        return ResultDataUtils.getInstance(replaceVehicleDTOResult).getDataOrException();
     }
 
     public static MaintenanceDTO getMaintenanceDTOByReplaceServeNo(MaintenanceAggregateRootApi maintenanceAggregateRootApi, String replaceServeNo) {
 
-        // 查找替换单
-        Result<ReplaceVehicleDTO> replaceVehicleDTOResult = maintenanceAggregateRootApi.getReplaceVehicleByServeNo(replaceServeNo);
-        ReplaceVehicleDTO replaceVehicleDTO = ResultDataUtils.getInstance(replaceVehicleDTOResult).getDataOrException();
-        if (replaceVehicleDTO != null) {
-            // 查找维修单
-            Result<MaintenanceDTO> maintenanceDTOResult = maintenanceAggregateRootApi.getMaintenanceDTOByMaintenanceId(replaceVehicleDTO.getMaintenanceId());
+        Result<MaintenanceDTO> maintenanceDTOResult = maintenanceAggregateRootApi.getMaintenanceDTOByReplaceVehicleServeNo(replaceServeNo);
 
-            return ResultDataUtils.getInstance(maintenanceDTOResult).getDataOrException();
-        }
-
-        return null;
+        return ResultDataUtils.getInstance(maintenanceDTOResult).getDataOrException();
     }
 }

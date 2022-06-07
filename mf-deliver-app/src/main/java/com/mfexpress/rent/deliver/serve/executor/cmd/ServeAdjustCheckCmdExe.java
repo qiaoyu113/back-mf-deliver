@@ -25,10 +25,12 @@ import com.mfexpress.rent.deliver.utils.PermissionUtil;
 import com.mfexpress.rent.deliver.utils.ServeDictDataUtil;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
 import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class ServeAdjustCheckCmdExe {
 
@@ -59,7 +61,7 @@ public class ServeAdjustCheckCmdExe {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未找到服务单");
         }
         ServeDTO serveDTO = serveDTOResult.getData();
-        String sourceServeNo = "FWD2022032400014";
+        String sourceServeNo = "";
         if (JudgeEnum.NO.getCode().equals(serveDTO.getReactiveFlag())) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前服务单不是替换单，无法进行服务单变更");
         } else {
@@ -79,6 +81,7 @@ public class ServeAdjustCheckCmdExe {
                     throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "原车未申收车，无法进行服务单变更");
                 }
                 sourceServeNo = deliverDTOResult.getData().getServeNo();
+                log.info("sourceServeNo---->{}", sourceServeNo);
             }
         }
 
@@ -93,7 +96,6 @@ public class ServeAdjustCheckCmdExe {
                 vo.setExpectRecoverTime(FormatUtil.addDays(FormatUtil.ymdFormatStringToDate(sourceServeDTOResult.getData().getExpectRecoverDate()), 1));
                 vo.setChargeDepositAmount(sourceServeDTOResult.getData().getDeposit());
                 vo.setChargeRentAmount(serveDTO.getRent());
-
 
                 return vo;
             }
