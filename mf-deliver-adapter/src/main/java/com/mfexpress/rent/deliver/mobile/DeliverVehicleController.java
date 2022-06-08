@@ -46,7 +46,7 @@ public class DeliverVehicleController {
     @PostMapping("/selectContactsByDeliverNo")
     @ApiOperation("根据交付单编号查询提车人信息")
     @PrintParam
-    public Result<LinkmanVo>  selectContactsByDeliverNo(@RequestBody @Validated CustomerCmd customerCmd){
+    public Result<LinkmanVo>selectContactsByDeliverNo(@RequestBody @Validated CustomerCmd customerCmd){
         return Result.getInstance(deliverVehicleServiceI.getDeliverByDeliverNo(customerCmd.getCustomerId()));
     }
 
