@@ -96,11 +96,6 @@ public class DeliverEntity implements DeliverEntityApi {
     private Integer recoverContractStatus;
 
     private Integer recoverAbnormalFlag;
-    //新增字段
-
-    private BigDecimal rent;
-
-    private BigDecimal deposit;
 
     @Override
     public List<DeliverDTO> getDeliverDTOListByServeNoList(List<String> serveNoList) {
