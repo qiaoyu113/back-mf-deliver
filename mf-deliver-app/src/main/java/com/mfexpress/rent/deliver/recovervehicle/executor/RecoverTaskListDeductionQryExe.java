@@ -58,9 +58,14 @@ public class RecoverTaskListDeductionQryExe implements RecoverQryServiceI {
             Map<String, RecoverVehicle> recoverVehicleMap = recoverVehicleMapResult.getData();
             recoverVehicleVOList.forEach(recoverVehicleVO -> {
                 Result<ServeDTO> serveDtoByServeNo = serveAggregateRootApi.getServeDtoByServeNo(recoverVehicleVO.getServeNo());
+                if (serveDtoByServeNo.getData().getReplaceFlag()==1){
+                    recoverVehicleVO.setLeaseModelDisplay(LeaseModelEnum.REPLACEMENT.getName());
+                    recoverVehicleVO.setLeaseModelId(LeaseModelEnum.REPLACEMENT.getCode());
+                }else {
+                    recoverVehicleVO.setLeaseModelDisplay(LeaseModelEnum.getEnum(serveDtoByServeNo.getData().getLeaseModelId()).getName());
+                    recoverVehicleVO.setLeaseModelId(serveDtoByServeNo.getData().getLeaseModelId());
+                }
 
-                recoverVehicleVO.setLeaseModelDisplay(LeaseModelEnum.getEnum(serveDtoByServeNo.getData().getLeaseModelId()).getName());
-                recoverVehicleVO.setLeaseModelId(serveDtoByServeNo.getData().getLeaseModelId());
 
 
                 RecoverVehicle recoverVehicle = recoverVehicleMap.get(recoverVehicleVO.getServeNo());

@@ -38,9 +38,14 @@ public class RecoverTaskListCompletedQryExe implements RecoverQryServiceI {
         RecoverTaskListVO recoverTaskListVO = recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo, Constants.ES_DELIVER_INDEX, Constants.ES_DELIVER_TYPE);
         recoverTaskListVO.getRecoverVehicleVOList().forEach(recoverVehicleVO -> {
             Result<ServeDTO> serveDtoByServeNo = serveAggregateRootApi.getServeDtoByServeNo(recoverVehicleVO.getServeNo());
+            if (serveDtoByServeNo.getData().getReplaceFlag()==1){
+                recoverVehicleVO.setLeaseModelDisplay(LeaseModelEnum.REPLACEMENT.getName());
+                recoverVehicleVO.setLeaseModelId(LeaseModelEnum.REPLACEMENT.getCode());
+            }else {
+                recoverVehicleVO.setLeaseModelDisplay(LeaseModelEnum.getEnum(serveDtoByServeNo.getData().getLeaseModelId()).getName());
+                recoverVehicleVO.setLeaseModelId(serveDtoByServeNo.getData().getLeaseModelId());
+            }
 
-            recoverVehicleVO.setLeaseModelDisplay(LeaseModelEnum.getEnum(serveDtoByServeNo.getData().getLeaseModelId()).getName());
-            recoverVehicleVO.setLeaseModelId(serveDtoByServeNo.getData().getLeaseModelId());
             if (JudgeEnum.YES.getCode().equals(recoverVehicleVO.getRecoverAbnormalFlag())) {
                 recoverVehicleVO.setRecoverTypeDisplay(RecoverVehicleType.ABNORMAL.getName());
             } else {
