@@ -1122,6 +1122,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     }
 
     @Override
+//    @PostMapping(value = "/serve/adjust/record")
     public Result<ServeAdjustRecordDTO> getServeAdjustRecord(ServeAdjustRecordQry qry) {
 
         ServeAdjustRecordPO po = serveAdjustRecordGateway.getRecordByServeNo(qry.getServeNo());
@@ -1132,7 +1133,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     }
 
     @Override
-    public Result<Integer> serveAdjustment(ServeAdjustCmd cmd) {
+    @PostMapping(value = "/serve/adjust")
+    @PrintParam
+    public Result<Integer> serveAdjustment(@RequestBody ServeAdjustCmd cmd) {
 
         serveEntityApi.serveAdjustment(cmd);
 

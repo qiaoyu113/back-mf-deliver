@@ -189,12 +189,12 @@ public interface ServeAggregateRootApi {
      * @return
      */
     @PostMapping(value = "/serve/adjust/record")
-    Result<ServeAdjustRecordDTO> getServeAdjustRecord(ServeAdjustRecordQry qry);
+    Result<ServeAdjustRecordDTO> getServeAdjustRecord(@RequestBody ServeAdjustRecordQry qry);
 
     /**
      * 替换车服务单调整
      * @param cmd
      */
     @PostMapping(value = "/serve/adjust")
-    Result<Integer> serveAdjustment(ServeAdjustCmd cmd);
+    Result<Integer> serveAdjustment(@RequestBody ServeAdjustCmd cmd);
 }

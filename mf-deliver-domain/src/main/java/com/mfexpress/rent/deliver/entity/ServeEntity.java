@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.entity;
 
 import cn.hutool.json.JSONUtil;
 import com.mfexpress.component.starter.tools.mq.MqTools;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeAdjustChargeRentTypeEnum;
 import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
@@ -277,9 +278,10 @@ public class ServeEntity implements ServeEntityApi {
         newEntity.setLeaseModelId(ServeAdjustChargeRentTypeEnum.NORMAL.getCode());
         newEntity.setExpectRecoverDate(FormatUtil.ymdFormatDateToString(cmd.getExpectRecoverTime()));
         newEntity.setDeposit(cmd.getChargeDepositAmount());
+        newEntity.setReplaceFlag(JudgeEnum.NO.getCode());
         newEntity.setUpdateId(cmd.getOperatorId());
         newEntity.setUpdateTime(new Date());
-
+        log.info("newEntity---->{}", newEntity);
         serveGateway.updateServeByServeNo(cmd.getServeNo(), newEntity);
 
         saveServeAdjustRecord(cmd);
@@ -313,7 +315,7 @@ public class ServeEntity implements ServeEntityApi {
         po.setChargeDepositAmount(cmd.getChargeDepositAmount());
         po.setExpectRecoverTime(cmd.getExpectRecoverTime());
         po.setDepositPayType(cmd.getDepositPayType());
-
+        log.info("ServeAdjustRecordPO---->{}", po);
         if (!Optional.ofNullable(po).map(ServeAdjustRecordPO::getId).isPresent()) {
             po.setCreateId(cmd.getOperatorId());
             po.setCreateTime(new Date());
@@ -335,6 +337,7 @@ public class ServeEntity implements ServeEntityApi {
         serveChangeRecordPO.setReactiveReason(reason);
         serveChangeRecordPO.setRemark(remark);
         serveChangeRecordPO.setCreatorId(createId);
+        log.info("serveChangeRecordPO---->{}", serveChangeRecordPO);
         serveChangeRecordGateway.insert(serveChangeRecordPO);
     }
 }

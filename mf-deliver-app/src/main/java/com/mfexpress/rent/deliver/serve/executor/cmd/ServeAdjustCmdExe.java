@@ -7,9 +7,10 @@ import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustRecordVo;
-import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class ServeAdjustCmdExe {
 
@@ -27,6 +28,7 @@ public class ServeAdjustCmdExe {
 
         initCmd(cmd, vo);
         cmd.setOperatorId(tokenInfo.getId());
+        log.info("cmd---->{}", cmd);
         // 服务单调整业务逻辑
         serveAggregateRootApi.serveAdjustment(cmd);
     }

@@ -1,17 +1,20 @@
 package com.mfexpress.rent.deliver.serve.executor.cmd;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import javax.annotation.Resource;
 
+import com.mfexpress.billing.customer.api.aggregate.BookAggregateRootApi;
 import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.enums.billing.AccountBookTypeEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.ServeAdjustChargeRentTypeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -49,6 +52,9 @@ public class ServeAdjustCheckCmdExe {
     @Resource
     private OfficeAggregateRootApi officeAggregateRootApi;
 
+    @Resource
+    private BookAggregateRootApi bookAggregateRootApi;
+
     public ServeAdjustRecordVo execute(ServeAdjustCheckCmd cmd, TokenInfo tokenInfo) {
 
         // 数据权限校验
@@ -83,22 +89,31 @@ public class ServeAdjustCheckCmdExe {
             log.info("sourceServeNo---->{}", sourceServeNo);
         }
 
-        if (StringUtils.isNotEmpty(sourceServeNo)) {
-            Result<ServeDTO> sourceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(sourceServeNo);
-            if (Optional.ofNullable(sourceServeDTOResult).map(Result::getData).isPresent()) {
-
-                ServeAdjustRecordVo vo = new ServeAdjustRecordVo();
-                vo.setServeNo(vo.getServeNo());
-                vo.setChargeLeaseModelId(ServeAdjustChargeRentTypeEnum.NORMAL.getCode());
-                vo.setChargeLeaseModel(ServeDictDataUtil.leaseModeMap.get(String.valueOf(vo.getChargeLeaseModelId())));
-                vo.setExpectRecoverTime(FormatUtil.addDays(FormatUtil.ymdFormatStringToDate(sourceServeDTOResult.getData().getExpectRecoverDate()), 1));
-                vo.setChargeDepositAmount(sourceServeDTOResult.getData().getDeposit());
-                vo.setChargeRentAmount(serveDTO.getRent());
-
-                return vo;
-            }
+        if (StringUtils.isEmpty(sourceServeNo)) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到原车服务单");
         }
 
-        return null;
+        Result<ServeDTO> sourceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(sourceServeNo);
+        ServeDTO sourceServeDTO = ResultDataUtils.getInstance(sourceServeDTOResult).getDataOrException();
+
+        ServeAdjustRecordVo vo = new ServeAdjustRecordVo();
+        vo.setServeNo(cmd.getServeNo());
+        vo.setChargeLeaseModelId(sourceServeDTO.getLeaseModelId());
+        vo.setChargeLeaseModel(ServeDictDataUtil.leaseModeMap.get(String.valueOf(vo.getChargeLeaseModelId())));
+        vo.setExpectRecoverTime(FormatUtil.addDays(FormatUtil.ymdFormatStringToDate(sourceServeDTO.getExpectRecoverDate()), 1));
+        vo.setChargeDepositAmount(sourceServeDTO.getDeposit());
+        vo.setChargeRentAmount(serveDTO.getRent());
+
+        log.info("ServeAdjustRecordVo---->{}", vo.getExpectRecoverTime());
+        log.info("sourceServeDTO.getExpectRecoverDate()---->{}", sourceServeDTO.getExpectRecoverDate());
+        Result<DeliverDTO> sourceDeliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(sourceServeNo);
+        DeliverDTO sourceDeliverDTO = ResultDataUtils.getInstance(sourceDeliverDTOResult).getDataOrException();
+        vo.setSourceCarId(sourceDeliverDTO.getCarId());
+        vo.setSourcePlate(sourceDeliverDTO.getCarNum());
+        Result<BigDecimal> unlockDepositAmountResult = bookAggregateRootApi.getBookBalanceByCustomerIdType(serveDTO.getCustomerId(), AccountBookTypeEnum.DEPOSIT_BALANCE.getCode());
+        vo.setUnlockDepositAmount(ResultDataUtils.getInstance(unlockDepositAmountResult).getDataOrException());
+
+        return vo;
+
     }
 }
