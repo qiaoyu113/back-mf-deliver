@@ -8,12 +8,10 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.mfexpress.rent.deliver.constant.ReplaceVehicleDepositPayTypeEnum;
-import com.oracle.tools.packager.Log;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @Data

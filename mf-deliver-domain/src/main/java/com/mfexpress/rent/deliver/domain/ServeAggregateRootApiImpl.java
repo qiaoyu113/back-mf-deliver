@@ -1098,7 +1098,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 // 查找替换车服务单
                 ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, cmd.getServeNo());
 
-                if (replaceVehicleDTO != null) {
+                if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
 
                     String replaceServeNo = replaceVehicleDTO.getServeNo();
 

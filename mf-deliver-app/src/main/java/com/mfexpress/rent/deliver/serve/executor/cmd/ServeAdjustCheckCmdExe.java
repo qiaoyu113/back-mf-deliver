@@ -73,16 +73,14 @@ public class ServeAdjustCheckCmdExe {
             }
             // 查找原车维修单
             MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceDTOByReplaceServeNo(maintenanceAggregateRootApi, cmd.getServeNo());
-            if (maintenanceDTO != null) {
-                // 查找交付单
-                Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(maintenanceDTO.getServeNo());
-                if (Optional.ofNullable(deliverDTOResult).map(Result::getData).isPresent()
-                        && DeliverEnum.IS_RECOVER.getCode().equals(deliverDTOResult.getData().getDeliverStatus())) {
-                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "原车未申收车，无法进行服务单变更");
-                }
-                sourceServeNo = deliverDTOResult.getData().getServeNo();
-                log.info("sourceServeNo---->{}", sourceServeNo);
+            // 查找交付单
+            Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(maintenanceDTO.getServeNo());
+            if (Optional.ofNullable(deliverDTOResult).map(Result::getData).isPresent()
+                    && DeliverEnum.IS_RECOVER.getCode().equals(deliverDTOResult.getData().getDeliverStatus())) {
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "原车未申收车，无法进行服务单变更");
             }
+            sourceServeNo = deliverDTOResult.getData().getServeNo();
+            log.info("sourceServeNo---->{}", sourceServeNo);
         }
 
         if (StringUtils.isNotEmpty(sourceServeNo)) {

@@ -112,7 +112,7 @@ public class RecoverDeductionByDeliverExe {
 
         // 查询是否有替换车服务单
         ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, serveDTO.getServeNo());
-        if (replaceVehicleDTO != null) {
+        if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
             // 查询押金支付方式
             Result<ServeAdjustRecordDTO> recordDTOResult = serveAggregateRootApi.getServeAdjustRecord(new ServeAdjustRecordQry(replaceVehicleDTO.getServeNo()));
             ServeAdjustRecordDTO serveAdjustRecordDTO = ResultDataUtils.getInstance(recordDTOResult).getDataOrException();

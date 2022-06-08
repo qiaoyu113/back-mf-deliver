@@ -308,43 +308,45 @@ public class ElecContractStatusMqCommand {
                 if (MaintenanceTypeEnum.FAULT.getCode().intValue() == maintenanceDTO.getType()) {
                     // 查询替换车服务单
                     ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, serveDTO.getServeNo());
-                    Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceVehicleDTO.getServeNo());
-                    ServeDTO replaceServe = ResultDataUtils.getInstance(replaceServeDTOResult).getDataOrException();
-                    // 替换单已发车且变更为正常服务单
-                    if (Optional.ofNullable(replaceServe)
-                            .filter(o -> ServeEnum.DELIVER.getCode().equals(o.getStatus())
-                                    && JudgeEnum.NO.getCode().equals(o.getReplaceFlag())
-                                    && LeaseModelEnum.NORMAL.getCode() == o.getLeaseModelId()).isPresent()) {
-                        // 原车维修单变为库存中维修
-                        maintenanceAggregateRootApi.updateMaintenanceDetailByServeNo(serveDTO.getServeNo());
-                        // 替换车押金支付
-                        // 查询替换单支付方式
-                        ServeAdjustRecordQry qry = new ServeAdjustRecordQry();
-                        qry.setServeNo(replaceServe.getServeNo());
-                        Result<ServeAdjustRecordDTO> serveAdjustRecordDTOResult = serveAggregateRootApi.getServeAdjustRecord(qry);
-                        ServeAdjustRecordDTO serveAdjustRecordDTO = ResultDataUtils.getInstance(serveAdjustRecordDTOResult).getDataOrException();
+                    if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
+                        Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceVehicleDTO.getServeNo());
+                        ServeDTO replaceServe = ResultDataUtils.getInstance(replaceServeDTOResult).getDataOrException();
+                        // 替换单已发车且变更为正常服务单
+                        if (Optional.ofNullable(replaceServe)
+                                .filter(o -> ServeEnum.DELIVER.getCode().equals(o.getStatus())
+                                        && JudgeEnum.NO.getCode().equals(o.getReplaceFlag())
+                                        && LeaseModelEnum.NORMAL.getCode() == o.getLeaseModelId()).isPresent()) {
+                            // 原车维修单变为库存中维修
+                            maintenanceAggregateRootApi.updateMaintenanceDetailByServeNo(serveDTO.getServeNo());
+                            // 替换车押金支付
+                            // 查询替换单支付方式
+                            ServeAdjustRecordQry qry = new ServeAdjustRecordQry();
+                            qry.setServeNo(replaceServe.getServeNo());
+                            Result<ServeAdjustRecordDTO> serveAdjustRecordDTOResult = serveAggregateRootApi.getServeAdjustRecord(qry);
+                            ServeAdjustRecordDTO serveAdjustRecordDTO = ResultDataUtils.getInstance(serveAdjustRecordDTOResult).getDataOrException();
 
-                        if (ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == serveAdjustRecordDTO.getDepositPayType()) {
-                            // 账本扣除
-                            serveServiceI.serveDepositPay(replaceServe, contractDTO.getCreatorId());
-                        }
+                            if (ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == serveAdjustRecordDTO.getDepositPayType()) {
+                                // 账本扣除
+                                serveServiceI.serveDepositPay(replaceServe, contractDTO.getCreatorId());
+                            }
 
-                        // 替换车开始计费
-                        Result<DeliverDTO> replaceDeliverResult = deliverAggregateRootApi.getDeliverByServeNo(replaceServe.getServeNo());
-                        DeliverDTO replaceDeliver = ResultDataUtils.getInstance(replaceDeliverResult).getDataOrException();
-                        RenewalCmd renewalCmd = new RenewalCmd();
-                        renewalCmd.setServeNo(replaceServe.getServeNo());
-                        renewalCmd.setDeliverNo(replaceDeliver.getDeliverNo());
-                        renewalCmd.setVehicleId(replaceDeliver.getCarId());
-                        renewalCmd.setCustomerId(replaceServe.getCustomerId());
-                        renewalCmd.setRent(replaceServe.getRent());
-                        renewalCmd.setRentRatio(replaceServe.getRentRatio().doubleValue());
+                            // 替换车开始计费
+                            Result<DeliverDTO> replaceDeliverResult = deliverAggregateRootApi.getDeliverByServeNo(replaceServe.getServeNo());
+                            DeliverDTO replaceDeliver = ResultDataUtils.getInstance(replaceDeliverResult).getDataOrException();
+                            RenewalCmd renewalCmd = new RenewalCmd();
+                            renewalCmd.setServeNo(replaceServe.getServeNo());
+                            renewalCmd.setDeliverNo(replaceDeliver.getDeliverNo());
+                            renewalCmd.setVehicleId(replaceDeliver.getCarId());
+                            renewalCmd.setCustomerId(replaceServe.getCustomerId());
+                            renewalCmd.setRent(replaceServe.getRent());
+                            renewalCmd.setRentRatio(replaceServe.getRentRatio().doubleValue());
 
 //                        renewalCmd.setRenewalDate();
-                        renewalCmd.setCreateId(contractDTO.getCreatorId());
-                        renewalCmd.setRentEffectDate(FormatUtil.ymdFormatDateToString(new Date()));
-                        renewalCmd.setEffectFlag(true);
-                        mqTools.send(event, "price_change", null, JSON.toJSONString(renewalCmd));
+                            renewalCmd.setCreateId(contractDTO.getCreatorId());
+                            renewalCmd.setRentEffectDate(FormatUtil.ymdFormatDateToString(new Date()));
+                            renewalCmd.setEffectFlag(true);
+                            mqTools.send(event, "price_change", null, JSON.toJSONString(renewalCmd));
+                        }
                     }
                 }
             }
