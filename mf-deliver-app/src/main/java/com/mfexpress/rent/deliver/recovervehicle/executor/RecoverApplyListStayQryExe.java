@@ -4,6 +4,7 @@ import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
 import com.mfexpress.rent.deliver.recovervehicle.RecoverQryServiceI;
@@ -19,7 +20,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 @Component
-public class RecoverApplyListStayQryExe implements RecoverQryServiceI {
+public class
+RecoverApplyListStayQryExe implements RecoverQryServiceI {
     @Resource
     private RecoverEsDataQryExe recoverEsDataQryExe;
 
@@ -33,6 +35,9 @@ public class RecoverApplyListStayQryExe implements RecoverQryServiceI {
         FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
         fieldSortBuilderList.add(expectRecoverTimeSortBuilder);
         fieldSortBuilderList.add(updateTimeSortBuilder);
-        return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo, Constants.ES_DELIVER_INDEX, Constants.ES_DELIVER_TYPE);
+        RecoverTaskListVO esData = recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo, Constants.ES_DELIVER_INDEX, Constants.ES_DELIVER_TYPE);
+
+
+        return esData;
     }
 }
