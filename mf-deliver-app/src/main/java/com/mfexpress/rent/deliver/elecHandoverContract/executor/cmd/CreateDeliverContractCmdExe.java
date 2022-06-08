@@ -22,7 +22,6 @@ import com.mfexpress.component.dto.contract.ContractDocumentInfoDTO;
 import com.mfexpress.component.enums.contract.ContractModeEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.tools.contract.MFContractTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
@@ -33,14 +32,12 @@ import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
 import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
-import com.mfexpress.rent.deliver.dto.data.delivervehicle.cmd.DeliverVehicleProcessCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateDeliverContractCmd;
@@ -114,10 +111,7 @@ public class CreateDeliverContractCmdExe {
     private ElecHandoverContractAggregateRootApi elecHandoverContractAggregateRootApi;
 
     @Resource
-    private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
-
-    @Resource(name = "serveSyncServiceImpl")
-    private EsSyncHandlerI serveSyncServiceI;
+    private DeliverVehicleProcessCmdExe deliverVehicleProcessCmdExe;
 
     /**
      * 发车签署开关
@@ -222,21 +216,7 @@ public class CreateDeliverContractCmdExe {
                 signingCmd.setDeliverType(DeliverTypeEnum.DELIVER.getCode());
                 deliverAggregateRootApi.contractSigning(signingCmd);
 
-                DeliverVehicleProcessCmd deliverVehicleProcessCmd = new DeliverVehicleProcessCmd();
-                deliverVehicleProcessCmd.setCustomerId(deliverDTO.getCustomerId());
-                elecContractDTO.setContractForeignNo(elecContractDTO.getContractShowNo());
-                deliverVehicleProcessCmd.setContractDTO(elecContractDTO);
-
-                Result<List<String>> serveNoListResult = deliverVehicleAggregateRootApi.deliverVehicleProcess(deliverVehicleProcessCmd);
-
-                List<String> serveNoList = ResultDataUtils.getInstance(serveNoListResult).getDataOrException();
-
-                //同步
-                Map<String, String> map = new HashMap<>();
-                serveNoList.forEach(s -> {
-                    map.put("serve_no", s);
-                    serveSyncServiceI.execOne(map);
-                });
+                deliverVehicleProcessCmdExe.execute(deliverVehicleProcessCmdExe.turnToCmd(deliverDTO, elecContractDTO));
             });
         }
 

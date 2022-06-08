@@ -1,5 +1,11 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
+import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.Optional;
+
+import javax.annotation.Resource;
+
 import com.alibaba.fastjson.JSON;
 import com.mfexpress.billing.customer.api.aggregate.AdvincePaymentAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.deliver.DeductFeeCmd;
@@ -19,6 +25,7 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustRecordDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustRecordQry;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
@@ -28,13 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 @Component
 @Slf4j
@@ -121,12 +121,17 @@ public class RecoverDeductionByDeliverExe {
                 Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceVehicleDTO.getServeNo());
                 ServeDTO replaceServe = ResultDataUtils.getInstance(replaceServeDTOResult).getDataOrException();
 
-                // 原车服务单押金解除锁定
-                List<String> serveNoList = new ArrayList<>();
-                serveNoList.add(serveDTO.getServeNo());
-                serveAggregateRootApi.unLockDeposit(serveNoList, tokenInfo.getId());
+                // 押金扣除
+                ServeDepositPayCmd serveDepositPayCmd = new ServeDepositPayCmd();
+                serveDepositPayCmd.setDepositAmount(replaceServe.getDeposit());
+                serveDepositPayCmd.setServeNo(replaceServe.getServeNo());
+                serveDepositPayCmd.setOrderId(replaceServe.getOrderId());
+                serveDepositPayCmd.setCustomerId(replaceServe.getCustomerId());
+                serveDepositPayCmd.setOperatorId(tokenInfo.getId());
+                serveDepositPayCmd.setDepositPayType(ReplaceVehicleDepositPayTypeEnum.SOURCE_DEPOSIT_PAY.getCode());
+                serveDepositPayCmd.setSourceServeNo(serveDTO.getServeNo());
 
-                serveServiceI.serveDepositPay(replaceServe, tokenInfo.getId());
+                serveServiceI.serveDepositPay(serveDepositPayCmd);
             }
         }
 

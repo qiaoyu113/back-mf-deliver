@@ -19,7 +19,6 @@ import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
-import com.mfexpress.billing.customer.api.aggregate.AdvincePaymentAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.deliver.DeliverVehicleCmd;
 import com.mfexpress.billing.rentcharge.dto.data.deliver.RecoverVehicleCmd;
 import com.mfexpress.billing.rentcharge.dto.data.deliver.RenewalCmd;
@@ -29,7 +28,6 @@ import com.mfexpress.component.enums.contract.ContractFailTypeEnum;
 import com.mfexpress.component.enums.contract.ContractStatusEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessClass;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessMethod;
 import com.mfexpress.component.starter.tools.mq.MqTools;
@@ -57,10 +55,13 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgIn
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.RenewalChargeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustRecordDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustRecordQry;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
+import com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd.DeliverVehicleProcessCmdExe;
+import com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd.RecoverVehicleProcessCmdExe;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
@@ -117,9 +118,10 @@ public class ElecContractStatusMqCommand {
     private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
 
     @Resource
-    private AdvincePaymentAggregateRootApi advincePaymentAggregateRootApi;
-    @Resource(name = "serveSyncServiceImpl")
-    private EsSyncHandlerI serveSyncServiceI;
+    private DeliverVehicleProcessCmdExe deliverVehicleProcessCmdExe;
+
+    @Resource
+    private RecoverVehicleProcessCmdExe recoverVehicleProcessCmdExe;
 
     @Resource
     private ServeServiceI serveServiceI;
@@ -230,23 +232,26 @@ public class ElecContractStatusMqCommand {
         Result<Integer> completedResult = contractAggregateRootApi.completed(cmd);
         ResultValidUtils.checkResultException(completedResult);
 
-        List<String> serveNoList;
+//        List<String> serveNoList;
         if (DeliverTypeEnum.DELIVER.getCode() == contractDTO.getDeliverType()) {
             // 发车处理
-            serveNoList = deliverVehicleProcess(serveDTO, contractDTO);
+            deliverVehicleProcessCmdExe.execute(deliverVehicleProcessCmdExe.turnToCmd(deliverDTO, contractDTO));
+//            serveNoList = deliverVehicleProcess(serveDTO, contractDTO);
         } else {
             // 收车处理
-            serveNoList = recoverVehicleProcess(serveDTO, deliverDTO, contractStatusInfo, contractDTO);
+            recoverVehicleProcessCmdExe.execute(recoverVehicleProcessCmdExe.turnToCmd(contractDTO, deliverDTO, serveDTO));
+//            serveNoList = recoverVehicleProcess(serveDTO, deliverDTO, contractStatusInfo, contractDTO);
         }
 
         //同步
-        Map<String, String> map = new HashMap<>();
-        serveNoList.forEach(serveNo -> {
-            map.put("serve_no", serveNo);
-            serveSyncServiceI.execOne(map);
-        });
+//        Map<String, String> map = new HashMap<>();
+//        serveNoList.forEach(serveNo -> {
+//            map.put("serve_no", serveNo);
+//            serveSyncServiceI.execOne(map);
+//        });
     }
 
+    @Deprecated
     private List<String> recoverVehicleProcess(ServeDTO serveDTO, DeliverDTO deliverDTO, ContractResultTopicDTO contractStatusInfo, ElecContractDTO contractDTO) {
         List<String> serveNoList = new LinkedList<>();
         // 交付单、服务单修改
@@ -327,7 +332,15 @@ public class ElecContractStatusMqCommand {
 
                             if (ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == serveAdjustRecordDTO.getDepositPayType()) {
                                 // 账本扣除
-                                serveServiceI.serveDepositPay(replaceServe, contractDTO.getCreatorId());
+                                ServeDepositPayCmd serveDepositPayCmd = new ServeDepositPayCmd();
+                                serveDepositPayCmd.setDepositAmount(replaceServe.getDeposit());
+                                serveDepositPayCmd.setServeNo(replaceServe.getServeNo());
+                                serveDepositPayCmd.setOrderId(replaceServe.getOrderId());
+                                serveDepositPayCmd.setCustomerId(replaceServe.getCustomerId());
+                                serveDepositPayCmd.setOperatorId(contractDTO.getCreatorId());
+                                serveDepositPayCmd.setDepositPayType(ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode());
+
+                                serveServiceI.serveDepositPay(serveDepositPayCmd);
                             }
 
                             // 替换车开始计费
@@ -370,6 +383,7 @@ public class ElecContractStatusMqCommand {
         return serveNoList;
     }
 
+    @Deprecated
     private List<String> deliverVehicleProcess(ServeDTO serveDTO, ElecContractDTO contractDTO) {
         // 数据收集
         List<DeliverImgInfo> deliverImgInfos = JSONUtil.toList(contractDTO.getPlateNumberWithImgs(), DeliverImgInfo.class);

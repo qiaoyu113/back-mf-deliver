@@ -1,16 +1,31 @@
 package com.mfexpress.rent.deliver.api;
 
 
-import com.mfexpress.component.dto.TokenInfo;
-import com.mfexpress.component.response.PagePagination;
-import com.mfexpress.rent.deliver.dto.data.serve.*;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositSourceToReplaceCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustRecordVo;
-
 import java.util.List;
 import java.util.Map;
+
+import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.response.PagePagination;
+import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.RenewableServeQry;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeAddCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeAllLeaseTermAmountVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDeliverDetailVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDeliverTaskListVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDeliverTaskQryCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeFastPreselectedListVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeListVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedListVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeQryByDeliverCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeQryCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeQryListCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeRecoverDetailVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeToRenewalVO;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustRecordVo;
 
 public interface ServeServiceI {
 
@@ -55,7 +70,7 @@ public interface ServeServiceI {
 
     /**
      * 服务单押金支付
-     * @param serveDTO
+     * @param cmd
      */
-    void serveDepositPay(ServeDTO serveDTO, Integer operatorId);
+    void serveDepositPay(ServeDepositPayCmd cmd);
 }

@@ -20,6 +20,7 @@ import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
+import com.mfexpress.billing.customer.api.aggregate.BookAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.deliver.RecoverVehicleCmd;
 import com.mfexpress.billing.rentcharge.dto.data.deliver.RenewalCmd;
 import com.mfexpress.component.constants.ResultErrorEnum;
@@ -57,6 +58,7 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverVehicleProcessCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.RenewalChargeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustRecordDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustRecordQry;
 import com.mfexpress.rent.deliver.dto.entity.RecoverAbnormal;
@@ -146,6 +148,9 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
 
     @Resource
     private MqTools mqTools;
+
+    @Resource
+    private BookAggregateRootApi bookAggregateRootApi;
 
     @Value("${rocketmq.listenEventTopic}")
     private String event;
@@ -503,7 +508,15 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
 
                             if (ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == serveAdjustRecordDTO.getDepositPayType()) {
                                 // 账本扣除
-                                serveServiceI.serveDepositPay(replaceServe, cmd.getOperatorId());
+                                ServeDepositPayCmd serveDepositPayCmd = new ServeDepositPayCmd();
+                                serveDepositPayCmd.setDepositAmount(replaceServe.getDeposit());
+                                serveDepositPayCmd.setServeNo(replaceServe.getServeNo());
+                                serveDepositPayCmd.setOrderId(replaceServe.getOrderId());
+                                serveDepositPayCmd.setCustomerId(replaceServe.getCustomerId());
+                                serveDepositPayCmd.setOperatorId(cmd.getOperatorId());
+                                serveDepositPayCmd.setDepositPayType(ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode());
+
+                                serveServiceI.serveDepositPay(serveDepositPayCmd);
                             }
 
                             // 替换车开始计费
@@ -516,8 +529,6 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
                             renewalCmd.setCustomerId(replaceServe.getCustomerId());
                             renewalCmd.setRent(replaceServe.getRent());
                             renewalCmd.setRentRatio(replaceServe.getRentRatio().doubleValue());
-
-//                        renewalCmd.setRenewalDate();
                             renewalCmd.setCreateId(cmd.getOperatorId());
                             renewalCmd.setRentEffectDate(FormatUtil.ymdFormatDateToString(new Date()));
                             renewalCmd.setEffectFlag(true);

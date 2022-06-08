@@ -94,6 +94,10 @@
             <groupId>com.mfexpress.billing.rentcharge</groupId>
             <artifactId>mf-billing-rentcharge-client</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.mfexpress.billing.customer</groupId>
+            <artifactId>mf-customer-billing-client</artifactId>
+        </dependency>
         <!--        测试使用-->
 
         <!--        测试使用-->

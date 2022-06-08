@@ -1,26 +1,54 @@
 package com.mfexpress.rent.deliver.serve;
 
-import com.mfexpress.billing.customer.data.dto.advince.OrderPayAdvincepaymentCmd;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
-import com.mfexpress.rent.deliver.dto.data.serve.*;
+import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.RenewableServeQry;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeAddCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeAllLeaseTermAmountVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDeliverDetailVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDeliverTaskListVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDeliverTaskQryCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeFastPreselectedListVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeListVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedListVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeQryByDeliverCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeQryCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeQryListCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeRecoverDetailVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeToRenewalVO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositSourceToReplaceCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustRecordVo;
-import com.mfexpress.rent.deliver.serve.executor.*;
+import com.mfexpress.rent.deliver.serve.executor.ExportServeLeaseTermAmountCmdExe;
+import com.mfexpress.rent.deliver.serve.executor.ExportServeLeaseTermAmountDataQryExe;
+import com.mfexpress.rent.deliver.serve.executor.ReactivateServeCmdExe;
+import com.mfexpress.rent.deliver.serve.executor.RenewableServeListQryExe;
+import com.mfexpress.rent.deliver.serve.executor.ServeAddCmdExe;
+import com.mfexpress.rent.deliver.serve.executor.ServeCheckQryExe;
+import com.mfexpress.rent.deliver.serve.executor.ServeCompletedQryExe;
+import com.mfexpress.rent.deliver.serve.executor.ServeDeliverDetailQryExe;
+import com.mfexpress.rent.deliver.serve.executor.ServeDeliverQryExe;
+import com.mfexpress.rent.deliver.serve.executor.ServeDeliverTaskListQryExe;
+import com.mfexpress.rent.deliver.serve.executor.ServeFastPreselectedQryExe;
+import com.mfexpress.rent.deliver.serve.executor.ServeInsureQryExe;
+import com.mfexpress.rent.deliver.serve.executor.ServeLeaseTermAmountQryExe;
+import com.mfexpress.rent.deliver.serve.executor.ServeListAllQryExe;
+import com.mfexpress.rent.deliver.serve.executor.ServePreselectedQryExe;
+import com.mfexpress.rent.deliver.serve.executor.ServeRecoverDetailQryByDeliverExe;
+import com.mfexpress.rent.deliver.serve.executor.ServeRecoverDetailQryExe;
 import com.mfexpress.rent.deliver.serve.executor.cmd.ServeAdjustCheckCmdExe;
 import com.mfexpress.rent.deliver.serve.executor.cmd.ServeAdjustCmdExe;
 import com.mfexpress.rent.deliver.serve.executor.cmd.ServeDepositPayCmdExe;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 @Service
 public class ServeServiceImpl implements ServeServiceI {
@@ -178,8 +206,8 @@ public class ServeServiceImpl implements ServeServiceI {
     }
 
     @Override
-    public void serveDepositPay(ServeDTO serveDTO, Integer operatorId) {
+    public void serveDepositPay(ServeDepositPayCmd cmd) {
 
-        serveDepositPayCmdExe.execute(serveDTO, operatorId);
+        serveDepositPayCmdExe.execute(cmd);
     }
 }
