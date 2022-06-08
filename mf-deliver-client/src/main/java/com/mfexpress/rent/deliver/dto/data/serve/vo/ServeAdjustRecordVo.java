@@ -8,11 +8,14 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.mfexpress.rent.deliver.constant.ReplaceVehicleDepositPayTypeEnum;
+import com.oracle.tools.packager.Log;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+@Slf4j
 @Data
 @ApiModel(value = "服务单调整记录VO")
 public class ServeAdjustRecordVo {
@@ -80,10 +83,10 @@ public class ServeAdjustRecordVo {
                 .stream().collect(Collectors.toMap(ReplaceVehicleDepositPayTypeEnum::getCode, ReplaceVehicleDepositPayTypeEnum::getTitle));
 
         map.forEach((key, value) -> {
-            if (ReplaceVehicleDepositPayTypeEnum.SOURCE_DEPOSIT_PAY.getCode() == getDepositPayType()) {
+            if (ReplaceVehicleDepositPayTypeEnum.SOURCE_DEPOSIT_PAY.getCode() == key) {
                 value = String.format(value, plate);
             } else {
-                value = String.format(value, chargeDepositAmount);
+                value = String.format(value, String.valueOf(chargeDepositAmount != null ? chargeDepositAmount : 0));
             }
         });
 
