@@ -201,7 +201,7 @@ public class CreateDeliverContractCmdExe {
                 Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(serveNo);
                 DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrException();
 
-                Result<ElecContractDTO> contractDTOResult = elecHandoverContractAggregateRootApi.getContractDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.RECOVER.getCode());
+                Result<ElecContractDTO> contractDTOResult = elecHandoverContractAggregateRootApi.getContractDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.DELIVER.getCode());
                 ElecContractDTO elecContractDTO = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
 
                 ContractStatusChangeCmd contractStatusChangeCmd = new ContractStatusChangeCmd();

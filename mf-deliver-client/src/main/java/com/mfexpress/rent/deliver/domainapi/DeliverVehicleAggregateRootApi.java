@@ -43,5 +43,5 @@ public interface DeliverVehicleAggregateRootApi {
      * @return
      */
     @PostMapping(value = "/deliver/process")
-    Result<List<String>> deliverVehicleProcess(DeliverVehicleProcessCmd cmd);
+    Result<List<String>> deliverVehicleProcess(@RequestBody DeliverVehicleProcessCmd cmd);
 }
