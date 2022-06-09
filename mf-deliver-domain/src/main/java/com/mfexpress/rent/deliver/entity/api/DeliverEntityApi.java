@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.entity.api;
 
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 
 import java.util.List;
@@ -22,4 +23,6 @@ public interface DeliverEntityApi {
     List<DeliverDTO> getDeliverNotComplete(List<String> serveNoList);
 
     DeliverDTO getDeliverByDeliverNo(String deliverNo);
+
+    public void cancelDeliver(DeliverCancelCmd cmd);
 }

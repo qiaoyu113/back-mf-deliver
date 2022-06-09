@@ -3,8 +3,10 @@ package com.mfexpress.rent.deliver.entity;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
+import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.DeliverStatusEnum;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
@@ -13,6 +15,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.persistence.Id;
@@ -142,5 +145,17 @@ public class DeliverEntity implements DeliverEntityApi {
         DeliverEntity deliverEntity = new DeliverEntity();
         deliverEntity.setStatus(DeliverStatusEnum.HISTORICAL.getCode());
         deliverGateway.updateDeliverByDeliverNo(cmd.getDeliverNo(), deliverEntity);
+    }
+
+    @Override
+    @Transactional
+    public void cancelDeliver(DeliverCancelCmd cmd) {
+
+        DeliverEntity deliverEntity = new DeliverEntity();
+        deliverEntity.setDeliverStatus(DeliverEnum.CANCEL.getCode());
+        deliverEntity.setUpdateId(cmd.getOperatorId());
+        deliverEntity.setUpdateTime(new Date());
+
+        deliverGateway.updateDeliverByServeNo(serveNo, deliverEntity);
     }
 }

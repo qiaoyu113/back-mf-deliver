@@ -10,6 +10,7 @@ import com.mfexpress.rent.deliver.MfDeliveryApplication;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyQryCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -96,6 +97,12 @@ class RecoverVehicleControllerTest {
 
     @Test
     void whetherToCheck() {
+        RecoverVechicleCmd cmd = new RecoverVechicleCmd();
+        cmd.setServeNo("FWD2022031800030");
+
+        Result<String> result = controller.whetherToCheck(cmd, jwt);
+
+        log.info("result---->{}", result);
     }
 
     @Test

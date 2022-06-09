@@ -33,6 +33,7 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
@@ -42,9 +43,11 @@ import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
 import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.constant.ServeRenewalTypeEnum;
+import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.domainservice.ServeDomainServiceI;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockConfirmDTO;
@@ -140,6 +143,11 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @Resource
     private ServeAdjustRecordGateway serveAdjustRecordGateway;
 
+    @Resource
+    private DeliverAggregateRootApi deliverAggregateRootApi;
+
+//    @Resource(name = "serveSyncServiceImpl")
+//    private EsSyncHandlerI serveSyncServiceI;
     @Resource
     private MqTools mqTools;
 
@@ -535,7 +543,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         serve.setReplaceFlag(JudgeEnum.YES.getCode());
         // 替换车申请的服务单 其月租金和押金应为0
         serve.setRent(serveAddDTO.getRent() != null ? serveAddDTO.getRent() : BigDecimal.ZERO);
-        serve.setRentRatio(serveAddDTO.getRentRatio());
+        serve.setRentRatio(serveAddDTO.getRentRatio() != null ? serveAddDTO.getRentRatio() : BigDecimal.ONE);
         serve.setDeposit(BigDecimal.ZERO);
         serve.setPaidInDeposit(BigDecimal.ZERO);
         serve.setPayableDeposit(BigDecimal.ZERO);
@@ -543,6 +551,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         try {
             serveGateway.addServeList(Collections.singletonList(serve));
         } catch (Exception e) {
+            e.printStackTrace();
             return Result.getInstance(serveAddDTO.getServeNo()).fail(ResultErrorEnum.CREATE_ERROR.getCode(), "替换车服务单生成失败");
         }
 
@@ -1067,7 +1076,19 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @Transactional
     public Result<Integer> cancelServe(ServeCancelCmd cmd) {
 
+        // 取消服务单
         serveEntityApi.cancelServe(cmd);
+
+        DeliverCancelCmd deliverCancelCmd = DeliverCancelCmd.builder().serveNo(cmd.getServeNo()).build();
+        deliverCancelCmd.setOperatorId(cmd.getOperatorId());
+
+        // 取消交付单
+        deliverAggregateRootApi.cancelDeliver(deliverCancelCmd);
+
+//        //同步
+//        Map<String, String> map = new HashMap<>();
+//        map.put("serve_no", cmd.getServeNo());
+//        serveSyncServiceI.execOne(map);
 
         return Result.getInstance(0).success();
     }
@@ -1087,9 +1108,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
             // 查询车辆维修单
             Result<MaintenanceDTO> result = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getServeNo());
-
+            log.info("MaintenanceDTO----->{}", result);
             if (Optional.ofNullable(result).map(r -> r.getData())
-                    .filter(maintenanceDTO -> MaintenanceTypeEnum.ACCIDENT.getCode().equals(maintenanceDTO.getStatus()))
+                    .filter(maintenanceDTO -> MaintenanceTypeEnum.ACCIDENT.getCode().equals(maintenanceDTO.getType()))
                     .isPresent()) {
                 // 事故维修单
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆处于事故维修中，无法进行收车。");
@@ -1098,6 +1119,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 // 查找替换车服务单
                 ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, cmd.getServeNo());
 
+                log.info("replaceVehicleDTO----->{}", replaceVehicleDTO);
+
                 if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
 
                     String replaceServeNo = replaceVehicleDTO.getServeNo();
@@ -1105,7 +1128,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                     Result<ServeDTO> replaceServeResult = getServeDtoByServeNo(replaceServeNo);
                     Optional<ServeDTO> replaceServeOptional = Optional.ofNullable(replaceServeResult).map(r -> r.getData());
 
-                    // 车辆维修单的维修类型为事故维修||存在未发车的替换车||存在替换车
+                    // 车辆维修单的维修类型为故障维修||存在未发车的替换车||存在替换车
                     if (replaceServeOptional.isPresent()
                             || replaceServeOptional.filter(replaceServe -> ServeEnum.NOT_PRESELECTED.getCode().equals(replaceServe.getStatus())
                             || ServeEnum.PRESELECTED.getCode().equals(replaceServe.getStatus())

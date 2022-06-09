@@ -14,6 +14,7 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverInsureCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverQry;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleMqDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
@@ -130,4 +131,7 @@ public interface DeliverAggregateRootApi {
     @PostMapping("/getMakeDeliverDTOSByCarIdList")
     Result<List<DeliverDTO>> getMakeDeliverDTOSByCarIdList(@RequestBody List<Integer> carIds,@RequestParam("status") Integer status);
 
+
+    @PostMapping(value = "/deliver/cancel")
+    Result<Integer> cancelDeliver(@RequestBody DeliverCancelCmd cmd);
 }

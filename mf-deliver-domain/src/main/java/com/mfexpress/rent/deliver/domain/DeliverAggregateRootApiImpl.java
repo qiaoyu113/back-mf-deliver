@@ -17,6 +17,7 @@ import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.deliver.*;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
@@ -602,4 +603,11 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         return Result.getInstance(deliverDTOS).success();
     }
 
+    @Override
+    public Result<Integer> cancelDeliver(DeliverCancelCmd cmd) {
+
+        deliverEntityApi.cancelDeliver(cmd);
+
+        return Result.getInstance(0).success();
+    }
 }

@@ -290,6 +290,7 @@ public class ServeEntity implements ServeEntityApi {
     }
 
     @Override
+    @Transactional
     public void cancelServe(ServeCancelCmd cmd) {
 
         ServeEntity rawEntity = serveGateway.getServeByServeNo(cmd.getServeNo());
