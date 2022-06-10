@@ -36,6 +36,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
@@ -146,7 +147,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
 
-//    @Resource(name = "serveSyncServiceImpl")
+    //    @Resource(name = "serveSyncServiceImpl")
 //    private EsSyncHandlerI serveSyncServiceI;
     @Resource
     private MqTools mqTools;
@@ -1085,11 +1086,6 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         // 取消交付单
         deliverAggregateRootApi.cancelDeliver(deliverCancelCmd);
 
-//        //同步
-//        Map<String, String> map = new HashMap<>();
-//        map.put("serve_no", cmd.getServeNo());
-//        serveSyncServiceI.execOne(map);
-
         return Result.getInstance(0).success();
     }
 
@@ -1107,15 +1103,12 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         if (ServeEnum.REPAIR.getCode().equals(serveDTOResult.getData().getStatus())) {
 
             // 查询车辆维修单
-            Result<MaintenanceDTO> result = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getServeNo());
-            log.info("MaintenanceDTO----->{}", result);
-            if (Optional.ofNullable(result).map(r -> r.getData())
-                    .filter(maintenanceDTO -> MaintenanceTypeEnum.ACCIDENT.getCode().equals(maintenanceDTO.getType()))
-                    .isPresent()) {
+            MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByServeNo(maintenanceAggregateRootApi, cmd.getServeNo());
+
+            if (MaintenanceTypeEnum.ACCIDENT.getCode().equals(maintenanceDTO.getType())) {
                 // 事故维修单
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆处于事故维修中，无法进行收车。");
             } else {
-
                 // 查找替换车服务单
                 ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, cmd.getServeNo());
 
@@ -1145,7 +1138,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     }
 
     @Override
-//    @PostMapping(value = "/serve/adjust/record")
+    @PrintParam
     public Result<ServeAdjustRecordDTO> getServeAdjustRecord(ServeAdjustRecordQry qry) {
 
         ServeAdjustRecordPO po = serveAdjustRecordGateway.getRecordByServeNo(qry.getServeNo());

@@ -307,8 +307,7 @@ public class ElecContractStatusMqCommand {
             // 服务单维修中
             if (ServeEnum.REPAIR.getCode().equals(serveDTO.getStatus())) {
                 // 查找维修单
-                Result<MaintenanceDTO> maintenanceDTOResult = maintenanceAggregateRootApi.getMaintenanceByServeNo(serveDTO.getServeNo());
-                MaintenanceDTO maintenanceDTO = ResultDataUtils.getInstance(maintenanceDTOResult).getDataOrException();
+                MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByServeNo(maintenanceAggregateRootApi, serveDTO.getServeNo());
                 // 维修性质为故障维修
                 if (MaintenanceTypeEnum.FAULT.getCode().intValue() == maintenanceDTO.getType()) {
                     // 查询替换车服务单
@@ -328,6 +327,7 @@ public class ElecContractStatusMqCommand {
                             ServeAdjustRecordQry qry = new ServeAdjustRecordQry();
                             qry.setServeNo(replaceServe.getServeNo());
                             Result<ServeAdjustRecordDTO> serveAdjustRecordDTOResult = serveAggregateRootApi.getServeAdjustRecord(qry);
+                            ResultValidUtils.checkResultException(serveAdjustRecordDTOResult);
                             ServeAdjustRecordDTO serveAdjustRecordDTO = ResultDataUtils.getInstance(serveAdjustRecordDTOResult).getDataOrException();
 
                             if (ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == serveAdjustRecordDTO.getDepositPayType()) {

@@ -108,6 +108,7 @@ public class RecoverAbnormalCmdExe {
         // deliver 收车签署状态改为未签，并且异常收车flag改为真，状态改为已收车；服务单状态更改为已收车；补充异常收车信息；取出合同信息修改收车单；
         cmd.setOperatorId(tokenInfo.getId());
         cmd.setElecContractDTO(contractDTO);
+        // 查询完成的维修单
         Result<MaintenanceDTO> maintainResult = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getServeNo());
         if (ResultValidUtils.checkResult(maintainResult)) {
             MaintenanceDTO maintenanceDTO = maintainResult.getData();

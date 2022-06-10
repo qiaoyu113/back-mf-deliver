@@ -294,6 +294,7 @@ public class CreateRecoverContractCmdExe {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "收车日期不能早于发车日期");
         }
 
+        // 查询完成的维修单
         Result<MaintenanceDTO> maintainResult = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getRecoverInfo().getServeNo());
         if (ResultValidUtils.checkResult(maintainResult)) {
             MaintenanceDTO maintenanceDTO = maintainResult.getData();
@@ -372,6 +373,7 @@ public class CreateRecoverContractCmdExe {
             throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "收车日期超出可选范围");
         }
 
+        // 查询完成的维修单
         Result<MaintenanceDTO> maintenanceByServeNo = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getRecoverInfo().getServeNo());
         if (ResultValidUtils.checkResult(maintenanceByServeNo)) {
             if (cmd.getRecoverInfo().getRecoverVehicleTime().before(maintenanceByServeNo.getData().getConfirmDate())) {

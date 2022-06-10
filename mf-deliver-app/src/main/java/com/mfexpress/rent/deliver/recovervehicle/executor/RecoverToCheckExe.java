@@ -6,6 +6,7 @@ import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
+import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.constant.ContractStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -29,7 +30,7 @@ public class RecoverToCheckExe {
         // 判断是否可以验车
         RecoverCheckJudgeCmd cmd = new RecoverCheckJudgeCmd();
         cmd.setServeNo(recoverVechicleCmd.getServeNo());
-        serveAggregateRootApi.recoverCheckJudge(cmd);
+        ResultValidUtils.checkResultException(serveAggregateRootApi.recoverCheckJudge(cmd));
 
         Result<Integer> countResult = contractAggregateRootApi.getRenewalContractCountByStatusAndServeNo(ContractStatusEnum.CREATED.getCode(), recoverVechicleCmd.getServeNo());
         Integer count = ResultDataUtils.getInstance(countResult).getDataOrException();

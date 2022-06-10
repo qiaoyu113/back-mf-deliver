@@ -12,9 +12,6 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeReplaceVehicleAddDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustRecordVo;
-import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
-import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
-import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -55,6 +52,7 @@ class ServeWebControllerTest {
 
     @Test
     void exportServeLeaseTermAmount() {
+
     }
 
     @Test

@@ -12,6 +12,7 @@ import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
+import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -123,7 +124,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         if (DeliverEnum.IS_RECOVER.getCode().equals(deliver.getDeliverStatus())) {
             RecoverCheckJudgeCmd cmd = new RecoverCheckJudgeCmd();
             cmd.setServeNo(serveNo);
-            serveAggregateRootApi.recoverCheckJudge(cmd);
+            ResultValidUtils.checkResultException(serveAggregateRootApi.recoverCheckJudge(cmd));
         }
 
         deliver.setIsCheck(JudgeEnum.YES.getCode());

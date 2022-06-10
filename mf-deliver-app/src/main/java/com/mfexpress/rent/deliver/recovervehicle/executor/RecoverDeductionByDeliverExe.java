@@ -16,6 +16,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
+import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.constant.ReplaceVehicleDepositPayTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
@@ -115,6 +116,7 @@ public class RecoverDeductionByDeliverExe {
         if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
             // 查询押金支付方式
             Result<ServeAdjustRecordDTO> recordDTOResult = serveAggregateRootApi.getServeAdjustRecord(new ServeAdjustRecordQry(replaceVehicleDTO.getServeNo()));
+            ResultValidUtils.checkResultException(recordDTOResult);
             ServeAdjustRecordDTO serveAdjustRecordDTO = ResultDataUtils.getInstance(recordDTOResult).getDataOrException();
             if (Optional.ofNullable(serveAdjustRecordDTO).filter(o -> ReplaceVehicleDepositPayTypeEnum.SOURCE_DEPOSIT_PAY.getCode() == o.getDepositPayType()).isPresent()) {
                 // 账本扣除

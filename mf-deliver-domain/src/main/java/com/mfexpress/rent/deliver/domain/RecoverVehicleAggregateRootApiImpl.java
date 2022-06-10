@@ -483,8 +483,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
             // 服务单维修中
             if (ServeEnum.REPAIR.getCode().equals(cmd.getServeStatus())) {
                 // 查找维修单
-                Result<MaintenanceDTO> maintenanceDTOResult = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getServeNo());
-                MaintenanceDTO maintenanceDTO = ResultDataUtils.getInstance(maintenanceDTOResult).getDataOrException();
+                MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByServeNo(maintenanceAggregateRootApi, cmd.getServeNo());
                 // 维修性质为故障维修
                 if (MaintenanceTypeEnum.FAULT.getCode().intValue() == maintenanceDTO.getType()) {
                     // 查询替换车服务单
@@ -504,6 +503,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
                             ServeAdjustRecordQry qry = new ServeAdjustRecordQry();
                             qry.setServeNo(replaceServe.getServeNo());
                             Result<ServeAdjustRecordDTO> serveAdjustRecordDTOResult = serveAggregateRootApi.getServeAdjustRecord(qry);
+                            ResultValidUtils.checkResultException(serveAdjustRecordDTOResult);
                             ServeAdjustRecordDTO serveAdjustRecordDTO = ResultDataUtils.getInstance(serveAdjustRecordDTOResult).getDataOrException();
 
                             if (ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == serveAdjustRecordDTO.getDepositPayType()) {
