@@ -40,7 +40,7 @@ public class RecoverQryContext {
             }
             Result<ServeDTO> serveDtoByServeNo = serveAggregateRootApi.getServeDtoByServeNo(v.getServeNo());
             v.setRent(serveDtoByServeNo.getData().getRent());
-            v.setDeposit(BigDecimal.valueOf(serveDtoByServeNo.getData().getDeposit()));
+            v.setDeposit(serveDtoByServeNo.getData().getDeposit());
         }
         return recoverTaskListVO;
 

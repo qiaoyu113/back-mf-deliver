@@ -33,9 +33,9 @@ import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessMetho
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
-import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.dto.data.CommodityDTO;
+import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
@@ -129,11 +129,6 @@ public class ElecContractStatusMqCommand {
     private ServeServiceI serveServiceI;
     @Resource
     private ContractAggregateRootApi orderContractAggregateRootApi;
-
-
-
-    @Resource(name = "serveSyncServiceImpl")
-    private EsSyncHandlerI serveSyncServiceI;
 
     private MqTools mqTools;
 
