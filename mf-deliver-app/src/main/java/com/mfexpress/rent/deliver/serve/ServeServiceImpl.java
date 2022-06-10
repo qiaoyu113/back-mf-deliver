@@ -70,6 +70,7 @@ public class ServeServiceImpl implements ServeServiceI {
 
     @Override
     public ServeListVO getServeListVoInsure(ServeQryListCmd serveQryListCmd) {
+
         return serveInsureQryExe.execute(serveQryListCmd);
     }
 
@@ -144,5 +145,6 @@ public class ServeServiceImpl implements ServeServiceI {
     public List<Map<String, Object>> exportServeLeaseTermAmountData(Map<String, Object> map) {
         return exportServeLeaseTermAmountDataQryExe.execute(map);
     }
+
 
 }

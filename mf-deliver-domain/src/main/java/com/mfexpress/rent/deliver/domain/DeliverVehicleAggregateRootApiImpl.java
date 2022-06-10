@@ -58,7 +58,7 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
             BeanUtils.copyProperties(deliverVehicle, deliverVehicleDTO);
             return Result.getInstance(deliverVehicleDTO).success();
         }
-        return Result.getInstance((DeliverVehicleDTO) null).success();
+        return Result.getInstance(deliverVehicleDTO).success();
     }
 
     @Override
@@ -92,6 +92,19 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
             deliverVehicleMap.put(deliverVehicleEntity.getServeNo(), deliverVehicle);
         });
         return Result.getInstance(deliverVehicleMap).success();
+    }
+
+    @Override
+    @PostMapping("getDeliverVehicleOneByServeNo")
+    @PrintParam
+    public Result< DeliverVehicleDTO> getDeliverVehicleOneByServeNo(@RequestBody String serveNo) {
+        DeliverVehicleEntity deliverVehicleList = deliverVehicleGateway.getDeliverVehicleOneByServeNo(serveNo);
+
+
+        DeliverVehicleDTO deliverVehicle = BeanUtil.copyProperties(deliverVehicleList, DeliverVehicleDTO.class);
+
+
+        return Result.getInstance(deliverVehicle).success();
     }
 
     // 发车电子合同签署完成后触发的一系列操作
@@ -164,5 +177,6 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
         }
         return Result.getInstance(deliverVehicleDTOList).success();
     }
+
 
 }

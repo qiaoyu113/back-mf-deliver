@@ -5,7 +5,8 @@ public enum LeaseModelEnum {
     NORMAL(1, "正常租赁"),
     TRIAL(2, "试用"),
     SHOW(3, "展示"),
-    DISCOUNT(4, "优惠");
+    DISCOUNT(4, "优惠"),
+    REPLACEMENT(5,"替换");
 
     private int code;
     private String name;

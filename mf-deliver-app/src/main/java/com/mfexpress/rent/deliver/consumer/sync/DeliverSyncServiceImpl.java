@@ -69,6 +69,7 @@ public class DeliverSyncServiceImpl implements EsSyncHandlerI {
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
 
+
     @Resource
     private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
 
@@ -277,7 +278,7 @@ public class DeliverSyncServiceImpl implements EsSyncHandlerI {
 
         Result<PagePagination<String>> deliverNoListPageResult = deliverAggregateRootApi.getDeliverNoListByPage(qry);
         PagePagination<String> pagePagination = ResultDataUtils.getInstance(deliverNoListPageResult).getDataOrNull();
-        if(null == pagePagination){
+        if (null == pagePagination) {
             return null;
         }
         return pagePagination.getList();
@@ -311,5 +312,7 @@ public class DeliverSyncServiceImpl implements EsSyncHandlerI {
             return 0;
         }
     }
+
+
 
 }
