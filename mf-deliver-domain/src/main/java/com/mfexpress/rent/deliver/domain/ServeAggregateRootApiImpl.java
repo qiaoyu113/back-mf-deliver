@@ -213,6 +213,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setRemark("");
                 serve.setRent(serveVehicleDTO.getRent());
                 serve.setGoodsId(serveVehicleDTO.getGoodsId());
+                serve.setRentRatio(BigDecimal.ONE);
                 serve.setContractCommodityId(serveVehicleDTO.getContractCommodityId());
 
                 serve.setContractId(serveVehicleDTO.getContractId());
