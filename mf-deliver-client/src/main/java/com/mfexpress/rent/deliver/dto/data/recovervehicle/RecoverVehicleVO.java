@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
@@ -61,6 +62,9 @@ public class RecoverVehicleVO {
     @ApiModelProperty(value = "服务单状态")
     private Integer serveStatus;
 
+    @ApiModelProperty(value = "维修交车日期")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+    private Date confirmDate;
 
     @ApiModelProperty(value = "还车人姓名")
     private String contactsName;
@@ -109,4 +113,10 @@ public class RecoverVehicleVO {
 
     private Integer orgId;
 
+    //新增字段
+    @ApiModelProperty(value = "月租金")
+    private BigDecimal rent;
+
+    @ApiModelProperty(value = "押金")
+    private BigDecimal deposit;
 }

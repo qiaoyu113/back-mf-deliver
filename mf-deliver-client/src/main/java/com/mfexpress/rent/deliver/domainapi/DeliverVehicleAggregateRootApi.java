@@ -22,12 +22,14 @@ public interface DeliverVehicleAggregateRootApi {
 
     @PostMapping("/addDeliverVehicle")
     Result<String> addDeliverVehicle(@RequestBody List<DeliverVehicleDTO> deliverVehicleDTOList);
-
     /**
      * @deprecated 废弃方法 只能用交付单编号查询发车单
      */
     @PostMapping("/getDeliverVehicleByServeNo")
     Result<Map<String, DeliverVehicle>> getDeliverVehicleByServeNo(@RequestBody List<String> serveNoList);
+
+    @PostMapping("/getDeliverVehicleByServeNo")
+    Result<DeliverVehicleDTO> getDeliverVehicleOneByServeNo(@RequestBody String serveNo);
 
     @PostMapping("/deliverVehicles")
     Result<Integer> deliverVehicles(@RequestBody ElecContractDTO contractDTO);

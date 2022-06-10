@@ -33,10 +33,10 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
-import com.mfexpress.component.utils.util.ResultDataUtils;
+import com.mfexpress.order.api.app.ContractAggregateRootApi;
+import com.mfexpress.order.dto.data.CommodityDTO;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
@@ -147,8 +147,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
 
-    //    @Resource(name = "serveSyncServiceImpl")
-//    private EsSyncHandlerI serveSyncServiceI;
+    @Resource
+    private ContractAggregateRootApi contractAggregateRootApi;
+
     @Resource
     private MqTools mqTools;
 
@@ -621,6 +622,10 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "交付单查询失败");
         }
         Map<String, DeliverEntity> deliverMap = deliverList.stream().collect(Collectors.toMap(DeliverEntity::getServeNo, Function.identity(), (v1, v2) -> v1));
+
+        List<Integer> commodityIds = renewalServeCmdList.stream().map(RenewalServeCmd::getContractCommodityId).distinct().collect(Collectors.toList());
+        Result<List<CommodityDTO>> commodityListResult = contractAggregateRootApi.getCommodityListByIdList(commodityIds);
+        Map<Integer, CommodityDTO> commodityDTOMap = commodityListResult.getData().stream().collect(Collectors.toMap(CommodityDTO::getId, a -> a));
         // 修改服务单相关信息，顺带生成操作记录对象
         List<ServeChangeRecordPO> recordList = new ArrayList<>();
         List<ServeEntity> serveListToUpdate = renewalServeCmdList.stream().map(renewalServeCmd -> {
@@ -669,6 +674,11 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 renewalChargeCmd.setRent(serve.getRent());
                 renewalChargeCmd.setRentEffectDate(renewalServeCmd.getBillingAdjustmentDate());
             }
+            if (Objects.nonNull(commodityDTOMap.get(serve.getContractCommodityId()))) {
+                renewalChargeCmd.setRentRatio(commodityDTOMap.get(serve.getContractCommodityId()).getRentRatio());
+            } else {
+                renewalChargeCmd.setRentRatio(0.00);
+            }
             /*if (rawDataServe.getRent().equals(serve.getRent())) {
                 renewalChargeCmd.setEffectFlag(false);
             } else {
@@ -700,6 +710,14 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         if (serveList.isEmpty() || replaceServeList.isEmpty()) {
             return Result.getInstance(0).success();
         }
+
+        List<Integer> commodityIds = serveList.stream().map(ServeEntity::getContractCommodityId).distinct().collect(Collectors.toList());
+        Result<List<CommodityDTO>> commodityListResult = contractAggregateRootApi.getCommodityListByIdList(commodityIds);
+        if (CollectionUtil.isEmpty(commodityListResult.getData())) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到商品信息");
+        }
+
+        Map<Integer, CommodityDTO> commodityDTOMap = commodityListResult.getData().stream().collect(Collectors.toMap(CommodityDTO::getId, a -> a));
 
         // 找出服务单和替换车服务单
         Map<String, ServeEntity> serveMap = serveList.stream().collect(Collectors.toMap(ServeEntity::getServeNo, Function.identity(), (v1, v2) -> v1));
@@ -746,6 +764,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         if (!replaceServeAlreadyDeliverNoList.isEmpty()) {
             List<DeliverEntity> deliverList = deliverGateway.getDeliverByServeNoList(replaceServeAlreadyDeliverNoList);
             Map<String, DeliverEntity> deliverMap = deliverList.stream().collect(Collectors.toMap(DeliverEntity::getServeNo, Function.identity(), (v1, v2) -> v1));
+
             replaceServeAlreadyDeliverNoList.forEach(serveNo -> {
                 //发生计费
                 //在这里查询交付单 后续看情况做修改
@@ -760,6 +779,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                     renewalChargeCmd.setVehicleId(deliver.getCarId());
                     renewalChargeCmd.setEffectFlag(false);
                     renewalChargeCmd.setRenewalDate(replaceServe.getExpectRecoverDate());
+                    renewalChargeCmd.setRentRatio(commodityDTOMap.get(replaceServe.getContractCommodityId()).getRentRatio());
                     mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
                 }
             });
@@ -816,6 +836,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         }
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
+        List<Integer> commodityIds = needPassiveRenewalServeList.stream().map(Serve::getContractCommodityId).distinct().collect(Collectors.toList());
+        Result<List<CommodityDTO>> commodityListResult = contractAggregateRootApi.getCommodityListByIdList(commodityIds);
+        Map<Integer, CommodityDTO> commodityDTOMap = commodityListResult.getData().stream().collect(Collectors.toMap(CommodityDTO::getId, a -> a));
         // 自动续约，收车日期顺延一个月，租赁期限不变，并发送mq到计费域(逻辑暂无)，自动续约不传计费调整日期
         List<ServeChangeRecordPO> recordList = new ArrayList<>();
         List<ServeEntity> serveToUpdateList = needPassiveRenewalServeList.stream().map(serve -> {
@@ -848,6 +871,11 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             renewalChargeCmd.setVehicleId(deliver.getCarId());
             renewalChargeCmd.setEffectFlag(false);
             renewalChargeCmd.setRenewalDate(updatedExpectRecoverDate);
+            if (Objects.nonNull(commodityDTOMap.get(serve.getContractCommodityId()))) {
+                renewalChargeCmd.setRentRatio(commodityDTOMap.get(serve.getContractCommodityId()).getRentRatio());
+            } else {
+                renewalChargeCmd.setRentRatio(0.00);
+            }
             mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
 
             return serveToUpdate;

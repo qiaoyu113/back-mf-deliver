@@ -5,9 +5,11 @@ import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.entity.RecoverVehicle;
 import com.mfexpress.rent.deliver.recovervehicle.RecoverQryServiceI;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -31,7 +33,8 @@ public class RecoverTaskListDeductionQryExe implements RecoverQryServiceI {
 
     @Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
-
+    @Resource
+    private ServeAggregateRootApi serveAggregateRootApi;
     @Override
     public RecoverTaskListVO execute(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -54,6 +57,17 @@ public class RecoverTaskListDeductionQryExe implements RecoverQryServiceI {
             }
             Map<String, RecoverVehicle> recoverVehicleMap = recoverVehicleMapResult.getData();
             recoverVehicleVOList.forEach(recoverVehicleVO -> {
+                Result<ServeDTO> serveDtoByServeNo = serveAggregateRootApi.getServeDtoByServeNo(recoverVehicleVO.getServeNo());
+                if (serveDtoByServeNo.getData().getReplaceFlag()==1){
+                    recoverVehicleVO.setLeaseModelDisplay(LeaseModelEnum.REPLACEMENT.getName());
+                    recoverVehicleVO.setLeaseModelId(LeaseModelEnum.REPLACEMENT.getCode());
+                }else {
+                    recoverVehicleVO.setLeaseModelDisplay(LeaseModelEnum.getEnum(serveDtoByServeNo.getData().getLeaseModelId()).getName());
+                    recoverVehicleVO.setLeaseModelId(serveDtoByServeNo.getData().getLeaseModelId());
+                }
+
+
+
                 RecoverVehicle recoverVehicle = recoverVehicleMap.get(recoverVehicleVO.getServeNo());
                 recoverVehicleVO.setDamageFee(recoverVehicle == null ? null : recoverVehicle.getDamageFee());
                 recoverVehicleVO.setParkFee(recoverVehicle == null ? null : recoverVehicle.getParkFee());

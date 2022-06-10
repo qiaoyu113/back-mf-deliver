@@ -63,6 +63,11 @@ public class recoverTaskListWaitSignQryExe implements RecoverQryServiceI {
             List<ElecContractDTO> elecContractDTOS = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
             Map<String, ElecContractDTO> contractDTOMap = elecContractDTOS.stream().collect(Collectors.toMap(ElecContractDTO::getDeliverNos, Function.identity(), (v1, v2) -> v1));
             recoverVehicleVOList.forEach(recoverVehicleVO -> {
+                if (recoverVehicleVO.getReplaceFlag().equals(1)){
+                    recoverVehicleVO.setLeaseModelDisplay(LeaseModelEnum.REPLACEMENT.getName());
+                    recoverVehicleVO.setLeaseModelId(LeaseModelEnum.REPLACEMENT.getCode());
+                }
+
                 String deliverNo = recoverVehicleVO.getDeliverNo();
                 ElecContractDTO elecContractDTO = contractDTOMap.get(JSONUtil.toJsonStr(Collections.singletonList(deliverNo)));
                 if(null != elecContractDTO){

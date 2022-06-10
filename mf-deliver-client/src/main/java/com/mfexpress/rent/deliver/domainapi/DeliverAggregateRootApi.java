@@ -131,7 +131,6 @@ public interface DeliverAggregateRootApi {
     @PostMapping("/getMakeDeliverDTOSByCarIdList")
     Result<List<DeliverDTO>> getMakeDeliverDTOSByCarIdList(@RequestBody List<Integer> carIds,@RequestParam("status") Integer status);
 
-
     @PostMapping(value = "/deliver/cancel")
     Result<Integer> cancelDeliver(@RequestBody DeliverCancelCmd cmd);
 }

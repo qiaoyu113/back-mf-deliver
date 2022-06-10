@@ -34,6 +34,8 @@ import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
+import com.mfexpress.order.api.app.ContractAggregateRootApi;
+import com.mfexpress.order.dto.data.CommodityDTO;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
@@ -125,6 +127,13 @@ public class ElecContractStatusMqCommand {
 
     @Resource
     private ServeServiceI serveServiceI;
+    @Resource
+    private ContractAggregateRootApi orderContractAggregateRootApi;
+
+
+
+    @Resource(name = "serveSyncServiceImpl")
+    private EsSyncHandlerI serveSyncServiceI;
 
     private MqTools mqTools;
 
@@ -273,7 +282,10 @@ public class ElecContractStatusMqCommand {
         if (ResultErrorEnum.SUCCESSED.getCode() != changeVehicleStatusResult.getCode()) {
             log.error("收车电子合同签署完成时，更改车辆状态失败，serveNo：{}，车辆id：{}", serveDTO.getServeNo(), deliverDTO.getCarId());
         }
-
+        Result<CommodityDTO> commodityResult = orderContractAggregateRootApi.getCommodityById(serveDTO.getContractCommodityId());
+        if (!Objects.nonNull(commodityResult.getData())) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到商品信息");
+        }
         // 发送收车信息到mq，由合同域判断服务单所属的合同是否到已履约完成状态
         // 租赁服务单1.1迭代，改为当服务单状态到已完成时，再向合同域发送此消息
         /*if (JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {
@@ -301,6 +313,7 @@ public class ElecContractStatusMqCommand {
             recoverVehicleCmd.setCustomerId(serveDTO.getCustomerId());
             recoverVehicleCmd.setCreateId(contractDTO.getCreatorId());
             recoverVehicleCmd.setRecoverDate(DateUtil.formatDate(contractDTO.getRecoverVehicleTime()));
+            recoverVehicleCmd.setRentRatio(commodityResult.getData().getRentRatio());
             log.info("正常收车时，交付域向计费域发送的收车单信息：{}", recoverVehicleCmd);
             mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(recoverVehicleCmd));
 
@@ -372,6 +385,7 @@ public class ElecContractStatusMqCommand {
             renewalChargeCmd.setDeliverNo(deliverDTO.getDeliverNo());
             renewalChargeCmd.setVehicleId(deliverDTO.getCarId());
             renewalChargeCmd.setEffectFlag(false);
+            renewalChargeCmd.setRentRatio(commodityResult.getData().getRentRatio());
             // 续约目标日期为实际收车日期
             renewalChargeCmd.setRenewalDate(DateUtil.formatDate(recoverVehicleTime));
             mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
@@ -393,6 +407,12 @@ public class ElecContractStatusMqCommand {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单信息不存在");
         }
         List<ServeDTO> serveDTOList = serveDTOListResult.getData();
+        List<Integer> commodityIds = serveDTOList.stream().map(ServeDTO::getContractCommodityId).distinct().collect(Collectors.toList());
+        Result<List<CommodityDTO>> commodityListResult = orderContractAggregateRootApi.getCommodityListByIdList(commodityIds);
+        if (commodityListResult.getCode() != 0 || null == commodityListResult.getData() || commodityListResult.getData().isEmpty()) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "商品信息不存在");
+        }
+        Map<Integer, CommodityDTO> commodityDTOMap = commodityListResult.getData().stream().collect(Collectors.toMap(CommodityDTO::getId, a -> a));
         Map<String, ServeDTO> serveDTOMap = serveDTOList.stream().collect(Collectors.toMap(ServeDTO::getServeNo, Function.identity(), (v1, v2) -> v1));
         //每个服务单对应的预计收车日期
         Map<String, String> expectRecoverDateMap = new HashMap<>(serveDTOList.size());
@@ -429,6 +449,10 @@ public class ElecContractStatusMqCommand {
             rentChargeCmd.setCreateId(contractDTO.getCreatorId());
             rentChargeCmd.setVehicleId(deliverImgInfo.getCarId());
             rentChargeCmd.setDeliverDate(DateUtil.formatDate(contractDTO.getDeliverVehicleTime()));
+            CommodityDTO commodityDTO = commodityDTOMap.get(serve.getContractCommodityId());
+            if (Objects.nonNull(commodityDTO)) {
+                rentChargeCmd.setRentRatio(commodityDTO.getRentRatio());
+            }
             mqTools.send(event, "deliver_vehicle", null, JSON.toJSONString(rentChargeCmd));
         });
 

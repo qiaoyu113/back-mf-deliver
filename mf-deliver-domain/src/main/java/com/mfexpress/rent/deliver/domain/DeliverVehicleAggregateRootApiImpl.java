@@ -1,5 +1,17 @@
 package com.mfexpress.rent.deliver.domain;
 
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateTime;
@@ -13,12 +25,13 @@ import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
-import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
-import com.mfexpress.rent.deliver.api.ServeServiceI;
-import com.mfexpress.rent.deliver.constant.*;
+import com.mfexpress.rent.deliver.constant.Constants;
+import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
+import com.mfexpress.rent.deliver.constant.DeliverEnum;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.DailyAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -37,9 +50,7 @@ import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.gateway.DeliverVehicleGateway;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
-import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
-import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
 import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
@@ -50,12 +61,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
-
-import javax.annotation.Resource;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
@@ -110,7 +120,7 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
             BeanUtils.copyProperties(deliverVehicle, deliverVehicleDTO);
             return Result.getInstance(deliverVehicleDTO).success();
         }
-        return Result.getInstance((DeliverVehicleDTO) null).success();
+        return Result.getInstance(deliverVehicleDTO).success();
     }
 
     @Override
@@ -144,6 +154,19 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
             deliverVehicleMap.put(deliverVehicleEntity.getServeNo(), deliverVehicle);
         });
         return Result.getInstance(deliverVehicleMap).success();
+    }
+
+    @Override
+    @PostMapping("getDeliverVehicleOneByServeNo")
+    @PrintParam
+    public Result< DeliverVehicleDTO> getDeliverVehicleOneByServeNo(@RequestBody String serveNo) {
+        DeliverVehicleEntity deliverVehicleList = deliverVehicleGateway.getDeliverVehicleOneByServeNo(serveNo);
+
+
+        DeliverVehicleDTO deliverVehicle = BeanUtil.copyProperties(deliverVehicleList, DeliverVehicleDTO.class);
+
+
+        return Result.getInstance(deliverVehicle).success();
     }
 
     // 发车电子合同签署完成后触发的一系列操作

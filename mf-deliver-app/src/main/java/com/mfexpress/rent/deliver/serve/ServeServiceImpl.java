@@ -119,6 +119,7 @@ public class ServeServiceImpl implements ServeServiceI {
 
     @Override
     public ServeListVO getServeListVoInsure(ServeQryListCmd serveQryListCmd) {
+
         return serveInsureQryExe.execute(serveQryListCmd);
     }
 
