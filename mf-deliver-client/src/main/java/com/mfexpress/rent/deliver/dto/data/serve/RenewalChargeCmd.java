@@ -39,4 +39,7 @@ public class RenewalChargeCmd {
 
     @ApiModelProperty("计费所属车辆的交付单编号")
     private String deliverNo;
+
+    @ApiModelProperty("租金占比")
+    private Double rentRatio;
 }
