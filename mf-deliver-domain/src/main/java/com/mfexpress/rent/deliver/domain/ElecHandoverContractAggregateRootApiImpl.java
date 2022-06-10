@@ -1,15 +1,31 @@
 package com.mfexpress.rent.deliver.domain;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
 import cn.hutool.json.JSONUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.ElecHandoverContractStatus;
+import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.*;
+import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ConfirmFailCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateDeliverContractCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateRecoverContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecDocDTO;
@@ -22,23 +38,24 @@ import com.mfexpress.rent.deliver.gateway.ElecHandoverDocGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.Resource;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
+@Slf4j
 @RestController
 @RequestMapping(value = "/domain/deliver/v3/elecHandoverContract")
 @Api(tags = "domain--交付--电子交接合同聚合", value = "ElecHandoverContractAggregateRootApiImpl")
+@RefreshScope
 public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverContractAggregateRootApi {
 
     @Resource
@@ -48,10 +65,23 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
     private ElecHandoverDocGateway docGateway;
 
     @Resource
+    private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
+
+    @Resource
+    private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
+
+    @Resource
     private BeanFactory beanFactory;
 
     @Resource
     private RedisTools redisTools;
+
+    @Resource
+    private ServeAggregateRootApi serveAggregateRootApi;
+
+    @Resource(name = "serveSyncServiceImpl")
+    private EsSyncHandlerI serveSyncServiceI;
+
 
     @Override
     @PostMapping("/createDeliverContract")
@@ -341,4 +371,18 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
         return Result.getInstance(elecDocDTO).success();
     }
 
+    @Override
+    @PostMapping(value = "/completed/auto")
+    @Transactional(rollbackFor = Exception.class)
+    @PrintParam
+    public Result<Integer> autoCompleted(@RequestBody @Validated ContractStatusChangeCmd cmd) {
+
+
+        ElecHandoverContract elecHandoverContract = beanFactory.getBean(ElecHandoverContract.class);
+        elecHandoverContract.init(cmd, ElecHandoverContractStatus.COMPLETED.getCode());
+        // 先不加check
+        elecHandoverContract.autoCompleted();
+
+        return Result.getInstance(0).success();
+    }
 }

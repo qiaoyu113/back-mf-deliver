@@ -1,18 +1,38 @@
 package com.mfexpress.rent.deliver.domainapi;
 
+import java.util.List;
+import java.util.Map;
+
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
-import com.mfexpress.rent.deliver.dto.data.serve.*;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockConfirmDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockListDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.PassiveRenewalServeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.RenewalCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.RenewalReplaceServeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeAddDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeChangeRecordDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeCycleQryCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDailyDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
+import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeReplaceVehicleAddDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustRecordDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustRecordQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.List;
-import java.util.Map;
 
 @FeignClient(name = "mf-deliver", path = "/domain/deliver/v3/serve", contextId = "mf-deliver-serve-aggregate-root-api")
 public interface ServeAggregateRootApi {
@@ -136,7 +156,7 @@ public interface ServeAggregateRootApi {
      * @return
      */
     @PostMapping("/lockDeposit")
-    Result <Boolean>lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList);
+    Result <Boolean> lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList);
 
     @PostMapping("/reactiveServe")
     Result<Integer> reactiveServe(@RequestBody ReactivateServeCmd cmd);
@@ -150,4 +170,31 @@ public interface ServeAggregateRootApi {
     @PostMapping("/getRentingServeNumByCustomerId")
     Result<Integer> getRentingServeNumByCustomerId(@RequestParam("customerId") Integer customerId);
 
+    @PostMapping(value = "/cancel")
+    Result<Integer> cancelServe(@RequestBody ServeCancelCmd cmd);
+
+    /**
+     * 判断是否可以收车验车
+     *
+     * @param cmd
+     * @return
+     */
+    @PostMapping(value = "/recover/check/judge")
+    Result<Integer> recoverCheckJudge(@RequestBody RecoverCheckJudgeCmd cmd);
+
+    /**
+     * 查询服务单调整记录
+     *
+     * @param qry
+     * @return
+     */
+    @PostMapping(value = "/serve/adjust/record")
+    Result<ServeAdjustRecordDTO> getServeAdjustRecord(@RequestBody ServeAdjustRecordQry qry);
+
+    /**
+     * 替换车服务单调整
+     * @param cmd
+     */
+    @PostMapping(value = "/serve/adjust")
+    Result<Integer> serveAdjustment(@RequestBody ServeAdjustCmd cmd);
 }

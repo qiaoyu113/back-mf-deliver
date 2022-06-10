@@ -1,6 +1,12 @@
 package com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd;
 
-import cn.hutool.core.date.DateTime;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
@@ -25,13 +31,16 @@ import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateRecoverContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateRecoverContractFrontCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.RecoverInfo;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.utils.CommonUtil;
@@ -46,13 +55,8 @@ import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.entity.Customer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 @Component
 @Slf4j
@@ -90,6 +94,18 @@ public class CreateRecoverContractCmdExe {
 
     @Resource
     private MFContractTools contractTools;
+
+    @Resource
+    private ElecHandoverContractAggregateRootApi elecHandoverContractAggregateRootApi;
+
+    @Resource
+    private RecoverVehicleProcessCmdExe recoverVehicleProcessCmdExe;
+
+    /**
+     * 收车签署开关
+     */
+    @Value(value = "${contract.recover.flag}")
+    private String contractRecoverFlag;
 
     private Map<String, String> leaseModeMap;
 
@@ -145,18 +161,21 @@ public class CreateRecoverContractCmdExe {
         // 先本地创建合同和交接单
         ContractIdWithDocIds contractIdWithDocIds = createContractWithDocInLocal(cmd, tokenInfo, serveDTO.getOrgId());
 
-        // 访问契约锁域创建合同
-        Result<Boolean> createElecContractResult = createElecContract(cmd, contractIdWithDocIds, docInfos, orderDTO);
-        if (ResultErrorEnum.SUCCESSED.getCode() != createElecContractResult.getCode() || null == createElecContractResult.getData()) {
-            log.error("创建合同时调用契约锁域失败，返回msg：{}", createElecContractResult.getMsg());
-            // 调用契约锁失败还得将本地创建的合同置为无效
-            makeContractInvalid(contractIdWithDocIds.getContractId());
-            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "操作失败");
+        if ("1".equals(contractRecoverFlag)) {
+            // 访问契约锁域创建合同
+            Result<Boolean> createElecContractResult = createElecContract(cmd, contractIdWithDocIds, docInfos, orderDTO);
+            if (ResultErrorEnum.SUCCESSED.getCode() != createElecContractResult.getCode() || null == createElecContractResult.getData()) {
+                log.error("创建合同时调用契约锁域失败，返回msg：{}", createElecContractResult.getMsg());
+                // 调用契约锁失败还得将本地创建的合同置为无效
+                makeContractInvalid(contractIdWithDocIds.getContractId());
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "操作失败");
+            }
         }
 
         // 什么时候改变交付单的状态，调用完契约锁域后，免得失败后还得改回来
         try {
             makeDeliverContractGenerating(Collections.singletonList(recoverInfo.getServeNo()), DeliverTypeEnum.RECOVER.getCode());
+
         } catch (Exception e) {
             // 操作交付单失败，合同应置为无效
             CancelContractCmd cancelContractCmd = new CancelContractCmd();
@@ -166,12 +185,34 @@ public class CreateRecoverContractCmdExe {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "创建电子交接单失败");
         }
 
+        // 增加电子交接单开关
+        log.info("contractRecoverFlag---->{}", contractRecoverFlag);
+        if ("0".equals(contractRecoverFlag)) {
+
+            Result<ElecContractDTO> contractDTOResult = elecHandoverContractAggregateRootApi.getContractDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.RECOVER.getCode());
+            ElecContractDTO elecContractDTO = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
+
+            ContractStatusChangeCmd contractStatusChangeCmd = new ContractStatusChangeCmd();
+            contractStatusChangeCmd.setContractId(elecContractDTO.getContractId());
+            contractStatusChangeCmd.setContractForeignNo(elecContractDTO.getContractShowNo());
+
+            contractAggregateRootApi.autoCompleted(contractStatusChangeCmd);
+
+            // 修改交付单的收车签署状态
+            DeliverContractSigningCmd signingCmd = new DeliverContractSigningCmd();
+            signingCmd.setDeliverNos(Collections.singletonList(deliverDTO.getDeliverNo()));
+            signingCmd.setDeliverType(DeliverTypeEnum.RECOVER.getCode());
+            deliverAggregateRootApi.contractSigning(signingCmd);
+
+            recoverVehicleProcessCmdExe.execute(recoverVehicleProcessCmdExe.turnToCmd(elecContractDTO, deliverDTO, serveDTO));
+        }
         return contractIdWithDocIds.getContractId().toString();
     }
 
     private void recoverCheck(String serveNo) {
         Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(serveNo);
         DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrException();
+
         if (DeliverContractStatusEnum.NOSIGN.getCode() != deliverDTO.getRecoverContractStatus()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "选中车辆存在电子交接单，请回列表页查看");
         }
@@ -253,6 +294,7 @@ public class CreateRecoverContractCmdExe {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "收车日期不能早于发车日期");
         }
 
+        // 查询完成的维修单
         Result<MaintenanceDTO> maintainResult = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getRecoverInfo().getServeNo());
         if (ResultValidUtils.checkResult(maintainResult)) {
             MaintenanceDTO maintenanceDTO = maintainResult.getData();
@@ -262,8 +304,8 @@ public class CreateRecoverContractCmdExe {
                 throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "收车日期请晚于维修交车日期");
             }
         }
-        DateTime endDate = DateUtil.endOfMonth(new Date());
-        DateTime startDate = DateUtil.beginOfMonth(new Date());
+//        DateTime endDate = DateUtil.endOfMonth(new Date());
+//        DateTime startDate = DateUtil.beginOfMonth(new Date());
         //增加收车日期限制
 //        if (!endDate.isAfter(recoverVehicleTime) || recoverVehicleTime.before(startDate)) {
 //            throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "收车日期请选择在当月内");
@@ -285,6 +327,7 @@ public class CreateRecoverContractCmdExe {
         createRecoverContractCmd.setOrgId(orgId);
         createRecoverContractCmd.setRecoverInfo(recoverInfo);
         createRecoverContractCmd.setOrderId(cmd.getOrderId());
+
         Result<ContractIdWithDocIds> createContractResult = contractAggregateRootApi.createRecoverContract(createRecoverContractCmd);
         if (ResultErrorEnum.SUCCESSED.getCode() != createContractResult.getCode() || null == createContractResult.getData()) {
             // 前端创建时没有电子合同的概念
@@ -330,6 +373,7 @@ public class CreateRecoverContractCmdExe {
             throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "收车日期超出可选范围");
         }
 
+        // 查询完成的维修单
         Result<MaintenanceDTO> maintenanceByServeNo = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getRecoverInfo().getServeNo());
         if (ResultValidUtils.checkResult(maintenanceByServeNo)) {
             if (cmd.getRecoverInfo().getRecoverVehicleTime().before(maintenanceByServeNo.getData().getConfirmDate())) {
@@ -347,5 +391,4 @@ public class CreateRecoverContractCmdExe {
         }
 
     }
-
 }

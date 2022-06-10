@@ -5,7 +5,8 @@ public enum DeliverEnum {
     DELIVER(2, "已发车"),
     IS_RECOVER(3, "收车中"),
     RECOVER(4, "已收车"),
-    COMPLETED(5, "已完成");
+    COMPLETED(5, "已完成"),
+    CANCEL(6, "作废");
 
 
     private Integer code;

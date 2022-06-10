@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -276,6 +277,15 @@ public class ElecHandoverContract {
         contractPOToUpdate.setContractForeignNo(contractForeignNo);
         contractPOToUpdate.setStatus(status);
         elecHandoverContractGateway.updateContractByContractForeignNo(contractPOToUpdate);
+    }
+
+    public void autoCompleted() {
+        ElectronicHandoverContractPO contractPOToUpdate = new ElectronicHandoverContractPO();
+        contractPOToUpdate.setContractId(contractId);
+        contractPOToUpdate.setContractForeignNo(contractForeignNo);
+        contractPOToUpdate.setStatus(status);
+        log.info("contractPOToUpdate---->{}", contractPOToUpdate);
+        elecHandoverContractGateway.updateContractByContractId(contractPOToUpdate);
     }
 
     // 补充交接单的文件url

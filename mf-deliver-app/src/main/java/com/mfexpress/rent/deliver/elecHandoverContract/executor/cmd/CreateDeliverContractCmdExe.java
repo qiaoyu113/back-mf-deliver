@@ -1,5 +1,15 @@
 package com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd;
 
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUnit;
@@ -12,7 +22,6 @@ import com.mfexpress.component.dto.contract.ContractDocumentInfoDTO;
 import com.mfexpress.component.enums.contract.ContractModeEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.tools.contract.MFContractTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
@@ -27,11 +36,14 @@ import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CreateDeliverContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ContractIdWithDocIds;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCheckCmd;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
@@ -47,12 +59,8 @@ import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.entity.Customer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -92,14 +100,24 @@ public class CreateDeliverContractCmdExe {
     @Resource
     private MFContractTools contractTools;
 
-    @Resource(name = "serveSyncServiceImpl")
-    private EsSyncHandlerI syncServiceI;
-
     @Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
 
     @Resource
     private ReactiveServeCheckCmdExe reactiveServeCheck;
+
+
+    @Resource
+    private ElecHandoverContractAggregateRootApi elecHandoverContractAggregateRootApi;
+
+    @Resource
+    private DeliverVehicleProcessCmdExe deliverVehicleProcessCmdExe;
+
+    /**
+     * 发车签署开关
+     */
+    @Value(value = "${contract.deliver.flag}")
+    private String contractDeliverFlag;
 
     public String execute(CreateDeliverContractCmd cmd, TokenInfo tokenInfo) {
         //发车日期校验
@@ -154,13 +172,15 @@ public class CreateDeliverContractCmdExe {
         // 先本地创建合同和交接单
         ContractIdWithDocIds contractIdWithDocIds = createContractWithDocInLocal(cmd, tokenInfo, serveMap.get(deliverImgInfos.get(0).getServeNo()).getOrgId(), serveMap.get(deliverImgInfos.get(0).getServeNo()).getOrderId());
 
-        // 访问契约锁域创建合同
-        Result<Boolean> createElecContractResult = createElecContract(cmd, contractIdWithDocIds, docInfos, orderDTO);
-        if (ResultErrorEnum.SUCCESSED.getCode() != createElecContractResult.getCode() || null == createElecContractResult.getData()) {
-            log.error("创建合同时调用契约锁域失败，返回msg：{}", createElecContractResult.getMsg());
-            // 调用契约锁失败还得将本地创建的合同置为无效
-            makeContractInvalid(contractIdWithDocIds.getContractId());
-            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "操作失败");
+        if ("1".equals(contractDeliverFlag)) {
+            // 访问契约锁域创建合同
+            Result<Boolean> createElecContractResult = createElecContract(cmd, contractIdWithDocIds, docInfos, orderDTO);
+            if (ResultErrorEnum.SUCCESSED.getCode() != createElecContractResult.getCode() || null == createElecContractResult.getData()) {
+                log.error("创建合同时调用契约锁域失败，返回msg：{}", createElecContractResult.getMsg());
+                // 调用契约锁失败还得将本地创建的合同置为无效
+                makeContractInvalid(contractIdWithDocIds.getContractId());
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "操作失败");
+            }
         }
 
         // 什么时候改变交付单的状态，调用完契约锁域后，免得失败后还得改回来
@@ -175,11 +195,31 @@ public class CreateDeliverContractCmdExe {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "创建电子交接单失败");
         }
 
-        HashMap<String, String> map = new HashMap<>();
-        for (String serveNo : serveNos) {
-            map.put("serve_no", serveNo);
-            syncServiceI.execOne(map);
+        // 增加电子交接单开关
+        if ("0".equals(contractDeliverFlag)) {
+            serveNos.forEach(serveNo -> {
+                Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(serveNo);
+                DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrException();
+
+                Result<ElecContractDTO> contractDTOResult = elecHandoverContractAggregateRootApi.getContractDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.DELIVER.getCode());
+                ElecContractDTO elecContractDTO = ResultDataUtils.getInstance(contractDTOResult).getDataOrException();
+
+                ContractStatusChangeCmd contractStatusChangeCmd = new ContractStatusChangeCmd();
+                contractStatusChangeCmd.setContractId(elecContractDTO.getContractId());
+                contractStatusChangeCmd.setContractForeignNo(elecContractDTO.getContractShowNo());
+
+                contractAggregateRootApi.autoCompleted(contractStatusChangeCmd);
+
+                // 修改交付单的收车签署状态
+                DeliverContractSigningCmd signingCmd = new DeliverContractSigningCmd();
+                signingCmd.setDeliverNos(Collections.singletonList(deliverDTO.getDeliverNo()));
+                signingCmd.setDeliverType(DeliverTypeEnum.DELIVER.getCode());
+                deliverAggregateRootApi.contractSigning(signingCmd);
+
+                deliverVehicleProcessCmdExe.execute(deliverVehicleProcessCmdExe.turnToCmd(deliverDTO, elecContractDTO));
+            });
         }
+
         return contractIdWithDocIds.getContractId().toString();
     }
 

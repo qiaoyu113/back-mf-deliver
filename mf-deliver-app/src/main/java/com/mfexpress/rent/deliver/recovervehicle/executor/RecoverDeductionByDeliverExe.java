@@ -1,6 +1,13 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
+import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.Optional;
+
+import javax.annotation.Resource;
+
 import com.alibaba.fastjson.JSON;
+import com.mfexpress.billing.customer.api.aggregate.AdvincePaymentAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.deliver.DeductFeeCmd;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
@@ -8,6 +15,10 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.starter.tools.mq.MqTools;
+import com.mfexpress.component.utils.util.ResultDataUtils;
+import com.mfexpress.component.utils.util.ResultValidUtils;
+import com.mfexpress.rent.deliver.api.ServeServiceI;
+import com.mfexpress.rent.deliver.constant.ReplaceVehicleDepositPayTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -15,14 +26,16 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustRecordDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustRecordQry;
+import com.mfexpress.rent.deliver.utils.MainServeUtil;
+import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
+import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
-import java.math.BigDecimal;
-import java.util.Collections;
 
 @Component
 @Slf4j
@@ -36,6 +49,15 @@ public class RecoverDeductionByDeliverExe {
 
     @Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
+
+    @Resource
+    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
+
+    @Resource
+    private AdvincePaymentAggregateRootApi advincePaymentAggregateRootApi;
+
+    @Resource
+    private ServeServiceI serveServiceI;
 
     @Resource
     private MqTools mqTools;
@@ -87,6 +109,32 @@ public class RecoverDeductionByDeliverExe {
         Result<Integer> updateResult = recoverVehicleAggregateRootApi.updateDeductionFeeByDeliver(cmd);
         if (ResultStatusEnum.SUCCESSED.getCode() != updateResult.getCode() || null == updateResult.getData()) {
             log.error("在收车进行处理事项操作时，修改收车单失败");
+        }
+
+        // 查询是否有替换车服务单
+        ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, serveDTO.getServeNo());
+        if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
+            // 查询押金支付方式
+            Result<ServeAdjustRecordDTO> recordDTOResult = serveAggregateRootApi.getServeAdjustRecord(new ServeAdjustRecordQry(replaceVehicleDTO.getServeNo()));
+            ResultValidUtils.checkResultException(recordDTOResult);
+            ServeAdjustRecordDTO serveAdjustRecordDTO = ResultDataUtils.getInstance(recordDTOResult).getDataOrException();
+            if (Optional.ofNullable(serveAdjustRecordDTO).filter(o -> ReplaceVehicleDepositPayTypeEnum.SOURCE_DEPOSIT_PAY.getCode() == o.getDepositPayType()).isPresent()) {
+                // 账本扣除
+                Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceVehicleDTO.getServeNo());
+                ServeDTO replaceServe = ResultDataUtils.getInstance(replaceServeDTOResult).getDataOrException();
+
+                // 押金扣除
+                ServeDepositPayCmd serveDepositPayCmd = new ServeDepositPayCmd();
+                serveDepositPayCmd.setDepositAmount(replaceServe.getDeposit());
+                serveDepositPayCmd.setServeNo(replaceServe.getServeNo());
+                serveDepositPayCmd.setOrderId(replaceServe.getOrderId());
+                serveDepositPayCmd.setCustomerId(replaceServe.getCustomerId());
+                serveDepositPayCmd.setOperatorId(tokenInfo.getId());
+                serveDepositPayCmd.setDepositPayType(ReplaceVehicleDepositPayTypeEnum.SOURCE_DEPOSIT_PAY.getCode());
+                serveDepositPayCmd.setSourceServeNo(serveDTO.getServeNo());
+
+                serveServiceI.serveDepositPay(serveDepositPayCmd);
+            }
         }
 
         return result.getData();

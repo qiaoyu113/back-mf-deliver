@@ -94,7 +94,7 @@
             <dependency>
                 <groupId>com.mfexpress</groupId>
                 <artifactId>mf-component-exception</artifactId>
-                <version>${mf.components.exception.version}</version>
+                <version>${mf.components.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.mfexpress</groupId>
