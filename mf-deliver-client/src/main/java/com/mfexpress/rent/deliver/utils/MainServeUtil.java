@@ -12,10 +12,10 @@ public class MainServeUtil {
 
     public static ReplaceVehicleDTO getReplaceVehicleDTOBySourceServNo(MaintenanceAggregateRootApi maintenanceAggregateRootApi, String sourceServNo) {
 
-        // 查找维修单
+        // 查找替换单
         Result<ReplaceVehicleDTO> replaceVehicleDTOResult = maintenanceAggregateRootApi.getReplaceVehicleDTObyMaintenanceServeNo(sourceServNo);
 
-        return ResultDataUtils.getInstance(replaceVehicleDTOResult).getDataOrException();
+        return ResultDataUtils.getInstance(replaceVehicleDTOResult).getDataOrNull();
     }
 
     public static MaintenanceDTO getMaintenanceDTOByReplaceServeNo(MaintenanceAggregateRootApi maintenanceAggregateRootApi, String replaceServeNo) {
