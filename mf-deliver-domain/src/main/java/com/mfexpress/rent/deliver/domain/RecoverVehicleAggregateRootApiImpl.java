@@ -454,13 +454,13 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         vehicleSaveCmd.setWarehouseId(cmd.getRecoverWareHouseId());
         vehicleSaveCmd.setCustomerId(0);
         Result<WarehouseDto> wareHouseResult = warehouseAggregateRootApi.getWarehouseById(vehicleSaveCmd.getWarehouseId());
-        if (wareHouseResult.getData() != null) {
+
+        if (ResultDataUtils.getInstance(wareHouseResult).getDataOrException() != null) {
             vehicleSaveCmd.setAddress(wareHouseResult.getData().getName());
         }
         Result<String> changeVehicleStatusResult = vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
-        if (ResultErrorEnum.SUCCESSED.getCode() != changeVehicleStatusResult.getCode()) {
-            log.error("收车电子合同签署完成时，更改车辆状态失败，serveNo：{}，车辆id：{}", cmd.getServeNo(), cmd.getCarId());
-        }
+
+        ResultValidUtils.checkResultException(changeVehicleStatusResult);
 
         // 判断实际收车日期和预计收车日期的前后关系，如果实际收车日期在预计收车日期之前或当天，发送收车计费消息，反之，发送自动续约消息
 
@@ -497,7 +497,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
                                         && JudgeEnum.NO.getCode().equals(o.getReplaceFlag())
                                         && LeaseModelEnum.NORMAL.getCode() == o.getLeaseModelId()).isPresent()) {
                             // 原车维修单变为库存中维修
-                            maintenanceAggregateRootApi.updateMaintenanceDetailByServeNo(cmd.getServeNo());
+                            ResultValidUtils.checkResultException(maintenanceAggregateRootApi.updateMaintenanceDetailByServeNo(cmd.getServeNo()));
                             // 替换车押金支付
                             // 查询替换单支付方式
                             ServeAdjustRecordQry qry = new ServeAdjustRecordQry();
@@ -558,7 +558,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         createDailyCmd.setDeliverRecoverDate(cmd.getRecoverVehicleTime());
         createDailyCmd.setServeNoList(serveNoList);
 
-        dailyAggregateRootApi.createDaily(createDailyCmd);
+        ResultValidUtils.checkResultException(dailyAggregateRootApi.createDaily(createDailyCmd));
 
         return Result.getInstance(serveNoList).success();
     }
