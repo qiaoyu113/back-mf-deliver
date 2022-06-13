@@ -22,7 +22,7 @@ public class MainServeUtil {
 
         Result<MaintenanceDTO> maintenanceDTOResult = maintenanceAggregateRootApi.getMaintenanceDTOByReplaceVehicleServeNo(replaceServeNo);
 
-        MaintenanceDTO maintenanceDTO = ResultDataUtils.getInstance(maintenanceDTOResult).getDataOrException();
+        MaintenanceDTO maintenanceDTO = ResultDataUtils.getInstance(maintenanceDTOResult).getDataOrNull();
 
         if (maintenanceDTO == null) {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到原车维修单");
@@ -35,7 +35,7 @@ public class MainServeUtil {
 
         Result<MaintenanceDTO> maintenanceDTOResult = maintenanceAggregateRootApi.getMaintenanceByServeNoAll(serveNo);
 
-        MaintenanceDTO maintenanceDTO = ResultDataUtils.getInstance(maintenanceDTOResult).getDataOrException();
+        MaintenanceDTO maintenanceDTO = ResultDataUtils.getInstance(maintenanceDTOResult).getDataOrNull();
 
         if (maintenanceDTO == null) {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到维修单");
