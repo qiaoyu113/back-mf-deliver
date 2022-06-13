@@ -4,10 +4,13 @@ import java.math.BigDecimal;
 
 import javax.annotation.Resource;
 
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.MfDeliveryApplication;
 import com.mfexpress.rent.deliver.constant.ReplaceVehicleDepositPayTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeAllLeaseTermAmountVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeReplaceVehicleAddDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
@@ -37,17 +40,12 @@ class ServeWebControllerTest {
     @Test
     void getServeLeaseTermAmountVOList() {
 
-        ServeReplaceVehicleAddDTO dto = new ServeReplaceVehicleAddDTO();
+        ServeLeaseTermAmountQry qry = new ServeLeaseTermAmountQry();
 
-        dto.setRentRatio(new BigDecimal(1));
-        dto.setRent(new BigDecimal(999));
 
-        dto.setServeNo("FWD2022032800026");
-        dto.setBrandId(1);
-        dto.setModelsId(1);
-        dto.setCreatorId(-999);
+        Result<PagePagination<ServeAllLeaseTermAmountVO>> result = serveWebController.getServeLeaseTermAmountVOList(qry, jwt);
 
-        serveAggregateRootApi.addServeForReplaceVehicle(dto);
+        log.info("result----{}", result);
     }
 
     @Test
