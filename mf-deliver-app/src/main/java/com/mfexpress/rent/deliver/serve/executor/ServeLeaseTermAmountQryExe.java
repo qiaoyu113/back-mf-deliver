@@ -6,9 +6,11 @@ import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import com.github.pagehelper.PageInfo;
 import com.mfexpress.billing.customer.api.aggregate.SubBillItemAggregateRootApi;
+import com.mfexpress.billing.customer.constant.LeaseModeEnum;
 import com.mfexpress.billing.customer.data.dto.billitem.SubBillItemDTO;
 import com.mfexpress.billing.rentcharge.api.DetailAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.detail.DetailedByServeNoByLtLeaseTermDTO;
+import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
 import com.mfexpress.common.domain.dto.SysOfficeDto;
 import com.mfexpress.common.domain.enums.OfficeCodeMsgEnum;
@@ -31,6 +33,7 @@ import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeAllLeaseTermAmountVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
+import com.mfexpress.rent.deliver.utils.CommonUtil;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -71,6 +74,7 @@ public class ServeLeaseTermAmountQryExe {
     private ContractAggregateRootApi contractAggregateRootApi;
 
     public PagePagination<ServeAllLeaseTermAmountVO> execute(ServeLeaseTermAmountQry qry, TokenInfo tokenInfo) {
+
         if (null != tokenInfo) {
             qry.setUserOfficeId(tokenInfo.getOfficeId());
         }
@@ -128,6 +132,13 @@ public class ServeLeaseTermAmountQryExe {
             if (JudgeEnum.YES.getCode().equals(serveES.getReplaceFlag())) {
                 serveAllLeaseTermAmountVO.setLeaseModelId(5);
                 serveAllLeaseTermAmountVO.setLeaseModelDisplay("替换");
+                serveAllLeaseTermAmountVO.setRentFee(String.valueOf(map.get("rent")));
+                // 计算服务费
+                BigDecimal rentFee = BigDecimal.valueOf(Double.valueOf(serveAllLeaseTermAmountVO.getRentFee()));
+
+                String serviceFeeStr = org.apache.commons.lang3.StringUtils.isNumeric(String.valueOf(map.get("rentRatio"))) ? String.valueOf(map.get("rentRatio")) : "1.00";
+                BigDecimal serviceFee = BigDecimal.ONE.subtract(BigDecimal.valueOf(Double.valueOf(serviceFeeStr)));
+                serveAllLeaseTermAmountVO.setServiceFee(String.valueOf(rentFee.multiply(serviceFee)));
             }
             // 所属管理区
             orgIdSet.add(serveAllLeaseTermAmountVO.getOrgId());
@@ -229,8 +240,8 @@ public class ServeLeaseTermAmountQryExe {
                 }
             }
 
-            // 租金、服务费补充
-            if (null != contractCommodityDTOMap) {
+            // 非替换车租金、服务费补充
+            if (LeaseModelEnum.REPLACEMENT.getCode() != vo.getLeaseModelId() && null != contractCommodityDTOMap) {
                 CommodityDTO commodityDTO = contractCommodityDTOMap.get(vo.getContractCommodityId());
                 if (null != commodityDTO) {
                     vo.setRentFee(supplementAccuracy(String.valueOf(commodityDTO.getRentFee())));
@@ -327,5 +338,4 @@ public class ServeLeaseTermAmountQryExe {
         }
         return new BigDecimal(num).setScale(2, RoundingMode.HALF_UP).toString();
     }
-
 }

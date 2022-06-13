@@ -215,6 +215,7 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
         serveEs.setServeStatusSort(getServeStatusSort(serveEs));
         serveEs.setOrderId(serveDTO.getOrderId().toString());
         serveEs.setRent(serveDTO.getRent().toString());
+        serveEs.setRentRatio(serveDTO.getRentRatio().toString());
         serveEs.setDeposit(serveDTO.getDeposit().toString());
         serveEs.setLeaseEndDate(serveDTO.getLeaseEndDate());
         serveEs.setRenewalType(serveDTO.getRenewalType());

@@ -35,6 +35,8 @@ import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
+import com.mfexpress.component.utils.util.ResultDataUtils;
+import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.dto.data.CommodityDTO;
 import com.mfexpress.rent.deliver.constant.Constants;
@@ -48,6 +50,7 @@ import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.domainservice.ServeDomainServiceI;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
@@ -95,6 +98,11 @@ import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
 import com.mfexpress.rent.maintain.constant.MaintenanceTypeEnum;
 import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
 import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
+import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
+import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
+import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
+import com.mfexpress.rent.vehicle.data.dto.warehouse.WarehouseDto;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -149,6 +157,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Resource
     private ContractAggregateRootApi contractAggregateRootApi;
+
+    @Resource
+    private VehicleAggregateRootApi vehicleAggregateRootApi;
 
     @Resource
     private MqTools mqTools;
@@ -1109,11 +1120,24 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         // 取消服务单
         serveEntityApi.cancelServe(cmd);
 
-        DeliverCancelCmd deliverCancelCmd = DeliverCancelCmd.builder().serveNo(cmd.getServeNo()).build();
-        deliverCancelCmd.setOperatorId(cmd.getOperatorId());
+        Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(cmd.getServeNo());
+        DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrNull();
+        if (deliverDTO != null) {
 
-        // 取消交付单
-        deliverAggregateRootApi.cancelDeliver(deliverCancelCmd);
+            DeliverCancelCmd deliverCancelCmd = DeliverCancelCmd.builder().serveNo(cmd.getServeNo()).build();
+            deliverCancelCmd.setOperatorId(cmd.getOperatorId());
+
+            // 取消交付单
+            deliverAggregateRootApi.cancelDeliver(deliverCancelCmd);
+
+            // 修改车辆状态
+            VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
+            vehicleSaveCmd.setId(Collections.singletonList(deliverDTO.getCarId()));
+            vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.UNCHECKED.getCode());
+            vehicleSaveCmd.setStockStatus(ValidStockStatusEnum.IN.getCode());
+
+            ResultValidUtils.checkResultException(vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd));
+        }
 
         return Result.getInstance(0).success();
     }
