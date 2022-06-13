@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.gateway;
 
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverInvalidCmd;
 import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
 
 import java.util.List;
@@ -21,4 +22,5 @@ public interface RecoverVehicleGateway {
 
     int updateRecoverVehicleByDeliverNo(RecoverVehicleEntity recoverVehicle);
 
+    int invalidRecover(RecoverInvalidCmd cmd);
 }

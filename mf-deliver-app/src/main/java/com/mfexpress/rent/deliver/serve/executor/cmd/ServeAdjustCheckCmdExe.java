@@ -108,8 +108,6 @@ public class ServeAdjustCheckCmdExe {
         vo.setChargeDepositAmount(sourceServeDTO.getDeposit());
         vo.setChargeRentAmount(serveDTO.getRent());
 
-        log.info("ServeAdjustRecordVo---->{}", vo.getExpectRecoverTime());
-        log.info("sourceServeDTO.getExpectRecoverDate()---->{}", sourceServeDTO.getExpectRecoverDate());
         Result<DeliverDTO> sourceDeliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(sourceServeNo);
         DeliverDTO sourceDeliverDTO = ResultDataUtils.getInstance(sourceDeliverDTOResult).getDataOrException();
         vo.setSourceCarId(sourceDeliverDTO.getCarId());

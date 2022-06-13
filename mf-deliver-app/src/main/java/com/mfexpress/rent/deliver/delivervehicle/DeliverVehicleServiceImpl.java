@@ -1,18 +1,20 @@
 package com.mfexpress.rent.deliver.delivervehicle;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.Resource;
+
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.api.DeliverVehicleServiceI;
 import com.mfexpress.rent.deliver.delivervehicle.executor.DeliverVehicleExe;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleCmd;
-import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleVO;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.entity.vo.LinkmanVo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-
+@Slf4j
 @Service
 public class DeliverVehicleServiceImpl implements DeliverVehicleServiceI {
 
@@ -20,9 +22,8 @@ public class DeliverVehicleServiceImpl implements DeliverVehicleServiceI {
     private DeliverVehicleExe deliverVehicleExe;
 
     @Resource
-    private DeliverVehicleServiceI deliverVehicleServiceI;
-    @Resource
     private CustomerAggregateRootApi customerAggregateRootApi;
+
 
     @Override
     public String toDeliver(DeliverVehicleCmd deliverVehicleCmd) {

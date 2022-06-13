@@ -12,6 +12,7 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalQry;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverInvalidCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverVehicleProcessCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.entity.RecoverVehicle;
@@ -71,12 +72,11 @@ public interface RecoverVehicleAggregateRootApi {
     Result<Integer> updateDeductionFeeByDeliver(@RequestBody RecoverDeductionByDeliverCmd cmd);
 
     /**
-     * 收车后续处理
+     * 收车无效
      *
      * @param cmd
-     *
      * @return
      */
-    @PostMapping(value = "/recover/process")
-    Result<List<String>> recoverVehicleProcess(@RequestBody RecoverVehicleProcessCmd cmd);
+    @PostMapping(value = "/recover/invalid")
+    Result<Integer> invalidRecover(@RequestBody RecoverInvalidCmd cmd);
 }
