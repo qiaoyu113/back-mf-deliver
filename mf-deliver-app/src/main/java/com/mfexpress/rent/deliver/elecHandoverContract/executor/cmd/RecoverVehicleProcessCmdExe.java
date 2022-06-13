@@ -51,6 +51,7 @@ import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import com.mfexpress.rent.vehicle.data.dto.warehouse.WarehouseDto;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -82,7 +83,6 @@ public class RecoverVehicleProcessCmdExe {
     @Resource
     private ServeServiceI serveServiceI;
 
-    @Resource
     private MqTools mqTools;
 
     @Value("${rocketmq.listenEventTopic}")
@@ -91,7 +91,14 @@ public class RecoverVehicleProcessCmdExe {
     @Resource(name = "serveSyncServiceImpl")
     private EsSyncHandlerI serveSyncServiceI;
 
+    @Resource
+    private BeanFactory beanFactory;
+
     public void execute(RecoverVehicleProcessCmd cmd) {
+
+        if (null == mqTools) {
+            mqTools = beanFactory.getBean(MqTools.class);
+        }
 
         List<String> serveNoList = new LinkedList<>();
         // 交付单、服务单修改
