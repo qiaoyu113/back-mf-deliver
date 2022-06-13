@@ -31,7 +31,7 @@ class RecoverVehicleControllerTest {
     String serveNo = "";
 
     // TODO 维修单号
-    String deliverNo = "";
+    String deliverNo = "JFD2022061300013";
     @Test
     void getRecoverVehicleListVO() {
 
@@ -57,8 +57,11 @@ class RecoverVehicleControllerTest {
         // 取消收车 判断替换车是否调整为正常服务单
         RecoverCancelByDeliverCmd cmd = new RecoverCancelByDeliverCmd();
         cmd.setDeliverNo(deliverNo);
+        cmd.setCancelRemarkId(1);
+        cmd.setCancelRemark("客户原因，取消收车");
 
-        controller.cancelRecoverByDeliver(cmd, jwt);
+        Result<Integer> reslut = controller.cancelRecoverByDeliver(cmd, jwt);
+        log.info("result---->{}", reslut);
     }
 
     @Test

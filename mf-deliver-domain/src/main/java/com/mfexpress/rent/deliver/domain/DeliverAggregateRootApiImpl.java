@@ -12,6 +12,7 @@ import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
@@ -35,6 +36,7 @@ import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
+import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
 import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -524,9 +526,11 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         }
 
         Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(deliverEntity.getServeNo());
-        if (Optional.ofNullable(serveDTOResult).map(Result::getData)
-                .filter(serve -> ServeEnum.REPAIR.getCode().equals(serve.getStatus())).isPresent()) {
+        ServeDTO serveDTO = ResultDataUtils.getInstance(serveDTOResult).getDataOrException();
+
+        if (Optional.ofNullable(serveDTO).filter(serve -> ServeEnum.REPAIR.getCode().equals(serve.getStatus())).isPresent()) {
             String serveNo = serveDTOResult.getData().getServeNo();
+
             // 查询替换单
             ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, serveNo);
 
@@ -534,7 +538,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
                 String replaceServeNo = replaceVehicleDTO.getServeNo();
                 Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceServeNo);
                 if (Optional.ofNullable(replaceServeDTOResult).map(Result::getData)
-                        .filter(serveDTO -> JudgeEnum.NO.getCode().equals(serveDTO.getReplaceFlag())).isPresent()) {
+                        .filter(s -> JudgeEnum.NO.getCode().equals(s.getReplaceFlag())).isPresent()) {
                     return Result.getInstance(0).fail(ResultStatusEnum.UNKNOWS.getCode(), "不可取消收车");
                 }
             }
