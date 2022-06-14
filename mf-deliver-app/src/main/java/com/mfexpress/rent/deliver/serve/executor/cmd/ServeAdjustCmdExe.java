@@ -6,6 +6,7 @@ import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.utils.util.ResultValidUtils;
+import com.mfexpress.rent.deliver.constant.ReplaceVehicleDepositPayTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
@@ -29,7 +30,8 @@ public class ServeAdjustCmdExe {
         checkCmd.setServeNo(cmd.getServeNo());
         ServeAdjustRecordVo vo = serveAdjustCheckCmdExe.execute(checkCmd, tokenInfo);
 
-        if (vo.getUnlockDepositAmount().compareTo(vo.getChargeDepositAmount()) == -1) {
+        if (ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == cmd.getDepositPayType()
+                && vo.getUnlockDepositAmount().compareTo(vo.getChargeDepositAmount()) == -1) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "未锁定押金账本金额小于变更后押金金额，无法进行服务单调整");
         }
 
