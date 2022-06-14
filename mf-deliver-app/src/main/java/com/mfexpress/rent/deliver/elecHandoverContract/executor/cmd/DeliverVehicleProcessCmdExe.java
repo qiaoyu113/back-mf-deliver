@@ -1,17 +1,5 @@
 package com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
@@ -42,8 +30,14 @@ import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -69,14 +63,21 @@ public class DeliverVehicleProcessCmdExe {
 
     @Resource(name = "serveSyncServiceImpl")
     private EsSyncHandlerI serveSyncServiceI;
-
-    @Resource
+//
     private MqTools mqTools;
 
     @Value("${rocketmq.listenEventTopic}")
     private String event;
 
+    @Resource
+    private BeanFactory beanFactory;
+
+
     public void execute(DeliverVehicleProcessCmd cmd) {
+
+        if (Objects.isNull(mqTools)) {
+            mqTools = beanFactory.getBean(MqTools.class);
+        }
 
         ElecContractDTO contractDTO = cmd.getContractDTO();
 
