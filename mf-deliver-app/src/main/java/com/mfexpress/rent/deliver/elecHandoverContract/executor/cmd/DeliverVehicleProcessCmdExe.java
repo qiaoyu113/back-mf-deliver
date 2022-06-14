@@ -1,17 +1,5 @@
 package com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
@@ -26,7 +14,6 @@ import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.domainapi.DailyAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.daily.CreateDailyCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
@@ -42,8 +29,14 @@ import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -66,14 +59,21 @@ public class DeliverVehicleProcessCmdExe {
 
     @Resource(name = "serveSyncServiceImpl")
     private EsSyncHandlerI serveSyncServiceI;
-
-    @Resource
+//
     private MqTools mqTools;
 
     @Value("${rocketmq.listenEventTopic}")
     private String event;
 
+    @Resource
+    private BeanFactory beanFactory;
+
+
     public void execute(DeliverVehicleProcessCmd cmd) {
+
+        if (Objects.isNull(mqTools)) {
+            mqTools = beanFactory.getBean(MqTools.class);
+        }
 
         ElecContractDTO contractDTO = cmd.getContractDTO();
 
@@ -122,7 +122,7 @@ public class DeliverVehicleProcessCmdExe {
             rentChargeCmd.setCreateId(contractDTO.getCreatorId());
             rentChargeCmd.setVehicleId(deliverImgInfo.getCarId());
             rentChargeCmd.setDeliverDate(DateUtil.formatDate(contractDTO.getDeliverVehicleTime()));
-            mqTools.send(event, "deliver_vehicle", null, JSON.toJSONString(rentChargeCmd));
+            this.mqTools.send(event, "deliver_vehicle", null, JSON.toJSONString(rentChargeCmd));
         });
 
         // 修改对应的车辆状态为租赁状态
