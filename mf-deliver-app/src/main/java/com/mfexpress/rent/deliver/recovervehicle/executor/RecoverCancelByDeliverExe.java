@@ -1,14 +1,29 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
+import java.util.Optional;
+
 import javax.annotation.Resource;
 
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.response.ResultStatusEnum;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
+import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCompletedCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverInvalidCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.utils.MainServeUtil;
+import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
+import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -20,19 +35,55 @@ public class RecoverCancelByDeliverExe {
     @Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
 
+    @Resource
+    private ServeAggregateRootApi serveAggregateRootApi;
+
+    @Resource
+    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
+
 
     public Integer execute(RecoverCancelByDeliverCmd cmd, TokenInfo tokenInfo) {
 
-        //交付单回退到已发车状态
-        cmd.setOperatorId(tokenInfo.getId());
-        cmd.setOperatorName(tokenInfo.getNickName());
-        Result<Integer> deliverResult = deliverAggregateRootApi.cancelRecoverByDeliver(cmd);
+        // 2022-05-31 增加不可取消收车规则判断
+        Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByDeliverNo(cmd.getDeliverNo());
 
-        ResultValidUtils.checkResultException(deliverResult);
-
-        if (deliverResult.getCode() != 0) {
-            throw new CommonException(deliverResult.getCode(), deliverResult.getMsg());
+        DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrNull();
+        if (deliverDTO == null) {
+            throw new CommonException(ResultStatusEnum.UNKNOWS.getCode(), "数据错误");
         }
+
+        Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(deliverDTO.getServeNo());
+        ServeDTO serveDTO = ResultDataUtils.getInstance(serveDTOResult).getDataOrException();
+
+        if (Optional.ofNullable(serveDTO).filter(serve -> ServeEnum.REPAIR.getCode().equals(serve.getStatus())).isPresent()) {
+            String serveNo = serveDTOResult.getData().getServeNo();
+
+            // 查询替换单
+            ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, serveNo);
+
+            if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
+                String replaceServeNo = replaceVehicleDTO.getServeNo();
+                Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceServeNo);
+                if (Optional.ofNullable(replaceServeDTOResult).map(Result::getData)
+                        .filter(s -> JudgeEnum.NO.getCode().equals(s.getReplaceFlag())).isPresent()) {
+                    throw new CommonException(ResultStatusEnum.UNKNOWS.getCode(), "不可取消收车");
+                }
+            }
+        }
+
+        // 交付单退回到已发车状态
+        DeliverCompletedCmd deliverCompletedCmd = new DeliverCompletedCmd();
+        deliverCompletedCmd.setDeliverNo(deliverDTO.getDeliverNo());
+        deliverCompletedCmd.setOperatorId(cmd.getOperatorId());
+
+        deliverAggregateRootApi.completedDeliver(deliverCompletedCmd);
+
+        // 之前的收车实体置为无效
+        RecoverInvalidCmd recoverInvalidCmd = new RecoverInvalidCmd();
+        recoverInvalidCmd.setDeliverNo(deliverDTO.getDeliverNo());
+        recoverInvalidCmd.setOperatorId(cmd.getOperatorId());
+
+        ResultValidUtils.checkResultException(recoverVehicleAggregateRootApi.invalidRecover(recoverInvalidCmd));
 
         return 0;
     }

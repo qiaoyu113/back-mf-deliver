@@ -36,14 +36,4 @@ public interface DeliverVehicleAggregateRootApi {
 
     @PostMapping("/getDeliverVehicleByDeliverNoList")
     Result<List<DeliverVehicleDTO>> getDeliverVehicleByDeliverNoList(@RequestBody List<String> deliverNoList);
-
-    /**
-     * 发车处理
-     *
-     * @param cmd
-     *
-     * @return
-     */
-    @PostMapping(value = "/deliver/process")
-    Result<List<String>> deliverVehicleProcess(@RequestBody DeliverVehicleProcessCmd cmd);
 }

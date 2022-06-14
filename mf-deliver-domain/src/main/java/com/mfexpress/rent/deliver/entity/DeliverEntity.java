@@ -7,6 +7,7 @@ import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.DeliverStatusEnum;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCompletedCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
@@ -159,5 +160,15 @@ public class DeliverEntity implements DeliverEntityApi {
         deliverEntity.setUpdateTime(new Date());
 
         deliverGateway.updateDeliverByServeNo(serveNo, deliverEntity);
+    }
+
+    @Override
+    @Transactional
+    public void completedDeliver(DeliverCompletedCmd cmd) {
+
+        DeliverEntity deliver = DeliverEntity.builder().deliverStatus(DeliverEnum.DELIVER.getCode())
+                .updateId(cmd.getOperatorId()).build();
+
+        deliverGateway.updateDeliverByDeliverNo(cmd.getDeliverNo(), deliver);
     }
 }

@@ -1,24 +1,6 @@
 package com.mfexpress.rent.deliver.domain;
 
 
-import java.math.BigDecimal;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
@@ -35,58 +17,28 @@ import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
+import com.mfexpress.component.utils.util.ResultDataUtils;
+import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.dto.data.CommodityDTO;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.DeliverEnum;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
-import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
-import com.mfexpress.rent.deliver.constant.ServeRenewalTypeEnum;
+import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.domainservice.ServeDomainServiceI;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockConfirmDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockListDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.PassiveRenewalServeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.RenewalChargeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.RenewalCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.RenewalReplaceServeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.RenewalServeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeAddDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeChangeRecordDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeCycleQryCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDailyDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
-import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeReplaceVehicleAddDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustRecordDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustRecordQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
-import com.mfexpress.rent.deliver.entity.DeliverEntity;
-import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
-import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
-import com.mfexpress.rent.deliver.entity.ServeChangeRecordPO;
-import com.mfexpress.rent.deliver.entity.ServeEntity;
+import com.mfexpress.rent.deliver.entity.*;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
-import com.mfexpress.rent.deliver.gateway.DeliverGateway;
-import com.mfexpress.rent.deliver.gateway.DeliverVehicleGateway;
-import com.mfexpress.rent.deliver.gateway.RecoverVehicleGateway;
-import com.mfexpress.rent.deliver.gateway.ServeAdjustRecordGateway;
-import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
-import com.mfexpress.rent.deliver.gateway.ServeGateway;
+import com.mfexpress.rent.deliver.gateway.*;
 import com.mfexpress.rent.deliver.po.ServeAdjustRecordPO;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
@@ -95,6 +47,10 @@ import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
 import com.mfexpress.rent.maintain.constant.MaintenanceTypeEnum;
 import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
 import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
+import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
+import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
+import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -102,11 +58,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/domain/deliver/v3/serve")
@@ -149,6 +109,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Resource
     private ContractAggregateRootApi contractAggregateRootApi;
+
+    @Resource
+    private VehicleAggregateRootApi vehicleAggregateRootApi;
 
     @Resource
     private MqTools mqTools;
@@ -228,6 +191,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setExpectRecoverDate("");
                 serve.setPayableDeposit(BigDecimal.valueOf(serveVehicleDTO.getDeposit()));
                 serve.setPaidInDeposit(BigDecimal.valueOf(serveVehicleDTO.getDeposit()));
+                serve.setRentRatio(BigDecimal.valueOf(serveVehicleDTO.getRentRatio()));
                 serveList.add(serve);
             }
         }
@@ -1109,11 +1073,24 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         // 取消服务单
         serveEntityApi.cancelServe(cmd);
 
-        DeliverCancelCmd deliverCancelCmd = DeliverCancelCmd.builder().serveNo(cmd.getServeNo()).build();
-        deliverCancelCmd.setOperatorId(cmd.getOperatorId());
+        Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(cmd.getServeNo());
+        DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrNull();
+        if (deliverDTO != null) {
 
-        // 取消交付单
-        deliverAggregateRootApi.cancelDeliver(deliverCancelCmd);
+            DeliverCancelCmd deliverCancelCmd = DeliverCancelCmd.builder().serveNo(cmd.getServeNo()).build();
+            deliverCancelCmd.setOperatorId(cmd.getOperatorId());
+
+            // 取消交付单
+            deliverAggregateRootApi.cancelDeliver(deliverCancelCmd);
+
+            // 修改车辆状态
+            VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
+            vehicleSaveCmd.setId(Collections.singletonList(deliverDTO.getCarId()));
+            vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.UNCHECKED.getCode());
+            vehicleSaveCmd.setStockStatus(ValidStockStatusEnum.IN.getCode());
+
+            ResultValidUtils.checkResultException(vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd));
+        }
 
         return Result.getInstance(0).success();
     }
