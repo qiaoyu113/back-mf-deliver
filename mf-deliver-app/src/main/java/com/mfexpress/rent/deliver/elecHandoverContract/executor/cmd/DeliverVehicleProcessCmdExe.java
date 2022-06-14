@@ -11,6 +11,7 @@ import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
+import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.domainapi.DailyAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
@@ -56,6 +57,9 @@ public class DeliverVehicleProcessCmdExe {
 
     @Resource
     private CustomerAggregateRootApi customerAggregateRootApi;
+
+    @Resource
+    private ContractAggregateRootApi orderContractAggregateRootApi;
 
     @Resource(name = "serveSyncServiceImpl")
     private EsSyncHandlerI serveSyncServiceI;
@@ -122,7 +126,9 @@ public class DeliverVehicleProcessCmdExe {
             rentChargeCmd.setCreateId(contractDTO.getCreatorId());
             rentChargeCmd.setVehicleId(deliverImgInfo.getCarId());
             rentChargeCmd.setDeliverDate(DateUtil.formatDate(contractDTO.getDeliverVehicleTime()));
-            this.mqTools.send(event, "deliver_vehicle", null, JSON.toJSONString(rentChargeCmd));
+            rentChargeCmd.setRentRatio(serve.getRentRatio().doubleValue());
+
+            mqTools.send(event, "deliver_vehicle", null, JSON.toJSONString(rentChargeCmd));
         });
 
         // 修改对应的车辆状态为租赁状态

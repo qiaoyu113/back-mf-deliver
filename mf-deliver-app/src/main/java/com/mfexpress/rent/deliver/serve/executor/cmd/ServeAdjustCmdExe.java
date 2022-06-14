@@ -2,8 +2,9 @@ package com.mfexpress.rent.deliver.serve.executor.cmd;
 
 import javax.annotation.Resource;
 
+import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
-import com.mfexpress.component.utils.util.ResultDataUtils;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
@@ -27,6 +28,10 @@ public class ServeAdjustCmdExe {
         ServeAdjustCheckCmd checkCmd = new ServeAdjustCheckCmd();
         checkCmd.setServeNo(cmd.getServeNo());
         ServeAdjustRecordVo vo = serveAdjustCheckCmdExe.execute(checkCmd, tokenInfo);
+
+        if (vo.getUnlockDepositAmount().compareTo(vo.getChargeDepositAmount()) == -1) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "未锁定押金账本金额小于变更后押金金额，无法进行服务单调整");
+        }
 
         initCmd(cmd, vo);
         cmd.setOperatorId(tokenInfo.getId());
