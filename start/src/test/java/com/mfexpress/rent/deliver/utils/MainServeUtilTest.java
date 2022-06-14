@@ -25,7 +25,7 @@ class MainServeUtilTest {
     @Test
     void getReplaceVehicleDTOBySourceServNo() {
 
-        ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, "FWD2022030400009");
+        ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, "FWD2022042800017");
 
         log.info("{}", replaceVehicleDTO);
     }
@@ -33,7 +33,7 @@ class MainServeUtilTest {
     @Test
     void getMaintenanceDTOByReplaceServeNo() {
 
-        MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceDTOByReplaceServeNo(maintenanceAggregateRootApi, "FWD2022060900029");
+        MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceDTOByReplaceServeNo(maintenanceAggregateRootApi, "FWD2022042800017");
 
         log.info("{}", maintenanceDTO);
     }
@@ -41,7 +41,7 @@ class MainServeUtilTest {
     @Test
     void getMaintenanceByServeNo() {
 
-        MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByServeNo(maintenanceAggregateRootApi, "FWD2021092600192");
+        MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByServeNo(maintenanceAggregateRootApi, "FWD2022061400015");
 
         log.info("{}", maintenanceDTO);
     }

@@ -1,9 +1,16 @@
 package com.mfexpress.rent.deliver.mobile;
 
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
 import javax.annotation.Resource;
 
+import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.MfDeliveryApplication;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCheckCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverInsureCmd;
+import com.mfexpress.rent.deliver.utils.FormatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -29,5 +36,31 @@ class DeliverControllerTest {
         DeliverCheckCmd cmd = new DeliverCheckCmd();
         cmd.setServeNo(serveNo);
         controller.toCheck(cmd, jwt);
+    }
+
+    @Test
+    void toInsure() {
+        /**
+         *
+         * {
+         *   "startInsureDate": 1655136000000,
+         *   "endInsureDate": 1655222400000,
+         *   "serveNoList": [
+         *     "FWD2022061400029"
+         *   ],
+         *   "carIdList": [
+         *     6489
+         *   ]
+         * }
+         */
+        DeliverInsureCmd cmd = new DeliverInsureCmd();
+
+        cmd.setServeNoList(Collections.singletonList("FWD2022061400029"));
+        cmd.setCarIdList(Collections.singletonList(6489));
+        cmd.setStartInsureDate(new Date());
+        cmd.setEndInsureDate(FormatUtil.addDays(new Date(), 2));
+
+        Result<String> result = controller.toInsure(cmd, jwt);
+        log.info("result---->{}", result);
     }
 }

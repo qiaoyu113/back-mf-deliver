@@ -15,6 +15,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -32,10 +33,10 @@ public class RecoverQryContext {
     public RecoverTaskListVO execute(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo) {
         RecoverQryServiceI bean = (RecoverQryServiceI) applicationContext.getBean(RecoverEnum.getServiceName(recoverQryListCmd.getTag()) + "QryExe");
         RecoverTaskListVO recoverTaskListVO = bean.execute(recoverQryListCmd, tokenInfo);
-       List<RecoverVehicleVO> recoverVehicleVOList = recoverTaskListVO.getRecoverVehicleVOList();
+        List<RecoverVehicleVO> recoverVehicleVOList = recoverTaskListVO.getRecoverVehicleVOList();
         for (RecoverVehicleVO v : recoverVehicleVOList) {
             Result<MaintenanceDTO> maintainResult = maintenanceAggregateRootApi.getMaintenanceByServeNo(v.getServeNo());
-            if (maintainResult.getData()!=null){
+            if (maintainResult.getData() != null) {
                 v.setConfirmDate(maintainResult.getData().getConfirmDate());
             }
             Result<ServeDTO> serveDtoByServeNo = serveAggregateRootApi.getServeDtoByServeNo(v.getServeNo());

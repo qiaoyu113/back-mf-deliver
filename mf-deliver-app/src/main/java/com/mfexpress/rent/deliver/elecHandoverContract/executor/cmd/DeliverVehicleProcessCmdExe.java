@@ -165,7 +165,7 @@ public class DeliverVehicleProcessCmdExe {
 
         DeliverVehicleProcessCmd deliverVehicleProcessCmd = new DeliverVehicleProcessCmd();
         deliverVehicleProcessCmd.setCustomerId(deliverDTO.getCustomerId());
-        elecContractDTO.setContractForeignNo(elecContractDTO.getContractShowNo());
+        elecContractDTO.setContractForeignNo(elecContractDTO.getContractForeignNo());
         deliverVehicleProcessCmd.setContractDTO(elecContractDTO);
 
         return deliverVehicleProcessCmd;

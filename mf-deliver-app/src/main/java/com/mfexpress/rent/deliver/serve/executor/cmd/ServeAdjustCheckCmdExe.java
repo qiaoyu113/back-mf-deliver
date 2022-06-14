@@ -104,7 +104,7 @@ public class ServeAdjustCheckCmdExe {
         vo.setServeNo(cmd.getServeNo());
         vo.setChargeLeaseModelId(sourceServeDTO.getLeaseModelId());
         vo.setChargeLeaseModel(ServeDictDataUtil.leaseModeMap.get(String.valueOf(vo.getChargeLeaseModelId())));
-        vo.setExpectRecoverTime(FormatUtil.addDays(FormatUtil.ymdFormatStringToDate(sourceServeDTO.getExpectRecoverDate()), 1));
+        vo.setExpectRecoverTime(FormatUtil.ymdFormatStringToDate(sourceServeDTO.getExpectRecoverDate()));
         vo.setChargeDepositAmount(sourceServeDTO.getDeposit());
         vo.setChargeRentAmount(serveDTO.getRent());
 
