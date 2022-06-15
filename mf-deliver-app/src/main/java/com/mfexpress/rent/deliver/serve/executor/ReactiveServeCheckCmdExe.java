@@ -7,6 +7,7 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
@@ -43,6 +44,9 @@ public class ReactiveServeCheckCmdExe {
         List<String> reactiveServeNoList = new ArrayList<>();
         Date nowDate = DateUtil.parse(DateUtil.today());
         for (ServeDTO serveDTO : serveDTOMap.values()) {
+            if (Optional.ofNullable(serveDTO).filter(s -> ServeEnum.CANCEL.getCode().equals(s.getStatus())).isPresent()) {
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单已作废,不能继续发车");
+            }
             if (JudgeEnum.YES.getCode().equals(serveDTO.getReactiveFlag())) {
                 if (nowDate.after(DateUtil.parseDate(serveDTO.getExpectRecoverDate()))) {
                     throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单：" + serveDTO.getServeNo() + "已过预计收车日期，不可进行操作");

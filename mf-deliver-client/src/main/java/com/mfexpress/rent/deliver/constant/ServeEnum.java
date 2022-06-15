@@ -7,7 +7,7 @@ public enum ServeEnum {
     RECOVER(3, "已收车", "已收车"),
     COMPLETED(4, "已完成", "已完成"),
     REPAIR(5, "维修中", "维修中"),
-    CANCEL(6, "作废", "作废");
+    CANCEL(6, "已作废", "已作废");
 
 
     private Integer code;

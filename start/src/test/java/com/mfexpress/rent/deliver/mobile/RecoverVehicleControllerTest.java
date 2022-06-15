@@ -10,6 +10,8 @@ import com.mfexpress.rent.deliver.MfDeliveryApplication;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyQryCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -31,7 +33,7 @@ class RecoverVehicleControllerTest {
     String serveNo = "";
 
     // TODO 维修单号
-    String deliverNo = "JFD2022061300013";
+    String deliverNo = "JFD2022042800015";
     @Test
     void getRecoverVehicleListVO() {
 
@@ -70,6 +72,29 @@ class RecoverVehicleControllerTest {
 
     @Test
     void getRecoverTaskListVO() {
+
+        /**
+         * {
+         *   "page": 1,
+         *   "tag": 21,
+         *   "limit": 20,
+         *   "carModelId": "",
+         *   "brandId": "",
+         *   "expectRecoverStartTime": "",
+         *   "expectRecoverEndTime": "",
+         *   "endDeliverTime": "",
+         *   "startDeliverTime": "",
+         *   "plateNumber": ""
+         * }
+         */
+        RecoverQryListCmd cmd = new RecoverQryListCmd();
+        cmd.setTag(21);
+        cmd.setPage(1);
+        cmd.setLimit(1);
+
+        Result<RecoverTaskListVO> result = controller.getRecoverTaskListVO(cmd, jwt);
+
+        log.info("result---->{}", result);
     }
 
     @Test

@@ -145,6 +145,9 @@ public class RecoverVehicleProcessCmdExe {
                 MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByServeNo(maintenanceAggregateRootApi, cmd.getServeNo());
                 // 维修性质为故障维修
                 if (MaintenanceTypeEnum.FAULT.getCode().intValue() == maintenanceDTO.getType()) {
+                    // 原车维修单变为库存中维修
+                    ResultValidUtils.checkResultException(maintenanceAggregateRootApi.updateMaintenanceDetailByServeNo(cmd.getServeNo()));
+
                     // 查询替换车服务单
                     ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, cmd.getServeNo());
                     if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
@@ -155,8 +158,7 @@ public class RecoverVehicleProcessCmdExe {
                                 .filter(o -> ServeEnum.DELIVER.getCode().equals(o.getStatus())
                                         && JudgeEnum.NO.getCode().equals(o.getReplaceFlag())
                                         && LeaseModelEnum.NORMAL.getCode() == o.getLeaseModelId()).isPresent()) {
-                            // 原车维修单变为库存中维修
-                            ResultValidUtils.checkResultException(maintenanceAggregateRootApi.updateMaintenanceDetailByServeNo(cmd.getServeNo()));
+
                             // 替换车押金支付
                             // 查询替换单支付方式
                             ServeAdjustRecordQry qry = new ServeAdjustRecordQry();
@@ -230,7 +232,7 @@ public class RecoverVehicleProcessCmdExe {
     public RecoverVehicleProcessCmd turnToCmd(ElecContractDTO contractDTO, DeliverDTO deliverDTO, ServeDTO serveDTO) {
 
         RecoverVehicleProcessCmd cmd = new RecoverVehicleProcessCmd();
-        cmd.setContractForeignNo(contractDTO.getContractShowNo());
+        cmd.setContractForeignNo(contractDTO.getContractForeignNo());
         cmd.setRecoverVehicleTime(contractDTO.getRecoverVehicleTime());
         cmd.setCarId(deliverDTO.getCarId());
         cmd.setServeNo(serveDTO.getServeNo());

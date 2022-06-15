@@ -156,10 +156,11 @@ public class DeliverEntity implements DeliverEntityApi {
 
         DeliverEntity deliverEntity = new DeliverEntity();
         deliverEntity.setDeliverStatus(DeliverEnum.CANCEL.getCode());
+        deliverEntity.setStatus(DeliverStatusEnum.INVALID.getCode());
         deliverEntity.setUpdateId(cmd.getOperatorId());
         deliverEntity.setUpdateTime(new Date());
 
-        deliverGateway.updateDeliverByServeNo(serveNo, deliverEntity);
+        deliverGateway.updateDeliverByServeNo(cmd.getServeNo(), deliverEntity);
     }
 
     @Override
