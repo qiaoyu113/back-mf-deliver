@@ -23,7 +23,6 @@ import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
-import com.mfexpress.rent.deliver.constant.ReplaceVehicleDepositPayTypeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.DailyAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
@@ -35,9 +34,6 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContract
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverVehicleProcessCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.RenewalChargeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustRecordDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustRecordQry;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
@@ -158,27 +154,6 @@ public class RecoverVehicleProcessCmdExe {
                                 .filter(o -> ServeEnum.DELIVER.getCode().equals(o.getStatus())
                                         && JudgeEnum.NO.getCode().equals(o.getReplaceFlag())
                                         && LeaseModelEnum.NORMAL.getCode() == o.getLeaseModelId()).isPresent()) {
-
-                            // 替换车押金支付
-                            // 查询替换单支付方式
-                            ServeAdjustRecordQry qry = new ServeAdjustRecordQry();
-                            qry.setServeNo(replaceServe.getServeNo());
-                            Result<ServeAdjustRecordDTO> serveAdjustRecordDTOResult = serveAggregateRootApi.getServeAdjustRecord(qry);
-                            ResultValidUtils.checkResultException(serveAdjustRecordDTOResult);
-                            ServeAdjustRecordDTO serveAdjustRecordDTO = ResultDataUtils.getInstance(serveAdjustRecordDTOResult).getDataOrException();
-
-                            if (ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == serveAdjustRecordDTO.getDepositPayType()) {
-                                // 账本扣除
-                                ServeDepositPayCmd serveDepositPayCmd = new ServeDepositPayCmd();
-                                serveDepositPayCmd.setDepositAmount(replaceServe.getDeposit());
-                                serveDepositPayCmd.setServeNo(replaceServe.getServeNo());
-                                serveDepositPayCmd.setOrderId(replaceServe.getOrderId());
-                                serveDepositPayCmd.setCustomerId(replaceServe.getCustomerId());
-                                serveDepositPayCmd.setOperatorId(cmd.getOperatorId());
-                                serveDepositPayCmd.setDepositPayType(ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode());
-
-                                serveServiceI.serveDepositPay(serveDepositPayCmd);
-                            }
 
                             // 替换车开始计费
                             Result<DeliverDTO> replaceDeliverResult = deliverAggregateRootApi.getDeliverByServeNo(replaceServe.getServeNo());
