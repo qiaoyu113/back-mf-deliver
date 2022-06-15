@@ -1,23 +1,19 @@
 package com.mfexpress.rent.deliver.mobile;
 
-import java.util.List;
-
-import javax.annotation.Resource;
-
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.MfDeliveryApplication;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyQryCmd;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
+import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import javax.annotation.Resource;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -34,15 +30,21 @@ class RecoverVehicleControllerTest {
 
     // TODO 维修单号
     String deliverNo = "JFD2022042800015";
+
+    @Resource
+    MaintenanceAggregateRootApi maintenanceAggregateRootApi;
     @Test
     void getRecoverVehicleListVO() {
 
-        RecoverApplyQryCmd cmd = new RecoverApplyQryCmd();
-        cmd.setCustomerId(85);
+//        RecoverApplyQryCmd cmd = new RecoverApplyQryCmd();
+//        cmd.setCustomerId(1071);
+//
+//        Result<List<RecoverApplyVO>> result = controller.getRecoverVehicleListVO(cmd, jwt);
+//
+//        log.info("size---->{}----result---->{}", ResultDataUtils.getInstance(result).getDataOrException().size(), result);
 
-        Result<List<RecoverApplyVO>> result = controller.getRecoverVehicleListVO(cmd, jwt);
-
-        log.info("size---->{}----result---->{}", ResultDataUtils.getInstance(result).getDataOrException().size(), result);
+        Result<Boolean> result = maintenanceAggregateRootApi.updateMaintenanceDetailByServeNo("FWD2022041400008");
+        System.out.println(result);
     }
 
     @Test
@@ -124,7 +126,7 @@ class RecoverVehicleControllerTest {
     @Test
     void whetherToCheck() {
         RecoverVechicleCmd cmd = new RecoverVechicleCmd();
-        cmd.setServeNo("FWD2021092600192");
+        cmd.setServeNo("FWD2022061400026");
 
         Result<String> result = controller.whetherToCheck(cmd, jwt);
 
