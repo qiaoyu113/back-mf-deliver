@@ -291,6 +291,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @Transactional(rollbackFor = Exception.class)
     public Result<Integer> recovered(@RequestParam("deliverNo") String deliverNo, @RequestParam("foreignNo") String foreignNo) {
         // 判断deliver中的合同状态，如果不是签署中状态，不可进行此操作
+        log.info("recovered---->deliver---->{} 开始修改", deliverNo);
         DeliverEntity deliver = deliverGateway.getDeliverByDeliverNo(deliverNo);
         if (DeliverContractStatusEnum.SIGNING.getCode() != deliver.getRecoverContractStatus()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单当前状态不允许收车");
@@ -302,11 +303,14 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         deliverToUpdate.setRecoverContractStatus(DeliverContractStatusEnum.COMPLETED.getCode());
         deliverToUpdate.setDeliverStatus(DeliverEnum.RECOVER.getCode());
         deliverGateway.updateDeliverByDeliverNos(Collections.singletonList(deliver.getDeliverNo()), deliverToUpdate);
-
+        log.info("recovered---->deliver---->{} 结束修改", deliverNo);
+        log.info("recovered---->serve---->{} 开始修改", deliver.getServeNo());
         // 服务单状态更改为已收车
         ServeEntity serve = ServeEntity.builder().status(ServeEnum.RECOVER.getCode()).build();
         serveGateway.updateServeByServeNoList(Collections.singletonList(deliver.getServeNo()), serve);
+        log.info("recovered---->serve---->{} 结束修改", deliver.getServeNo());
 
+        log.info("recovered---->recoverVehicle---->{} 开始修改", deliver.getCarNum());
         // 用合同信息补充收车单信息
         ElectronicHandoverContractPO contractPO = contractGateway.getContractByForeignNo(foreignNo);
         if (null == contractPO) {
@@ -324,7 +328,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         List<GroupPhotoVO> groupPhotoVOS = JSONUtil.toList(contractPO.getPlateNumberWithImgs(), GroupPhotoVO.class);
         recoverVehicle.setImgUrl(groupPhotoVOS.get(0).getImgUrl());
         recoverVehicleGateway.updateRecoverVehicle(recoverVehicle);
-
+        log.info("recovered---->recoverVehicle---->{} 结束修改", deliver.getCarNum());
         return Result.getInstance(0).success();
     }
 
