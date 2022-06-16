@@ -610,6 +610,8 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     }
 
     @Override
+    @Transactional
+    @PrintParam
     public Result<Integer> cancelDeliver(DeliverCancelCmd cmd) {
 
         deliverEntityApi.cancelDeliver(cmd);
@@ -619,6 +621,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @Transactional
+    @PrintParam
     public Result<Integer> completedDeliver(DeliverCompletedCmd cmd) {
 
         deliverEntityApi.completedDeliver(cmd);

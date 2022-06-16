@@ -38,6 +38,12 @@ public class ServeAdjustRecordVo {
     private BigDecimal chargeRentAmount;
 
     /**
+     * 变更后的租金比例
+     */
+    @ApiModelProperty(value = "变更后的租金比例")
+    private BigDecimal chargeRentRatio;
+
+    /**
      * 实缴押金金额
      */
     @ApiModelProperty(value = "实缴押金金额")

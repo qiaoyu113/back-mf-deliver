@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
-@Builder
 @ApiModel(value = "交付单取消命令 CMD")
 public class DeliverCancelCmd extends BaseCmd {
 

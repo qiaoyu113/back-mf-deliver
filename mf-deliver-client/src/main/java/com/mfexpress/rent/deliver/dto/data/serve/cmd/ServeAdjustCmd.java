@@ -31,6 +31,12 @@ public class ServeAdjustCmd extends BaseCmd {
     private BigDecimal chargeRentAmount;
 
     /**
+     * 变更后的租金比例
+     */
+    @ApiModelProperty(value = "变更后的租金比例")
+    private BigDecimal chargeRentRatio;
+
+    /**
      * 变更后押金
      */
     @ApiModelProperty(value = "变更后押金", required = false)

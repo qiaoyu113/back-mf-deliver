@@ -89,7 +89,7 @@ public class ServeAdjustCheckCmdExe {
             Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(maintenanceDTO.getServeNo());
             DeliverDTO sourceDeliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrException();
             if (!Optional.ofNullable(sourceDeliverDTO).filter(deliver -> DeliverEnum.IS_RECOVER.getCode().equals(deliver.getDeliverStatus())).isPresent()) {
-                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "原车未申收车，无法进行服务单变更");
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "原车未申请收车，无法进行服务单变更");
             }
             sourceServeNo = sourceDeliverDTO.getServeNo();
             log.info("sourceServeNo---->{}", sourceServeNo);
@@ -107,8 +107,11 @@ public class ServeAdjustCheckCmdExe {
         vo.setChargeLeaseModelId(sourceServeDTO.getLeaseModelId());
         vo.setChargeLeaseModel(ServeDictDataUtil.leaseModeMap.get(String.valueOf(vo.getChargeLeaseModelId())));
         vo.setExpectRecoverTime(FormatUtil.ymdFormatStringToDate(sourceServeDTO.getExpectRecoverDate()));
+        // 变更后的押金、租金、租金比例为原车押金、租金、租金比例
         vo.setChargeDepositAmount(sourceServeDTO.getDeposit());
-        vo.setChargeRentAmount(serveDTO.getRent());
+        vo.setChargeRentAmount(sourceServeDTO.getRent());
+        vo.setChargeRentRatio(sourceServeDTO.getRentRatio());
+
         vo.setPaidInDepositAmount(serveDTO.getPaidInDeposit());
         vo.setOrderId(serveDTO.getOrderId());
         vo.setCustomerId(serveDTO.getCustomerId());

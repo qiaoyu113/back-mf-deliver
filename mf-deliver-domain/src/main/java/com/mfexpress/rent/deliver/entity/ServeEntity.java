@@ -277,6 +277,8 @@ public class ServeEntity implements ServeEntityApi {
         ServeEntity newEntity = new ServeEntity();
         newEntity.setLeaseModelId(ServeAdjustChargeRentTypeEnum.NORMAL.getCode());
         newEntity.setExpectRecoverDate(FormatUtil.ymdFormatDateToString(cmd.getExpectRecoverTime()));
+        newEntity.setRent(cmd.getChargeRentAmount());
+        newEntity.setRentRatio(cmd.getChargeRentRatio());
         newEntity.setDeposit(cmd.getChargeDepositAmount());
         newEntity.setPayableDeposit(cmd.getChargeDepositAmount());
         newEntity.setPaidInDeposit(cmd.getPaidInDepositAmount());
