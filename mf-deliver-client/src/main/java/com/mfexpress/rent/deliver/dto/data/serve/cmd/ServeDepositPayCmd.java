@@ -23,11 +23,17 @@ public class ServeDepositPayCmd extends BaseCmd {
     @NotNull(message = "orderId不能为空")
     private  Long orderId;
 
-    @ApiModelProperty("押金金额")
+    @ApiModelProperty(value = "实缴押金金额")
     @NotNull
     @DecimalMin("0.00")
     @DecimalMax("99999999.99")
-    private BigDecimal depositAmount;
+    private BigDecimal paidInDepositAmount;
+
+    @ApiModelProperty(value = "应缴押金金额")
+    @NotNull
+    @DecimalMin("0.00")
+    @DecimalMax("99999999.99")
+    private BigDecimal payAbleDepositAmount;
 
     @NotNull
     @ApiModelProperty("服务单编号")

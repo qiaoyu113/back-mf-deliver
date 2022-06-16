@@ -37,6 +37,12 @@ public class ServeAdjustCmd extends BaseCmd {
     private BigDecimal chargeDepositAmount;
 
     /**
+     * 实缴押金金额
+     */
+    @ApiModelProperty(value = "实缴押金金额")
+    private BigDecimal paidInDepositAmount;
+
+    /**
      * 预计收车日期
      */
     @ApiModelProperty(value = "预计收车日期", required = false)
@@ -48,4 +54,10 @@ public class ServeAdjustCmd extends BaseCmd {
      */
     @ApiModelProperty(value = "押金支付方式：1、押金账本支付;2、原车押金", required = true)
     private Integer depositPayType;
+
+    @ApiModelProperty("客户id")
+    private  Integer customerId;
+
+    @ApiModelProperty("订单id")
+    private  Long orderId;
 }

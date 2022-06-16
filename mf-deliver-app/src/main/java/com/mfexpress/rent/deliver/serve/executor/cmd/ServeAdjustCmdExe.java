@@ -38,30 +38,30 @@ public class ServeAdjustCmdExe {
         ServeAdjustRecordVo vo = serveAdjustCheckCmdExe.execute(checkCmd, tokenInfo);
 
         if (ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == cmd.getDepositPayType()
-                && vo.getUnlockDepositAmount().compareTo(vo.getChargeDepositAmount()) == -1) {
-            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "未锁定押金账本金额小于变更后押金金额，无法进行服务单调整");
+                && vo.getUnlockDepositAmount().compareTo(vo.getChargeDepositAmount().subtract(vo.getPaidInDepositAmount())) == -1) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "未锁定押金账本金额小于补缴押金差额，无法进行服务单调整");
         }
 
         initCmd(cmd, vo);
         cmd.setOperatorId(tokenInfo.getId());
         log.info("cmd---->{}", cmd);
-        // 服务单调整业务逻辑
-        ResultValidUtils.checkResultException(serveAggregateRootApi.serveAdjustment(cmd));
 
-        // 账本扣除
         if (ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == cmd.getDepositPayType()) {
-
+            // 账本扣除 原车扣除在违章处理完成后处理
             ServeDepositPayCmd serveDepositPayCmd = new ServeDepositPayCmd();
             serveDepositPayCmd.setDepositPayType(ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode());
             serveDepositPayCmd.setServeNo(cmd.getServeNo());
-            serveDepositPayCmd.setDepositAmount(vo.getChargeDepositAmount());
-            Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(cmd.getServeNo());
-            ServeDTO serveDTO = ResultDataUtils.getInstance(serveDTOResult).getDataOrException();
-            serveDepositPayCmd.setOrderId(serveDTO.getOrderId());
-            serveDepositPayCmd.setCustomerId(serveDTO.getCustomerId());
+            serveDepositPayCmd.setPayAbleDepositAmount(vo.getChargeDepositAmount());
+            serveDepositPayCmd.setPaidInDepositAmount(vo.getPaidInDepositAmount());
+            serveDepositPayCmd.setOrderId(cmd.getOrderId());
+            serveDepositPayCmd.setCustomerId(cmd.getCustomerId());
             serveDepositPayCmd.setOperatorId(cmd.getOperatorId());
+
             serveDepositPayCmdExe.execute(serveDepositPayCmd);
         }
+
+        // 服务单调整业务逻辑
+        ResultValidUtils.checkResultException(serveAggregateRootApi.serveAdjustment(cmd));
     }
 
     void initCmd(ServeAdjustCmd cmd, ServeAdjustRecordVo vo) {
@@ -69,5 +69,7 @@ public class ServeAdjustCmdExe {
         cmd.setChargeRentAmount(vo.getChargeRentAmount());
         cmd.setChargeDepositAmount(vo.getChargeDepositAmount());
         cmd.setExpectRecoverTime(vo.getExpectRecoverTime());
+        cmd.setOrderId(vo.getOrderId());
+        cmd.setCustomerId(vo.getCustomerId());
     }
 }
