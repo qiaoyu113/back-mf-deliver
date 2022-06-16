@@ -2,8 +2,8 @@ package com.mfexpress.rent.deliver.constant;
 
 public enum ReplaceVehicleDepositPayTypeEnum {
 
-    ACCOUNT_DEPOSIT_UNLOCK_PAY(1, "未锁定押金账本余额:%s"),
-    SOURCE_DEPOSIT_PAY(2, "使用车辆%s押金进行支付");
+    ACCOUNT_DEPOSIT_UNLOCK_PAY(1, "未锁定押金账本余额"),
+    SOURCE_DEPOSIT_PAY(2, "使用车辆押金进行支付");
 
     private int code;
 

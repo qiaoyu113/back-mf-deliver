@@ -65,7 +65,8 @@ public class RecoverCancelByDeliverExe {
                 String replaceServeNo = replaceVehicleDTO.getServeNo();
                 Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceServeNo);
                 if (Optional.ofNullable(replaceServeDTOResult).map(Result::getData)
-                        .filter(s -> JudgeEnum.NO.getCode().equals(s.getReplaceFlag())).isPresent()) {
+                        .filter(s -> JudgeEnum.NO.getCode().equals(s.getReplaceFlag()))
+                        .filter(s -> !ServeEnum.CANCEL.getCode().equals(s.getStatus()) || !ServeEnum.COMPLETED.getCode().equals(s.getStatus())).isPresent()) {
                     throw new CommonException(ResultStatusEnum.UNKNOWS.getCode(), "不可取消收车");
                 }
             }

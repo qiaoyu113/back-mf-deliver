@@ -22,7 +22,7 @@ public class ServeAdjustCmd extends BaseCmd {
      * 变更后租赁方式：1、正常租赁
      */
     @ApiModelProperty(value = "变更后租赁方式：1、正常租赁", required = false)
-    private Integer chargeRentType;
+    private Integer chargeLeaseModelId;
 
     /**
      * 变更后租金
@@ -31,10 +31,22 @@ public class ServeAdjustCmd extends BaseCmd {
     private BigDecimal chargeRentAmount;
 
     /**
+     * 变更后的租金比例
+     */
+    @ApiModelProperty(value = "变更后的租金比例")
+    private BigDecimal chargeRentRatio;
+
+    /**
      * 变更后押金
      */
     @ApiModelProperty(value = "变更后押金", required = false)
     private BigDecimal chargeDepositAmount;
+
+    /**
+     * 实缴押金金额
+     */
+    @ApiModelProperty(value = "实缴押金金额")
+    private BigDecimal paidInDepositAmount;
 
     /**
      * 预计收车日期
@@ -48,4 +60,10 @@ public class ServeAdjustCmd extends BaseCmd {
      */
     @ApiModelProperty(value = "押金支付方式：1、押金账本支付;2、原车押金", required = true)
     private Integer depositPayType;
+
+    @ApiModelProperty("客户id")
+    private  Integer customerId;
+
+    @ApiModelProperty("订单id")
+    private  Long orderId;
 }

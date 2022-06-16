@@ -3,11 +3,9 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Optional;
-
 import javax.annotation.Resource;
 
 import com.alibaba.fastjson.JSON;
-import com.mfexpress.billing.customer.api.aggregate.AdvincePaymentAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.deliver.DeductFeeCmd;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
@@ -17,7 +15,6 @@ import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
-import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.constant.ReplaceVehicleDepositPayTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
@@ -29,6 +26,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustRecordDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustRecordQry;
+import com.mfexpress.rent.deliver.serve.executor.cmd.ServeDepositPayCmdExe;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
 import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
@@ -53,11 +51,9 @@ public class RecoverDeductionByDeliverExe {
     @Resource
     private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
 
-    @Resource
-    private AdvincePaymentAggregateRootApi advincePaymentAggregateRootApi;
 
     @Resource
-    private ServeServiceI serveServiceI;
+    private ServeDepositPayCmdExe serveDepositPayCmdExe;
 
     @Resource
     private MqTools mqTools;
@@ -125,7 +121,8 @@ public class RecoverDeductionByDeliverExe {
 
                 // 押金扣除
                 ServeDepositPayCmd serveDepositPayCmd = new ServeDepositPayCmd();
-                serveDepositPayCmd.setDepositAmount(replaceServe.getDeposit());
+                serveDepositPayCmd.setPayAbleDepositAmount(replaceServe.getDeposit());
+                serveDepositPayCmd.setPaidInDepositAmount(replaceServe.getPaidInDeposit());
                 serveDepositPayCmd.setServeNo(replaceServe.getServeNo());
                 serveDepositPayCmd.setOrderId(replaceServe.getOrderId());
                 serveDepositPayCmd.setCustomerId(replaceServe.getCustomerId());
@@ -133,7 +130,7 @@ public class RecoverDeductionByDeliverExe {
                 serveDepositPayCmd.setDepositPayType(ReplaceVehicleDepositPayTypeEnum.SOURCE_DEPOSIT_PAY.getCode());
                 serveDepositPayCmd.setSourceServeNo(serveDTO.getServeNo());
 
-                serveServiceI.serveDepositPay(serveDepositPayCmd);
+                serveDepositPayCmdExe.execute(serveDepositPayCmd);
             }
         }
 

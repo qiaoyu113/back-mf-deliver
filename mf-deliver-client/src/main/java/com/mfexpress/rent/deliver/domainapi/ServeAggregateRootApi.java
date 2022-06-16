@@ -130,6 +130,12 @@ public interface ServeAggregateRootApi {
     @PostMapping("/getPageServeByQry")
     Result<PagePagination<Serve>> getPageServeByQry(@RequestBody ServeListQry qry);
 
+    /**
+     * 获取客户押金列表
+     *
+     * @param customerDepositLisDTO
+     * @return
+     */
     @PostMapping("/getPageServeDepositList")
     Result<PagePagination<ServeDepositDTO>> getPageServeDepositList(@RequestBody CustomerDepositListDTO customerDepositLisDTO);
 

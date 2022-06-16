@@ -44,6 +44,7 @@ import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
+import com.mfexpress.rent.maintain.constant.MaintenanceStatusEnum;
 import com.mfexpress.rent.maintain.constant.MaintenanceTypeEnum;
 import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
 import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
@@ -510,10 +511,10 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         serve.setReplaceFlag(JudgeEnum.YES.getCode());
         // 替换车申请的服务单 其月租金和押金应为0
         serve.setRent(serveAddDTO.getRent() != null ? serveAddDTO.getRent() : BigDecimal.ZERO);
-        serve.setRentRatio(serveAddDTO.getRentRatio() != null ? serveAddDTO.getRentRatio() : BigDecimal.ONE);
-        serve.setDeposit(BigDecimal.ZERO);
+        serve.setRentRatio(serveAddDTO.getRentRatio());
+        serve.setDeposit(serve.getDeposit());
         serve.setPaidInDeposit(BigDecimal.ZERO);
-        serve.setPayableDeposit(BigDecimal.ZERO);
+        serve.setPayableDeposit(serve.getPayableDeposit());
 
         try {
             serveGateway.addServeList(Collections.singletonList(serve));
@@ -1077,7 +1078,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrNull();
         if (deliverDTO != null) {
 
-            DeliverCancelCmd deliverCancelCmd = DeliverCancelCmd.builder().serveNo(cmd.getServeNo()).build();
+            DeliverCancelCmd deliverCancelCmd = new DeliverCancelCmd();
+            deliverCancelCmd.setServeNo(cmd.getServeNo());
             deliverCancelCmd.setOperatorId(cmd.getOperatorId());
 
             // 取消交付单
@@ -1111,7 +1113,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             // 查询车辆维修单
             MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByServeNo(maintenanceAggregateRootApi, cmd.getServeNo());
 
-            if (MaintenanceTypeEnum.ACCIDENT.getCode().equals(maintenanceDTO.getType())) {
+            if (Optional.ofNullable(maintenanceDTO).filter(m -> (MaintenanceStatusEnum.MAINTAINING.getCode().compareTo(m.getStatus()) == 0
+                    || MaintenanceStatusEnum.MAINTAINED.getCode().compareTo(m.getStatus()) == 0) &&
+                    MaintenanceTypeEnum.ACCIDENT.getCode().equals(m.getType())).isPresent()) {
                 // 事故维修单
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆处于事故维修中，无法进行收车。");
             } else {
@@ -1128,11 +1132,11 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                     Optional<ServeDTO> replaceServeOptional = Optional.ofNullable(replaceServeResult).map(r -> r.getData());
 
                     // 车辆维修单的维修类型为故障维修||存在未发车的替换车||存在替换车
-                    if (replaceServeOptional.isPresent()
-                            || replaceServeOptional.filter(replaceServe -> ServeEnum.NOT_PRESELECTED.getCode().equals(replaceServe.getStatus())
-                            || ServeEnum.PRESELECTED.getCode().equals(replaceServe.getStatus())
-                            || ServeEnum.DELIVER.getCode().equals(replaceServe.getStatus())
-                            || ServeEnum.REPAIR.getCode().equals(replaceServe.getStatus())).isPresent()) {
+                    if (replaceServeOptional.filter(serve -> JudgeEnum.YES.getCode().equals(serve.getReplaceFlag()))
+                            .filter(serve -> ServeEnum.NOT_PRESELECTED.getCode().equals(serve.getStatus())
+                                    || ServeEnum.PRESELECTED.getCode().equals(serve.getStatus())
+                                    || ServeEnum.DELIVER.getCode().equals(serve.getStatus())
+                                    || ServeEnum.REPAIR.getCode().equals(serve.getStatus())).isPresent()) {
                         throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在未发车的替换单或存在替换车，无法进行收车。");
                     }
                 }

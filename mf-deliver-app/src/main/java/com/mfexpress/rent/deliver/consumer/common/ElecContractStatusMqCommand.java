@@ -341,7 +341,8 @@ public class ElecContractStatusMqCommand {
                             if (ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == serveAdjustRecordDTO.getDepositPayType()) {
                                 // 账本扣除
                                 ServeDepositPayCmd serveDepositPayCmd = new ServeDepositPayCmd();
-                                serveDepositPayCmd.setDepositAmount(replaceServe.getDeposit());
+                                serveDepositPayCmd.setPayAbleDepositAmount(replaceServe.getDeposit());
+                                serveDepositPayCmd.setPaidInDepositAmount(replaceServe.getPaidInDeposit());
                                 serveDepositPayCmd.setServeNo(replaceServe.getServeNo());
                                 serveDepositPayCmd.setOrderId(replaceServe.getOrderId());
                                 serveDepositPayCmd.setCustomerId(replaceServe.getCustomerId());
