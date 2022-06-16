@@ -130,15 +130,23 @@ public class ServeLeaseTermAmountQryExe {
             serveAllLeaseTermAmountVO.setExpectRecoverDateChar(null == serveES.getExpectRecoverDate() ? null : DateUtil.format(serveES.getExpectRecoverDate(), "yyyy-MM-dd"));
             // 替换租赁方式单独设置
             if (JudgeEnum.YES.getCode().equals(serveES.getReplaceFlag())) {
-                serveAllLeaseTermAmountVO.setLeaseModelId(5);
-                serveAllLeaseTermAmountVO.setLeaseModelDisplay("替换");
-                serveAllLeaseTermAmountVO.setRentFee(String.valueOf(map.get("rent")));
-                // 计算服务费
-                BigDecimal rentFee = BigDecimal.valueOf(Double.valueOf(serveAllLeaseTermAmountVO.getRentFee()));
+                serveAllLeaseTermAmountVO.setLeaseModelId(LeaseModelEnum.REPLACEMENT.getCode());
+                serveAllLeaseTermAmountVO.setLeaseModelDisplay(LeaseModelEnum.REPLACEMENT.getName());
 
-                String serviceFeeStr = org.apache.commons.lang3.StringUtils.isNumeric(String.valueOf(map.get("rentRatio"))) ? String.valueOf(map.get("rentRatio")) : "1.00";
-                BigDecimal serviceFee = BigDecimal.ONE.subtract(BigDecimal.valueOf(Double.valueOf(serviceFeeStr)));
-                serveAllLeaseTermAmountVO.setServiceFee(String.valueOf(rentFee.multiply(serviceFee)));
+
+                BigDecimal rent = BigDecimal.valueOf(Double.valueOf(String.valueOf(map.get("rent"))));
+
+                String serviceFeeStr = "1.00";
+                if (!StringUtils.isEmpty(map.get("rentRatio"))) {
+                    serviceFeeStr = String.valueOf(map.get("rentRatio"));
+                }
+                BigDecimal rentRatio = BigDecimal.valueOf(Double.valueOf(serviceFeeStr));
+                // 租金
+                BigDecimal rentFee = rent.multiply(rentRatio);
+                serveAllLeaseTermAmountVO.setRentFee(String.valueOf(rentFee));
+
+                // 计算服务费
+                serveAllLeaseTermAmountVO.setServiceFee(String.valueOf(rent.subtract(rentFee)));
             }
             // 所属管理区
             orgIdSet.add(serveAllLeaseTermAmountVO.getOrgId());

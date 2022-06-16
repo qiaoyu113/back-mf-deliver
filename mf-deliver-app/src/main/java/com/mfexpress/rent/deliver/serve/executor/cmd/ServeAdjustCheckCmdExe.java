@@ -27,6 +27,7 @@ import com.mfexpress.rent.deliver.utils.MainServeUtil;
 import com.mfexpress.rent.deliver.utils.PermissionUtil;
 import com.mfexpress.rent.deliver.utils.ServeDictDataUtil;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
+import com.mfexpress.rent.maintain.constant.MaintenanceStatusEnum;
 import com.mfexpress.rent.maintain.constant.MaintenanceTypeEnum;
 import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +81,8 @@ public class ServeAdjustCheckCmdExe {
             }
             // 查找原车维修单
             MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceDTOByReplaceServeNo(maintenanceAggregateRootApi, cmd.getServeNo());
-            if (Optional.ofNullable(maintenanceDTO).filter(m -> MaintenanceTypeEnum.ACCIDENT.getCode().equals(m.getType())).isPresent()) {
+            if (Optional.ofNullable(maintenanceDTO).filter(m -> MaintenanceStatusEnum.MAINTAINING.getCode().compareTo(m.getStatus()) >= 0)
+                    .filter(m -> MaintenanceTypeEnum.ACCIDENT.getCode().equals(m.getType())).isPresent()) {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "原车处于事故维修，申请的替换车不能进行调整");
             }
             // 查找交付单
