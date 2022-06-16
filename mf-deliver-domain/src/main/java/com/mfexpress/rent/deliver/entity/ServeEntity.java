@@ -275,7 +275,7 @@ public class ServeEntity implements ServeEntityApi {
         ServeEntity rawEntity = serveGateway.getServeByServeNo(cmd.getServeNo());
 
         ServeEntity newEntity = new ServeEntity();
-        newEntity.setLeaseModelId(ServeAdjustChargeRentTypeEnum.NORMAL.getCode());
+        newEntity.setLeaseModelId(cmd.getChargeLeaseModelId());
         newEntity.setExpectRecoverDate(FormatUtil.ymdFormatDateToString(cmd.getExpectRecoverTime()));
         newEntity.setRent(cmd.getChargeRentAmount());
         newEntity.setRentRatio(cmd.getChargeRentRatio());

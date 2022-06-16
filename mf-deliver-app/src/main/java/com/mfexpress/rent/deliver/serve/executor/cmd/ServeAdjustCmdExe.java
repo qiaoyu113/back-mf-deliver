@@ -65,7 +65,7 @@ public class ServeAdjustCmdExe {
     }
 
     void initCmd(ServeAdjustCmd cmd, ServeAdjustRecordVo vo) {
-        cmd.setChargeRentType(vo.getChargeLeaseModelId());
+        cmd.setChargeLeaseModelId(vo.getChargeLeaseModelId());
         cmd.setChargeRentAmount(vo.getChargeRentAmount());
         cmd.setChargeRentRatio(vo.getChargeRentRatio());
         cmd.setChargeDepositAmount(vo.getChargeDepositAmount());

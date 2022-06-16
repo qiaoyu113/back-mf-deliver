@@ -22,7 +22,7 @@ public class ServeAdjustCmd extends BaseCmd {
      * 变更后租赁方式：1、正常租赁
      */
     @ApiModelProperty(value = "变更后租赁方式：1、正常租赁", required = false)
-    private Integer chargeRentType;
+    private Integer chargeLeaseModelId;
 
     /**
      * 变更后租金
