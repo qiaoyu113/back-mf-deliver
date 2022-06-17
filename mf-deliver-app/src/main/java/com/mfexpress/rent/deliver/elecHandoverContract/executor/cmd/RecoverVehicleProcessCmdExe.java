@@ -152,8 +152,7 @@ public class RecoverVehicleProcessCmdExe {
                         // 替换单已发车且变更为正常服务单
                         if (Optional.ofNullable(replaceServe)
                                 .filter(o -> ServeEnum.DELIVER.getCode().equals(o.getStatus())
-                                        && JudgeEnum.NO.getCode().equals(o.getReplaceFlag())
-                                        && LeaseModelEnum.NORMAL.getCode() == o.getLeaseModelId()).isPresent()) {
+                                        && JudgeEnum.NO.getCode().equals(o.getReplaceFlag())).isPresent()) {
 
                             // 替换车开始计费
                             Result<DeliverDTO> replaceDeliverResult = deliverAggregateRootApi.getDeliverByServeNo(replaceServe.getServeNo());
@@ -166,7 +165,7 @@ public class RecoverVehicleProcessCmdExe {
                             renewalCmd.setRent(replaceServe.getRent());
                             renewalCmd.setRentRatio(replaceServe.getRentRatio().doubleValue());
                             renewalCmd.setCreateId(cmd.getOperatorId());
-                            renewalCmd.setRentEffectDate(FormatUtil.ymdFormatDateToString(new Date()));
+                            renewalCmd.setRentEffectDate(FormatUtil.ymdFormatDateToString(FormatUtil.addDays(cmd.getRecoverVehicleTime(), 1)));
                             renewalCmd.setEffectFlag(true);
                             mqTools.send(event, "price_change", null, JSON.toJSONString(renewalCmd));
                         }

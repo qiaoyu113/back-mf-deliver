@@ -36,7 +36,7 @@ public class ServeAdjustCmdExe {
 
         if (ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == cmd.getDepositPayType()
                 && vo.getUnlockDepositAmount().compareTo(vo.getChargeDepositAmount().subtract(vo.getPaidInDepositAmount())) == -1) {
-            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "未锁定押金账本金额小于补缴押金差额，无法进行服务单调整");
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "未锁定押金账本金额小于补缴押金的差额，无法进行服务单调整；");
         }
 
         initCmd(cmd, vo);

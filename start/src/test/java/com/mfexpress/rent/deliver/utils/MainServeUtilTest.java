@@ -41,7 +41,7 @@ class MainServeUtilTest {
     @Test
     void getMaintenanceByServeNo() {
 
-        MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByServeNo(maintenanceAggregateRootApi, "FWD2022061400026");
+        MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByServeNo(maintenanceAggregateRootApi, "FWD2022061700008");
 
         log.info("{}", maintenanceDTO);
     }
