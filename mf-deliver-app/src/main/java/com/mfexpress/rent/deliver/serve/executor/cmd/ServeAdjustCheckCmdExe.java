@@ -1,10 +1,5 @@
 package com.mfexpress.rent.deliver.serve.executor.cmd;
 
-import java.math.BigDecimal;
-import java.util.Optional;
-
-import javax.annotation.Resource;
-
 import com.mfexpress.billing.customer.api.aggregate.BookAggregateRootApi;
 import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
 import com.mfexpress.component.constants.ResultErrorEnum;
@@ -34,6 +29,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+import javax.annotation.Resource;
 
 @Slf4j
 @Component

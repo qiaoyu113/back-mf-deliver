@@ -1,11 +1,5 @@
 package com.mfexpress.rent.deliver.serve.executor.cmd;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.Resource;
-
 import com.mfexpress.billing.customer.api.aggregate.AccountAggregateRootApi;
 import com.mfexpress.billing.customer.api.aggregate.AdvincePaymentAggregateRootApi;
 import com.mfexpress.billing.customer.api.aggregate.BookAggregateRootApi;
@@ -23,6 +17,11 @@ import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockConfirmDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
 import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Resource;
 
 @Component
 public class ServeDepositPayCmdExe {
