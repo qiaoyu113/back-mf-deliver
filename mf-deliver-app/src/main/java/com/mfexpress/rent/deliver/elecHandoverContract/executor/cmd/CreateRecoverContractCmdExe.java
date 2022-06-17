@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.Resource;
 
@@ -29,6 +30,7 @@ import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
@@ -45,8 +47,10 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.RecoverInfo;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.utils.CommonUtil;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
+import com.mfexpress.rent.deliver.utils.MainServeUtil;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
 import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
+import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.VehicleValidationAggregateRootApi;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInfoDto;
@@ -101,6 +105,9 @@ public class CreateRecoverContractCmdExe {
     @Resource
     private RecoverVehicleProcessCmdExe recoverVehicleProcessCmdExe;
 
+    @Resource
+    private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
+
     /**
      * 收车签署开关
      */
@@ -127,6 +134,24 @@ public class CreateRecoverContractCmdExe {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单查询失败");
         }
         ServeDTO serveDTO = serveDTOResult.getData();
+
+        // 收车日期不能在替换车发车日期之前
+        ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, serveDTO.getServeNo());
+        if (Optional.ofNullable(replaceVehicleDTO).map(ReplaceVehicleDTO::getServeNo).isPresent()) {
+            // 查找替换车发车信息
+            Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(replaceVehicleDTO.getServeNo());
+            if (!Optional.ofNullable(deliverDTOResult).map(Result::getData).isPresent()) {
+                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到交付单");
+            }
+            Result<DeliverVehicleDTO> deliverVehicleDTOResult = deliverVehicleAggregateRootApi.getDeliverVehicleDto(deliverDTOResult.getData().getDeliverNo());
+            if (!Optional.ofNullable(deliverVehicleDTOResult).map(Result::getData).isPresent()) {
+                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到发车单");
+            }
+            if (recoverInfo.getRecoverVehicleTime().before(deliverVehicleDTOResult.getData().getDeliverVehicleTime())) {
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "收车日期小于替换车发车日期");
+            }
+        }
+
 
         ReviewOrderQry qry = new ReviewOrderQry();
         qry.setId(serveDTO.getOrderId().toString());

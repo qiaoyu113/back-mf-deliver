@@ -152,8 +152,7 @@ public class RecoverVehicleProcessCmdExe {
                         // 替换单已发车且变更为正常服务单
                         if (Optional.ofNullable(replaceServe)
                                 .filter(o -> ServeEnum.DELIVER.getCode().equals(o.getStatus())
-                                        && JudgeEnum.NO.getCode().equals(o.getReplaceFlag())
-                                        && LeaseModelEnum.NORMAL.getCode() == o.getLeaseModelId()).isPresent()) {
+                                        && JudgeEnum.NO.getCode().equals(o.getReplaceFlag())).isPresent()) {
 
                             // 替换车开始计费
                             Result<DeliverDTO> replaceDeliverResult = deliverAggregateRootApi.getDeliverByServeNo(replaceServe.getServeNo());
