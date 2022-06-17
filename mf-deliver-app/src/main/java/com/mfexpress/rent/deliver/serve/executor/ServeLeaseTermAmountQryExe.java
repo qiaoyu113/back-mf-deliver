@@ -6,11 +6,9 @@ import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import com.github.pagehelper.PageInfo;
 import com.mfexpress.billing.customer.api.aggregate.SubBillItemAggregateRootApi;
-import com.mfexpress.billing.customer.constant.LeaseModeEnum;
 import com.mfexpress.billing.customer.data.dto.billitem.SubBillItemDTO;
 import com.mfexpress.billing.rentcharge.api.DetailAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.detail.DetailedByServeNoByLtLeaseTermDTO;
-import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
 import com.mfexpress.common.domain.dto.SysOfficeDto;
 import com.mfexpress.common.domain.enums.OfficeCodeMsgEnum;
@@ -33,7 +31,6 @@ import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeAllLeaseTermAmountVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
-import com.mfexpress.rent.deliver.utils.CommonUtil;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -46,12 +43,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.annotation.Resource;
 
 @Component
 public class ServeLeaseTermAmountQryExe {
@@ -132,21 +135,6 @@ public class ServeLeaseTermAmountQryExe {
             if (JudgeEnum.YES.getCode().equals(serveES.getReplaceFlag())) {
                 serveAllLeaseTermAmountVO.setLeaseModelId(LeaseModelEnum.REPLACEMENT.getCode());
                 serveAllLeaseTermAmountVO.setLeaseModelDisplay(LeaseModelEnum.REPLACEMENT.getName());
-
-
-                BigDecimal rent = BigDecimal.valueOf(Double.valueOf(String.valueOf(map.get("rent"))));
-
-                String serviceFeeStr = "1.00";
-                if (!StringUtils.isEmpty(map.get("rentRatio"))) {
-                    serviceFeeStr = String.valueOf(map.get("rentRatio"));
-                }
-                BigDecimal rentRatio = BigDecimal.valueOf(Double.valueOf(serviceFeeStr));
-                // 租金
-                BigDecimal rentFee = rent.multiply(rentRatio);
-                serveAllLeaseTermAmountVO.setRentFee(String.valueOf(rentFee));
-
-                // 计算服务费
-                serveAllLeaseTermAmountVO.setServiceFee(String.valueOf(rent.subtract(rentFee)));
             }
             // 所属管理区
             orgIdSet.add(serveAllLeaseTermAmountVO.getOrgId());
