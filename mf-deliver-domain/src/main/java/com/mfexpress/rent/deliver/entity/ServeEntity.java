@@ -281,7 +281,6 @@ public class ServeEntity implements ServeEntityApi {
         newEntity.setRentRatio(cmd.getChargeRentRatio());
         newEntity.setDeposit(cmd.getChargeDepositAmount());
         newEntity.setPayableDeposit(cmd.getChargeDepositAmount());
-        newEntity.setPaidInDeposit(cmd.getPaidInDepositAmount());
         newEntity.setReplaceFlag(JudgeEnum.NO.getCode());
         newEntity.setUpdateId(cmd.getOperatorId());
         newEntity.setUpdateTime(new Date());
