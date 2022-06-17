@@ -132,21 +132,6 @@ public class ServeLeaseTermAmountQryExe {
             if (JudgeEnum.YES.getCode().equals(serveES.getReplaceFlag())) {
                 serveAllLeaseTermAmountVO.setLeaseModelId(LeaseModelEnum.REPLACEMENT.getCode());
                 serveAllLeaseTermAmountVO.setLeaseModelDisplay(LeaseModelEnum.REPLACEMENT.getName());
-
-
-                BigDecimal rent = BigDecimal.valueOf(Double.valueOf(String.valueOf(map.get("rent"))));
-
-                String serviceFeeStr = "1.00";
-                if (!StringUtils.isEmpty(map.get("rentRatio"))) {
-                    serviceFeeStr = String.valueOf(map.get("rentRatio"));
-                }
-                BigDecimal rentRatio = BigDecimal.valueOf(Double.valueOf(serviceFeeStr));
-                // 租金
-                BigDecimal rentFee = rent.multiply(rentRatio);
-                serveAllLeaseTermAmountVO.setRentFee(String.valueOf(rentFee));
-
-                // 计算服务费
-                serveAllLeaseTermAmountVO.setServiceFee(String.valueOf(rent.subtract(rentFee)));
             }
             // 所属管理区
             orgIdSet.add(serveAllLeaseTermAmountVO.getOrgId());
