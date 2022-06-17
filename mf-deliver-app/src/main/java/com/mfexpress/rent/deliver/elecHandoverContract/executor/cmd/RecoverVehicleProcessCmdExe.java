@@ -166,7 +166,7 @@ public class RecoverVehicleProcessCmdExe {
                             renewalCmd.setRent(replaceServe.getRent());
                             renewalCmd.setRentRatio(replaceServe.getRentRatio().doubleValue());
                             renewalCmd.setCreateId(cmd.getOperatorId());
-                            renewalCmd.setRentEffectDate(FormatUtil.ymdFormatDateToString(new Date()));
+                            renewalCmd.setRentEffectDate(FormatUtil.ymdFormatDateToString(FormatUtil.addDays(cmd.getRecoverVehicleTime(), 1)));
                             renewalCmd.setEffectFlag(true);
                             mqTools.send(event, "price_change", null, JSON.toJSONString(renewalCmd));
                         }
