@@ -512,9 +512,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         // 替换车申请的服务单 其月租金和押金应为0
         serve.setRent(serveAddDTO.getRent() != null ? serveAddDTO.getRent() : BigDecimal.ZERO);
         serve.setRentRatio(serveAddDTO.getRentRatio());
-        serve.setDeposit(serve.getDeposit());
+        serve.setDeposit(BigDecimal.ZERO);
         serve.setPaidInDeposit(BigDecimal.ZERO);
-        serve.setPayableDeposit(serve.getPayableDeposit());
+        serve.setPayableDeposit(BigDecimal.ZERO);
 
         try {
             serveGateway.addServeList(Collections.singletonList(serve));
