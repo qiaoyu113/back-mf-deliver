@@ -1,10 +1,5 @@
 package com.mfexpress.rent.deliver.web;
 
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Resource;
-
 import com.mfexpress.component.constants.CommonConstants;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
@@ -19,7 +14,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeAllLeaseTermAmountVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustRecordVo;
+import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -28,6 +23,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Resource;
 
 @RestController("serveWebController")
 @RequestMapping("/api/deliver/v3/serve/web")
@@ -85,7 +84,7 @@ public class ServeWebController {
     @ApiOperation(value = "服务单调整判断")
     @PostMapping(value = "/serve/adjustment/check")
     @PrintParam
-    public Result<ServeAdjustRecordVo> serveAdjustmentCheck(@RequestBody ServeAdjustCheckCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+    public Result<ServeAdjustVO> serveAdjustmentCheck(@RequestBody ServeAdjustCheckCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
 
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {

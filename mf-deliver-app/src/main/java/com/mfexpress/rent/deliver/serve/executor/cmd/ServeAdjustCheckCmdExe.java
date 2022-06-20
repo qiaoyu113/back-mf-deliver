@@ -16,13 +16,14 @@ import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustRecordVo;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
+import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustVO;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
 import com.mfexpress.rent.deliver.utils.PermissionUtil;
 import com.mfexpress.rent.deliver.utils.ServeDictDataUtil;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
-import com.mfexpress.rent.maintain.constant.MaintenanceStatusEnum;
 import com.mfexpress.rent.maintain.constant.MaintenanceTypeEnum;
 import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -56,10 +57,18 @@ public class ServeAdjustCheckCmdExe {
     @Resource
     private BookAggregateRootApi bookAggregateRootApi;
 
-    public ServeAdjustRecordVo execute(ServeAdjustCheckCmd cmd, TokenInfo tokenInfo) {
+    public ServeAdjustVO execute(ServeAdjustCheckCmd cmd, TokenInfo tokenInfo) {
 
         // 数据权限校验
         PermissionUtil.dataPermissionCheck(officeAggregateRootApi, tokenInfo);
+
+        // 查询是否存在调整工单
+        ServeAdjustQry qry = new ServeAdjustQry();
+        qry.setServeNo(cmd.getServeNo());
+        Result<ServeAdjustDTO> serveAdjustDTOResult = serveAggregateRootApi.getServeAdjust(qry);
+        if (Optional.ofNullable(serveAdjustDTOResult).map(Result::getData).isPresent()) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "已经存在调整工单");
+        }
 
         ServeDictDataUtil.initDictData(beanFactory);
         // 查询服务单
@@ -100,17 +109,18 @@ public class ServeAdjustCheckCmdExe {
         Result<ServeDTO> sourceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(sourceServeNo);
         ServeDTO sourceServeDTO = ResultDataUtils.getInstance(sourceServeDTOResult).getDataOrException();
 
-        ServeAdjustRecordVo vo = new ServeAdjustRecordVo();
+        ServeAdjustVO vo = new ServeAdjustVO();
         vo.setServeNo(cmd.getServeNo());
+        vo.setSourceServeNo(sourceServeNo);
         vo.setChargeLeaseModelId(sourceServeDTO.getLeaseModelId());
         vo.setChargeLeaseModel(ServeDictDataUtil.leaseModeMap.get(String.valueOf(vo.getChargeLeaseModelId())));
         vo.setExpectRecoverTime(FormatUtil.ymdFormatStringToDate(sourceServeDTO.getExpectRecoverDate()));
         // 变更后的押金、租金、租金比例为原车押金、租金、租金比例
-        vo.setChargeDepositAmount(sourceServeDTO.getDeposit());
+        vo.setChargePayableDepositAmount(sourceServeDTO.getPayableDeposit());
         vo.setChargeRentAmount(sourceServeDTO.getRent());
         vo.setChargeRentRatio(sourceServeDTO.getRentRatio());
 
-        vo.setPaidInDepositAmount(serveDTO.getPaidInDeposit());
+        vo.setChargePaidInDepositAmount(serveDTO.getPaidInDeposit());
         vo.setOrderId(serveDTO.getOrderId());
         vo.setCustomerId(serveDTO.getCustomerId());
 

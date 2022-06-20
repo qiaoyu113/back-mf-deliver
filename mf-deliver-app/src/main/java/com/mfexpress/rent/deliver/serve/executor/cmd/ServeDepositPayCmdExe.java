@@ -12,7 +12,7 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
-import com.mfexpress.rent.deliver.constant.ReplaceVehicleDepositPayTypeEnum;
+import com.mfexpress.rent.deliver.constant.DepositPayTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockConfirmDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
@@ -54,7 +54,7 @@ public class ServeDepositPayCmdExe {
                 .amount(payAmount)
                 .userId(cmd.getOperatorId());
 
-        if (ReplaceVehicleDepositPayTypeEnum.SOURCE_DEPOSIT_PAY.getCode() == cmd.getDepositPayType()) {
+        if (DepositPayTypeEnum.SOURCE_DEPOSIT_PAY.getCode() == cmd.getDepositPayType()) {
             // 原车解锁押金
             List<String> serveNoList = new ArrayList<>();
             serveNoList.add(cmd.getSourceServeNo());

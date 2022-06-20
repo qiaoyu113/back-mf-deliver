@@ -34,6 +34,7 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContract
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverVehicleProcessCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.RenewalChargeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustStartBillingCmd;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
@@ -168,6 +169,14 @@ public class RecoverVehicleProcessCmdExe {
                             renewalCmd.setRentEffectDate(FormatUtil.ymdFormatDateToString(FormatUtil.addDays(cmd.getRecoverVehicleTime(), 1)));
                             renewalCmd.setEffectFlag(true);
                             mqTools.send(event, "price_change", null, JSON.toJSONString(renewalCmd));
+
+                            // 服务单调整工单状态改为开始计费并记录开始计费时间
+                            ServeAdjustStartBillingCmd startBillingCmd = ServeAdjustStartBillingCmd.builder()
+                                    .serveNo(replaceServe.getServeNo())
+                                    .deliverNo(replaceDeliver.getDeliverNo())
+                                    .startBillingDate(FormatUtil.addDays(cmd.getRecoverVehicleTime(), 1)).build();
+
+                            serveAggregateRootApi.serveAdjustStartBilling(startBillingCmd);
                         }
                     }
                 }

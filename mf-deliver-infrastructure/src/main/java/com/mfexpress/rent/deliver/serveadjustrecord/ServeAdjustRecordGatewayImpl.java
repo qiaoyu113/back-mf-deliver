@@ -9,6 +9,7 @@ import com.mfexpress.rent.deliver.po.ServeAdjustRecordPO;
 import com.mfexpress.rent.deliver.serveadjustrecord.repository.ServeAdjustRecordMapper;
 import org.springframework.stereotype.Component;
 
+@Deprecated
 @Component
 public class ServeAdjustRecordGatewayImpl implements ServeAdjustRecordGateway {
 

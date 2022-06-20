@@ -1,8 +1,5 @@
 package com.mfexpress.rent.deliver.domainapi;
 
-import java.util.List;
-import java.util.Map;
-
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
@@ -24,15 +21,20 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeReplaceVehicleAddDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCompletedCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustStartBillingCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustRecordDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustRecordQry;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
+import java.util.Map;
 
 @FeignClient(name = "mf-deliver", path = "/domain/deliver/v3/serve", contextId = "mf-deliver-serve-aggregate-root-api")
 public interface ServeAggregateRootApi {
@@ -194,8 +196,8 @@ public interface ServeAggregateRootApi {
      * @param qry
      * @return
      */
-    @PostMapping(value = "/serve/adjust/record")
-    Result<ServeAdjustRecordDTO> getServeAdjustRecord(@RequestBody ServeAdjustRecordQry qry);
+    @PostMapping(value = "/serve/adjust/wo")
+    Result<ServeAdjustDTO> getServeAdjust(@RequestBody ServeAdjustQry qry);
 
     /**
      * 替换车服务单调整
@@ -203,4 +205,10 @@ public interface ServeAggregateRootApi {
      */
     @PostMapping(value = "/serve/adjust")
     Result<Integer> serveAdjustment(@RequestBody ServeAdjustCmd cmd);
+
+    @PostMapping(value = "/serve/adjust/start/billing")
+    Result<Integer> serveAdjustStartBilling(@RequestBody ServeAdjustStartBillingCmd cmd);
+
+    @PostMapping(value = "/serve/adjust/completed")
+    Result<Integer> serveAdjustCompleted(@RequestBody ServeAdjustCompletedCmd cmd);
 }

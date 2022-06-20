@@ -1,6 +1,6 @@
 package com.mfexpress.rent.deliver.constant;
 
-public enum ReplaceVehicleDepositPayTypeEnum {
+public enum DepositPayTypeEnum {
 
     ACCOUNT_DEPOSIT_UNLOCK_PAY(1, "未锁定押金账本余额"),
     SOURCE_DEPOSIT_PAY(2, "使用车辆押金进行支付");
@@ -9,7 +9,7 @@ public enum ReplaceVehicleDepositPayTypeEnum {
 
     private String title;
 
-    ReplaceVehicleDepositPayTypeEnum(int code, String title) {
+    DepositPayTypeEnum(int code, String title) {
         this.code = code;
         this.title = title;
     }
@@ -24,7 +24,7 @@ public enum ReplaceVehicleDepositPayTypeEnum {
 
     public static String getTitle(int code) {
 
-        for (ReplaceVehicleDepositPayTypeEnum obj : ReplaceVehicleDepositPayTypeEnum.values()) {
+        for (DepositPayTypeEnum obj : DepositPayTypeEnum.values()) {
             if (code == obj.getCode()) {
                 return obj.getTitle();
             }

@@ -1,10 +1,5 @@
 package com.mfexpress.rent.deliver.serve;
 
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Resource;
-
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
@@ -27,7 +22,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeToRenewalVO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustRecordVo;
+import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustVO;
 import com.mfexpress.rent.deliver.serve.executor.ExportServeLeaseTermAmountCmdExe;
 import com.mfexpress.rent.deliver.serve.executor.ExportServeLeaseTermAmountDataQryExe;
 import com.mfexpress.rent.deliver.serve.executor.ReactivateServeCmdExe;
@@ -49,6 +44,10 @@ import com.mfexpress.rent.deliver.serve.executor.cmd.ServeAdjustCheckCmdExe;
 import com.mfexpress.rent.deliver.serve.executor.cmd.ServeAdjustCmdExe;
 import com.mfexpress.rent.deliver.serve.executor.cmd.ServeDepositPayCmdExe;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Resource;
 
 @Service
 public class ServeServiceImpl implements ServeServiceI {
@@ -196,7 +195,7 @@ public class ServeServiceImpl implements ServeServiceI {
     }
 
     @Override
-    public ServeAdjustRecordVo serveAdjustCheck(ServeAdjustCheckCmd cmd, TokenInfo tokenInfo) {
+    public ServeAdjustVO serveAdjustCheck(ServeAdjustCheckCmd cmd, TokenInfo tokenInfo) {
         return serveAdjustCheckCmdExe.execute(cmd, tokenInfo);
     }
 
