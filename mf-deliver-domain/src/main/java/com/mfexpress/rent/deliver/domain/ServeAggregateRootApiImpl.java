@@ -1180,15 +1180,11 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
                     String replaceServeNo = replaceVehicleDTO.getServeNo();
 
-                    Result<ServeDTO> replaceServeResult = getServeDtoByServeNo(replaceServeNo);
-                    Optional<ServeDTO> replaceServeOptional = Optional.ofNullable(replaceServeResult).map(r -> r.getData());
-
+                    // 查询是否存在调整工单
+                    ServeAdjustQry serveAdjustQry = ServeAdjustQry.builder().serveNo(replaceServeNo).build();
+                    ServeAdjustDTO serveAdjustDTO = ResultDataUtils.getInstance(getServeAdjust(serveAdjustQry)).getDataOrNull();
                     // 车辆维修单的维修类型为故障维修||存在未发车的替换车||存在替换车
-                    if (replaceServeOptional.filter(serve -> JudgeEnum.YES.getCode().equals(serve.getReplaceFlag()))
-                            .filter(serve -> ServeEnum.NOT_PRESELECTED.getCode().equals(serve.getStatus())
-                                    || ServeEnum.PRESELECTED.getCode().equals(serve.getStatus())
-                                    || ServeEnum.DELIVER.getCode().equals(serve.getStatus())
-                                    || ServeEnum.REPAIR.getCode().equals(serve.getStatus())).isPresent()) {
+                    if (serveAdjustDTO == null) {
                         throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在未发车的替换单或存在替换车，无法进行收车。");
                     }
                 }
