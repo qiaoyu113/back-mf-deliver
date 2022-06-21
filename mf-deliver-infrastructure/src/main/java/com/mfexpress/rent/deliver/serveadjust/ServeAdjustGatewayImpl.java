@@ -31,6 +31,6 @@ public class ServeAdjustGatewayImpl implements ServeAdjustGateway {
     @Override
     public ServeAdjustPO getByServeNo(String serveNo) {
 
-        return serveAdjustMapper.selectOneByExample(getByServeNo(serveNo));
+        return serveAdjustMapper.selectOneByExample(getServeNoExample(serveNo));
     }
 }
