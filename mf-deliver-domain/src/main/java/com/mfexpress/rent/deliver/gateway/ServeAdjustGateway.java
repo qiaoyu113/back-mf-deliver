@@ -14,7 +14,7 @@ public interface ServeAdjustGateway {
     default Example getServeNoExample(String serveNo) {
 
         Example example = new Example(ServeAdjustPO.class);
-        example.createCriteria().andEqualTo("serve_no", serveNo);
+        example.createCriteria().andEqualTo("serveNo", serveNo);
 
         return example;
     }
