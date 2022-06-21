@@ -35,6 +35,8 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverVehicleProc
 import com.mfexpress.rent.deliver.dto.data.serve.RenewalChargeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustStartBillingCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
@@ -150,10 +152,17 @@ public class RecoverVehicleProcessCmdExe {
                     if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
                         Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceVehicleDTO.getServeNo());
                         ServeDTO replaceServe = ResultDataUtils.getInstance(replaceServeDTOResult).getDataOrException();
+
+                        ServeAdjustQry qry = new ServeAdjustQry();
+                        qry.setServeNo(replaceServe.getServeNo());
+                        Result<ServeAdjustDTO> serveAdjustDTOResult = serveAggregateRootApi.getServeAdjust(qry);
+
+                        ServeAdjustDTO serveAdjustDTO = ResultDataUtils.getInstance(serveAdjustDTOResult).getDataOrException();
+
                         // 替换单已发车且变更为正常服务单
-                        if (Optional.ofNullable(replaceServe)
+                        if (serveAdjustDTO != null && Optional.ofNullable(replaceServe)
                                 .filter(o -> ServeEnum.DELIVER.getCode().equals(o.getStatus())
-                                        && JudgeEnum.NO.getCode().equals(o.getReplaceFlag())).isPresent()) {
+                                        && JudgeEnum.YES.getCode().equals(o.getReplaceFlag())).isPresent()) {
 
                             // 替换车开始计费
                             Result<DeliverDTO> replaceDeliverResult = deliverAggregateRootApi.getDeliverByServeNo(replaceServe.getServeNo());
@@ -175,6 +184,7 @@ public class RecoverVehicleProcessCmdExe {
                                     .serveNo(replaceServe.getServeNo())
                                     .deliverNo(replaceDeliver.getDeliverNo())
                                     .startBillingDate(FormatUtil.addDays(cmd.getRecoverVehicleTime(), 1)).build();
+                            startBillingCmd.setOperatorId(cmd.getOperatorId());
 
                             serveAggregateRootApi.serveAdjustStartBilling(startBillingCmd);
                         }
