@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 /**
  * 服务单调整记录表
  */
+@Deprecated
 @Data
 @Table(name = "serve_adjust_record")
 @AllArgsConstructor

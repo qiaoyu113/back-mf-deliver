@@ -1,66 +1,71 @@
 package com.mfexpress.rent.deliver.dto.data.serve.vo;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.math.BigDecimal;
 import java.util.Date;
 
-import javax.validation.constraints.DecimalMax;
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-
-@Deprecated
-@Slf4j
 @Data
-@ApiModel(value = "服务单调整记录VO")
-public class ServeAdjustRecordVo {
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@ApiModel(value = "服务单调整工单前端交互VO")
+public class ServeAdjustVO {
 
-    @ApiModelProperty(value = "服务单编号")
+    /**
+     * 服务单号
+     */
+    @ApiModelProperty(value = "服务单号")
     private String serveNo;
 
     /**
-     * 变更后租赁方式：1、正常租赁
+     * 原车服务单号
      */
-    @ApiModelProperty(value = "变更后租赁方式：1、正常租赁")
+    @ApiModelProperty(value = "原车服务单号")
+    private String sourceServeNo;
+
+    /**
+     * 变更后租赁方式
+     */
+    @ApiModelProperty(value = "变更后租赁方式")
     private Integer chargeLeaseModelId;
 
     @ApiModelProperty(value = "变更后租赁方式Label")
     private String chargeLeaseModel;
 
     /**
-     * 变更后租金/应缴押金金额
+     * 变更后租金金额
      */
-    @ApiModelProperty(value = "变更后租金")
+    @ApiModelProperty(value = "变更后租金金额")
     private BigDecimal chargeRentAmount;
 
     /**
-     * 变更后的租金比例
+     * 调整后租金比例
      */
-    @ApiModelProperty(value = "变更后的租金比例")
+    @ApiModelProperty(value = "变更后租金比例")
     private BigDecimal chargeRentRatio;
 
     /**
-     * 实缴押金金额
+     * 变更后应缴押金金额
      */
-    @ApiModelProperty(value = "实缴押金金额")
-    private BigDecimal paidInDepositAmount;
+    @ApiModelProperty(value = "变更后应缴押金金额")
+    private BigDecimal chargePayableDepositAmount;
 
     /**
-     * 变更后押金
+     * 变更后实缴押金金额
      */
-    @ApiModelProperty(value = "变更后押金")
-    private BigDecimal chargeDepositAmount;
+    @ApiModelProperty(value = "变更后实缴押金金额")
+    private BigDecimal chargePaidInDepositAmount;
 
     /**
      * 预计收车日期
      */
     @ApiModelProperty(value = "预计收车日期")
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date expectRecoverTime;
 
     /**
@@ -69,19 +74,33 @@ public class ServeAdjustRecordVo {
     @ApiModelProperty(value = "押金支付方式：1、押金账本支付;2、原车押金")
     private Integer depositPayType;
 
+    /**
+     * 原车辆ID
+     */
     @ApiModelProperty(value = "原车辆ID")
     private Integer sourceCarId;
 
+    /**
+     * 原车牌号
+     */
     @ApiModelProperty(value = "原车牌号")
     private String sourcePlate;
 
+    /**
+     * 未锁定押金账本金额
+     */
     @ApiModelProperty(value = "未锁定押金账本金额")
     private BigDecimal unlockDepositAmount;
 
+    /**
+     * 客户id
+     */
     @ApiModelProperty("客户id")
     private  Integer customerId;
 
+    /**
+     * 订单id
+     */
     @ApiModelProperty("订单id")
     private  Long orderId;
-
 }

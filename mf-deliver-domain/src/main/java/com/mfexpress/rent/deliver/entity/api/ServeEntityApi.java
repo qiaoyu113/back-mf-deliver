@@ -43,16 +43,10 @@ public interface ServeEntityApi {
     void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId,Boolean isLockFlag);
 
     /**
-     * 替换车服务单调整
-     * @param cmd
-     */
-    void serveAdjustment(ServeAdjustCmd cmd);
-
-    /**
      * 服务单取消(作废)
      * @param cmd
      */
     void cancelServe(ServeCancelCmd cmd);
 
-    void saveServeAdjustRecord(ServeAdjustCmd cmd);
+    public void saveChangeRecord(ServeEntity rawServe, ServeEntity newServe, Integer type, String deliverNo, Integer reason, String remark, Integer createId);
 }

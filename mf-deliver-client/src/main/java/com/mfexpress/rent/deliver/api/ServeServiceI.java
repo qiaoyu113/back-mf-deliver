@@ -1,9 +1,6 @@
 package com.mfexpress.rent.deliver.api;
 
 
-import java.util.List;
-import java.util.Map;
-
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
@@ -25,7 +22,10 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeToRenewalVO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustRecordVo;
+import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustVO;
+
+import java.util.List;
+import java.util.Map;
 
 public interface ServeServiceI {
 
@@ -64,7 +64,7 @@ public interface ServeServiceI {
 
     List<Map<String, Object>> exportServeLeaseTermAmountData(Map<String, Object> map);
 
-    ServeAdjustRecordVo serveAdjustCheck(ServeAdjustCheckCmd cmd, TokenInfo tokenInfo);
+    ServeAdjustVO serveAdjustCheck(ServeAdjustCheckCmd cmd, TokenInfo tokenInfo);
 
     void serveAdjust(ServeAdjustCmd cmd, TokenInfo tokenInfo);
 

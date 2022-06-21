@@ -1,28 +1,22 @@
 package com.mfexpress.rent.deliver.entity;
 
-import cn.hutool.json.JSONUtil;
-import com.mfexpress.component.starter.tools.mq.MqTools;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.ServeAdjustChargeRentTypeEnum;
-import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
-import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.mfexpress.component.response.PagePagination;
+import com.mfexpress.component.starter.tools.mq.MqTools;
+import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
+import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
-import com.mfexpress.rent.deliver.gateway.ServeAdjustRecordGateway;
 import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
-import com.mfexpress.rent.deliver.po.ServeAdjustRecordPO;
-import com.mfexpress.rent.deliver.utils.FormatUtil;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,13 +27,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Resource;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-
-import java.math.BigDecimal;
-import java.util.*;
 
 @Data
 @AllArgsConstructor
@@ -137,9 +134,6 @@ public class ServeEntity implements ServeEntityApi {
 
     @Transient
     private String event;
-
-    @Resource
-    private ServeAdjustRecordGateway serveAdjustRecordGateway;
 
     @Resource
     private BeanFactory beanFactory;
@@ -270,31 +264,6 @@ public class ServeEntity implements ServeEntityApi {
 
     @Override
     @Transactional
-    public void serveAdjustment(ServeAdjustCmd cmd) {
-
-        ServeEntity rawEntity = serveGateway.getServeByServeNo(cmd.getServeNo());
-
-        ServeEntity newEntity = new ServeEntity();
-        newEntity.setLeaseModelId(cmd.getChargeLeaseModelId());
-        newEntity.setExpectRecoverDate(FormatUtil.ymdFormatDateToString(cmd.getExpectRecoverTime()));
-        newEntity.setRent(cmd.getChargeRentAmount());
-        newEntity.setRentRatio(cmd.getChargeRentRatio());
-        newEntity.setDeposit(cmd.getChargeDepositAmount());
-        newEntity.setPayableDeposit(cmd.getChargeDepositAmount());
-        newEntity.setReplaceFlag(JudgeEnum.NO.getCode());
-        newEntity.setUpdateId(cmd.getOperatorId());
-        newEntity.setUpdateTime(new Date());
-
-        log.info("newEntity---->{}", newEntity);
-        serveGateway.updateServeByServeNo(cmd.getServeNo(), newEntity);
-
-        saveServeAdjustRecord(cmd);
-
-        saveChangeRecord(rawEntity, newEntity, ServeChangeRecordEnum.REPLACE_ADJUST.getCode(), "", 0, "", cmd.getOperatorId());
-    }
-
-    @Override
-    @Transactional
     public void cancelServe(ServeCancelCmd cmd) {
 
         ServeEntity rawEntity = serveGateway.getServeByServeNo(cmd.getServeNo());
@@ -310,27 +279,7 @@ public class ServeEntity implements ServeEntityApi {
 
     @Override
     @Transactional
-    public void saveServeAdjustRecord(ServeAdjustCmd cmd) {
-
-        ServeAdjustRecordPO po = serveAdjustRecordGateway.getRecordByServeNo(cmd.getServeNo());
-        po = Optional.ofNullable(po).isPresent() ? po : new ServeAdjustRecordPO();
-        po.setServeNo(cmd.getServeNo());
-        po.setChargeLeaseModelId(ServeAdjustChargeRentTypeEnum.NORMAL.getCode());
-        po.setChargeRentAmount(cmd.getChargeRentAmount());
-        po.setChargeDepositAmount(cmd.getChargeDepositAmount());
-        po.setExpectRecoverTime(cmd.getExpectRecoverTime());
-        po.setDepositPayType(cmd.getDepositPayType());
-        log.info("ServeAdjustRecordPO---->{}", po);
-        if (!Optional.ofNullable(po).map(ServeAdjustRecordPO::getId).isPresent()) {
-            po.setCreateId(cmd.getOperatorId());
-            po.setCreateTime(new Date());
-            serveAdjustRecordGateway.saveRecord(po);
-        } else {
-            serveAdjustRecordGateway.updateRecord(po);
-        }
-    }
-
-    private void saveChangeRecord(ServeEntity rawServe, ServeEntity newServe, Integer type, String deliverNo, Integer reason, String remark, Integer createId) {
+    public void saveChangeRecord(ServeEntity rawServe, ServeEntity newServe, Integer type, String deliverNo, Integer reason, String remark, Integer createId) {
 
         ServeChangeRecordPO serveChangeRecordPO = new ServeChangeRecordPO();
         serveChangeRecordPO.setServeNo(rawServe.getServeNo());

@@ -1,20 +1,5 @@
 package com.mfexpress.rent.deliver.consumer.common;
 
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.locks.Lock;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
@@ -39,9 +24,9 @@ import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
+import com.mfexpress.rent.deliver.constant.DepositPayTypeEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
-import com.mfexpress.rent.deliver.constant.ReplaceVehicleDepositPayTypeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.DailyAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
@@ -58,8 +43,8 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContract
 import com.mfexpress.rent.deliver.dto.data.serve.RenewalChargeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustRecordDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustRecordQry;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd.DeliverVehicleProcessCmdExe;
@@ -84,6 +69,20 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.redis.util.RedisLockRegistry;
 import org.springframework.stereotype.Component;
+
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.locks.Lock;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import javax.annotation.Resource;
 
 @Component
 @MFMqCommonProcessClass(topicKey = "rocketmq.listenContractTopic")
@@ -332,13 +331,13 @@ public class ElecContractStatusMqCommand {
                             maintenanceAggregateRootApi.updateMaintenanceDetailByServeNo(serveDTO.getServeNo());
                             // 替换车押金支付
                             // 查询替换单支付方式
-                            ServeAdjustRecordQry qry = new ServeAdjustRecordQry();
+                            ServeAdjustQry qry = new ServeAdjustQry();
                             qry.setServeNo(replaceServe.getServeNo());
-                            Result<ServeAdjustRecordDTO> serveAdjustRecordDTOResult = serveAggregateRootApi.getServeAdjustRecord(qry);
-                            ResultValidUtils.checkResultException(serveAdjustRecordDTOResult);
-                            ServeAdjustRecordDTO serveAdjustRecordDTO = ResultDataUtils.getInstance(serveAdjustRecordDTOResult).getDataOrException();
+                            Result<ServeAdjustDTO> serveAdjustDTOResult = serveAggregateRootApi.getServeAdjust(qry);
 
-                            if (ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == serveAdjustRecordDTO.getDepositPayType()) {
+                            ServeAdjustDTO serveAdjustDTO = ResultDataUtils.getInstance(serveAdjustDTOResult).getDataOrException();
+
+                            if (DepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == serveAdjustDTO.getDepositPayType()) {
                                 // 账本扣除
                                 ServeDepositPayCmd serveDepositPayCmd = new ServeDepositPayCmd();
                                 serveDepositPayCmd.setPayAbleDepositAmount(replaceServe.getDeposit());
@@ -347,7 +346,7 @@ public class ElecContractStatusMqCommand {
                                 serveDepositPayCmd.setOrderId(replaceServe.getOrderId());
                                 serveDepositPayCmd.setCustomerId(replaceServe.getCustomerId());
                                 serveDepositPayCmd.setOperatorId(contractDTO.getCreatorId());
-                                serveDepositPayCmd.setDepositPayType(ReplaceVehicleDepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode());
+                                serveDepositPayCmd.setDepositPayType(DepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode());
 
                                 serveServiceI.serveDepositPay(serveDepositPayCmd);
                             }

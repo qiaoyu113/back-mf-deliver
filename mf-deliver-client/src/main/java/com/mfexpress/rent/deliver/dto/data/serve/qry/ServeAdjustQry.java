@@ -6,11 +6,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@ApiModel(value = "替换单调整记录查询")
+@ApiModel(value = "替换单调整工单查询")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ServeAdjustRecordQry {
+public class ServeAdjustQry {
     
     @ApiModelProperty(value = "服务单号")
     private String serveNo;

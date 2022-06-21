@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+@Deprecated
 @Data
 @ApiModel(value = "替换单调整记录 DTO")
 public class ServeAdjustRecordDTO {
