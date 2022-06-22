@@ -1,14 +1,28 @@
 package com.mfexpress.rent.deliver.mobile;
 
+import java.util.Optional;
+
+import com.mfexpress.component.constants.ResultErrorEnum;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.MfDeliveryApplication;
+import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
+import com.mfexpress.rent.deliver.utils.MainServeUtil;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
+import com.mfexpress.rent.maintain.constant.MaintenanceStatusEnum;
+import com.mfexpress.rent.maintain.constant.MaintenanceTypeEnum;
+import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
+import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -140,9 +154,45 @@ class RecoverVehicleControllerTest {
 //        log.info("result---->{}", result);
 
         RecoverCheckJudgeCmd cmd = new RecoverCheckJudgeCmd();
-        cmd.setServeNo("FWD2022062200002");
+        cmd.setServeNo("FWD2022062200001");
 
-        serveAggregateRootApi.recoverCheckJudge(cmd);
+        Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(cmd.getServeNo());
+
+        if (!Optional.ofNullable(serveDTOResult).map(r -> r.getData()).isPresent()) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), ResultErrorEnum.OPER_ERROR.getName());
+        }
+
+        if (ServeEnum.REPAIR.getCode().equals(serveDTOResult.getData().getStatus())) {
+
+            // 查询车辆维修单
+            MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByServeNo(maintenanceAggregateRootApi, cmd.getServeNo());
+
+            if (Optional.ofNullable(maintenanceDTO).filter(m -> (MaintenanceStatusEnum.MAINTAINING.getCode().compareTo(m.getStatus()) == 0
+                    || MaintenanceStatusEnum.MAINTAINED.getCode().compareTo(m.getStatus()) == 0) &&
+                    MaintenanceTypeEnum.ACCIDENT.getCode().equals(m.getType())).isPresent()) {
+                // 事故维修单
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆处于事故维修中，无法进行收车。");
+            } else {
+                // 查找替换车服务单
+                ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, cmd.getServeNo());
+
+                log.info("replaceVehicleDTO----->{}", replaceVehicleDTO);
+
+                if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
+
+                    String replaceServeNo = replaceVehicleDTO.getServeNo();
+
+                    // 查询是否存在调整工单
+                    ServeAdjustQry serveAdjustQry = ServeAdjustQry.builder().serveNo(replaceServeNo).build();
+                    ServeAdjustDTO serveAdjustDTO = ResultDataUtils.getInstance(serveAggregateRootApi.getServeAdjust(serveAdjustQry)).getDataOrNull();
+                    // 车辆维修单的维修类型为故障维修||存在未发车的替换车||存在替换车
+                    if (serveAdjustDTO == null) {
+                        throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在未发车的替换单或存在替换车，无法进行收车。");
+                    }
+                }
+
+            }
+        }
     }
 
     @Test
