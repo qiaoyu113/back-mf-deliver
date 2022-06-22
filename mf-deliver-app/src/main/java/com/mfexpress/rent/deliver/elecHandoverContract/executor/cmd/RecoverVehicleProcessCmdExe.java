@@ -1,15 +1,5 @@
 package com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.annotation.Resource;
-
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
@@ -22,7 +12,6 @@ import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.DailyAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
@@ -53,6 +42,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -166,13 +158,15 @@ public class RecoverVehicleProcessCmdExe {
 
                             // 替换车开始计费
                             Result<DeliverDTO> replaceDeliverResult = deliverAggregateRootApi.getDeliverByServeNo(replaceServe.getServeNo());
+                            Result<ServeDTO> oldServeResult = serveAggregateRootApi.getServeDtoByServeNo(cmd.getServeNo());
                             DeliverDTO replaceDeliver = ResultDataUtils.getInstance(replaceDeliverResult).getDataOrException();
+                            ServeDTO oldServeDTO = ResultDataUtils.getInstance(oldServeResult).getDataOrException();
                             RenewalCmd renewalCmd = new RenewalCmd();
                             renewalCmd.setServeNo(replaceServe.getServeNo());
                             renewalCmd.setDeliverNo(replaceDeliver.getDeliverNo());
                             renewalCmd.setVehicleId(replaceDeliver.getCarId());
                             renewalCmd.setCustomerId(replaceServe.getCustomerId());
-                            renewalCmd.setRent(replaceServe.getRent());
+                            renewalCmd.setRent(oldServeDTO.getRent());
                             renewalCmd.setRentRatio(replaceServe.getRentRatio().doubleValue());
                             renewalCmd.setCreateId(cmd.getOperatorId());
                             renewalCmd.setRentEffectDate(FormatUtil.ymdFormatDateToString(FormatUtil.addDays(cmd.getRecoverVehicleTime(), 1)));

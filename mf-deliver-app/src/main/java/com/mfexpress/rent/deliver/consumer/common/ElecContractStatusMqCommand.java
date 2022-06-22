@@ -21,19 +21,8 @@ import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.dto.data.CommodityDTO;
 import com.mfexpress.rent.deliver.api.ServeServiceI;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
-import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
-import com.mfexpress.rent.deliver.constant.DepositPayTypeEnum;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
-import com.mfexpress.rent.deliver.domainapi.DailyAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.constant.*;
+import com.mfexpress.rent.deliver.domainapi.*;
 import com.mfexpress.rent.deliver.dto.data.daily.DailyOperateCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
@@ -70,19 +59,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.redis.util.RedisLockRegistry;
 import org.springframework.stereotype.Component;
 
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import javax.annotation.Resource;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.annotation.Resource;
 
 @Component
 @MFMqCommonProcessClass(topicKey = "rocketmq.listenContractTopic")
@@ -165,6 +146,7 @@ public class ElecContractStatusMqCommand {
             obtain.lock();
             try {
                 contractCompleted(contractStatusInfo);
+
             } finally {
                 obtain.unlock();
             }
