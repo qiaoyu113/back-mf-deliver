@@ -1201,6 +1201,11 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     public Result<ServeAdjustDTO> getServeAdjust(ServeAdjustQry qry) {
 
         ServeAdjustPO po = serveAdjustGateway.getByServeNo(qry.getServeNo());
+
+        if (po == null) {
+            return null;
+        }
+
         ServeAdjustDTO dto = new ServeAdjustDTO();
         BeanUtils.copyProperties(po, dto);
 

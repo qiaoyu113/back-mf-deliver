@@ -16,6 +16,7 @@ import com.mfexpress.rent.deliver.po.ServeAdjustOperatorRecordPO;
 import com.mfexpress.rent.deliver.po.ServeAdjustPO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import javax.annotation.Resource;
@@ -39,8 +40,8 @@ public class ServeAdjustEntity implements ServeAdjustEntityApi {
     @Resource
     DeliverGateway deliverGateway;
 
-    @SuppressWarnings("DuplicatedCode")
     @Override
+    @Transactional
     public int save(ServeAdjustCmd cmd) {
 
         ServeEntity rawEntity = serveGateway.getServeByServeNo(cmd.getServeNo());
@@ -59,6 +60,7 @@ public class ServeAdjustEntity implements ServeAdjustEntityApi {
     }
 
     @Override
+    @Transactional
     public int startBilling(ServeAdjustStartBillingCmd cmd) {
 
         ServeEntity rawEntity = serveGateway.getServeByServeNo(cmd.getServeNo());
@@ -94,6 +96,7 @@ public class ServeAdjustEntity implements ServeAdjustEntityApi {
     }
 
     @Override
+    @Transactional
     public int completed(ServeAdjustCompletedCmd cmd) {
 
         ServeEntity rawEntity = serveGateway.getServeByServeNo(cmd.getServeNo());
