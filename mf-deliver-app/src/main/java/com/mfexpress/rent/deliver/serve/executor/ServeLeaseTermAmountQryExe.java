@@ -330,7 +330,7 @@ public class ServeLeaseTermAmountQryExe {
     // 补充精度至小数点后两位
     public String supplementAccuracy(String num) {
         if (StringUtils.isEmpty(num)) {
-            return "";
+            return "0.00";
         }
         return new BigDecimal(num).setScale(2, RoundingMode.HALF_UP).toString();
     }
