@@ -2,10 +2,12 @@ package com.mfexpress.rent.deliver.mobile;
 
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.MfDeliveryApplication;
+import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -33,6 +35,10 @@ class RecoverVehicleControllerTest {
 
     @Resource
     MaintenanceAggregateRootApi maintenanceAggregateRootApi;
+
+    @Resource
+    ServeAggregateRootApi serveAggregateRootApi;
+
     @Test
     void getRecoverVehicleListVO() {
 
@@ -125,12 +131,18 @@ class RecoverVehicleControllerTest {
 
     @Test
     void whetherToCheck() {
-        RecoverVechicleCmd cmd = new RecoverVechicleCmd();
-        cmd.setServeNo("FWD2022061400026");
+//        RecoverVechicleCmd cmd = new RecoverVechicleCmd();
+//        cmd.setServeNo("FWD2022062200002");
 
-        Result<String> result = controller.whetherToCheck(cmd, jwt);
+//
+//        Result<String> result = controller.whetherToCheck(cmd, jwt);
+//
+//        log.info("result---->{}", result);
 
-        log.info("result---->{}", result);
+        RecoverCheckJudgeCmd cmd = new RecoverCheckJudgeCmd();
+        cmd.setServeNo("FWD2022062200002");
+
+        serveAggregateRootApi.recoverCheckJudge(cmd);
     }
 
     @Test
