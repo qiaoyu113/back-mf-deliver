@@ -140,6 +140,15 @@ public class ServeLeaseTermAmountQryExe {
             orgIdSet.add(serveAllLeaseTermAmountVO.getOrgId());
             serveNoList.add(serveAllLeaseTermAmountVO.getServeNo());
             contractCommodityIdList.add(serveES.getContractCommodityId());
+
+            String rentStr = String.valueOf(map.get("rent"));
+            String rentRatioStr = String.valueOf(map.get("rentRatio"));
+            serveAllLeaseTermAmountVO.setRentFee(rentStr);
+            BigDecimal rent = new BigDecimal(rentStr);
+            BigDecimal rentRatio = new BigDecimal(rentRatioStr);
+            BigDecimal serviceFee = rent.subtract(rent.multiply(rentRatio));
+            serveAllLeaseTermAmountVO.setServiceFee(String.format("%.2f", serviceFee));
+
             return serveAllLeaseTermAmountVO;
         }).collect(Collectors.toList());
 
@@ -246,20 +255,20 @@ public class ServeLeaseTermAmountQryExe {
             }
 
             // 历史租期欠费补充
-            for (ServeAllLeaseTermAmountVO serveAllLeaseTermAmountVO : voList) {
-                BigDecimal unpaidAmount = BigDecimal.ZERO;
-                if (null != serveNoWithSubBillItemDTOListMap) {
-                    List<SubBillItemDTO> subBillItemDTOList = serveNoWithSubBillItemDTOListMap.get(serveAllLeaseTermAmountVO.getServeNo());
-                    if (null != subBillItemDTOList && !subBillItemDTOList.isEmpty()) {
-                        for (SubBillItemDTO subBillItemDTO : subBillItemDTOList) {
-                            if (null != subBillItemDTO.getUnpaidAmount()) {
-                                unpaidAmount = unpaidAmount.add(subBillItemDTO.getUnpaidAmount());
-                            }
+            BigDecimal unpaidAmount = BigDecimal.ZERO;
+            if (null != serveNoWithSubBillItemDTOListMap) {
+                List<SubBillItemDTO> subBillItemDTOList = serveNoWithSubBillItemDTOListMap.get(vo.getServeNo());
+                if (null != subBillItemDTOList && !subBillItemDTOList.isEmpty()) {
+                    for (SubBillItemDTO subBillItemDTO : subBillItemDTOList) {
+                        if (null != subBillItemDTO.getUnpaidAmount()) {
+                            unpaidAmount = unpaidAmount.add(subBillItemDTO.getUnpaidAmount());
                         }
                     }
                 }
-                serveAllLeaseTermAmountVO.setTotalArrears(supplementAccuracy(unpaidAmount.toString()));
             }
+            vo.setTotalArrears(supplementAccuracy(unpaidAmount.toString()));
+//            for (ServeAllLeaseTermAmountVO serveAllLeaseTermAmountVO : voList) {
+//            }
         }
         // 数据拼装 --------------------------- end
 

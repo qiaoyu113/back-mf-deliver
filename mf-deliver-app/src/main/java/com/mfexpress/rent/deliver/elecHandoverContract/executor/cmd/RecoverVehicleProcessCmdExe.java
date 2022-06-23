@@ -167,13 +167,14 @@ public class RecoverVehicleProcessCmdExe {
                             // 替换车开始计费
                             Result<DeliverDTO> replaceDeliverResult = deliverAggregateRootApi.getDeliverByServeNo(replaceServe.getServeNo());
                             DeliverDTO replaceDeliver = ResultDataUtils.getInstance(replaceDeliverResult).getDataOrException();
+
                             RenewalCmd renewalCmd = new RenewalCmd();
                             renewalCmd.setServeNo(replaceServe.getServeNo());
                             renewalCmd.setDeliverNo(replaceDeliver.getDeliverNo());
                             renewalCmd.setVehicleId(replaceDeliver.getCarId());
                             renewalCmd.setCustomerId(replaceServe.getCustomerId());
-                            renewalCmd.setRent(replaceServe.getRent());
-                            renewalCmd.setRentRatio(replaceServe.getRentRatio().doubleValue());
+                            renewalCmd.setRent(serveAdjustDTO.getChargeRentAmount());
+                            renewalCmd.setRentRatio(serveAdjustDTO.getChargeRentRatio().doubleValue());
                             renewalCmd.setCreateId(cmd.getOperatorId());
                             renewalCmd.setRentEffectDate(FormatUtil.ymdFormatDateToString(FormatUtil.addDays(cmd.getRecoverVehicleTime(), 1)));
                             renewalCmd.setEffectFlag(true);

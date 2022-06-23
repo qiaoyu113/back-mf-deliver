@@ -38,7 +38,7 @@ class ServeWebControllerTest {
     void getServeLeaseTermAmountVOList() {
 
         ServeLeaseTermAmountQry qry = new ServeLeaseTermAmountQry();
-        qry.setCarId(5616);
+//        qry.setCarId(5616);
 
 
         Result<PagePagination<ServeAllLeaseTermAmountVO>> result = serveWebController.getServeLeaseTermAmountVOList(qry, jwt);

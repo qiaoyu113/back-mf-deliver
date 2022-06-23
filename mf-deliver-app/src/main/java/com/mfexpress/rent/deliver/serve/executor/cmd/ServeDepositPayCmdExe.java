@@ -4,6 +4,7 @@ import com.mfexpress.billing.customer.api.aggregate.AccountAggregateRootApi;
 import com.mfexpress.billing.customer.api.aggregate.AdvincePaymentAggregateRootApi;
 import com.mfexpress.billing.customer.api.aggregate.BookAggregateRootApi;
 import com.mfexpress.billing.customer.constant.AccountBookTypeEnum;
+import com.mfexpress.billing.customer.constant.AccountOperTypeEnum;
 import com.mfexpress.billing.customer.constant.AccountSourceTypeEnum;
 import com.mfexpress.billing.customer.data.dto.advince.OrderPayAdvincepaymentCmd;
 import com.mfexpress.billing.customer.data.dto.book.BookMoveBalanceDTO;
@@ -15,6 +16,7 @@ import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.constant.DepositPayTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockConfirmDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
 import org.springframework.stereotype.Component;
 
@@ -51,7 +53,6 @@ public class ServeDepositPayCmdExe {
         Integer accountId = ResultDataUtils.getInstance(accountIdResult).getDataOrException();
 
         BookMoveBalanceDTO.BookMoveBalanceDTOBuilder bookMoveBalanceDTOBuilder = BookMoveBalanceDTO.builder().accountId(accountId)
-                .amount(payAmount)
                 .userId(cmd.getOperatorId());
 
         if (DepositPayTypeEnum.SOURCE_DEPOSIT_PAY.getCode() == cmd.getDepositPayType()) {
@@ -59,15 +60,18 @@ public class ServeDepositPayCmdExe {
             List<String> serveNoList = new ArrayList<>();
             serveNoList.add(cmd.getSourceServeNo());
 
+            // 在服务单解锁押金前查询
+            ServeDTO sourceServe = ResultDataUtils.getInstance(serveAggregateRootApi.getServeDtoByServeNo(cmd.getSourceServeNo())).getDataOrException();
+
             Result<Boolean> unLockDepositResult = serveAggregateRootApi.unLockDeposit(serveNoList, cmd.getOperatorId());
             ResultValidUtils.checkResultException(unLockDepositResult);
             if (!unLockDepositResult.getData()) {
                 // 不记录log了 查看入参排错吧
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "解除押金操作异常");
             }
-
             // 原车押金转移记录
             bookMoveBalanceDTOBuilder.targetType(AccountBookTypeEnum.DEPOSIT_BALANCE.getCode())
+                    .amount(sourceServe.getPaidInDeposit())
                     .sourceType(AccountBookTypeEnum.DEPOSIT.getCode()).build();
 
             Result<Boolean> lockDepositResult = bookAggregateRootApi.unLockDeposit(bookMoveBalanceDTOBuilder.build());
@@ -93,6 +97,7 @@ public class ServeDepositPayCmdExe {
 
         // 替换车押金转移记录
         bookMoveBalanceDTOBuilder.targetType(AccountBookTypeEnum.DEPOSIT.getCode())
+                .amount(payAmount)
                 .sourceType(AccountBookTypeEnum.DEPOSIT_BALANCE.getCode()).build();
 
         Result<Boolean> lockDepositResult = bookAggregateRootApi.lockDeposit(bookMoveBalanceDTOBuilder.build());
@@ -101,15 +106,19 @@ public class ServeDepositPayCmdExe {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "锁定押金操作异常");
         }
 
-        // 押金支付
-        OrderPayAdvincepaymentCmd orderPayAdvincepaymentCmd = new OrderPayAdvincepaymentCmd();
-        orderPayAdvincepaymentCmd.setOrderId(cmd.getOrderId());
-        orderPayAdvincepaymentCmd.setCustomerId(cmd.getCustomerId());
-        orderPayAdvincepaymentCmd.setAdvinceAmount(BigDecimal.ZERO);
-        orderPayAdvincepaymentCmd.setAllAmount(payAmount);
-        orderPayAdvincepaymentCmd.setDepositAmount(payAmount);
-        orderPayAdvincepaymentCmd.setUserId(cmd.getOperatorId());
+        // 使用账本支付时 进行押金支付
+        if (DepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == cmd.getDepositPayType()) {
+            // 押金支付
+            OrderPayAdvincepaymentCmd orderPayAdvincepaymentCmd = new OrderPayAdvincepaymentCmd();
+            orderPayAdvincepaymentCmd.setOrderId(cmd.getOrderId());
+            orderPayAdvincepaymentCmd.setCustomerId(cmd.getCustomerId());
+            orderPayAdvincepaymentCmd.setAdvinceAmount(BigDecimal.ZERO);
+            orderPayAdvincepaymentCmd.setAllAmount(payAmount);
+            orderPayAdvincepaymentCmd.setDepositAmount(payAmount);
+            orderPayAdvincepaymentCmd.setUserId(cmd.getOperatorId());
+            orderPayAdvincepaymentCmd.setAccountOperType(AccountOperTypeEnum.PAY_DEPOSIT.getCode());
 
-        advincePaymentAggregateRootApi.orderPayFromBalance(orderPayAdvincepaymentCmd);
+            advincePaymentAggregateRootApi.orderPayFromBalance(orderPayAdvincepaymentCmd);
+        }
     }
 }
