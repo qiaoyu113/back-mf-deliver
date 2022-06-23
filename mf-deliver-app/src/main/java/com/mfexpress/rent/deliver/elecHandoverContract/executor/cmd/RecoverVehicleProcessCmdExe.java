@@ -44,6 +44,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+
 import java.util.*;
 
 @Slf4j
@@ -158,7 +159,6 @@ public class RecoverVehicleProcessCmdExe {
 
                             // 替换车开始计费
                             Result<DeliverDTO> replaceDeliverResult = deliverAggregateRootApi.getDeliverByServeNo(replaceServe.getServeNo());
-                            Result<ServeDTO> oldServeResult = serveAggregateRootApi.getServeDtoByServeNo(cmd.getServeNo());
                             DeliverDTO replaceDeliver = ResultDataUtils.getInstance(replaceDeliverResult).getDataOrException();
 
                             RenewalCmd renewalCmd = new RenewalCmd();
