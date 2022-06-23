@@ -329,7 +329,6 @@ public class ElecContractStatusMqCommand {
                                 serveDepositPayCmd.setCustomerId(replaceServe.getCustomerId());
                                 serveDepositPayCmd.setOperatorId(contractDTO.getCreatorId());
                                 serveDepositPayCmd.setDepositPayType(DepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode());
-
                                 serveServiceI.serveDepositPay(serveDepositPayCmd);
                             }
 

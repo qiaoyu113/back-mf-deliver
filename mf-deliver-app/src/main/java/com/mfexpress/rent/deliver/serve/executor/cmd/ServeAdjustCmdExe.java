@@ -53,7 +53,7 @@ public class ServeAdjustCmdExe {
             serveDepositPayCmd.setOrderId(cmd.getOrderId());
             serveDepositPayCmd.setCustomerId(cmd.getCustomerId());
             serveDepositPayCmd.setOperatorId(cmd.getOperatorId());
-
+            serveDepositPayCmd.setUserId(tokenInfo.getId());
             serveDepositPayCmdExe.execute(serveDepositPayCmd);
         }
 

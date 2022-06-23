@@ -6,7 +6,8 @@ import com.mfexpress.billing.customer.api.aggregate.BookAggregateRootApi;
 import com.mfexpress.billing.customer.constant.AccountBookTypeEnum;
 import com.mfexpress.billing.customer.constant.AccountOperTypeEnum;
 import com.mfexpress.billing.customer.constant.AccountSourceTypeEnum;
-import com.mfexpress.billing.customer.data.dto.advince.OrderPayAdvincepaymentCmd;
+import com.mfexpress.billing.customer.data.dto.advince.OrderPayPaymentDTO;
+import com.mfexpress.billing.customer.data.dto.advince.PayInfoDTO;
 import com.mfexpress.billing.customer.data.dto.book.BookMoveBalanceDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
@@ -20,10 +21,11 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import javax.annotation.Resource;
 
 @Component
 public class ServeDepositPayCmdExe {
@@ -109,16 +111,17 @@ public class ServeDepositPayCmdExe {
         // 使用账本支付时 进行押金支付
         if (DepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == cmd.getDepositPayType()) {
             // 押金支付
-            OrderPayAdvincepaymentCmd orderPayAdvincepaymentCmd = new OrderPayAdvincepaymentCmd();
-            orderPayAdvincepaymentCmd.setOrderId(cmd.getOrderId());
-            orderPayAdvincepaymentCmd.setCustomerId(cmd.getCustomerId());
-            orderPayAdvincepaymentCmd.setAdvinceAmount(BigDecimal.ZERO);
-            orderPayAdvincepaymentCmd.setAllAmount(payAmount);
-            orderPayAdvincepaymentCmd.setDepositAmount(payAmount);
-            orderPayAdvincepaymentCmd.setUserId(cmd.getOperatorId());
-            orderPayAdvincepaymentCmd.setAccountOperType(AccountOperTypeEnum.PAY_DEPOSIT.getCode());
-
-            advincePaymentAggregateRootApi.orderPayFromBalance(orderPayAdvincepaymentCmd);
+            OrderPayPaymentDTO orderPayPaymentDTO = new OrderPayPaymentDTO();
+            orderPayPaymentDTO.setOrderId(cmd.getOrderId());
+            orderPayPaymentDTO.setCustomerId(cmd.getCustomerId());
+            PayInfoDTO payInfoDTO = new PayInfoDTO();
+            payInfoDTO.setAmount(payAmount);
+            payInfoDTO.setBookType(AccountBookTypeEnum.DEPOSIT_BALANCE.getCode());
+            payInfoDTO.setPayType("deposit");
+            orderPayPaymentDTO.setPayTypeId(AccountOperTypeEnum.PAY_DEPOSIT.getCode());
+            orderPayPaymentDTO.setPayInfoDTOList(Arrays.asList(payInfoDTO));
+            orderPayPaymentDTO.setUserId(cmd.getUserId());
+            advincePaymentAggregateRootApi.orderPay(orderPayPaymentDTO);
         }
     }
 }
