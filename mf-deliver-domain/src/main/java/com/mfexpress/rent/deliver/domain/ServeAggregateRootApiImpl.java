@@ -21,6 +21,7 @@ import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.dto.data.CommodityDTO;
+import com.mfexpress.rent.deliver.constant.AdjustStatusEnum;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
@@ -1184,7 +1185,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                     ServeAdjustQry serveAdjustQry = ServeAdjustQry.builder().serveNo(replaceServeNo).build();
                     ServeAdjustDTO serveAdjustDTO = ResultDataUtils.getInstance(getServeAdjust(serveAdjustQry)).getDataOrNull();
                     // 车辆维修单的维修类型为故障维修||存在未发车的替换车||存在替换车
-                    if (serveAdjustDTO == null) {
+                    if (Optional.ofNullable(serveAdjustDTO).filter(o -> AdjustStatusEnum.NOT_ADJUST.getIndex() == o.getAdjustStatus()).isPresent()) {
                         throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在未发车的替换单或存在替换车，无法进行收车。");
                     }
                 }
