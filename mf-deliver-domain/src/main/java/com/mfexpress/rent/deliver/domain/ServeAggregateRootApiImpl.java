@@ -551,7 +551,6 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_SERVE_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
         String newServeNo = DeliverUtils.getNo(Constants.REDIS_SERVE_KEY, incr);
 
-        serve.setLeaseModelId(LeaseModelEnum.REPLACEMENT.getCode());
         serve.setStatus(ServeEnum.NOT_PRESELECTED.getCode());
         serve.setCarModelId(serveAddDTO.getModelsId());
         serve.setBrandId(serveAddDTO.getBrandId());

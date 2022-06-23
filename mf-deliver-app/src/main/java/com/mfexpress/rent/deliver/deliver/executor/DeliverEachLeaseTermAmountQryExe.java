@@ -13,6 +13,7 @@ import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.constant.DeliverStatusEnum;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -142,7 +143,11 @@ public class DeliverEachLeaseTermAmountQryExe {
                     deliverEachLeaseTermAmountVO.setCarModelDisplay(vehicleTypeMap.get(vehicleDto.getBrandId()));
                 }
             }
-            deliverEachLeaseTermAmountVO.setLeaseModelId(serveDTO.getLeaseModelId());
+            if (JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {
+                deliverEachLeaseTermAmountVO.setLeaseModelId(LeaseModelEnum.REPLACEMENT.getCode());
+            } else {
+                deliverEachLeaseTermAmountVO.setLeaseModelId(serveDTO.getLeaseModelId());
+            }
             LeaseModelEnum leaseModelEnum = LeaseModelEnum.getEnum(deliverEachLeaseTermAmountVO.getLeaseModelId());
             deliverEachLeaseTermAmountVO.setLeaseModelDisplay(leaseModelEnum == null ? null : leaseModelEnum.getName());
             deliverEachLeaseTermAmountVO.setRealTimeRentFee(serveLeaseTermInfoDTO.getRentFee().toString());

@@ -145,54 +145,13 @@ class RecoverVehicleControllerTest {
 
     @Test
     void whetherToCheck() {
-//        RecoverVechicleCmd cmd = new RecoverVechicleCmd();
-//        cmd.setServeNo("FWD2022062200002");
+        RecoverVechicleCmd cmd = new RecoverVechicleCmd();
+        cmd.setServeNo("FWD2022062200029");
 
-//
-//        Result<String> result = controller.whetherToCheck(cmd, jwt);
-//
-//        log.info("result---->{}", result);
 
-        RecoverCheckJudgeCmd cmd = new RecoverCheckJudgeCmd();
-        cmd.setServeNo("FWD2022062200001");
+        Result<String> result = controller.whetherToCheck(cmd, jwt);
 
-        Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(cmd.getServeNo());
-
-        if (!Optional.ofNullable(serveDTOResult).map(r -> r.getData()).isPresent()) {
-            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), ResultErrorEnum.OPER_ERROR.getName());
-        }
-
-        if (ServeEnum.REPAIR.getCode().equals(serveDTOResult.getData().getStatus())) {
-
-            // 查询车辆维修单
-            MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByServeNo(maintenanceAggregateRootApi, cmd.getServeNo());
-
-            if (Optional.ofNullable(maintenanceDTO).filter(m -> (MaintenanceStatusEnum.MAINTAINING.getCode().compareTo(m.getStatus()) == 0
-                    || MaintenanceStatusEnum.MAINTAINED.getCode().compareTo(m.getStatus()) == 0) &&
-                    MaintenanceTypeEnum.ACCIDENT.getCode().equals(m.getType())).isPresent()) {
-                // 事故维修单
-                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆处于事故维修中，无法进行收车。");
-            } else {
-                // 查找替换车服务单
-                ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, cmd.getServeNo());
-
-                log.info("replaceVehicleDTO----->{}", replaceVehicleDTO);
-
-                if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
-
-                    String replaceServeNo = replaceVehicleDTO.getServeNo();
-
-                    // 查询是否存在调整工单
-                    ServeAdjustQry serveAdjustQry = ServeAdjustQry.builder().serveNo(replaceServeNo).build();
-                    ServeAdjustDTO serveAdjustDTO = ResultDataUtils.getInstance(serveAggregateRootApi.getServeAdjust(serveAdjustQry)).getDataOrNull();
-                    // 车辆维修单的维修类型为故障维修||存在未发车的替换车||存在替换车
-                    if (serveAdjustDTO == null) {
-                        throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在未发车的替换单或存在替换车，无法进行收车。");
-                    }
-                }
-
-            }
-        }
+        log.info("result---->{}", result);
     }
 
     @Test
