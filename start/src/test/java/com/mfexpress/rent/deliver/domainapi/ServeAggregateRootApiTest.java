@@ -59,7 +59,7 @@ class ServeAggregateRootApiTest {
     void recoverCheckJudge() {
 
         RecoverCheckJudgeCmd cmd = new RecoverCheckJudgeCmd();
-        cmd.setServeNo("FWD2022062200029");
+        cmd.setServeNo("FWD2022062300042");
 
         serveAggregateRootApi.recoverCheckJudge(cmd);
     }
