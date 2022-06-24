@@ -1181,12 +1181,20 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
                     String replaceServeNo = replaceVehicleDTO.getServeNo();
 
-                    // 查询是否存在调整工单
-                    ServeAdjustQry serveAdjustQry = ServeAdjustQry.builder().serveNo(replaceServeNo).build();
-                    ServeAdjustDTO serveAdjustDTO = ResultDataUtils.getInstance(getServeAdjust(serveAdjustQry)).getDataOrNull();
-                    // 车辆维修单的维修类型为故障维修||存在未发车的替换车||存在替换车
-                    if (!Optional.ofNullable(serveAdjustDTO).isPresent()) {
-                        throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在未发车的替换单或存在替换车，无法进行收车。");
+                    ServeDTO replaceServeDTO = ResultDataUtils.getInstance(getServeDtoByServeNo(replaceServeNo)).getDataOrException();
+                    // 替换服务单状态为0、1、2、5时，判断是否有调整工单，如果没有则不允许原车验车
+                    if (Optional.ofNullable(replaceServeDTO).filter(o -> ServeEnum.NOT_PRESELECTED.getCode().equals(o.getStatus())
+                            || ServeEnum.PRESELECTED.getCode().equals(o.getStatus()) || ServeEnum.DELIVER.getCode().equals(o.getStatus())
+                            || ServeEnum.REPAIR.getCode().equals(o.getStatus())).isPresent()) {
+
+                        // 查询是否存在调整工单
+                        ServeAdjustQry serveAdjustQry = ServeAdjustQry.builder().serveNo(replaceServeNo).build();
+
+                        ServeAdjustDTO serveAdjustDTO = ResultDataUtils.getInstance(getServeAdjust(serveAdjustQry)).getDataOrNull();
+
+                        if (!Optional.ofNullable(serveAdjustDTO).isPresent()) {
+                            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在未发车的替换单或存在替换车，无法进行收车。");
+                        }
                     }
                 }
 
