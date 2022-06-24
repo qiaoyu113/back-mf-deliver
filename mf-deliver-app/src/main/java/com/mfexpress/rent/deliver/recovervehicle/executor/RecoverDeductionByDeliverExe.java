@@ -33,10 +33,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Optional;
-import javax.annotation.Resource;
 
 @Component
 @Slf4j
@@ -135,7 +135,7 @@ public class RecoverDeductionByDeliverExe {
                 serveDepositPayCmd.setOperatorId(tokenInfo.getId());
                 serveDepositPayCmd.setDepositPayType(DepositPayTypeEnum.SOURCE_DEPOSIT_PAY.getCode());
                 serveDepositPayCmd.setSourceServeNo(serveDTO.getServeNo());
-
+                serveDepositPayCmd.setUserId(tokenInfo.getId());
                 serveDepositPayCmdExe.execute(serveDepositPayCmd);
 
                 // 替换服务单调整工单完成

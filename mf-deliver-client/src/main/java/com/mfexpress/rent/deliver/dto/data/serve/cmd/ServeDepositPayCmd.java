@@ -1,15 +1,14 @@
 package com.mfexpress.rent.deliver.dto.data.serve.cmd;
 
-import java.math.BigDecimal;
+import com.mfexpress.rent.deliver.dto.data.BaseCmd;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 import javax.validation.constraints.DecimalMax;
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-
-import com.mfexpress.rent.deliver.dto.data.BaseCmd;
-import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
+import java.math.BigDecimal;
 
 @Data
 public class ServeDepositPayCmd extends BaseCmd {
@@ -44,4 +43,6 @@ public class ServeDepositPayCmd extends BaseCmd {
 
     @ApiModelProperty(value = "押金支付方式")
     private Integer depositPayType;
+
+    private Integer userId;
 }
