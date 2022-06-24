@@ -21,6 +21,8 @@ import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCompletedCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverInvalidCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
 import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
@@ -63,10 +65,14 @@ public class RecoverCancelByDeliverExe {
 
             if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
                 String replaceServeNo = replaceVehicleDTO.getServeNo();
-                Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceServeNo);
-                if (Optional.ofNullable(replaceServeDTOResult).map(Result::getData)
-                        .filter(s -> JudgeEnum.NO.getCode().equals(s.getReplaceFlag()))
-                        .filter(s -> !ServeEnum.CANCEL.getCode().equals(s.getStatus()) || !ServeEnum.COMPLETED.getCode().equals(s.getStatus())).isPresent()) {
+
+                // 查询是否存在调整工单
+                ServeAdjustQry serveAdjustQry = ServeAdjustQry.builder().serveNo(replaceServeNo).build();
+
+                ServeAdjustDTO serveAdjustDTO = ResultDataUtils.getInstance(serveAggregateRootApi.getServeAdjust(serveAdjustQry)).getDataOrNull();
+
+                // 存在调整工单 不允许取消收车
+                if (Optional.ofNullable(serveAdjustDTO).isPresent()) {
                     throw new CommonException(ResultStatusEnum.UNKNOWS.getCode(), "不可取消收车");
                 }
             }
