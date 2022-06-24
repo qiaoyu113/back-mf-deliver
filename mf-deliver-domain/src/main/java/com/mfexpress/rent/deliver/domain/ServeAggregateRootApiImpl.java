@@ -1185,7 +1185,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                     ServeAdjustQry serveAdjustQry = ServeAdjustQry.builder().serveNo(replaceServeNo).build();
                     ServeAdjustDTO serveAdjustDTO = ResultDataUtils.getInstance(getServeAdjust(serveAdjustQry)).getDataOrNull();
                     // 车辆维修单的维修类型为故障维修||存在未发车的替换车||存在替换车
-                    if (Optional.ofNullable(serveAdjustDTO).filter(o -> AdjustStatusEnum.NOT_ADJUST.getIndex() == o.getAdjustStatus()).isPresent()) {
+                    if (!Optional.ofNullable(serveAdjustDTO).isPresent()) {
                         throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在未发车的替换单或存在替换车，无法进行收车。");
                     }
                 }
