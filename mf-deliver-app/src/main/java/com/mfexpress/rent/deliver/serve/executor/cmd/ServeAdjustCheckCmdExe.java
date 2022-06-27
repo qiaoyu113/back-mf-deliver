@@ -76,7 +76,11 @@ public class ServeAdjustCheckCmdExe {
         if (!Optional.ofNullable(serveDTOResult).map(result -> result.getData()).isPresent()) {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未找到服务单");
         }
+
         ServeDTO serveDTO = serveDTOResult.getData();
+        if (ServeEnum.RECOVER.getCode() == serveDTO.getStatus()) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "该服务单已收车");
+        }
         String sourceServeNo = "";
         if (JudgeEnum.NO.getCode().equals(serveDTO.getReactiveFlag())) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前服务单不是替换单，无法进行服务单变更");

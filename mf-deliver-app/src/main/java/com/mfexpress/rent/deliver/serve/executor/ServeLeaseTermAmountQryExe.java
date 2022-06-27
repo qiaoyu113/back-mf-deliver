@@ -51,6 +51,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -141,8 +142,8 @@ public class ServeLeaseTermAmountQryExe {
             serveNoList.add(serveAllLeaseTermAmountVO.getServeNo());
             contractCommodityIdList.add(serveES.getContractCommodityId());
 
-            String rentStr = String.valueOf(map.get("rent"));
-            String rentRatioStr = String.valueOf(map.get("rentRatio"));
+            String rentStr = String.valueOf(!Objects.isNull(map.get("rent")) ? map.get("rent") : "0.00");
+            String rentRatioStr = String.valueOf(!Objects.isNull(map.get("rentRatio")) ? map.get("rentRatio") : "0.00");
             serveAllLeaseTermAmountVO.setRentFee(rentStr);
             BigDecimal rent = new BigDecimal(rentStr);
             BigDecimal rentRatio = new BigDecimal(rentRatioStr);
