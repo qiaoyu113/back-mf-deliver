@@ -248,12 +248,16 @@ public class CreateDeliverContractCmdExe {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "订单信息查询失败");
             }
             docInfo.setOrderContactsPhone(orderDTOResult.getData().getConsigneeMobile());
-
             // 验车信息补充
             // 问题和图片需要验证一下copy过去了没有
             VehicleValidationFullInfoDTO fullInfoDTO = fullInfoDTOMap.get(deliverImgInfo.getCarId());
             BeanUtils.copyProperties(fullInfoDTO, docInfo);
             docInfo.setMileage(fullInfoDTO.getMileage().toString());
+            //北出 新增
+            docInfo.setHasTyreFluid(fullInfoDTO.getIsNormalTireRepairLiquid());
+            docInfo.setDisplayTyreFluid(fullInfoDTO.getDisplayTireRepairLiquid());
+            docInfo.setHasBlastPump(fullInfoDTO.getIsNormalPump());
+            docInfo.setDisplayBlastPump(fullInfoDTO.getDisplayPump());
             return docInfo;
         }).collect(Collectors.toList());
         return docInfos;
