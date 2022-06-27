@@ -9,6 +9,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
 import io.swagger.models.auth.In;
 
@@ -49,4 +50,6 @@ public interface ServeEntityApi {
     void cancelServe(ServeCancelCmd cmd);
 
     public void saveChangeRecord(ServeEntity rawServe, ServeEntity newServe, Integer type, String deliverNo, Integer reason, String remark, Integer createId);
+
+    Integer updateServePaidInDeposit(ServePaidInDepositUpdateCmd cmd);
 }

@@ -14,6 +14,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
 import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
@@ -26,6 +27,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import tk.mybatis.mapper.entity.Example;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -293,5 +295,17 @@ public class ServeEntity implements ServeEntityApi {
         serveChangeRecordPO.setCreatorId(createId);
         log.info("serveChangeRecordPO---->{}", serveChangeRecordPO);
         serveChangeRecordGateway.insert(serveChangeRecordPO);
+    }
+
+    @Override
+    @Transactional
+    public Integer updateServePaidInDeposit(ServePaidInDepositUpdateCmd cmd) {
+
+        ServeEntity serve = serveGateway.getServeByServeNo(cmd.getServeNo());
+
+        ServeEntity updateServe = new ServeEntity();
+        updateServe.setPaidInDeposit(serve.getPaidInDeposit().add(cmd.getChargeDepositAmount()));
+
+        return serveGateway.updateServeByServeNo(cmd.getServeNo(), updateServe);
     }
 }
