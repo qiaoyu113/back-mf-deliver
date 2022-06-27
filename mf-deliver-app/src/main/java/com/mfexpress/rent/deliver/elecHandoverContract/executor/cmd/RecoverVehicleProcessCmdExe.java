@@ -181,6 +181,10 @@ public class RecoverVehicleProcessCmdExe {
                             startBillingCmd.setOperatorId(cmd.getOperatorId());
 
                             serveAggregateRootApi.serveAdjustStartBilling(startBillingCmd);
+
+                            // 修改replace_vehicle的租金为原车租金
+                            replaceVehicleDTO.setRent(serveAdjustDTO.getChargeRentAmount());
+                            maintenanceAggregateRootApi.updateReplaceVehicle(replaceVehicleDTO);
                         }
                     }
                 }

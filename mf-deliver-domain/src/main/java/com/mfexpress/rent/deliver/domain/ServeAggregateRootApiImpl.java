@@ -59,6 +59,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCompletedCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustStartBillingCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
@@ -1242,5 +1243,10 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     public Result<Integer> serveAdjustCompleted(ServeAdjustCompletedCmd cmd) {
 
         return Result.getInstance(serveAdjustEntityApi.completed(cmd)).success();
+    }
+
+    @Override
+    public Result<Integer> updateServePaidInDeposit(ServePaidInDepositUpdateCmd cmd) {
+        return null;
     }
 }

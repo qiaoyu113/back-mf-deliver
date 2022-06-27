@@ -24,6 +24,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCompletedCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustStartBillingCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
@@ -211,4 +212,7 @@ public interface ServeAggregateRootApi {
 
     @PostMapping(value = "/serve/adjust/completed")
     Result<Integer> serveAdjustCompleted(@RequestBody ServeAdjustCompletedCmd cmd);
+
+    @PostMapping(value = "/serve/paid-in-depost/update")
+    Result<Integer> updateServePaidInDeposit(@RequestBody ServePaidInDepositUpdateCmd cmd);
 }

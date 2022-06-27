@@ -144,9 +144,9 @@ public class ServeLeaseTermAmountQryExe {
 
             String rentStr = String.valueOf(!Objects.isNull(map.get("rent")) ? map.get("rent") : "0.00");
             String rentRatioStr = String.valueOf(!Objects.isNull(map.get("rentRatio")) ? map.get("rentRatio") : "0.00");
-            serveAllLeaseTermAmountVO.setRentFee(rentStr);
             BigDecimal rent = new BigDecimal(rentStr);
             BigDecimal rentRatio = new BigDecimal(rentRatioStr);
+            serveAllLeaseTermAmountVO.setRentFee(String.format("%.2f", rent.multiply(rentRatio)));
             BigDecimal serviceFee = rent.subtract(rent.multiply(rentRatio));
             serveAllLeaseTermAmountVO.setServiceFee(String.format("%.2f", serviceFee));
 
