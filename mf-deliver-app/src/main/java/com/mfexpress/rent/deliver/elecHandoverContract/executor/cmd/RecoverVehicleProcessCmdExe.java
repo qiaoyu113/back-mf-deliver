@@ -182,8 +182,9 @@ public class RecoverVehicleProcessCmdExe {
 
                             serveAggregateRootApi.serveAdjustStartBilling(startBillingCmd);
 
-                            // 修改replace_vehicle的租金为原车租金
+                            // 修改replace_vehicle的租金为原车租金,租金比例改为原车租金比例
                             replaceVehicleDTO.setRent(serveAdjustDTO.getChargeRentAmount());
+                            replaceVehicleDTO.setRentRatio(serveAdjustDTO.getChargeRentRatio());
                             maintenanceAggregateRootApi.updateReplaceVehicle(replaceVehicleDTO);
                         }
                     }
