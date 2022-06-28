@@ -18,8 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
 import javax.annotation.Resource;
+import java.util.Date;
 
 @Slf4j
 @Component
@@ -109,7 +109,7 @@ public class ServeAdjustEntity implements ServeAdjustEntityApi {
 
         po = serveAdjustGateway.getByServeNo(po.getServeNo());
         ServeAdjustOperatorRecordPO recordPO = initOperatorRecord(rawEntity, po, cmd.getOperatorId(), cmd.getStartBillingDate());
-
+        recordPO.setPaidInDepositAmount(po.getChargePaidInDepositAmount());
         // 操作记录保存
         recordGateway.save(recordPO);
 
