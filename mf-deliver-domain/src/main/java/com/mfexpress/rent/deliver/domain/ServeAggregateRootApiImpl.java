@@ -21,14 +21,7 @@ import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.dto.data.CommodityDTO;
-import com.mfexpress.rent.deliver.constant.AdjustStatusEnum;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.DeliverEnum;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
-import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
-import com.mfexpress.rent.deliver.constant.ServeRenewalTypeEnum;
+import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.domainservice.ServeDomainServiceI;
@@ -36,47 +29,16 @@ import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockConfirmDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockListDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.PassiveRenewalServeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.RenewalChargeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.RenewalCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.RenewalReplaceServeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.RenewalServeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeAddDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeChangeRecordDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeCycleQryCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDailyDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
-import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeReplaceVehicleAddDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeVehicleDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCompletedCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustStartBillingCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.*;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.*;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
-import com.mfexpress.rent.deliver.entity.DeliverEntity;
-import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
-import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
-import com.mfexpress.rent.deliver.entity.ServeChangeRecordPO;
-import com.mfexpress.rent.deliver.entity.ServeEntity;
+import com.mfexpress.rent.deliver.entity.*;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.entity.api.ServeAdjustEntityApi;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
-import com.mfexpress.rent.deliver.gateway.DeliverGateway;
-import com.mfexpress.rent.deliver.gateway.DeliverVehicleGateway;
-import com.mfexpress.rent.deliver.gateway.RecoverVehicleGateway;
-import com.mfexpress.rent.deliver.gateway.ServeAdjustGateway;
-import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
-import com.mfexpress.rent.deliver.gateway.ServeGateway;
+import com.mfexpress.rent.deliver.gateway.*;
 import com.mfexpress.rent.deliver.po.ServeAdjustPO;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
@@ -97,28 +59,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.annotation.Resource;
 
 @RestController
 @RequestMapping("/domain/deliver/v3/serve")
@@ -1247,6 +1196,10 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Override
     public Result<Integer> updateServePaidInDeposit(ServePaidInDepositUpdateCmd cmd) {
-        return null;
+        Integer servePaidInDeposit = serveEntityApi.updateServePaidInDeposit(cmd);
+        if (servePaidInDeposit > 0) {
+            return Result.getInstance(servePaidInDeposit).success();
+        }
+        return Result.getInstance(0).fail(ResultErrorEnum.OPER_ERROR.getCode(), "更新服务单失败");
     }
 }
