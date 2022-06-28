@@ -26,6 +26,7 @@ import com.mfexpress.rent.deliver.utils.ServeDictDataUtil;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
 import com.mfexpress.rent.maintain.constant.MaintenanceTypeEnum;
 import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
+import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
@@ -33,6 +34,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -102,13 +104,17 @@ public class ServeAdjustCheckCmdExe {
             if (!Optional.ofNullable(sourceDeliverDTO).filter(deliver -> DeliverEnum.IS_RECOVER.getCode().equals(deliver.getDeliverStatus())).isPresent()) {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "原车未申请收车，无法进行服务单变更");
             }
-//            Result<ReplaceVehicleDTO> replaceVehicleDTOResult = maintenanceAggregateRootApi.getReplaceVehicleDTObyMaintenanceServeNo(cmd.getServeNo());
-//            if (Objects.isNull(replaceVehicleDTOResult.getData())) {
-//                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "未查询到替换车信息");
-//            }
-//            ReplaceVehicleDTO replaceVehicleDTO = replaceVehicleDTOResult.getData();
-//
-            sourceServeNo = maintenanceDTO.getServeNo();
+            Result<ReplaceVehicleDTO> replaceVehicleDTOResult = maintenanceAggregateRootApi.getReplaceVehicleDTObyMaintenanceServeNo(cmd.getServeNo());
+            if (Objects.isNull(replaceVehicleDTOResult.getData())) {
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "未查询到替换车信息");
+            }
+            ReplaceVehicleDTO replaceVehicleDTO = replaceVehicleDTOResult.getData();
+            Result<MaintenanceDTO> maintenanceDTOResult = maintenanceAggregateRootApi.getMaintenanceDTOByMaintenanceId(replaceVehicleDTO.getMaintenanceId());
+            if (Objects.isNull(maintenanceDTOResult.getData())) {
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "未查询到维修单");
+            }
+            MaintenanceDTO sourceMaintenanceDTO = maintenanceDTOResult.getData();
+            sourceServeNo = sourceMaintenanceDTO.getServeNo();
             log.info("sourceServeNo---->{}", sourceServeNo);
         }
 
