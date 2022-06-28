@@ -104,7 +104,7 @@ public class ServeAdjustCheckCmdExe {
             if (!Optional.ofNullable(sourceDeliverDTO).filter(deliver -> DeliverEnum.IS_RECOVER.getCode().equals(deliver.getDeliverStatus())).isPresent()) {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "原车未申请收车，无法进行服务单变更");
             }
-            Result<ReplaceVehicleDTO> replaceVehicleDTOResult = maintenanceAggregateRootApi.getReplaceVehicleDTObyMaintenanceServeNo(cmd.getServeNo());
+            Result<ReplaceVehicleDTO> replaceVehicleDTOResult = maintenanceAggregateRootApi.getReplaceVehicleByServeNo(cmd.getServeNo());
             if (Objects.isNull(replaceVehicleDTOResult.getData())) {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "未查询到替换车信息");
             }
