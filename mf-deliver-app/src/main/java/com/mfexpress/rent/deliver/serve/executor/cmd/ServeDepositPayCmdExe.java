@@ -128,6 +128,7 @@ public class ServeDepositPayCmdExe {
             advincePaymentAggregateRootApi.orderPay(orderPayPaymentDTO);
 
             // 修改替换车实缴金额
+
             ServePaidInDepositUpdateCmd servePaidInDepositUpdateCmd = ServePaidInDepositUpdateCmd.builder()
                     .serveNo(cmd.getServeNo()).chargeDepositAmount(payAmount).build();
             serveAggregateRootApi.updateServePaidInDeposit(servePaidInDepositUpdateCmd);
