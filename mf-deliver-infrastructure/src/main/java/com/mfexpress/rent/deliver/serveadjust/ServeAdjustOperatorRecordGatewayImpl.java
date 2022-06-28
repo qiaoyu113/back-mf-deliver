@@ -16,6 +16,6 @@ public class ServeAdjustOperatorRecordGatewayImpl implements ServeAdjustOperator
     @Override
     public int save(ServeAdjustOperatorRecordPO po) {
 
-        return serveAdjustOperatorRecordMapper.insert(po);
+        return serveAdjustOperatorRecordMapper.insertSelective(po);
     }
 }

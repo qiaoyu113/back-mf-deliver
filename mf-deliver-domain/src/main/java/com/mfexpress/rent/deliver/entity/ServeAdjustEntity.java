@@ -109,7 +109,7 @@ public class ServeAdjustEntity implements ServeAdjustEntityApi {
 
         po = serveAdjustGateway.getByServeNo(po.getServeNo());
         ServeAdjustOperatorRecordPO recordPO = initOperatorRecord(rawEntity, po, cmd.getOperatorId(), cmd.getStartBillingDate());
-        recordPO.setPaidInDepositAmount(po.getChargePaidInDepositAmount());
+//        recordPO.setPaidInDepositAmount(po.getChargePaidInDepositAmount());
         // 操作记录保存
         recordGateway.save(recordPO);
 
