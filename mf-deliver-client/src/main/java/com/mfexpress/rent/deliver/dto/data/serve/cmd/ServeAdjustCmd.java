@@ -1,15 +1,13 @@
 package com.mfexpress.rent.deliver.dto.data.serve.cmd;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
-import javax.persistence.Column;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.mfexpress.rent.deliver.dto.data.BaseCmd;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
+import java.math.BigDecimal;
+import java.util.Date;
 
 @Data
 @ApiModel(value = "服务单调整命令")
