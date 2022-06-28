@@ -240,6 +240,11 @@ public class CreateRecoverContractCmdExe {
         // 问题和图片需要验证一下copy过去了没有
         BeanUtils.copyProperties(validationFullInfoDTO, docInfo);
         docInfo.setMileage(validationFullInfoDTO.getMileage().toString());
+        //北出 新增
+        docInfo.setHasTyreFluid(validationFullInfoDTO.getIsNormalTireRepairLiquid());
+        docInfo.setDisplayTyreFluid(validationFullInfoDTO.getDisplayTireRepairLiquid());
+        docInfo.setHasBlastPump(validationFullInfoDTO.getIsNormalPump());
+        docInfo.setDisplayBlastPump(validationFullInfoDTO.getDisplayPump());
         return Collections.singletonList(docInfo);
     }
 
