@@ -56,12 +56,9 @@ public class ServeDepositPayCmdExe {
         Result<Integer> accountIdResult = accountAggregateRootApi.getAccountIdByCustomerId(cmd.getCustomerId(), AccountSourceTypeEnum.CUSTOMER.getCode());
         Integer accountId = ResultDataUtils.getInstance(accountIdResult).getDataOrException();
 
-
-
-        BookMoveBalanceDTO.BookMoveBalanceDTOBuilder bookMoveBalanceDTOBuilder = BookMoveBalanceDTO.builder().accountId(accountId)
-                .userId(cmd.getOperatorId());
-
         if (DepositPayTypeEnum.SOURCE_DEPOSIT_PAY.getCode() == cmd.getDepositPayType()) {
+            BookMoveBalanceDTO.BookMoveBalanceDTOBuilder bookMoveBalanceDTOBuilder = BookMoveBalanceDTO.builder().accountId(accountId)
+                    .userId(cmd.getOperatorId());
             // 原车解锁押金
             List<String> serveNoList = new ArrayList<>();
             serveNoList.add(cmd.getSourceServeNo());

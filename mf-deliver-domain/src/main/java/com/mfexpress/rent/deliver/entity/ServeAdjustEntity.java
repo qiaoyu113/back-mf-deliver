@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.entity;
 
 import com.mfexpress.rent.deliver.constant.AdjustStatusEnum;
+import com.mfexpress.rent.deliver.constant.DepositPayTypeEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
@@ -14,6 +15,7 @@ import com.mfexpress.rent.deliver.gateway.ServeAdjustOperatorRecordGateway;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.po.ServeAdjustOperatorRecordPO;
 import com.mfexpress.rent.deliver.po.ServeAdjustPO;
+import com.mfexpress.rent.deliver.utils.FormatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -91,6 +93,15 @@ public class ServeAdjustEntity implements ServeAdjustEntityApi {
 
         // 保存服务单更改记录
         serveEntityApi.saveChangeRecord(rawEntity, newEntity, ServeChangeRecordEnum.REPLACE_ADJUST.getCode(), cmd.getDeliverNo(), 0, "替换掉开始计费", cmd.getOperatorId());
+
+        // 如果是账本支付，则记录完成操作
+        if (DepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == po.getDepositPayType()) {
+            ServeAdjustCompletedCmd completedCmd = ServeAdjustCompletedCmd.builder().serveNo(cmd.getServeNo())
+                    .startBillingDate(cmd.getStartBillingDate()).build();
+
+            log.info("原车收车 替换单调整工单开始计费操作 账本支付完成操作--------------");
+            completed(completedCmd);
+        }
 
         return 1;
     }
