@@ -98,6 +98,7 @@ public class ServeAdjustEntity implements ServeAdjustEntityApi {
         if (DepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == po.getDepositPayType()) {
             ServeAdjustCompletedCmd completedCmd = ServeAdjustCompletedCmd.builder().serveNo(cmd.getServeNo())
                     .startBillingDate(cmd.getStartBillingDate()).build();
+            completedCmd.setOperatorId(cmd.getOperatorId());
 
             log.info("原车收车 替换单调整工单开始计费操作 账本支付完成操作--------------");
             completed(completedCmd);
