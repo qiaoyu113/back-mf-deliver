@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -29,7 +30,8 @@ public class ServePreselectedQryExe {
 
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         boolQueryBuilder.must(QueryBuilders.matchQuery("orderId", serveQryListCmd.getOrderId()))
-                .must(QueryBuilders.matchQuery("isPreselected", JudgeEnum.NO.getCode()));
+                .must(QueryBuilders.matchQuery("isPreselected", JudgeEnum.NO.getCode()))
+                .mustNot(QueryBuilders.matchQuery("serveStatus", ServeEnum.CANCEL.getCode()));
         FieldSortBuilder updateTimeSortBuilders = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
         List<FieldSortBuilder> fieldSortBuilderList = new LinkedList<>();
         fieldSortBuilderList.add(updateTimeSortBuilders);

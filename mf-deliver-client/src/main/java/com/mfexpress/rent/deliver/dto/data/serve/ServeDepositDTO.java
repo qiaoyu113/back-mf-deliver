@@ -51,4 +51,6 @@ public class ServeDepositDTO {
     @ApiModelProperty("收车费用确认标识")
     private Boolean recoverFeeConfirmFlag;
 
+    private Integer replaceFlag;
+
 }

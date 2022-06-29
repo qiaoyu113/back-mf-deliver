@@ -1,6 +1,8 @@
 package com.mfexpress.rent.deliver.recovervehicle;
 
+import com.google.common.collect.ImmutableMap;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverInvalidCmd;
 import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
 import com.mfexpress.rent.deliver.gateway.RecoverVehicleGateway;
 import com.mfexpress.rent.deliver.recovervehicle.repository.RecoverVehicleMapper;
@@ -76,5 +78,15 @@ public class RecoverGatewayImpl implements RecoverVehicleGateway {
         return recoverVehicleMapper.updateByExampleSelective(recoverVehicle, example);
     }
 
+    @Override
+    public int invalidRecover(RecoverInvalidCmd cmd) {
 
+        Example example = new Example(RecoverVehicleEntity.class);
+        example.createCriteria().andEqualTo("deliverNo", cmd.getDeliverNo())
+                .andEqualTo("status", ValidStatusEnum.VALID.getCode());
+
+        RecoverVehicleEntity recoverVehicleEntity = RecoverVehicleEntity.builder().status(ValidStatusEnum.INVALID.getCode()).build();
+
+        return recoverVehicleMapper.updateByExampleSelective(recoverVehicleEntity, example);
+    }
 }

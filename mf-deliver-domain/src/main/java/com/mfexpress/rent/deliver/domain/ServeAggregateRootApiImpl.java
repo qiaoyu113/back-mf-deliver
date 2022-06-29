@@ -17,28 +17,41 @@ import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
+import com.mfexpress.component.utils.util.ResultDataUtils;
+import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.dto.data.CommodityDTO;
 import com.mfexpress.rent.deliver.constant.*;
+import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.domainservice.ServeDomainServiceI;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.*;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.entity.*;
-import com.mfexpress.rent.deliver.gateway.*;
-import com.mfexpress.rent.deliver.entity.DeliverEntity;
-import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
-import com.mfexpress.rent.deliver.entity.ServeChangeRecordPO;
-import com.mfexpress.rent.deliver.entity.ServeEntity;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
+import com.mfexpress.rent.deliver.entity.api.ServeAdjustEntityApi;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
-import com.mfexpress.rent.deliver.gateway.DeliverGateway;
-import com.mfexpress.rent.deliver.gateway.DeliverVehicleGateway;
-import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
-import com.mfexpress.rent.deliver.gateway.ServeGateway;
+import com.mfexpress.rent.deliver.gateway.*;
+import com.mfexpress.rent.deliver.po.ServeAdjustPO;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
+import com.mfexpress.rent.deliver.utils.MainServeUtil;
+import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
+import com.mfexpress.rent.maintain.constant.MaintenanceStatusEnum;
+import com.mfexpress.rent.maintain.constant.MaintenanceTypeEnum;
+import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
+import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
+import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
+import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
+import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -87,7 +100,22 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     private RecoverVehicleGateway recoverVehicleGateway;
 
     @Resource
+    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
+
+    @Resource
+    private ServeAdjustGateway serveAdjustGateway;
+
+    @Resource
+    private DeliverAggregateRootApi deliverAggregateRootApi;
+
+    @Resource
     private ContractAggregateRootApi contractAggregateRootApi;
+
+    @Resource
+    private VehicleAggregateRootApi vehicleAggregateRootApi;
+
+    @Resource
+    private ServeAdjustEntityApi serveAdjustEntityApi;
 
     @Resource
     private MqTools mqTools;
@@ -152,11 +180,12 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setRemark("");
                 serve.setRent(serveVehicleDTO.getRent());
                 serve.setGoodsId(serveVehicleDTO.getGoodsId());
+                serve.setRentRatio(BigDecimal.ONE);
                 serve.setContractCommodityId(serveVehicleDTO.getContractCommodityId());
 
                 serve.setContractId(serveVehicleDTO.getContractId());
                 serve.setOaContractCode(serveVehicleDTO.getOaContractCode());
-                serve.setDeposit(serveVehicleDTO.getDeposit());
+                serve.setDeposit(BigDecimal.valueOf(serveVehicleDTO.getDeposit()));
                 serve.setLeaseBeginDate(serveVehicleDTO.getLeaseBeginDate());
                 serve.setLeaseMonths(serveVehicleDTO.getLeaseMonths());
                 serve.setLeaseDays(serveVehicleDTO.getLeaseDays());
@@ -166,6 +195,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setExpectRecoverDate("");
                 serve.setPayableDeposit(BigDecimal.valueOf(serveVehicleDTO.getDeposit()));
                 serve.setPaidInDeposit(BigDecimal.valueOf(serveVehicleDTO.getDeposit()));
+                serve.setRentRatio(BigDecimal.valueOf(serveVehicleDTO.getRentRatio()));
                 serveList.add(serve);
             }
         }
@@ -483,14 +513,16 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         serve.setUpdateTime(new Date());
         serve.setReplaceFlag(JudgeEnum.YES.getCode());
         // 替换车申请的服务单 其月租金和押金应为0
-        serve.setRent(BigDecimal.ZERO);
-        serve.setDeposit(0.0);
+        serve.setRent(serveAddDTO.getRent() != null ? serveAddDTO.getRent() : BigDecimal.ZERO);
+        serve.setRentRatio(serveAddDTO.getRentRatio());
+        serve.setDeposit(BigDecimal.ZERO);
         serve.setPaidInDeposit(BigDecimal.ZERO);
         serve.setPayableDeposit(BigDecimal.ZERO);
 
         try {
             serveGateway.addServeList(Collections.singletonList(serve));
         } catch (Exception e) {
+            e.printStackTrace();
             return Result.getInstance(serveAddDTO.getServeNo()).fail(ResultErrorEnum.CREATE_ERROR.getCode(), "替换车服务单生成失败");
         }
 
@@ -912,7 +944,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         if (CollectionUtil.isNotEmpty(serveDTOList)) {
             serveDTOList.forEach(serveDTO -> {
                 if (!ServeEnum.RECOVER.getCode().equals(serveDTO.getStatus())) {
-                    log.error("解锁 ------- 服务单不满足解锁条件 参数：{}",serveDTO);
+                    log.error("解锁 ------- 服务单不满足解锁条件 参数：{}", serveDTO);
                     throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "服务单不满足解锁条件");
                 }
             });
@@ -944,8 +976,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             if (CollectionUtil.isNotEmpty(serveDTOList)) {
                 //判断服务单状态
                 serveDTOList.forEach(serveDTO -> {
-                    if (ServeEnum.COMPLETED.getCode().equals(serveDTO.getStatus())||ServeEnum.RECOVER.getCode().equals(serveDTO.getStatus())) {
-                        log.error("锁定 ------- 服务单不满足锁定条件 参数：{}",serveDTO);
+                    if (ServeEnum.COMPLETED.getCode().equals(serveDTO.getStatus()) || ServeEnum.RECOVER.getCode().equals(serveDTO.getStatus())) {
+                        log.error("锁定 ------- 服务单不满足锁定条件 参数：{}", serveDTO);
                         throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "服务单不满足锁定条件");
                     }
                 });
@@ -1036,4 +1068,138 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         }
     }
 
+    @Override
+    @PostMapping(value = "/cancel")
+    @PrintParam
+    @Transactional
+    public Result<Integer> cancelServe(ServeCancelCmd cmd) {
+
+        // 取消服务单
+        serveEntityApi.cancelServe(cmd);
+
+        Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(cmd.getServeNo());
+        DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrNull();
+        if (deliverDTO != null) {
+
+            DeliverCancelCmd deliverCancelCmd = new DeliverCancelCmd();
+            deliverCancelCmd.setServeNo(cmd.getServeNo());
+            deliverCancelCmd.setOperatorId(cmd.getOperatorId());
+
+            // 取消交付单
+            deliverAggregateRootApi.cancelDeliver(deliverCancelCmd);
+
+            // 修改车辆状态
+            VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
+            vehicleSaveCmd.setId(Collections.singletonList(deliverDTO.getCarId()));
+            vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.UNCHECKED.getCode());
+            vehicleSaveCmd.setStockStatus(ValidStockStatusEnum.IN.getCode());
+
+            ResultValidUtils.checkResultException(vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd));
+        }
+
+        return Result.getInstance(0).success();
+    }
+
+    @Override
+    @PostMapping(value = "/recover/check/judge")
+    @PrintParam
+    public Result<Integer> recoverCheckJudge(RecoverCheckJudgeCmd cmd) {
+
+        Result<ServeDTO> serveDTOResult = getServeDtoByServeNo(cmd.getServeNo());
+
+        if (!Optional.ofNullable(serveDTOResult).map(r -> r.getData()).isPresent()) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), ResultErrorEnum.OPER_ERROR.getName());
+        }
+
+        if (ServeEnum.REPAIR.getCode().equals(serveDTOResult.getData().getStatus())) {
+
+            // 查询车辆维修单
+            MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByServeNo(maintenanceAggregateRootApi, cmd.getServeNo());
+
+            if (Optional.ofNullable(maintenanceDTO).filter(m -> (MaintenanceStatusEnum.MAINTAINING.getCode().compareTo(m.getStatus()) == 0
+                    || MaintenanceStatusEnum.MAINTAINED.getCode().compareTo(m.getStatus()) == 0) &&
+                    MaintenanceTypeEnum.ACCIDENT.getCode().equals(m.getType())).isPresent()) {
+                // 事故维修单
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆处于事故维修中，无法进行收车。");
+            } else {
+                // 查找替换车服务单
+                ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, cmd.getServeNo());
+
+                log.info("replaceVehicleDTO----->{}", replaceVehicleDTO);
+
+                if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
+
+                    String replaceServeNo = replaceVehicleDTO.getServeNo();
+
+                    ServeDTO replaceServeDTO = ResultDataUtils.getInstance(getServeDtoByServeNo(replaceServeNo)).getDataOrException();
+                    // 替换服务单状态为0、1、2、5时，判断是否有调整工单，如果没有则不允许原车验车
+                    if (Optional.ofNullable(replaceServeDTO).filter(o -> ServeEnum.NOT_PRESELECTED.getCode().equals(o.getStatus())
+                            || ServeEnum.PRESELECTED.getCode().equals(o.getStatus()) || ServeEnum.DELIVER.getCode().equals(o.getStatus())
+                            || ServeEnum.REPAIR.getCode().equals(o.getStatus())).isPresent()) {
+
+                        // 查询是否存在调整工单
+                        ServeAdjustQry serveAdjustQry = ServeAdjustQry.builder().serveNo(replaceServeNo).build();
+
+                        ServeAdjustDTO serveAdjustDTO = ResultDataUtils.getInstance(getServeAdjust(serveAdjustQry)).getDataOrNull();
+
+                        if (!Optional.ofNullable(serveAdjustDTO).isPresent()) {
+                            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在未发车的替换单或存在替换车，无法进行收车。");
+                        }
+                    }
+                }
+
+            }
+        }
+
+        return Result.getInstance(0).success();
+    }
+
+    @Override
+    @PrintParam
+    public Result<ServeAdjustDTO> getServeAdjust(ServeAdjustQry qry) {
+
+        ServeAdjustPO po = serveAdjustGateway.getByServeNo(qry.getServeNo());
+
+        if (po == null) {
+            return null;
+        }
+
+        ServeAdjustDTO dto = new ServeAdjustDTO();
+        BeanUtils.copyProperties(po, dto);
+
+        return Result.getInstance(dto).success();
+    }
+
+    @Override
+    @PostMapping(value = "/serve/adjust")
+    @PrintParam
+    public Result<Integer> serveAdjustment(@RequestBody ServeAdjustCmd cmd) {
+
+        serveAdjustEntityApi.save(cmd);
+
+        return Result.getInstance(0).success();
+    }
+
+    @Override
+    @PrintParam
+    public Result<Integer> serveAdjustStartBilling(ServeAdjustStartBillingCmd cmd) {
+
+        return Result.getInstance(serveAdjustEntityApi.startBilling(cmd)).success();
+    }
+
+    @Override
+    @PrintParam
+    public Result<Integer> serveAdjustCompleted(ServeAdjustCompletedCmd cmd) {
+
+        return Result.getInstance(serveAdjustEntityApi.completed(cmd)).success();
+    }
+
+    @Override
+    public Result<Integer> updateServePaidInDeposit(ServePaidInDepositUpdateCmd cmd) {
+        Integer servePaidInDeposit = serveEntityApi.updateServePaidInDeposit(cmd);
+        if (servePaidInDeposit > 0) {
+            return Result.getInstance(servePaidInDeposit).success();
+        }
+        return Result.getInstance(0).fail(ResultErrorEnum.OPER_ERROR.getCode(), "更新服务单失败");
+    }
 }

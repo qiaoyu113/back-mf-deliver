@@ -1,13 +1,15 @@
 package com.mfexpress.rent.deliver.entity.api;
 
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCompletedCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 
 import java.util.List;
 
 public interface DeliverEntityApi {
 
-    List<DeliverDTO> getDeliverDTOListByServeNoList(List<String>serveNoList);
+    List<DeliverDTO> getDeliverDTOListByServeNoList(List<String> serveNoList);
 
     void toHistory(ReactivateServeCmd cmd);
 
@@ -22,4 +24,13 @@ public interface DeliverEntityApi {
     List<DeliverDTO> getDeliverNotComplete(List<String> serveNoList);
 
     DeliverDTO getDeliverByDeliverNo(String deliverNo);
+
+    void cancelDeliver(DeliverCancelCmd cmd);
+
+    /**
+     * 完成发车(修改deliverStatus=2)
+     *
+     * @param cmd
+     */
+    void completedDeliver(DeliverCompletedCmd cmd);
 }

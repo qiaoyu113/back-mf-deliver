@@ -43,12 +43,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.annotation.Resource;
 
 @Component
 public class ServeLeaseTermAmountQryExe {
@@ -71,6 +78,7 @@ public class ServeLeaseTermAmountQryExe {
     private ContractAggregateRootApi contractAggregateRootApi;
 
     public PagePagination<ServeAllLeaseTermAmountVO> execute(ServeLeaseTermAmountQry qry, TokenInfo tokenInfo) {
+
         if (null != tokenInfo) {
             qry.setUserOfficeId(tokenInfo.getOfficeId());
         }
@@ -126,13 +134,22 @@ public class ServeLeaseTermAmountQryExe {
             serveAllLeaseTermAmountVO.setExpectRecoverDateChar(null == serveES.getExpectRecoverDate() ? null : DateUtil.format(serveES.getExpectRecoverDate(), "yyyy-MM-dd"));
             // 替换租赁方式单独设置
             if (JudgeEnum.YES.getCode().equals(serveES.getReplaceFlag())) {
-                serveAllLeaseTermAmountVO.setLeaseModelId(5);
-                serveAllLeaseTermAmountVO.setLeaseModelDisplay("替换");
+                serveAllLeaseTermAmountVO.setLeaseModelId(LeaseModelEnum.REPLACEMENT.getCode());
+                serveAllLeaseTermAmountVO.setLeaseModelDisplay(LeaseModelEnum.REPLACEMENT.getName());
             }
             // 所属管理区
             orgIdSet.add(serveAllLeaseTermAmountVO.getOrgId());
             serveNoList.add(serveAllLeaseTermAmountVO.getServeNo());
             contractCommodityIdList.add(serveES.getContractCommodityId());
+
+            String rentStr = String.valueOf(!Objects.isNull(map.get("rent")) ? map.get("rent") : "0.00");
+            String rentRatioStr = String.valueOf(!Objects.isNull(map.get("rentRatio")) ? map.get("rentRatio") : "0.00");
+            BigDecimal rent = new BigDecimal(rentStr);
+            BigDecimal rentRatio = new BigDecimal(rentRatioStr);
+            serveAllLeaseTermAmountVO.setRentFee(String.format("%.2f", rent.multiply(rentRatio)));
+            BigDecimal serviceFee = rent.subtract(rent.multiply(rentRatio));
+            serveAllLeaseTermAmountVO.setServiceFee(String.format("%.2f", serviceFee));
+
             return serveAllLeaseTermAmountVO;
         }).collect(Collectors.toList());
 
@@ -229,8 +246,8 @@ public class ServeLeaseTermAmountQryExe {
                 }
             }
 
-            // 租金、服务费补充
-            if (null != contractCommodityDTOMap) {
+            // 非替换车租金、服务费补充
+            if (LeaseModelEnum.REPLACEMENT.getCode() != vo.getLeaseModelId() && null != contractCommodityDTOMap) {
                 CommodityDTO commodityDTO = contractCommodityDTOMap.get(vo.getContractCommodityId());
                 if (null != commodityDTO) {
                     vo.setRentFee(supplementAccuracy(String.valueOf(commodityDTO.getRentFee())));
@@ -239,20 +256,20 @@ public class ServeLeaseTermAmountQryExe {
             }
 
             // 历史租期欠费补充
-            for (ServeAllLeaseTermAmountVO serveAllLeaseTermAmountVO : voList) {
-                BigDecimal unpaidAmount = BigDecimal.ZERO;
-                if (null != serveNoWithSubBillItemDTOListMap) {
-                    List<SubBillItemDTO> subBillItemDTOList = serveNoWithSubBillItemDTOListMap.get(serveAllLeaseTermAmountVO.getServeNo());
-                    if (null != subBillItemDTOList && !subBillItemDTOList.isEmpty()) {
-                        for (SubBillItemDTO subBillItemDTO : subBillItemDTOList) {
-                            if (null != subBillItemDTO.getUnpaidAmount()) {
-                                unpaidAmount = unpaidAmount.add(subBillItemDTO.getUnpaidAmount());
-                            }
+            BigDecimal unpaidAmount = BigDecimal.ZERO;
+            if (null != serveNoWithSubBillItemDTOListMap) {
+                List<SubBillItemDTO> subBillItemDTOList = serveNoWithSubBillItemDTOListMap.get(vo.getServeNo());
+                if (null != subBillItemDTOList && !subBillItemDTOList.isEmpty()) {
+                    for (SubBillItemDTO subBillItemDTO : subBillItemDTOList) {
+                        if (null != subBillItemDTO.getUnpaidAmount()) {
+                            unpaidAmount = unpaidAmount.add(subBillItemDTO.getUnpaidAmount());
                         }
                     }
                 }
-                serveAllLeaseTermAmountVO.setTotalArrears(supplementAccuracy(unpaidAmount.toString()));
             }
+            vo.setTotalArrears(supplementAccuracy(unpaidAmount.toString()));
+//            for (ServeAllLeaseTermAmountVO serveAllLeaseTermAmountVO : voList) {
+//            }
         }
         // 数据拼装 --------------------------- end
 
@@ -323,9 +340,8 @@ public class ServeLeaseTermAmountQryExe {
     // 补充精度至小数点后两位
     public String supplementAccuracy(String num) {
         if (StringUtils.isEmpty(num)) {
-            return "";
+            return "0.00";
         }
         return new BigDecimal(num).setScale(2, RoundingMode.HALF_UP).toString();
     }
-
 }
