@@ -142,6 +142,7 @@ public class RecoverDeductionByDeliverExe {
                 Result<RecoverVehicleDTO> recoverVehicleDTOResult = recoverVehicleAggregateRootApi.getRecoverVehicleDtoByDeliverNo(deliverDTO.getDeliverNo());
                 RecoverVehicleDTO recoverVehicleDTO = ResultDataUtils.getInstance(recoverVehicleDTOResult).getDataOrException();
 
+                log.info("原车收车 替换单调整工单完成操作--------------");
                 ServeAdjustCompletedCmd completedCmd = ServeAdjustCompletedCmd.builder().serveNo(replaceServe.getServeNo())
                         .startBillingDate(FormatUtil.addDays(recoverVehicleDTO.getRecoverVehicleTime(), 1)).build();
 

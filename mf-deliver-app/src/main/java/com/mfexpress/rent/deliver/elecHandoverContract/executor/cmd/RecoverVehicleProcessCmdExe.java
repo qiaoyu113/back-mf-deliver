@@ -174,6 +174,7 @@ public class RecoverVehicleProcessCmdExe {
                             mqTools.send(event, "price_change", null, JSON.toJSONString(renewalCmd));
 
                             // 服务单调整工单状态改为开始计费并记录开始计费时间
+                            log.info("原车收车 替换单调整工单开始计费操作--------------");
                             ServeAdjustStartBillingCmd startBillingCmd = ServeAdjustStartBillingCmd.builder()
                                     .serveNo(replaceServe.getServeNo())
                                     .deliverNo(replaceDeliver.getDeliverNo())
