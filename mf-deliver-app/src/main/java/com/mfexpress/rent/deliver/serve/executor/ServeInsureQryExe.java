@@ -29,7 +29,8 @@ public class ServeInsureQryExe {
         boolQueryBuilder.must(QueryBuilders.matchQuery("orderId", serveQryListCmd.getOrderId()))
                 .must(QueryBuilders.matchQuery("isPreselected", ServeEnum.PRESELECTED.getCode()))
                 .must(QueryBuilders.matchQuery("isInsurance", JudgeEnum.NO.getCode()))
-                .must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.IS_DELIVER.getCode()));
+                .must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.IS_DELIVER.getCode()))
+                .mustNot(QueryBuilders.matchQuery("serveStatus", ServeEnum.CANCEL.getCode()));
         List<FieldSortBuilder> fieldSortBuilderList = new LinkedList<>();
         FieldSortBuilder updateTimeSortBuilders = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
         fieldSortBuilderList.add(updateTimeSortBuilders);

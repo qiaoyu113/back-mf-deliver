@@ -6,13 +6,13 @@ import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.mfexpress.billing.rentcharge.dto.data.deliver.DeliverVehicleCmd;
 import com.mfexpress.billing.rentcharge.dto.data.deliver.RecoverVehicleCmd;
+import com.mfexpress.billing.rentcharge.dto.data.deliver.RenewalCmd;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.contract.ContractResultTopicDTO;
 import com.mfexpress.component.enums.contract.ContractFailTypeEnum;
 import com.mfexpress.component.enums.contract.ContractStatusEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessClass;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessMethod;
 import com.mfexpress.component.starter.tools.mq.MqTools;
@@ -20,10 +20,8 @@ import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.dto.data.CommodityDTO;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
-import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.api.ServeServiceI;
+import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.*;
 import com.mfexpress.rent.deliver.dto.data.daily.DailyOperateCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
@@ -33,8 +31,19 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgIn
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.RenewalChargeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
+import com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd.DeliverVehicleProcessCmdExe;
+import com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd.RecoverVehicleProcessCmdExe;
+import com.mfexpress.rent.deliver.utils.FormatUtil;
+import com.mfexpress.rent.deliver.utils.MainServeUtil;
+import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
+import com.mfexpress.rent.maintain.constant.MaintenanceTypeEnum;
+import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
+import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
@@ -51,6 +60,7 @@ import org.springframework.integration.redis.util.RedisLockRegistry;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Function;
@@ -88,12 +98,18 @@ public class ElecContractStatusMqCommand {
     private DailyAggregateRootApi dailyAggregateRootApi;
 
     @Resource
+    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
+
+    @Resource
+    private DeliverVehicleProcessCmdExe deliverVehicleProcessCmdExe;
+
+    @Resource
+    private RecoverVehicleProcessCmdExe recoverVehicleProcessCmdExe;
+
+    @Resource
+    private ServeServiceI serveServiceI;
+    @Resource
     private ContractAggregateRootApi orderContractAggregateRootApi;
-
-
-
-    @Resource(name = "serveSyncServiceImpl")
-    private EsSyncHandlerI serveSyncServiceI;
 
     private MqTools mqTools;
 
@@ -131,6 +147,7 @@ public class ElecContractStatusMqCommand {
             obtain.lock();
             try {
                 contractCompleted(contractStatusInfo);
+
             } finally {
                 obtain.unlock();
             }
@@ -201,23 +218,26 @@ public class ElecContractStatusMqCommand {
         Result<Integer> completedResult = contractAggregateRootApi.completed(cmd);
         ResultValidUtils.checkResultException(completedResult);
 
-        List<String> serveNoList;
+//        List<String> serveNoList;
         if (DeliverTypeEnum.DELIVER.getCode() == contractDTO.getDeliverType()) {
             // 发车处理
-            serveNoList = deliverVehicleProcess(serveDTO, contractDTO);
+            deliverVehicleProcessCmdExe.execute(deliverVehicleProcessCmdExe.turnToCmd(deliverDTO, contractDTO));
+//            serveNoList = deliverVehicleProcess(serveDTO, contractDTO);
         } else {
             // 收车处理
-            serveNoList = recoverVehicleProcess(serveDTO, deliverDTO, contractStatusInfo, contractDTO);
+            recoverVehicleProcessCmdExe.execute(recoverVehicleProcessCmdExe.turnToCmd(contractDTO, deliverDTO, serveDTO));
+//            serveNoList = recoverVehicleProcess(serveDTO, deliverDTO, contractStatusInfo, contractDTO);
         }
 
         //同步
-        Map<String, String> map = new HashMap<>();
-        serveNoList.forEach(serveNo -> {
-            map.put("serve_no", serveNo);
-            serveSyncServiceI.execOne(map);
-        });
+//        Map<String, String> map = new HashMap<>();
+//        serveNoList.forEach(serveNo -> {
+//            map.put("serve_no", serveNo);
+//            serveSyncServiceI.execOne(map);
+//        });
     }
 
+    @Deprecated
     private List<String> recoverVehicleProcess(ServeDTO serveDTO, DeliverDTO deliverDTO, ContractResultTopicDTO contractStatusInfo, ElecContractDTO contractDTO) {
         List<String> serveNoList = new LinkedList<>();
         // 交付单、服务单修改
@@ -273,6 +293,66 @@ public class ElecContractStatusMqCommand {
             recoverVehicleCmd.setRentRatio(commodityResult.getData().getRentRatio());
             log.info("正常收车时，交付域向计费域发送的收车单信息：{}", recoverVehicleCmd);
             mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(recoverVehicleCmd));
+
+            // 服务单维修中
+            if (ServeEnum.REPAIR.getCode().equals(serveDTO.getStatus())) {
+                // 查找维修单
+                MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByServeNo(maintenanceAggregateRootApi, serveDTO.getServeNo());
+                // 维修性质为故障维修
+                if (MaintenanceTypeEnum.FAULT.getCode().intValue() == maintenanceDTO.getType()) {
+                    // 查询替换车服务单
+                    ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, serveDTO.getServeNo());
+                    if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
+                        Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceVehicleDTO.getServeNo());
+                        ServeDTO replaceServe = ResultDataUtils.getInstance(replaceServeDTOResult).getDataOrException();
+                        // 替换单已发车且变更为正常服务单
+                        if (Optional.ofNullable(replaceServe)
+                                .filter(o -> ServeEnum.DELIVER.getCode().equals(o.getStatus())
+                                        && JudgeEnum.NO.getCode().equals(o.getReplaceFlag())
+                                        && LeaseModelEnum.NORMAL.getCode() == o.getLeaseModelId()).isPresent()) {
+                            // 原车维修单变为库存中维修
+                            maintenanceAggregateRootApi.updateMaintenanceDetailByServeNo(serveDTO.getServeNo());
+                            // 替换车押金支付
+                            // 查询替换单支付方式
+                            ServeAdjustQry qry = new ServeAdjustQry();
+                            qry.setServeNo(replaceServe.getServeNo());
+                            Result<ServeAdjustDTO> serveAdjustDTOResult = serveAggregateRootApi.getServeAdjust(qry);
+
+                            ServeAdjustDTO serveAdjustDTO = ResultDataUtils.getInstance(serveAdjustDTOResult).getDataOrException();
+
+                            if (DepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode() == serveAdjustDTO.getDepositPayType()) {
+                                // 账本扣除
+                                ServeDepositPayCmd serveDepositPayCmd = new ServeDepositPayCmd();
+                                serveDepositPayCmd.setPayAbleDepositAmount(replaceServe.getDeposit());
+                                serveDepositPayCmd.setPaidInDepositAmount(replaceServe.getPaidInDeposit());
+                                serveDepositPayCmd.setServeNo(replaceServe.getServeNo());
+                                serveDepositPayCmd.setOrderId(replaceServe.getOrderId());
+                                serveDepositPayCmd.setCustomerId(replaceServe.getCustomerId());
+                                serveDepositPayCmd.setOperatorId(contractDTO.getCreatorId());
+                                serveDepositPayCmd.setDepositPayType(DepositPayTypeEnum.ACCOUNT_DEPOSIT_UNLOCK_PAY.getCode());
+                                serveServiceI.serveDepositPay(serveDepositPayCmd);
+                            }
+
+                            // 替换车开始计费
+                            Result<DeliverDTO> replaceDeliverResult = deliverAggregateRootApi.getDeliverByServeNo(replaceServe.getServeNo());
+                            DeliverDTO replaceDeliver = ResultDataUtils.getInstance(replaceDeliverResult).getDataOrException();
+                            RenewalCmd renewalCmd = new RenewalCmd();
+                            renewalCmd.setServeNo(replaceServe.getServeNo());
+                            renewalCmd.setDeliverNo(replaceDeliver.getDeliverNo());
+                            renewalCmd.setVehicleId(replaceDeliver.getCarId());
+                            renewalCmd.setCustomerId(replaceServe.getCustomerId());
+                            renewalCmd.setRent(replaceServe.getRent());
+                            renewalCmd.setRentRatio(replaceServe.getRentRatio().doubleValue());
+
+//                        renewalCmd.setRenewalDate();
+                            renewalCmd.setCreateId(contractDTO.getCreatorId());
+                            renewalCmd.setRentEffectDate(FormatUtil.ymdFormatDateToString(new Date()));
+                            renewalCmd.setEffectFlag(true);
+                            mqTools.send(event, "price_change", null, JSON.toJSONString(renewalCmd));
+                        }
+                    }
+                }
+            }
         } else {
             // 发送自动续约消息
             RenewalChargeCmd renewalChargeCmd = new RenewalChargeCmd();
@@ -294,6 +374,7 @@ public class ElecContractStatusMqCommand {
         return serveNoList;
     }
 
+    @Deprecated
     private List<String> deliverVehicleProcess(ServeDTO serveDTO, ElecContractDTO contractDTO) {
         // 数据收集
         List<DeliverImgInfo> deliverImgInfos = JSONUtil.toList(contractDTO.getPlateNumberWithImgs(), DeliverImgInfo.class);

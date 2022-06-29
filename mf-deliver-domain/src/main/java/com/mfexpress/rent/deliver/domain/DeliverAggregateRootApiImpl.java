@@ -10,13 +10,21 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
+import com.mfexpress.component.utils.util.ResultDataUtils;
+import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.deliver.*;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCompletedCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.entity.DeliverEntity;
 import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
@@ -24,8 +32,13 @@ import com.mfexpress.rent.deliver.entity.ServeEntity;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.gateway.RecoverVehicleGateway;
+import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
+import com.mfexpress.rent.deliver.utils.MainServeUtil;
+import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
+import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
+import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -55,6 +68,12 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Resource
     private RecoverVehicleGateway recoverVehicleGateway;
+
+    @Resource
+    private ServeAggregateRootApi serveAggregateRootApi;
+
+    @Resource
+    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
 
     @Override
     @PostMapping("/getDeliverByServeNo")
@@ -103,6 +122,14 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     public Result<Integer> toCheck(@RequestParam("serveNo") String serveNo, @RequestParam("operatorId") Integer operatorId) {
         //2021-10-13修改 收车验车时交付单变更为已收车
         DeliverEntity deliver = deliverGateway.getDeliverByServeNo(serveNo);
+
+        // 2022-05-31 如果是收车 需要校验验车是否可以进行
+        if (DeliverEnum.IS_RECOVER.getCode().equals(deliver.getDeliverStatus())) {
+            RecoverCheckJudgeCmd cmd = new RecoverCheckJudgeCmd();
+            cmd.setServeNo(serveNo);
+            ResultValidUtils.checkResultException(serveAggregateRootApi.recoverCheckJudge(cmd));
+        }
+
         deliver.setIsCheck(JudgeEnum.YES.getCode());
         deliver.setCarServiceId(operatorId);
         deliver.setUpdateId(operatorId);
@@ -492,6 +519,32 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PrintParam
     @Transactional(rollbackFor = Exception.class)
     public Result<Integer> cancelRecoverByDeliver(@RequestBody @Validated RecoverCancelByDeliverCmd cmd) {
+
+        // 2022-05-31 增加不可取消收车规则判断
+        DeliverEntity deliverEntity = deliverGateway.getDeliverByDeliverNo(cmd.getDeliverNo());
+        if (deliverEntity == null) {
+            return Result.getInstance(0).fail(ResultStatusEnum.UNKNOWS.getCode(), "数据错误");
+        }
+
+        Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(deliverEntity.getServeNo());
+        ServeDTO serveDTO = ResultDataUtils.getInstance(serveDTOResult).getDataOrException();
+
+        if (Optional.ofNullable(serveDTO).filter(serve -> ServeEnum.REPAIR.getCode().equals(serve.getStatus())).isPresent()) {
+            String serveNo = serveDTOResult.getData().getServeNo();
+
+            // 查询替换单
+            ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, serveNo);
+
+            if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
+                String replaceServeNo = replaceVehicleDTO.getServeNo();
+                Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceServeNo);
+                if (Optional.ofNullable(replaceServeDTOResult).map(Result::getData)
+                        .filter(s -> JudgeEnum.NO.getCode().equals(s.getReplaceFlag())).isPresent()) {
+                    return Result.getInstance(0).fail(ResultStatusEnum.UNKNOWS.getCode(), "不可取消收车");
+                }
+            }
+        }
+
         DeliverEntity deliver = DeliverEntity.builder().deliverStatus(DeliverEnum.DELIVER.getCode())
                 .updateId(cmd.getOperatorId())
                 .build();
@@ -556,4 +609,23 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         return Result.getInstance(deliverDTOS).success();
     }
 
+    @Override
+    @Transactional
+    @PrintParam
+    public Result<Integer> cancelDeliver(DeliverCancelCmd cmd) {
+
+        deliverEntityApi.cancelDeliver(cmd);
+
+        return Result.getInstance(0).success();
+    }
+
+    @Override
+    @Transactional
+    @PrintParam
+    public Result<Integer> completedDeliver(DeliverCompletedCmd cmd) {
+
+        deliverEntityApi.completedDeliver(cmd);
+
+        return Result.getInstance(0).success();
+    }
 }

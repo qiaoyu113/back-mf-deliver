@@ -1,18 +1,20 @@
 package com.mfexpress.rent.deliver.entity;
 
-import cn.hutool.json.JSONUtil;
-import com.mfexpress.component.starter.tools.mq.MqTools;
-import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
-import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.mfexpress.component.response.PagePagination;
+import com.mfexpress.component.starter.tools.mq.MqTools;
+import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
+import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
 import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
@@ -21,16 +23,22 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import tk.mybatis.mapper.entity.Example;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Resource;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import java.math.BigDecimal;
-import java.util.*;
 
 @Data
 @AllArgsConstructor
@@ -76,6 +84,8 @@ public class ServeEntity implements ServeEntityApi {
 
     private BigDecimal rent;
 
+    private BigDecimal rentRatio;
+
     private Date createTime;
 
     private Date updateTime;
@@ -91,7 +101,7 @@ public class ServeEntity implements ServeEntityApi {
 
     private String oaContractCode;
 
-    private Double deposit;
+    private BigDecimal deposit;
 
     private String leaseBeginDate;
 
@@ -126,6 +136,9 @@ public class ServeEntity implements ServeEntityApi {
 
     @Transient
     private String event;
+
+    @Resource
+    private BeanFactory beanFactory;
 
     @Override
     public void reactiveServe(ReactivateServeCmd cmd) {
@@ -216,7 +229,7 @@ public class ServeEntity implements ServeEntityApi {
             updateDeposit.setStatus(isLockFlag ? serveEntity.getStatus() : ServeEnum.COMPLETED.getCode());
             serveGateway.updateServeByServeNo(serveEntity.getServeNo(), updateDeposit);
 
-            if(updateDeposit.getStatus().equals(ServeEnum.COMPLETED.getCode())){
+            if (updateDeposit.getStatus().equals(ServeEnum.COMPLETED.getCode())) {
                 // 向合同域发送服务单已完成消息
                 ServeDTO serveDTOToNoticeContract = new ServeDTO();
                 serveDTOToNoticeContract.setServeNo(serveEntity.getServeNo());
@@ -251,4 +264,48 @@ public class ServeEntity implements ServeEntityApi {
         serveChangeRecordGateway.insertList(recordList);
     }
 
+    @Override
+    @Transactional
+    public void cancelServe(ServeCancelCmd cmd) {
+
+        ServeEntity rawEntity = serveGateway.getServeByServeNo(cmd.getServeNo());
+
+        ServeEntity newEntity = new ServeEntity();
+        newEntity.setStatus(ServeEnum.CANCEL.getCode());
+        newEntity.setUpdateId(cmd.getOperatorId());
+        newEntity.setUpdateTime(new Date());
+        serveGateway.updateServeByServeNo(cmd.getServeNo(), newEntity);
+
+        saveChangeRecord(rawEntity, newEntity, ServeChangeRecordEnum.CANCEL.getCode(), "", 0, "", cmd.getOperatorId());
+    }
+
+    @Override
+    @Transactional
+    public void saveChangeRecord(ServeEntity rawServe, ServeEntity newServe, Integer type, String deliverNo, Integer reason, String remark, Integer createId) {
+
+        ServeChangeRecordPO serveChangeRecordPO = new ServeChangeRecordPO();
+        serveChangeRecordPO.setServeNo(rawServe.getServeNo());
+        serveChangeRecordPO.setType(type);
+        serveChangeRecordPO.setRenewalType(0);
+        serveChangeRecordPO.setRawData(JSONUtil.toJsonStr(rawServe));
+        serveChangeRecordPO.setNewData(JSONUtil.toJsonStr(newServe));
+        serveChangeRecordPO.setDeliverNo(deliverNo);
+        serveChangeRecordPO.setReactiveReason(reason);
+        serveChangeRecordPO.setRemark(remark);
+        serveChangeRecordPO.setCreatorId(createId);
+        log.info("serveChangeRecordPO---->{}", serveChangeRecordPO);
+        serveChangeRecordGateway.insert(serveChangeRecordPO);
+    }
+
+    @Override
+    @Transactional
+    public Integer updateServePaidInDeposit(ServePaidInDepositUpdateCmd cmd) {
+
+        ServeEntity serve = serveGateway.getServeByServeNo(cmd.getServeNo());
+
+        ServeEntity updateServe = new ServeEntity();
+        updateServe.setPaidInDeposit(serve.getPaidInDeposit().add(cmd.getChargeDepositAmount()));
+
+        return serveGateway.updateServeByServeNo(cmd.getServeNo(), updateServe);
+    }
 }

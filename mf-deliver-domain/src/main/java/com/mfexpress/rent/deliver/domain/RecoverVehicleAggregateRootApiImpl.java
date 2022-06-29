@@ -1,6 +1,17 @@
 package com.mfexpress.rent.deliver.domain;
 
 
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
@@ -12,32 +23,49 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
-import com.mfexpress.rent.deliver.constant.*;
+import com.mfexpress.rent.deliver.constant.Constants;
+import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
+import com.mfexpress.rent.deliver.constant.DeliverEnum;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.constant.ServeEnum;
+import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.po.ElectronicHandoverContractPO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.GroupPhotoVO;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalDTO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalQry;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionByDeliverCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverInvalidCmd;
 import com.mfexpress.rent.deliver.dto.entity.RecoverAbnormal;
 import com.mfexpress.rent.deliver.dto.entity.RecoverVehicle;
 import com.mfexpress.rent.deliver.entity.DeliverEntity;
 import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
 import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
-import com.mfexpress.rent.deliver.gateway.*;
+import com.mfexpress.rent.deliver.gateway.DeliverGateway;
+import com.mfexpress.rent.deliver.gateway.DeliverVehicleGateway;
+import com.mfexpress.rent.deliver.gateway.ElecHandoverContractGateway;
+import com.mfexpress.rent.deliver.gateway.RecoverAbnormalGateway;
+import com.mfexpress.rent.deliver.gateway.RecoverVehicleGateway;
+import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.Resource;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
+@Slf4j
 @RestController
 @RequestMapping("/domain/deliver/v3/recovervehicle")
 @Api(tags = "domain--交付--1.4收车单聚合")
@@ -263,6 +291,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @Transactional(rollbackFor = Exception.class)
     public Result<Integer> recovered(@RequestParam("deliverNo") String deliverNo, @RequestParam("foreignNo") String foreignNo) {
         // 判断deliver中的合同状态，如果不是签署中状态，不可进行此操作
+        log.info("recovered---->deliver---->{} 开始修改", deliverNo);
         DeliverEntity deliver = deliverGateway.getDeliverByDeliverNo(deliverNo);
         if (DeliverContractStatusEnum.SIGNING.getCode() != deliver.getRecoverContractStatus()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单当前状态不允许收车");
@@ -274,11 +303,14 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         deliverToUpdate.setRecoverContractStatus(DeliverContractStatusEnum.COMPLETED.getCode());
         deliverToUpdate.setDeliverStatus(DeliverEnum.RECOVER.getCode());
         deliverGateway.updateDeliverByDeliverNos(Collections.singletonList(deliver.getDeliverNo()), deliverToUpdate);
-
+        log.info("recovered---->deliver---->{} 结束修改", deliverNo);
+        log.info("recovered---->serve---->{} 开始修改", deliver.getServeNo());
         // 服务单状态更改为已收车
         ServeEntity serve = ServeEntity.builder().status(ServeEnum.RECOVER.getCode()).build();
         serveGateway.updateServeByServeNoList(Collections.singletonList(deliver.getServeNo()), serve);
+        log.info("recovered---->serve---->{} 结束修改", deliver.getServeNo());
 
+        log.info("recovered---->recoverVehicle---->{} 开始修改", deliver.getCarNum());
         // 用合同信息补充收车单信息
         ElectronicHandoverContractPO contractPO = contractGateway.getContractByForeignNo(foreignNo);
         if (null == contractPO) {
@@ -296,7 +328,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         List<GroupPhotoVO> groupPhotoVOS = JSONUtil.toList(contractPO.getPlateNumberWithImgs(), GroupPhotoVO.class);
         recoverVehicle.setImgUrl(groupPhotoVOS.get(0).getImgUrl());
         recoverVehicleGateway.updateRecoverVehicle(recoverVehicle);
-
+        log.info("recovered---->recoverVehicle---->{} 结束修改", deliver.getCarNum());
         return Result.getInstance(0).success();
     }
 
@@ -345,4 +377,9 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         return Result.getInstance(0).success();
     }
 
+    @Override
+    public Result<Integer> invalidRecover(RecoverInvalidCmd cmd) {
+
+        return Result.getInstance(recoverVehicleGateway.invalidRecover(cmd)).success();
+    }
 }

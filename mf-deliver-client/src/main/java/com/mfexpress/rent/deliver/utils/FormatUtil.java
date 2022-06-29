@@ -6,7 +6,9 @@ import org.springframework.util.StringUtils;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.regex.Pattern;
 
 public class FormatUtil {
@@ -64,4 +66,12 @@ public class FormatUtil {
         }
     }
 
+    public static Date addDays(Date date, int days) {
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.add(Calendar.DATE, days);
+
+        return calendar.getTime();
+    }
 }
