@@ -144,7 +144,10 @@ public class RecoverDeductionByDeliverExe {
 
                 log.info("原车收车 替换单调整工单完成操作--------------");
                 ServeAdjustCompletedCmd completedCmd = ServeAdjustCompletedCmd.builder().serveNo(replaceServe.getServeNo())
-                        .startBillingDate(FormatUtil.addDays(recoverVehicleDTO.getRecoverVehicleTime(), 1)).build();
+                        .startBillingDate(FormatUtil.addDays(recoverVehicleDTO.getRecoverVehicleTime(), 1))
+                        .build();
+
+                completedCmd.setOperatorId(tokenInfo.getId());
 
                 serveAdjustCompletedCmdExe.execute(completedCmd);
             }
