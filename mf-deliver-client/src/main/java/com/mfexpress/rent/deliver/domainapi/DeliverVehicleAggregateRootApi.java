@@ -1,16 +1,17 @@
 package com.mfexpress.rent.deliver.domainapi;
 
+import java.util.List;
+import java.util.Map;
+
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.cmd.DeliverVehicleProcessCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.entity.DeliverVehicle;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.List;
-import java.util.Map;
 
 
 @FeignClient(name = "mf-deliver", path = "/domain/deliver/v3/delivervehcile", contextId = "mf-deliver-vehicle-aggregate-root-api")
@@ -35,6 +36,4 @@ public interface DeliverVehicleAggregateRootApi {
 
     @PostMapping("/getDeliverVehicleByDeliverNoList")
     Result<List<DeliverVehicleDTO>> getDeliverVehicleByDeliverNoList(@RequestBody List<String> deliverNoList);
-
-
 }

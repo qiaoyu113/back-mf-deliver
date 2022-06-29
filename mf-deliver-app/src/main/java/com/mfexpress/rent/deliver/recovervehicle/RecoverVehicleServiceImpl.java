@@ -1,21 +1,51 @@
 package com.mfexpress.rent.deliver.recovervehicle;
 
-import com.mfexpress.component.dto.TokenInfo;
-import com.mfexpress.component.response.Result;
-import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
-import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
-import com.mfexpress.rent.deliver.recovervehicle.executor.*;
-import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
-import com.mfexpress.transportation.customer.api.RentalCustomerAggregateRootApi;
-import com.mfexpress.transportation.customer.dto.entity.vo.LinkmanVo;
-import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Resource;
+
+import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalQry;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalVO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyListCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyQryCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverApplyVO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionByDeliverCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDetailQryCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDetailVO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
+import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverAbnormalCmdExe;
+import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverAbnormalQryExe;
+import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverApplyExe;
+import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverBackInsureByDeliverExe;
+import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverBackInsureExe;
+import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverCancelByDeliverExe;
+import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverCancelExe;
+import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverDeductionByDeliverExe;
+import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverDeductionExe;
+import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverToCheckExe;
+import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverVehicleCheckInfoCacheExe;
+import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverVehicleCheckInfoQryExe;
+import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverVehicleDetailQryExe;
+import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverVehicleQryExe;
+import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.dto.entity.vo.LinkmanVo;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+@Slf4j
 @Component
 public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
 
@@ -34,8 +64,6 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     @Resource
     private RecoverDeductionExe recoverDeductionExe;
 
-    @Resource
-    private RentalCustomerAggregateRootApi rentalCustomerAggregateRootApi;
     @Resource
     private RecoverVehicleCheckInfoCacheExe checkInfoCacheExe;
 
@@ -62,6 +90,8 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
 
     @Resource
     private CustomerAggregateRootApi  customerAggregateRootApi;
+
+
     @Override
     public List<RecoverApplyVO> getRecoverVehicleListVO(RecoverApplyQryCmd recoverApplyQryCmd, TokenInfo tokenInfo) {
         return recoverVehicleQryExe.execute(recoverApplyQryCmd, tokenInfo);
@@ -156,5 +186,4 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
         }
        return new LinkmanVo();
     }
-
 }

@@ -3,7 +3,30 @@ package com.mfexpress.rent.deliver.domainapi;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
-import com.mfexpress.rent.deliver.dto.data.serve.*;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockConfirmDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockListDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.PassiveRenewalServeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.RenewalCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.RenewalReplaceServeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeAddDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeChangeRecordDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeCycleQryCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDailyDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
+import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeReplaceVehicleAddDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCompletedCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustStartBillingCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
@@ -110,6 +133,12 @@ public interface ServeAggregateRootApi {
     @PostMapping("/getPageServeByQry")
     Result<PagePagination<Serve>> getPageServeByQry(@RequestBody ServeListQry qry);
 
+    /**
+     * 获取客户押金列表
+     *
+     * @param customerDepositLisDTO
+     * @return
+     */
     @PostMapping("/getPageServeDepositList")
     Result<PagePagination<ServeDepositDTO>> getPageServeDepositList(@RequestBody CustomerDepositListDTO customerDepositLisDTO);
 
@@ -136,7 +165,7 @@ public interface ServeAggregateRootApi {
      * @return
      */
     @PostMapping("/lockDeposit")
-    Result <Boolean>lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList);
+    Result <Boolean> lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList);
 
     @PostMapping("/reactiveServe")
     Result<Integer> reactiveServe(@RequestBody ReactivateServeCmd cmd);
@@ -150,4 +179,40 @@ public interface ServeAggregateRootApi {
     @PostMapping("/getRentingServeNumByCustomerId")
     Result<Integer> getRentingServeNumByCustomerId(@RequestParam("customerId") Integer customerId);
 
+    @PostMapping(value = "/cancel")
+    Result<Integer> cancelServe(@RequestBody ServeCancelCmd cmd);
+
+    /**
+     * 判断是否可以收车验车
+     *
+     * @param cmd
+     * @return
+     */
+    @PostMapping(value = "/recover/check/judge")
+    Result<Integer> recoverCheckJudge(@RequestBody RecoverCheckJudgeCmd cmd);
+
+    /**
+     * 查询服务单调整记录
+     *
+     * @param qry
+     * @return
+     */
+    @PostMapping(value = "/serve/adjust/wo")
+    Result<ServeAdjustDTO> getServeAdjust(@RequestBody ServeAdjustQry qry);
+
+    /**
+     * 替换车服务单调整
+     * @param cmd
+     */
+    @PostMapping(value = "/serve/adjust")
+    Result<Integer> serveAdjustment(@RequestBody ServeAdjustCmd cmd);
+
+    @PostMapping(value = "/serve/adjust/start/billing")
+    Result<Integer> serveAdjustStartBilling(@RequestBody ServeAdjustStartBillingCmd cmd);
+
+    @PostMapping(value = "/serve/adjust/completed")
+    Result<Integer> serveAdjustCompleted(@RequestBody ServeAdjustCompletedCmd cmd);
+
+    @PostMapping(value = "/serve/paid-in-depost/update")
+    Result<Integer> updateServePaidInDeposit(@RequestBody ServePaidInDepositUpdateCmd cmd);
 }

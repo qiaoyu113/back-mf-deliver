@@ -11,6 +11,9 @@ import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.DailyAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.daily.CreateDailyCmd;
 import com.mfexpress.rent.deliver.dto.data.daily.DailyDTO;
 import com.mfexpress.rent.deliver.dto.data.daily.DailyMaintainDTO;
 import com.mfexpress.rent.deliver.dto.data.daily.DailyOperateCmd;
@@ -21,6 +24,7 @@ import com.mfexpress.rent.deliver.entity.api.DailyEntityApi;
 import com.mfexpress.rent.deliver.gateway.DailyGateway;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,6 +44,12 @@ public class DailyAggregateRootApiImpl implements DailyAggregateRootApi {
     private DailyGateway dailyGateway;
     @Resource
     private DailyEntityApi dailyEntityApi;
+
+    @Resource
+    private ServeAggregateRootApi serveAggregateRootApi;
+
+    @Resource
+    private DeliverAggregateRootApi deliverAggregateRootApi;
 
 
     @Override
@@ -176,5 +186,30 @@ public class DailyAggregateRootApiImpl implements DailyAggregateRootApi {
         daily.setReplaceFlag(serve.getReplaceFlag());
 
         return daily;
+    }
+
+    @Override
+    @PostMapping(value = "/deliver/recover/daily")
+    @Transactional(rollbackFor = Exception.class)
+    @PrintParam
+    public Result<Integer> createDaily(@RequestBody CreateDailyCmd cmd) {
+
+        Result<Map<String, Serve>> serveResult = serveAggregateRootApi.getServeMapByServeNoList(cmd.getServeNoList());
+        Map<String, Serve> serveMap = serveResult.getData();
+        List<Serve> serveList = serveMap.values().stream().collect(Collectors.toList());
+        Result<Map<String, Deliver>> deliverResult = deliverAggregateRootApi.getDeliverByServeNoList(cmd.getServeNoList());
+        Map<String, Deliver> deliverMap = deliverResult.getData();
+        DailyOperateCmd dailyCreateCmd = DailyOperateCmd.builder().serveList(serveList).deliverMap(deliverMap).date(cmd.getDeliverRecoverDate()).build();
+        //发车标识
+
+        if (1 == cmd.getDeliverFlag()) {
+            //发车
+            deliverDaily(dailyCreateCmd);
+        } else {
+            //收车
+            recoverDaily(dailyCreateCmd);
+        }
+
+        return Result.getInstance(0).success();
     }
 }

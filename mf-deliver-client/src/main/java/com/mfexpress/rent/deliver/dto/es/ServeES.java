@@ -195,6 +195,9 @@ public class ServeES {
     )
     private String rent;
 
+    @ApiModelProperty(value = "租金比例")
+    private String rentRatio;
+
     @ApiModelProperty(value = "押金")
     @MultiField(
             mainField = @StringField(type = StringType.Text),

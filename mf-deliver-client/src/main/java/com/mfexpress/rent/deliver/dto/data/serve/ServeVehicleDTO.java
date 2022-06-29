@@ -52,4 +52,7 @@ public class ServeVehicleDTO {
     @ApiModelProperty(value = "租赁结束日期")
     private String leaseEndDate;
 
+    @ApiModelProperty(value = "比例")
+    private Double rentRatio;
+
 }
