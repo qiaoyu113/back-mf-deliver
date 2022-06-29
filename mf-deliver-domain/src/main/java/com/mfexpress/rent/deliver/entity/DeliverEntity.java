@@ -8,6 +8,7 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -138,6 +139,7 @@ public class DeliverEntity implements DeliverEntityApi {
         return deliverDTO;
     }
 
+    @Override
     public void toHistory(ReactivateServeCmd cmd) {
         DeliverEntity deliverEntity = new DeliverEntity();
         deliverEntity.setStatus(DeliverStatusEnum.HISTORICAL.getCode());

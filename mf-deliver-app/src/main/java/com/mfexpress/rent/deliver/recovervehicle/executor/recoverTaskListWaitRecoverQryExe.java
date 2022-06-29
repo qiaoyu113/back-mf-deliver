@@ -43,7 +43,16 @@ public class recoverTaskListWaitRecoverQryExe implements RecoverQryServiceI {
         // updateTime 指的是 deliver 的 updateTime
         FieldSortBuilder updateTimeSortBuilder = SortBuilders.fieldSort("updateTime").unmappedType("date").order(SortOrder.DESC);
         fieldSortBuilderList.add(updateTimeSortBuilder);
-        return recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo, Constants.ES_SERVE_INDEX, Constants.ES_SERVE_TYPE);
+        RecoverTaskListVO esData = recoverEsDataQryExe.getEsData(recoverQryListCmd, boolQueryBuilder, fieldSortBuilderList, tokenInfo, Constants.ES_SERVE_INDEX, Constants.ES_SERVE_TYPE);
+        esData.getRecoverVehicleVOList().forEach(recoverVehicleVO ->{
+            if (recoverVehicleVO.getReplaceFlag().equals(1)){
+                recoverVehicleVO.setLeaseModelDisplay(LeaseModelEnum.REPLACEMENT.getName());
+                recoverVehicleVO.setLeaseModelId(LeaseModelEnum.REPLACEMENT.getCode());
+            }
+
+        });
+        return esData;
+
     }
 
 }

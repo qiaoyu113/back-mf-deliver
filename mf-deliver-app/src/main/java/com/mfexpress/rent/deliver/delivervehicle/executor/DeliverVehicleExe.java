@@ -1,13 +1,20 @@
 package com.mfexpress.rent.deliver.delivervehicle.executor;
 
+import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.tools.mq.MqTools;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleCmd;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleVO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.dto.entity.vo.LinkmanVo;
+import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
@@ -28,6 +35,7 @@ public class DeliverVehicleExe {
     private CustomerAggregateRootApi customerAggregateRootApi;
     @Resource(name = "serveSyncServiceImpl")
     private EsSyncHandlerI syncServiceI;
+
 
     /*@Resource
     private MqTools mqTools;*/
@@ -121,6 +129,8 @@ public class DeliverVehicleExe {
         return deliverVehicleResult.getData();*/
         return null;
     }
+
+
 
     /*private  String getExpectRecoverDate(Date deliverVehicleDate, int offset) {
         DateTime dateTime = DateUtil.endOfMonth(deliverVehicleDate);

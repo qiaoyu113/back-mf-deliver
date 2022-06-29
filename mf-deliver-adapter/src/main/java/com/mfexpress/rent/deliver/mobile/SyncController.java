@@ -5,10 +5,7 @@ import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
@@ -58,5 +55,7 @@ public class SyncController {
     public Result<Boolean> switchDeliverAlias(@RequestParam("alias") String alias, @RequestParam("indexVersion") String indexVersionName){
         return Result.getInstance(deliverSyncServiceI.switchAliasIndex(alias, indexVersionName)).success();
     }
+
+
 
 }

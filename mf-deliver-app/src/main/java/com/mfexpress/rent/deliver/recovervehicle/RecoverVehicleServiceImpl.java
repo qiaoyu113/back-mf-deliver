@@ -1,12 +1,19 @@
 package com.mfexpress.rent.deliver.recovervehicle;
 
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
 import com.mfexpress.rent.deliver.recovervehicle.executor.*;
+import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.api.RentalCustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.dto.entity.vo.LinkmanVo;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -27,6 +34,8 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     @Resource
     private RecoverDeductionExe recoverDeductionExe;
 
+    @Resource
+    private RentalCustomerAggregateRootApi rentalCustomerAggregateRootApi;
     @Resource
     private RecoverVehicleCheckInfoCacheExe checkInfoCacheExe;
 
@@ -51,9 +60,11 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     @Resource
     private RecoverDeductionByDeliverExe recoverDeductionByDeliverExe;
 
+    @Resource
+    private CustomerAggregateRootApi  customerAggregateRootApi;
     @Override
     public List<RecoverApplyVO> getRecoverVehicleListVO(RecoverApplyQryCmd recoverApplyQryCmd, TokenInfo tokenInfo) {
-        return recoverVehicleQryExe.execute(recoverApplyQryCmd,tokenInfo);
+        return recoverVehicleQryExe.execute(recoverApplyQryCmd, tokenInfo);
     }
 
     @Override
@@ -128,4 +139,22 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     public Integer toDeductionByDeliver(RecoverDeductionByDeliverCmd cmd, TokenInfo tokenInfo) {
         return recoverDeductionByDeliverExe.execute(cmd, tokenInfo);
     }
+
+
+    @Override
+    public LinkmanVo getRecoverVehicleDtoByDeliverNo(Integer customerId) {
+        Result<List<LinkmanVo>> customerId1 = customerAggregateRootApi.getLinkMansByCusomerId(customerId);
+        List<LinkmanVo> objects = new ArrayList<>();
+        List<LinkmanVo> data = customerId1.getData();
+        if (data != null && data.size()>0) {
+            for (LinkmanVo v : data) {
+                if (v.getType() == 2) {
+                    objects.add(v);
+                }
+            }
+            return objects.get(0);
+        }
+       return new LinkmanVo();
+    }
+
 }
