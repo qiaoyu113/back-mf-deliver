@@ -1,14 +1,5 @@
 package com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.annotation.Resource;
-
-import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.component.constants.ResultErrorEnum;
@@ -27,11 +18,7 @@ import com.mfexpress.order.dto.qry.ReviewOrderQry;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
 import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
-import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
@@ -61,6 +48,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import java.util.*;
 
 @Component
 @Slf4j
@@ -398,10 +388,10 @@ public class CreateRecoverContractCmdExe {
 
 
     private void checkDate(CreateRecoverContractFrontCmd cmd) {
-        if (DateUtil.between(DateUtil.parseDate(DateUtil.format(cmd.getRecoverInfo().getRecoverVehicleTime(), "yyyy-MM-dd")), DateUtil.parseDate(DateUtil.now()), DateUnit.DAY) > 6) {
-            log.info("收车日期超出可选范围  参数:{}", cmd);
-            throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "收车日期超出可选范围");
-        }
+//        if (DateUtil.between(DateUtil.parseDate(DateUtil.format(cmd.getRecoverInfo().getRecoverVehicleTime(), "yyyy-MM-dd")), DateUtil.parseDate(DateUtil.now()), DateUnit.DAY) > 6) {
+//            log.info("收车日期超出可选范围  参数:{}", cmd);
+//            throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "收车日期超出可选范围");
+//        }
 
         // 查询完成的维修单
         Result<MaintenanceDTO> maintenanceByServeNo = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getRecoverInfo().getServeNo());

@@ -1,18 +1,7 @@
 package com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateTime;
-import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.component.constants.ResultErrorEnum;
@@ -61,6 +50,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -364,10 +358,10 @@ public class CreateDeliverContractCmdExe {
     }
 
     private void checkDate(CreateDeliverContractCmd cmd) {
-        if (DateUtil.between(DateUtil.parseDate(DateUtil.format(cmd.getDeliverInfo().getDeliverVehicleTime(),"yyyy-MM-dd")), DateUtil.parseDate(DateUtil.now()), DateUnit.DAY) > 6) {
-            log.info("发车日期超出可选范围  参数:{}", cmd);
-            throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "发车日期超出可选范围");
-        }
+//        if (DateUtil.between(DateUtil.parseDate(DateUtil.format(cmd.getDeliverInfo().getDeliverVehicleTime(),"yyyy-MM-dd")), DateUtil.parseDate(DateUtil.now()), DateUnit.DAY) > 6) {
+//            log.info("发车日期超出可选范围  参数:{}", cmd);
+//            throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "发车日期超出可选范围");
+//        }
         List<Integer> vehicleId = cmd.getDeliverImgInfos().stream().map(DeliverImgInfo::getCarId).distinct().collect(Collectors.toList());
         if (CollectionUtil.isEmpty(vehicleId)) {
             log.error("判断车辆最晚收车日期出错 未查询到车辆Id  参数:{}", cmd);
