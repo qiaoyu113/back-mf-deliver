@@ -233,7 +233,7 @@ public class ServeLeaseTermAmountQryExe {
                 vo.setServeStatusDisplay(serveEnum.getAlias());
             }
             // 是否展示重新激活按钮 服务单状态为已收车 && 租赁方式为正常租赁或优惠 && 预计收车日期-收车日期>=15day && 预计收车日期在当前日期之后
-            if (ServeEnum.RECOVER.getCode().equals(vo.getServeStatus()) && (LeaseModelEnum.NORMAL.getCode() == vo.getLeaseModelId() || LeaseModelEnum.DISCOUNT.getCode() == vo.getLeaseModelId())) {
+            if (ServeEnum.RECOVER.getCode().equals(vo.getServeStatus()) && (LeaseModelEnum.NORMAL.getCode() == vo.getLeaseModelId() || LeaseModelEnum.DISCOUNT.getCode() == vo.getLeaseModelId() || LeaseModelEnum.SHOW.getCode() == vo.getLeaseModelId())) {
                 if (null != vo.getRecoverVehicleTime() && null != vo.getExpectRecoverDate() && vo.getExpectRecoverDate().after(vo.getRecoverVehicleTime())) {
                     String nowDateChar = FormatUtil.ymdFormatDateToString(new Date());
                     Date nowDate = FormatUtil.ymdFormatStringToDate(nowDateChar);
