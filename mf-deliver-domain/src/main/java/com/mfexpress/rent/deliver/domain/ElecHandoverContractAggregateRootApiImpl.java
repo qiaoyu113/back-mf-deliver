@@ -10,7 +10,7 @@ import javax.annotation.Resource;
 
 import cn.hutool.json.JSONUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
-import com.mfexpress.component.log.PrintParam;
+import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
