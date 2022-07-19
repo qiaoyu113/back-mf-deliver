@@ -177,6 +177,7 @@ public class DeliverSyncServiceImpl implements EsSyncHandlerI {
         deliverES.setRecoverAbnormalFlag(deliverDTO.getRecoverAbnormalFlag());
         deliverES.setUpdateTime(deliverDTO.getUpdateTime());
         deliverES.setOrgId(serveDTO.getOrgId());
+        deliverES.setVehicleBusinessMode(deliverDTO.getVehicleBusinessMode());
 
         // 客户信息补充
         deliverES.setCustomerId(serveDTO.getCustomerId());

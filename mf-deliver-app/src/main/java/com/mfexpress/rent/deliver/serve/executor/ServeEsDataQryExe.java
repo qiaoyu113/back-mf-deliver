@@ -15,14 +15,15 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeListVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeVO;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
+import com.mfexpress.rent.deliver.utils.ServeDictDataUtil;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
-import com.mfexpress.rent.vehicle.utils.Utils;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -44,7 +45,12 @@ public class ServeEsDataQryExe {
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
 
+    @Resource
+    private BeanFactory beanFactory;
+
     public ServeListVO execute(String orderId, QueryBuilder boolQueryBuilder, int nowPage, int limit, List<FieldSortBuilder> fieldSortBuilderList) {
+        ServeDictDataUtil.initDictData(beanFactory);
+
         List<FieldSortBuilder> sortBuilderList = new LinkedList<>();
         FieldSortBuilder scoreSortBuilder = SortBuilders.fieldSort("_score").order(SortOrder.DESC);
         sortBuilderList.add(scoreSortBuilder);
@@ -60,6 +66,9 @@ public class ServeEsDataQryExe {
             ServeVO serveVO = new ServeVO();
             ServeES serveEs = BeanUtil.mapToBean(serveMap, ServeES.class, false, new CopyOptions());
             BeanUtil.copyProperties(serveEs, serveVO);
+            if (null != serveVO.getVehicleBusinessMode()) {
+                serveVO.setVehicleBusinessModeDisplay(ServeDictDataUtil.vehicleBusinessModeMap.get(serveVO.getVehicleBusinessMode().toString()));
+            }
             serveVoList.add(serveVO);
         }
         ReviewOrderQry reviewOrderQry = new ReviewOrderQry();

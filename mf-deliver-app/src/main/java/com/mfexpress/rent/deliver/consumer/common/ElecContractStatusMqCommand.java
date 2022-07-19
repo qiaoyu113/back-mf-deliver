@@ -348,6 +348,7 @@ public class ElecContractStatusMqCommand {
                             renewalCmd.setCreateId(contractDTO.getCreatorId());
                             renewalCmd.setRentEffectDate(FormatUtil.ymdFormatDateToString(new Date()));
                             renewalCmd.setEffectFlag(true);
+                            renewalCmd.setVehicleBusinessMode(replaceDeliver.getVehicleBusinessMode());
                             mqTools.send(event, "price_change", null, JSON.toJSONString(renewalCmd));
                         }
                     }

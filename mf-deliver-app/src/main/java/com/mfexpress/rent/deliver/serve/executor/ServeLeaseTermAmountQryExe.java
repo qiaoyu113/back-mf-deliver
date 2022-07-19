@@ -33,12 +33,14 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
+import com.mfexpress.rent.deliver.utils.ServeDictDataUtil;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -77,8 +79,11 @@ public class ServeLeaseTermAmountQryExe {
     @Resource
     private ContractAggregateRootApi contractAggregateRootApi;
 
-    public PagePagination<ServeAllLeaseTermAmountVO> execute(ServeLeaseTermAmountQry qry, TokenInfo tokenInfo) {
+    @Resource
+    private BeanFactory beanFactory;
 
+    public PagePagination<ServeAllLeaseTermAmountVO> execute(ServeLeaseTermAmountQry qry, TokenInfo tokenInfo) {
+        ServeDictDataUtil.initDictData(beanFactory);
         if (null != tokenInfo) {
             qry.setUserOfficeId(tokenInfo.getOfficeId());
         }
@@ -150,6 +155,9 @@ public class ServeLeaseTermAmountQryExe {
             BigDecimal serviceFee = rent.subtract(rent.multiply(rentRatio));
             serveAllLeaseTermAmountVO.setServiceFee(String.format("%.2f", serviceFee));
 
+            if (null != serveAllLeaseTermAmountVO.getVehicleBusinessMode()) {
+                serveAllLeaseTermAmountVO.setVehicleBusinessModeDisplay(ServeDictDataUtil.vehicleBusinessModeMap.get(serveAllLeaseTermAmountVO.getVehicleBusinessMode().toString()));
+            }
             return serveAllLeaseTermAmountVO;
         }).collect(Collectors.toList());
 
@@ -333,6 +341,9 @@ public class ServeLeaseTermAmountQryExe {
 
         if (null != qry.getServeStatus()) {
             boolQueryBuilder.must(QueryBuilders.matchQuery("serveStatus", qry.getServeStatus()));
+        }
+        if (null != qry.getVehicleBusinessMode() && 0 != qry.getVehicleBusinessMode()) {
+            boolQueryBuilder.must(QueryBuilders.termQuery("vehicleBusinessMode", qry.getVehicleBusinessMode()));
         }
         return boolQueryBuilder;
     }

@@ -101,6 +101,7 @@ public class DeliverToPreselectedExe {
             deliverDTO.setVehicleAge(deliverVehicleSelectCmd.getVehicleAge());
             deliverDTO.setCustomerId(deliverPreselectedCmd.getCustomerId());
             deliverDTO.setCarServiceId(deliverPreselectedCmd.getCarServiceId());
+            deliverDTO.setVehicleBusinessMode(vehicleInfoDto.getVehicleBusinessMode());
             deliverList.add(deliverDTO);
             carIdList.add(deliverVehicleSelectCmd.getId());
 

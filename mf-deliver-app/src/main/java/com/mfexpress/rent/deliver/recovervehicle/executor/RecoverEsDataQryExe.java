@@ -15,6 +15,7 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
+import com.mfexpress.rent.deliver.utils.ServeDictDataUtil;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -22,6 +23,7 @@ import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -37,8 +39,12 @@ public class RecoverEsDataQryExe {
     @Resource
     private OfficeAggregateRootApi officeAggregateRootApi;
 
+    @Resource
+    private BeanFactory beanFactory;
+
     public RecoverTaskListVO getEsData(RecoverQryListCmd recoverQryListCmd, BoolQueryBuilder boolQueryBuilder
             , List<FieldSortBuilder> fieldSortBuilderList, TokenInfo tokenInfo, String index, String type) {
+        ServeDictDataUtil.initDictData(beanFactory);
 
         RecoverTaskListVO recoverTaskListVO = new RecoverTaskListVO();
 
@@ -86,6 +92,9 @@ public class RecoverEsDataQryExe {
             RecoverVehicleVO recoverVehicleVO = new RecoverVehicleVO();
             ServeES serveEs = BeanUtil.mapToBean(dataMap, ServeES.class, false, new CopyOptions());
             BeanUtils.copyProperties(serveEs, recoverVehicleVO);
+            if (null != recoverVehicleVO.getVehicleBusinessMode()) {
+                recoverVehicleVO.setVehicleBusinessModeDisplay(ServeDictDataUtil.vehicleBusinessModeMap.get(recoverVehicleVO.getVehicleBusinessMode().toString()));
+            }
             recoverVehicleVOList.add(recoverVehicleVO);
         }
 

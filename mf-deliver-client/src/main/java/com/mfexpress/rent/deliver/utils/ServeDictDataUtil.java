@@ -5,6 +5,7 @@ import java.util.Map;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import org.springframework.beans.factory.BeanFactory;
 
@@ -15,6 +16,8 @@ public class ServeDictDataUtil {
     public static Map<String, String> vehicleColorMap;
 
     public static Map<Integer, String> vehicleTypeMap;
+
+    public static Map<String, String> vehicleBusinessModeMap;
 
     public static void initDictData(BeanFactory beanFactory) {
 
@@ -32,6 +35,9 @@ public class ServeDictDataUtil {
             if (ResultErrorEnum.SUCCESSED.getCode() == vehicleTypeResult.getCode() && null != vehicleTypeResult.getData()) {
                 vehicleTypeMap = vehicleTypeResult.getData();
             }
+        }
+        if (null == vehicleBusinessModeMap) {
+            vehicleBusinessModeMap = CommonUtil.getDictDataDTOMapByDictType(dictAggregateRootApi, Constants.VEHICLE_BUSINESS_MODE);
         }
     }
 }

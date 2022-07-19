@@ -35,4 +35,10 @@ public class VehicleVO {
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date expectRecoverTime;
 
+    @ApiModelProperty(value = "车辆运营模式")
+    private Integer vehicleBusinessMode;
+
+    @ApiModelProperty(value = "车辆运营模式描述")
+    private String vehicleBusinessModeDisplay;
+
 }

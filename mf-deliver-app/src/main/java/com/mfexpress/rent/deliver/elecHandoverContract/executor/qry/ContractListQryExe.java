@@ -24,6 +24,7 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.ElecContractW
 import com.mfexpress.rent.deliver.dto.data.serve.ServeVO;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
+import com.mfexpress.rent.deliver.utils.ServeDictDataUtil;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.utils.Utils;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
@@ -33,6 +34,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -58,7 +60,11 @@ public class ContractListQryExe {
     @Resource
     private ElasticsearchTools elasticsearchTools;
 
+    @Resource
+    private BeanFactory beanFactory;
+
     public DeliverContractListVO execute(ContractListQry qry, TokenInfo tokenInfo) {
+        ServeDictDataUtil.initDictData(beanFactory);
         // 订单信息补全
         OrderDTO orderDTO = getOrderDTO(qry.getOrderId());
         DeliverContractListVO deliverContractListVO = new DeliverContractListVO();
@@ -120,6 +126,9 @@ public class ContractListQryExe {
             ServeVO serveVO = new ServeVO();
             ServeES serveEs = BeanUtil.mapToBean(serveMap, ServeES.class, false, new CopyOptions());
             BeanUtil.copyProperties(serveEs, serveVO);
+            if (null != serveVO.getVehicleBusinessMode()) {
+                serveVO.setVehicleBusinessModeDisplay(ServeDictDataUtil.vehicleBusinessModeMap.get(serveVO.getVehicleBusinessMode().toString()));
+            }
             serveVoList.add(serveVO);
         }
         Map<String, ServeVO> serveVOMap = datas.stream().map(data -> {
