@@ -29,11 +29,13 @@ import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
+import com.mfexpress.rent.maintain.constant.MaintenanceStatusEnum;
 import com.mfexpress.rent.maintain.constant.MaintenanceTypeEnum;
 import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
 import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
+import com.mfexpress.rent.vehicle.constant.UsageStatusEnum;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
 import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
@@ -139,6 +141,13 @@ public class RecoverVehicleProcessCmdExe {
                 if (MaintenanceTypeEnum.FAULT.getCode().intValue() == maintenanceDTO.getType()) {
                     // 原车维修单变为库存中维修
                     ResultValidUtils.checkResultException(maintenanceAggregateRootApi.updateMaintenanceDetailByServeNo(cmd.getServeNo()));
+                    if (MaintenanceStatusEnum.MAINTAINED.getCode().equals(maintenanceDTO.getStatus())) {
+                        // 维修单将在维修域由租赁中维修变更为库存中维修，如果其状态在已维修，需要变更为已完成，同时需要通知车辆修改其状态为正常
+                        vehicleSaveCmd = new VehicleSaveCmd();
+                        vehicleSaveCmd.setId(Collections.singletonList(maintenanceDTO.getVehicleId()));
+                        vehicleSaveCmd.setStatus(UsageStatusEnum.NORMAL.getCode());
+                        vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
+                    }
 
                     // 查询替换车服务单
                     ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, cmd.getServeNo());
