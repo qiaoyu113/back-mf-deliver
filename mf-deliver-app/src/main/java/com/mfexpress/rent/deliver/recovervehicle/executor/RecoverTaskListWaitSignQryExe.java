@@ -24,7 +24,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
-public class recoverTaskListWaitSignQryExe implements RecoverQryServiceI {
+public class RecoverTaskListWaitSignQryExe implements RecoverQryServiceI {
 
     @Resource
     private RecoverEsDataQryExe recoverEsDataQryExe;
@@ -44,7 +44,7 @@ public class recoverTaskListWaitSignQryExe implements RecoverQryServiceI {
         // 2. 排序规则：“最近一次数据更新时间”倒序
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         List<FieldSortBuilder> fieldSortBuilderList = new LinkedList<>();
-        boolQueryBuilder.must(QueryBuilders.matchQuery("serveStatus", ServeEnum.DELIVER.getCode()))
+        boolQueryBuilder.must(QueryBuilders.termsQuery("serveStatus", Arrays.asList(ServeEnum.DELIVER.getCode(), ServeEnum.REPAIR.getCode())))
                 .must(QueryBuilders.matchQuery("deliverStatus", DeliverEnum.IS_RECOVER.getCode()))
                 .must(QueryBuilders.matchQuery("isCheck", JudgeEnum.YES.getCode()))
                 .must(QueryBuilders.termsQuery("recoverContractStatus", Arrays.asList(DeliverContractStatusEnum.GENERATING.getCode(), DeliverContractStatusEnum.SIGNING.getCode())))
