@@ -74,4 +74,6 @@ public class DeliverDTO {
 
     private Integer recoverAbnormalFlag;
 
+    private Integer vehicleBusinessMode;
+
 }

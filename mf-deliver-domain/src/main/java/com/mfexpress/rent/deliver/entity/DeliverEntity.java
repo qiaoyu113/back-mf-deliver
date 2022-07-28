@@ -101,6 +101,8 @@ public class DeliverEntity implements DeliverEntityApi {
 
     private Integer recoverAbnormalFlag;
 
+    private Integer vehicleBusinessMode;
+
     @Override
     public List<DeliverDTO> getDeliverDTOListByServeNoList(List<String> serveNoList) {
         if (CollectionUtil.isEmpty(serveNoList)) {
