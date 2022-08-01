@@ -35,5 +35,4 @@ public class ServeListVO extends ListVO {
     @ApiModelProperty(value = "租赁服务单列表")
     private List<ServeVO> serveVOList;
 
-
 }

@@ -122,6 +122,8 @@ public class RecoverVehicleProcessCmdExe {
         DateTime expectRecoverDate = DateUtil.parseDate(expectRecoverDateChar);
         // 发送收车计费消息
         if (expectRecoverDate.isAfterOrEquals(recoverVehicleTime)) {
+            Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByDeliverNo(cmd.getDeliverNo());
+            DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrException();
             //收车计费
             RecoverVehicleCmd recoverVehicleCmd = new RecoverVehicleCmd();
             recoverVehicleCmd.setServeNo(cmd.getServeNo());
@@ -130,6 +132,9 @@ public class RecoverVehicleProcessCmdExe {
             recoverVehicleCmd.setCustomerId(cmd.getCustomerId());
             recoverVehicleCmd.setCreateId(cmd.getOperatorId());
             recoverVehicleCmd.setRecoverDate(DateUtil.formatDate(cmd.getRecoverVehicleTime()));
+            if (null != deliverDTO) {
+                recoverVehicleCmd.setVehicleBusinessMode(deliverDTO.getVehicleBusinessMode());
+            }
             log.info("正常收车时，交付域向计费域发送的收车单信息：{}", recoverVehicleCmd);
             mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(recoverVehicleCmd));
 
@@ -180,6 +185,7 @@ public class RecoverVehicleProcessCmdExe {
                             renewalCmd.setCreateId(cmd.getOperatorId());
                             renewalCmd.setRentEffectDate(FormatUtil.ymdFormatDateToString(FormatUtil.addDays(cmd.getRecoverVehicleTime(), 1)));
                             renewalCmd.setEffectFlag(true);
+                            renewalCmd.setVehicleBusinessMode(replaceDeliver.getVehicleBusinessMode());
                             mqTools.send(event, "price_change", null, JSON.toJSONString(renewalCmd));
 
                             // 服务单调整工单状态改为开始计费并记录开始计费时间
@@ -211,6 +217,11 @@ public class RecoverVehicleProcessCmdExe {
             renewalChargeCmd.setEffectFlag(false);
             // 续约目标日期为实际收车日期
             renewalChargeCmd.setRenewalDate(DateUtil.formatDate(recoverVehicleTime));
+            Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByDeliverNo(cmd.getDeliverNo());
+            DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrException();
+            if (null != deliverDTO) {
+                renewalChargeCmd.setVehicleBusinessMode(deliverDTO.getVehicleBusinessMode());
+            }
             mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
         }
 

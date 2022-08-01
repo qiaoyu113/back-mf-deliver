@@ -656,6 +656,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 renewalChargeCmd.setRentEffectDate(renewalServeCmd.getBillingAdjustmentDate());
             }*/
             renewalChargeCmd.setRenewalDate(renewalServeCmd.getLeaseEndDate());
+            renewalChargeCmd.setVehicleBusinessMode(deliver.getVehicleBusinessMode());
             mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
             return serve;
         }).collect(Collectors.toList());
@@ -749,6 +750,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                     renewalChargeCmd.setEffectFlag(false);
                     renewalChargeCmd.setRenewalDate(replaceServe.getExpectRecoverDate());
                     renewalChargeCmd.setRentRatio(commodityDTOMap.get(replaceServe.getContractCommodityId()).getRentRatio());
+                    renewalChargeCmd.setVehicleBusinessMode(deliver.getVehicleBusinessMode());
                     mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
                 }
             });
@@ -845,6 +847,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             } else {
                 renewalChargeCmd.setRentRatio(0.00);
             }
+            renewalChargeCmd.setVehicleBusinessMode(deliver.getVehicleBusinessMode());
             mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
 
             return serveToUpdate;

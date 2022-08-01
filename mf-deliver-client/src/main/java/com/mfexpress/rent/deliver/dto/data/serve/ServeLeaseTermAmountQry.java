@@ -34,4 +34,7 @@ public class ServeLeaseTermAmountQry extends ListQry {
 
     private Integer userOfficeId;
 
+    @ApiModelProperty(value = "车辆运营模式")
+    private Integer vehicleBusinessMode;
+
 }

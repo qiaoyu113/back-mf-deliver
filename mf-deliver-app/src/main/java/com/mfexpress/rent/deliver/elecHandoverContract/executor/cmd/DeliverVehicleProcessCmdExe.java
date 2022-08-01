@@ -14,6 +14,7 @@ import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.domainapi.DailyAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.daily.CreateDailyCmd;
@@ -53,6 +54,9 @@ public class DeliverVehicleProcessCmdExe {
     private ServeAggregateRootApi serveAggregateRootApi;
 
     @Resource
+    private DeliverAggregateRootApi deliverAggregateRootApi;
+
+    @Resource
     private DailyAggregateRootApi dailyAggregateRootApi;
 
     @Resource
@@ -63,7 +67,7 @@ public class DeliverVehicleProcessCmdExe {
 
     @Resource(name = "serveSyncServiceImpl")
     private EsSyncHandlerI serveSyncServiceI;
-//
+    //
     private MqTools mqTools;
 
     @Value("${rocketmq.listenEventTopic}")
@@ -90,7 +94,14 @@ public class DeliverVehicleProcessCmdExe {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单信息不存在");
         }
 
+        Result<List<DeliverDTO>> deliverDTOListResult = deliverAggregateRootApi.getDeliverDTOListByServeNoList(serveNoList);
+        List<DeliverDTO> deliverDTOList = ResultDataUtils.getInstance(deliverDTOListResult).getDataOrNull();
+        if (CollectionUtils.isEmpty(deliverDTOList)) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "交付单信息不存在");
+        }
+
         Map<String, ServeDTO> serveDTOMap = serveDTOList.stream().collect(Collectors.toMap(ServeDTO::getServeNo, Function.identity(), (v1, v2) -> v1));
+        Map<String, DeliverDTO> deliverDTOMap = deliverDTOList.stream().collect(Collectors.toMap(DeliverDTO::getDeliverNo, Function.identity(), (v1, v2) -> v1));
         //每个服务单对应的预计收车日期
         Map<String, String> expectRecoverDateMap = new HashMap<>(serveDTOList.size());
         for (String serveNo : serveNoList) {
@@ -127,6 +138,10 @@ public class DeliverVehicleProcessCmdExe {
             rentChargeCmd.setVehicleId(deliverImgInfo.getCarId());
             rentChargeCmd.setDeliverDate(DateUtil.formatDate(contractDTO.getDeliverVehicleTime()));
             rentChargeCmd.setRentRatio(serve.getRentRatio().doubleValue());
+            DeliverDTO deliverDTO = deliverDTOMap.get(deliverImgInfo.getDeliverNo());
+            if (null != deliverDTO) {
+                rentChargeCmd.setVehicleBusinessMode(deliverDTO.getVehicleBusinessMode());
+            }
 
             mqTools.send(event, "deliver_vehicle", null, JSON.toJSONString(rentChargeCmd));
         });

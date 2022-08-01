@@ -42,4 +42,8 @@ public class RenewalChargeCmd {
 
     @ApiModelProperty("租金占比")
     private Double rentRatio;
+
+    @ApiModelProperty(value = "车辆运营模式")
+    private Integer vehicleBusinessMode;
+
 }

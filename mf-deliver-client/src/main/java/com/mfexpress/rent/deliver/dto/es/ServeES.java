@@ -232,4 +232,7 @@ public class ServeES {
     @ApiModelProperty(value = "收车类型描述，正常收车或异常收车")
     private String recoverTypeDisplay;
 
+    @ApiModelProperty(value = "车辆运营模式")
+    private Integer vehicleBusinessMode;
+
 }
