@@ -29,6 +29,7 @@ import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -65,10 +66,13 @@ public class ServeDeliverDetailQryExe {
     @Resource
     private ElecHandoverContractAggregateRootApi contractAggregateRootApi;
 
+    @Resource
+    private BeanFactory beanFactory;
+
     public ServeDeliverDetailVO execute(ServeQryCmd cmd) {
         String serveNo = cmd.getServeNo();
         Result<ServeDTO> serveDtoResult = serveAggregateRootApi.getServeDtoByServeNo(serveNo);
-        if(!DeliverUtils.resultDataCheck(serveDtoResult)){
+        if (!DeliverUtils.resultDataCheck(serveDtoResult)) {
             // commonException应封到base中
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
@@ -79,26 +83,26 @@ public class ServeDeliverDetailQryExe {
         // 不管是什么状态，必补充订单信息
         serveDeliverDetailVO.setOrderVO(getOrderVO(serveDTO));
 
-        if(!ServeEnum.NOT_PRESELECTED.getCode().equals(serveDTO.getStatus())){
+        if (!ServeEnum.NOT_PRESELECTED.getCode().equals(serveDTO.getStatus())) {
             Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(serveNo);
-            if(!DeliverUtils.resultDataCheck(deliverDTOResult)){
+            if (!DeliverUtils.resultDataCheck(deliverDTOResult)) {
                 throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "交付单信息查询失败");
             }
             DeliverDTO deliverDTO = deliverDTOResult.getData();
 
             // serve的status属性为1，状态为已预选，服务单信息选择补充
-            if (ServeEnum.PRESELECTED.getCode().equals(serveDTO.getStatus())){
+            if (ServeEnum.PRESELECTED.getCode().equals(serveDTO.getStatus())) {
                 // serve的status属性为1，deliver的deliver_status属性必为1，必补充车辆信息
                 serveDeliverDetailVO.setVehicleVO(getVehicleVO(serveDTO, deliverDTO));
                 if (JudgeEnum.YES.getCode().equals(deliverDTO.getIsCheck())) {
                     // 验车标志位为true补充验车信息
                     serveDeliverDetailVO.setVehicleValidationVO(getVehicleValidationVO());
                 }
-                if(JudgeEnum.YES.getCode().equals(deliverDTO.getIsInsurance())){
+                if (JudgeEnum.YES.getCode().equals(deliverDTO.getIsInsurance())) {
                     // 投保标志位为true补充投保信息
                     serveDeliverDetailVO.setVehicleInsuranceVO(getVehicleInsuranceVO(deliverDTO));
                 }
-                if(DeliverContractStatusEnum.SIGNING.getCode() == deliverDTO.getDeliverContractStatus()){
+                if (DeliverContractStatusEnum.SIGNING.getCode() == deliverDTO.getDeliverContractStatus()) {
                     // 补充发车单信息,从合同中取
                     serveDeliverDetailVO.setDeliverVehicleVO(getDeliverVehicleVOFromContract(deliverDTO));
                 }
@@ -109,7 +113,7 @@ public class ServeDeliverDetailQryExe {
                 serveDeliverDetailVO.setVehicleInsuranceVO(getVehicleInsuranceVO(deliverDTO));
                 // 补充发车单信息,从发车单中取
                 serveDeliverDetailVO.setDeliverVehicleVO(getDeliverVehicleVO(deliverDTO));
-                if(DeliverContractStatusEnum.COMPLETED.getCode() == deliverDTO.getDeliverContractStatus()){
+                if (DeliverContractStatusEnum.COMPLETED.getCode() == deliverDTO.getDeliverContractStatus()) {
                     // 补充电子交接单信息
                     serveDeliverDetailVO.setElecHandoverDocVO(getElecHandoverDocVO(deliverDTO));
                 }
@@ -122,7 +126,7 @@ public class ServeDeliverDetailQryExe {
     private ElecHandoverDocVO getElecHandoverDocVO(DeliverDTO deliverDTO) {
         Result<ElecDocDTO> docDTOResult = contractAggregateRootApi.getDocDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.DELIVER.getCode());
         ElecDocDTO docDTO = ResultDataUtils.getInstance(docDTOResult).getDataOrException();
-        if(null == docDTO){
+        if (null == docDTO) {
             return null;
         }
         ElecHandoverDocVO elecHandoverDocVO = new ElecHandoverDocVO();
@@ -137,19 +141,19 @@ public class ServeDeliverDetailQryExe {
         DeliverVehicleVO deliverVehicleVO = new DeliverVehicleVO();
         BeanUtils.copyProperties(contractDTO, deliverVehicleVO);
         List<DeliverImgInfo> deliverImgInfos = JSONUtil.toList(contractDTO.getPlateNumberWithImgs(), DeliverImgInfo.class);
-        if(deliverImgInfos.isEmpty()){
+        if (deliverImgInfos.isEmpty()) {
             return null;
         }
         Map<String, DeliverImgInfo> imgInfoMap = deliverImgInfos.stream().collect(Collectors.toMap(DeliverImgInfo::getDeliverNo, Function.identity(), (v1, v2) -> v1));
         DeliverImgInfo deliverImgInfo = imgInfoMap.get(deliverDTO.getDeliverNo());
-        if(null == deliverImgInfo){
+        if (null == deliverImgInfo) {
             return null;
         }
         deliverVehicleVO.setImgUrl(deliverImgInfo.getImgUrl());
         return deliverVehicleVO;
     }
 
-    public DeliverVehicleVO getDeliverVehicleVO(DeliverDTO deliverDTO){
+    public DeliverVehicleVO getDeliverVehicleVO(DeliverDTO deliverDTO) {
         Result<DeliverVehicleDTO> deliverVehicleDTOResult = deliverVehicleAggregateRootApi.getDeliverVehicleDto(deliverDTO.getDeliverNo());
         if (!DeliverUtils.resultDataCheck(deliverVehicleDTOResult)) {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "发车单信息查询失败");
@@ -160,7 +164,7 @@ public class ServeDeliverDetailQryExe {
         return deliverVehicleVO;
     }
 
-    public VehicleInsuranceVO getVehicleInsuranceVO(DeliverDTO deliverDTO){
+    public VehicleInsuranceVO getVehicleInsuranceVO(DeliverDTO deliverDTO) {
         VehicleInsuranceVO vehicleInsuranceVO = new VehicleInsuranceVO();
         vehicleInsuranceVO.setStartTime(deliverDTO.getInsuranceStartTime());
         return vehicleInsuranceVO;
@@ -181,6 +185,10 @@ public class ServeDeliverDetailQryExe {
         vehicleVO.setVin(deliverDTO.getFrameNum());
         vehicleVO.setMileage(deliverDTO.getMileage());
         vehicleVO.setVehicleAge(deliverDTO.getVehicleAge());
+        vehicleVO.setVehicleBusinessMode(deliverDTO.getVehicleBusinessMode());
+        if (null != deliverDTO.getVehicleBusinessMode()) {
+            vehicleVO.setVehicleBusinessModeDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.VEHICLE_BUSINESS_MODE), deliverDTO.getVehicleBusinessMode().toString()));
+        }
         return vehicleVO;
     }
 

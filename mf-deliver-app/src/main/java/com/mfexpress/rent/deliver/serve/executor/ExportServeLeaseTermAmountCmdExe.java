@@ -37,6 +37,7 @@ public class ExportServeLeaseTermAmountCmdExe {
         headers.add("serveNo,租赁服务单编号");
         headers.add("plateNumber,车牌号");
         headers.add("carModelDisplay,品牌车型");
+        headers.add("vehicleBusinessModeDisplay,运营模式");
         headers.add("rentFee,租赁价格（元/月/台）");
         headers.add("serviceFee,服务费金额（元/月/台）");
         headers.add("rent,月租金（元/月/台）\n（租赁价格+服务费金额）");

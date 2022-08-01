@@ -20,6 +20,12 @@ public class ServeAllLeaseTermAmountVO {
     @ApiModelProperty(value = "车牌号")
     private String plateNumber;
 
+    @ApiModelProperty(value = "车辆运营模式")
+    private Integer vehicleBusinessMode;
+
+    @ApiModelProperty(value = "车辆运营模式描述")
+    private String vehicleBusinessModeDisplay;
+
     @ApiModelProperty(value = "车型id")
     private Integer carModelId;
 

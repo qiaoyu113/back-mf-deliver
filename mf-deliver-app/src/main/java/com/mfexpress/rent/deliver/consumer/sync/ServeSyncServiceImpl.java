@@ -283,6 +283,7 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
             serveEs.setDeliverContractStatus(deliverDTO.getDeliverContractStatus());
             serveEs.setRecoverContractStatus(deliverDTO.getRecoverContractStatus());
             serveEs.setRecoverAbnormalFlag(deliverDTO.getRecoverAbnormalFlag());
+            serveEs.setVehicleBusinessMode(deliverDTO.getVehicleBusinessMode());
 
             //排序规则
             Integer sort = getSort(serveEs);

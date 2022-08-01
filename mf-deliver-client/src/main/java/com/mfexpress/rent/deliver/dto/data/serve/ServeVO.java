@@ -87,6 +87,11 @@ public class ServeVO {
     @ApiModelProperty(value = "押金")
     private BigDecimal deposit;
 
+    @ApiModelProperty(value = "车辆运营模式")
+    private Integer vehicleBusinessMode;
+
+    @ApiModelProperty(value = "车辆运营模式描述")
+    private String vehicleBusinessModeDisplay;
 
 }
 
