@@ -44,6 +44,10 @@
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.mfexpress.base.starter</groupId>
+            <artifactId>mf-logback-spring-boot-starter</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
