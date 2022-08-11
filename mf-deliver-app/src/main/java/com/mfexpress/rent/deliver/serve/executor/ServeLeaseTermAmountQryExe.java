@@ -336,11 +336,11 @@ public class ServeLeaseTermAmountQryExe {
         }
 
         if (!StringUtils.isEmpty(qry.getOaContractNo())) {
-            boolQueryBuilder.must(QueryBuilders.matchQuery("contractNo", qry.getOaContractNo()));
+            boolQueryBuilder.must(QueryBuilders.termQuery("contractNo.keyword", qry.getOaContractNo()));
         }
 
         if (null != qry.getServeStatus()) {
-            boolQueryBuilder.must(QueryBuilders.matchQuery("serveStatus", qry.getServeStatus()));
+            boolQueryBuilder.must(QueryBuilders.termQuery("serveStatus", qry.getServeStatus()));
         }
         if (null != qry.getVehicleBusinessMode() && 0 != qry.getVehicleBusinessMode()) {
             boolQueryBuilder.must(QueryBuilders.termQuery("vehicleBusinessMode", qry.getVehicleBusinessMode()));
