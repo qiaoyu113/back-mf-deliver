@@ -119,4 +119,23 @@ public class RecoverVehicleVO {
 
     @ApiModelProperty(value = "押金")
     private BigDecimal deposit;
+
+    @ApiModelProperty(value = "车辆交强险状态")
+    private Integer vehicleCompulsoryInsuranceStatus;
+
+    @ApiModelProperty(value = "车辆交强险状态含义")
+    private String vehicleCompulsoryInsuranceStatusDisplay;
+
+    @ApiModelProperty(value = "车辆交强险终保日期")
+    private Date vehicleCompulsoryInsuranceEndDate;
+
+    @ApiModelProperty(value = "车辆商业险状态")
+    private Integer vehicleCommercialInsuranceStatus;
+
+    @ApiModelProperty(value = "车辆商业险状态含义")
+    private String vehicleCommercialInsuranceStatusDisplay;
+
+    @ApiModelProperty(value = "车辆商业险终保日期")
+    private Date vehicleCommercialInsuranceEndDate;
+
 }

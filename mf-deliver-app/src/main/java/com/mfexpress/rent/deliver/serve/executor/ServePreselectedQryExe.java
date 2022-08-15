@@ -1,5 +1,10 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
+import com.mfexpress.component.response.Result;
+import com.mfexpress.component.utils.util.ResultDataUtils;
+import com.mfexpress.order.api.app.ContractAggregateRootApi;
+import com.mfexpress.order.dto.data.CommodityDTO;
+import com.mfexpress.order.dto.data.InsuranceInfoDTO;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
@@ -14,6 +19,7 @@ import javax.annotation.Resource;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -21,6 +27,10 @@ public class ServePreselectedQryExe {
 
     @Resource
     private ServeEsDataQryExe serveEsDataQryExe;
+
+    @Resource
+    private ContractAggregateRootApi contractAggregateRootApi;
+
     /*@Resource
     private SyncServiceI syncServiceI;*/
 
@@ -37,6 +47,7 @@ public class ServePreselectedQryExe {
         fieldSortBuilderList.add(updateTimeSortBuilders);
         ServeListVO serveListVO = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilderList);
         List<ServeVO> serveVOList = serveListVO.getServeVOList();
+        serveEsDataQryExe.supplyVehicleInsureRequirement(serveVOList);
         //车型聚合数据
         if (serveVOList != null) {
             List<ServePreselectedVO> servePreselectedVoList = new LinkedList<>();
@@ -62,6 +73,14 @@ public class ServePreselectedQryExe {
             servePreselectedListVO.setCustomerName(serveListVO.getCustomerName());
             servePreselectedListVO.setPage(serveListVO.getPage());
             servePreselectedListVO.setCustomerId(serveListVO.getCustomerId());
+
+            for (ServePreselectedVO servePreselectedVO : servePreselectedVoList) {
+                List<ServeVO> preServeVOList = servePreselectedVO.getServeVOList();
+                if (!preServeVOList.isEmpty() && null != preServeVOList.get(0)) {
+                    ServeVO serveVO = preServeVOList.get(0);
+                    servePreselectedVO.setVehicleInsureRequirement(serveVO.getVehicleInsureRequirement());
+                }
+            }
         }
 
         return servePreselectedListVO;

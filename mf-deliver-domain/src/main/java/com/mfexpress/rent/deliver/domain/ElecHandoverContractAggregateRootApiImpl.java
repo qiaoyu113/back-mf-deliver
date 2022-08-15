@@ -13,14 +13,8 @@ import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
-import com.mfexpress.component.starter.tools.redis.RedisTools;
-import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.ElecHandoverContractStatus;
-import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.CancelContractCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ConfirmFailCmd;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
@@ -32,10 +26,10 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecDocDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.po.ElectronicHandoverContractPO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.po.ElectronicHandoverDocPO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.qry.ContractListQry;
-import com.mfexpress.rent.deliver.entity.ElecHandoverContract;
+import com.mfexpress.rent.deliver.entity.ElecHandoverContractEntity;
+import com.mfexpress.rent.deliver.entity.api.ElecHandoverContractEntityApi;
 import com.mfexpress.rent.deliver.gateway.ElecHandoverContractGateway;
 import com.mfexpress.rent.deliver.gateway.ElecHandoverDocGateway;
-import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -65,43 +59,17 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
     private ElecHandoverDocGateway docGateway;
 
     @Resource
-    private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
-
-    @Resource
-    private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
-
-    @Resource
     private BeanFactory beanFactory;
 
     @Resource
-    private RedisTools redisTools;
-
-    @Resource
-    private ServeAggregateRootApi serveAggregateRootApi;
-
-    @Resource(name = "serveSyncServiceImpl")
-    private EsSyncHandlerI serveSyncServiceI;
-
+    private ElecHandoverContractEntityApi elecHandoverContractEntityApi;
 
     @Override
     @PostMapping("/createDeliverContract")
     @Transactional(rollbackFor = Exception.class)
     @PrintParam
     public Result<ContractIdWithDocIds> createDeliverContract(@RequestBody @Validated CreateDeliverContractCmd cmd) {
-        ElecHandoverContract elecHandoverContract = beanFactory.getBean(ElecHandoverContract.class);
-        elecHandoverContract.init(cmd);
-        elecHandoverContract.createCheck();
-        // 从实体中得到将要持久化的合同对象
-        ElectronicHandoverContractPO contractPO = elecHandoverContract.getContractPO();
-        // 从实体中得到将要持久化的交接单对象
-        List<ElectronicHandoverDocPO> docPOS = elecHandoverContract.getDocPOS();
-        contractGateway.create(contractPO);
-        Map<String, String> deliverNoWithDocId = docGateway.batchCreate(docPOS);
-
-        ContractIdWithDocIds contractIdWithDocIds = new ContractIdWithDocIds();
-        contractIdWithDocIds.setContractId(contractPO.getContractId());
-        contractIdWithDocIds.setDeliverNoWithDocId(deliverNoWithDocId);
-        return Result.getInstance(contractIdWithDocIds).success();
+        return Result.getInstance(elecHandoverContractEntityApi.createDeliverContract(cmd)).success();
     }
 
     @Override
@@ -109,31 +77,14 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
     @Transactional(rollbackFor = Exception.class)
     @PrintParam
     public Result<ContractIdWithDocIds> createRecoverContract(@RequestBody @Validated CreateRecoverContractCmd cmd) {
-        ElecHandoverContract elecHandoverContract = beanFactory.getBean(ElecHandoverContract.class);
-        elecHandoverContract.init(cmd);
-        elecHandoverContract.createCheck();
-        // 从实体中得到将要持久化的合同对象
-        ElectronicHandoverContractPO contractPO = elecHandoverContract.getContractPO();
-        // 从实体中得到将要持久化的交接单对象
-        List<ElectronicHandoverDocPO> docPOS = elecHandoverContract.getDocPOS();
-        contractGateway.create(contractPO);
-        Map<String, String> deliverNoWithDocId = docGateway.batchCreate(docPOS);
-
-        ContractIdWithDocIds contractIdWithDocIds = new ContractIdWithDocIds();
-        contractIdWithDocIds.setContractId(contractPO.getContractId());
-        contractIdWithDocIds.setDeliverNoWithDocId(deliverNoWithDocId);
-        return Result.getInstance(contractIdWithDocIds).success();
+        return Result.getInstance(elecHandoverContractEntityApi.createRecoverContract(cmd)).success();
     }
 
     @Override
     @PostMapping("/cancelContract")
     @PrintParam
     public Result<Integer> cancelContract(@RequestBody @Validated CancelContractCmd cmd) {
-        ElecHandoverContract elecHandoverContract = beanFactory.getBean(ElecHandoverContract.class);
-        elecHandoverContract.init(cmd);
-        elecHandoverContract.cancelCheck();
-        elecHandoverContract.cancel();
-        return Result.getInstance(0).success();
+        return Result.getInstance(elecHandoverContractEntityApi.cancelContract(cmd)).success();
     }
 
     // 来自契约锁的回调，合同创建中状态补充外部合同编号
@@ -141,11 +92,7 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
     @PostMapping("/completionContractForeignNo")
     @PrintParam
     public Result<Integer> completionContractForeignNo(@RequestBody @Validated ContractStatusChangeCmd cmd) {
-        ElecHandoverContract elecHandoverContract = beanFactory.getBean(ElecHandoverContract.class);
-        elecHandoverContract.init(cmd, null);
-        // check 先不加
-        elecHandoverContract.completionContractForeignNo();
-        return Result.getInstance(0).success();
+        return Result.getInstance(elecHandoverContractEntityApi.completionContractForeignNo(cmd)).success();
     }
 
     // 来自契约锁的回调，合同创建成功
@@ -154,15 +101,7 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
     @PrintParam
     @Transactional(rollbackFor = Exception.class)
     public Result<Integer> signing(@RequestBody @Validated ContractStatusChangeCmd cmd) {
-        ElecHandoverContract elecHandoverContract = beanFactory.getBean(ElecHandoverContract.class);
-        elecHandoverContract.init(cmd, ElecHandoverContractStatus.SIGNING.getCode());
-        elecHandoverContract.signingCheck();
-        elecHandoverContract.signing();
-        // redis存储该合同可发短信的倒计时
-        String key = DeliverUtils.concatCacheKey(Constants.ELEC_CONTRACT_LAST_TIME_SEND_SMS_KEY, cmd.getContractId().toString());
-        // 存活时间60s,时间单位是seconds
-        redisTools.set(key, System.currentTimeMillis(), 60L);
-        return Result.getInstance(0).success();
+        return Result.getInstance(elecHandoverContractEntityApi.signing(cmd)).success();
     }
 
     // 来自契约锁的回调，合同签署成功
@@ -171,12 +110,7 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
     @PrintParam
     @Transactional(rollbackFor = Exception.class)
     public Result<Integer> completed(@RequestBody @Validated ContractStatusChangeCmd cmd) {
-        ElecHandoverContract elecHandoverContract = beanFactory.getBean(ElecHandoverContract.class);
-        elecHandoverContract.init(cmd, ElecHandoverContractStatus.COMPLETED.getCode());
-        elecHandoverContract.completedCheck();
-        elecHandoverContract.completed();
-        elecHandoverContract.supplementDocPdfUrl(cmd.getDocPdfUrlMap());
-        return Result.getInstance(0).success();
+        return Result.getInstance(elecHandoverContractEntityApi.completed(cmd)).success();
     }
 
     @Override
@@ -184,22 +118,14 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
     @PrintParam
     @Transactional(rollbackFor = Exception.class)
     public Result<Integer> fail(@RequestBody @Validated ContractStatusChangeCmd cmd) {
-        ElecHandoverContract elecHandoverContract = beanFactory.getBean(ElecHandoverContract.class);
-        elecHandoverContract.init(cmd, ElecHandoverContractStatus.FAIL.getCode());
-        elecHandoverContract.failCheck();
-        elecHandoverContract.fail();
-        return Result.getInstance(0).success();
+        return Result.getInstance(elecHandoverContractEntityApi.fail(cmd)).success();
     }
 
     @Override
     @PostMapping("/confirmFailContract")
     @PrintParam
     public Result<Integer> confirmFailContract(@RequestBody @Validated ConfirmFailCmd cmd) {
-        ElecHandoverContract elecHandoverContract = beanFactory.getBean(ElecHandoverContract.class);
-        elecHandoverContract.init(cmd);
-        elecHandoverContract.confirmFailContractCheck();
-        elecHandoverContract.confirmFailContract();
-        return Result.getInstance(0).success();
+        return Result.getInstance(elecHandoverContractEntityApi.confirmFailContract(cmd)).success();
     }
 
     @Override
@@ -272,33 +198,7 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
     @PostMapping("/incrSendSmsCount")
     @PrintParam
     public Result<Integer> incrSendSmsCount(@RequestParam("contractId") Long contractId) {
-        ElectronicHandoverContractPO contractPO = contractGateway.getContractByContractId(contractId);
-        if (null == contractPO) {
-            return Result.getInstance((Integer) null).fail(ResultErrorEnum.OPER_ERROR.getCode(), "电子交接单不存在");
-        }
-
-        ElectronicHandoverContractPO contractPOToUpdate = new ElectronicHandoverContractPO();
-        contractPOToUpdate.setContractId(contractPO.getContractId());
-        contractPOToUpdate.setSendSmsDate(FormatUtil.ymdHmsFormatDateToString(new Date()));
-        if (ElecHandoverContractStatus.SIGNING.getCode() == contractPO.getStatus()) {
-            if(StringUtils.isEmpty(contractPO.getSendSmsDate())){
-                contractPOToUpdate.setSendSmsCount(1);
-            }else{
-                String sendSmsDate = contractPO.getSendSmsDate().substring(0, 10);
-                String nowYmd = FormatUtil.ymdFormatDateToString(new Date());
-                if (nowYmd.equals(sendSmsDate)) {
-                    // 如果是今天，发送短信次数加1
-                    contractPOToUpdate.setSendSmsCount(contractPO.getSendSmsCount() + 1);
-                } else {
-                    // 如果不是今天，发送短信次数设为1，并将日期改为今天
-                    contractPOToUpdate.setSendSmsCount(1);
-                }
-            }
-            contractPOToUpdate.setSendSmsDate(FormatUtil.ymdHmsFormatDateToString(new Date()));
-            contractGateway.updateContractByContractId(contractPOToUpdate);
-        }
-
-        return Result.getInstance(0).success();
+        return Result.getInstance(elecHandoverContractEntityApi.incrSendSmsCount(contractId)).success();
     }
 
     @Override
@@ -376,13 +276,7 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
     @Transactional(rollbackFor = Exception.class)
     @PrintParam
     public Result<Integer> autoCompleted(@RequestBody @Validated ContractStatusChangeCmd cmd) {
-
-
-        ElecHandoverContract elecHandoverContract = beanFactory.getBean(ElecHandoverContract.class);
-        elecHandoverContract.init(cmd, ElecHandoverContractStatus.COMPLETED.getCode());
-        // 先不加check
-        elecHandoverContract.autoCompleted();
-
-        return Result.getInstance(0).success();
+        return Result.getInstance(elecHandoverContractEntityApi.autoCompleted(cmd)).success();
     }
+
 }

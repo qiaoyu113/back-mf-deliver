@@ -102,7 +102,7 @@ public class RenewableServeListQryExe {
         }
         if (null != qry.getLeaseMode() && !qry.getLeaseMode().isEmpty()) {
             // 如果前端只传leaseModel为3（展示），进行限制查询，其他的不限制
-            if(qry.getLeaseMode().size() == 1 && qry.getLeaseMode().get(0).equals(3)){
+            if (qry.getLeaseMode().size() == 1 && qry.getLeaseMode().get(0).equals(3)) {
                 boolQueryBuilder.must(QueryBuilders.termsQuery("leaseModelId", qry.getLeaseMode()));
             }
         }

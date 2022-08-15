@@ -74,4 +74,14 @@ public class DeliverDTO {
 
     private Integer recoverAbnormalFlag;
 
+    private String surrenderBatchAcceptCode;
+
+    private String surrenderApplyId;
+
+    private String surrenderApplyCode;
+
+    private String compulsoryPolicyId;
+
+    private String commercialPolicyId;
+
 }

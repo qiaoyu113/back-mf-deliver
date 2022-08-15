@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.dto.data.recovervehicle;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.mfexpress.rent.deliver.dto.data.BaseCmd;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -11,7 +12,7 @@ import java.util.List;
 
 @Data
 @ApiModel("退保")
-public class RecoverBackInsureCmd {
+public class RecoverBackInsureCmd extends BaseCmd {
 
     @ApiModelProperty(value = "服务编号")
     private List<String> serveNoList;

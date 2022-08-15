@@ -1,8 +1,6 @@
 package com.mfexpress.rent.deliver.deliver.executor;
 
 
-import cn.hutool.core.date.DateTime;
-import cn.hutool.core.date.DateUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
@@ -10,7 +8,7 @@ import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
+import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
@@ -19,11 +17,11 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverPreselectedCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleSelectCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCheckCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.serve.executor.ReactiveServeCheckCmdExe;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.VehicleInsuranceAggregateRootApi;
+import com.mfexpress.rent.vehicle.constant.PolicyStatusEnum;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInfoDto;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
@@ -78,13 +76,22 @@ public class DeliverToPreselectedExe {
             if (deliverResult.getData() != null) {
                 continue;
             }
+            Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(serveNoList.get(i));
+            ServeDTO serveDTO = ResultDataUtils.getInstance(serveDTOResult).getDataOrException();
+            if (null == serveDTO) {
+                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单查询失败");
+            }
+
             DeliverVehicleSelectCmd deliverVehicleSelectCmd = deliverVehicleSelectCmdList.get(i);
             Result<VehicleInfoDto> vehicleResult = vehicleAggregateRootApi.getVehicleInfoVOById(deliverVehicleSelectCmd.getId());
             if (vehicleResult.getCode() != 0 || vehicleResult.getData() == null) {
                 throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), vehicleResult.getMsg());
             }
             VehicleInfoDto vehicleInfoDto = vehicleResult.getData();
-            if (JudgeEnum.YES.getCode().equals(vehicleInfoDto.getInsuranceStatus())) {
+            if ((PolicyStatusEnum.EFFECT.getCode() == vehicleInfoDto.getCompulsoryInsuranceStatus() && PolicyStatusEnum.EFFECT.getCode() == vehicleInfoDto.getCommercialInsuranceStatus()) ||
+                    PolicyStatusEnum.EFFECT.getCode() == vehicleInfoDto.getCompulsoryInsuranceStatus() && LeaseModelEnum.SHOW.getCode() == serveDTO.getLeaseModelId()) {
+                // 车辆保险状态都是有效，设isInsurance为true
+                // 如果服务单租赁方式为展示，需要额外的判断逻辑，如果车辆的交强险有效，设isInsurance为true
                 deliverDTO.setIsInsurance(JudgeEnum.YES.getCode());
                 Result<VehicleInsuranceDto> vehicleInsuranceDtoResult = vehicleInsuranceAggregateRootApi.getVehicleInsuranceById(deliverVehicleSelectCmd.getId());
                 if (null != vehicleInsuranceDtoResult.getData()) {
@@ -101,6 +108,8 @@ public class DeliverToPreselectedExe {
             deliverDTO.setVehicleAge(deliverVehicleSelectCmd.getVehicleAge());
             deliverDTO.setCustomerId(deliverPreselectedCmd.getCustomerId());
             deliverDTO.setCarServiceId(deliverPreselectedCmd.getCarServiceId());
+            deliverDTO.setCompulsoryPolicyId(deliverVehicleSelectCmd.getCompulsoryPolicyId());
+            deliverDTO.setCommercialPolicyId(deliverVehicleSelectCmd.getCommercialPolicyId());
             deliverList.add(deliverDTO);
             carIdList.add(deliverVehicleSelectCmd.getId());
 

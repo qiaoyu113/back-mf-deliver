@@ -15,7 +15,6 @@ import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
-import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleVO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecDocDTO;
@@ -33,9 +32,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -129,7 +126,7 @@ public class ServeRecoverDetailQryExe {
                 serveRecoverDetailVO.setRecoverAbnormalFlag(RecoverVehicleType.ABNORMAL.getCode());
                 serveRecoverDetailVO.getRecoverVehicleVO().setRecoverTypeDisplay(RecoverVehicleType.ABNORMAL.getName());
             }
-            if(DeliverContractStatusEnum.NOSIGN.getCode() == deliverDTO.getRecoverContractStatus() && RecoverVehicleType.NORMAL.getCode() == deliverDTO.getRecoverAbnormalFlag()){
+            if (DeliverContractStatusEnum.NOSIGN.getCode() == deliverDTO.getRecoverContractStatus() && RecoverVehicleType.NORMAL.getCode() == deliverDTO.getRecoverAbnormalFlag()) {
                 // 历史数据为正常收车
                 serveRecoverDetailVO.getRecoverVehicleVO().setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
             }
@@ -155,7 +152,7 @@ public class ServeRecoverDetailQryExe {
                 serveRecoverDetailVO.setRecoverAbnormalFlag(RecoverVehicleType.ABNORMAL.getCode());
                 serveRecoverDetailVO.getRecoverVehicleVO().setRecoverTypeDisplay(RecoverVehicleType.ABNORMAL.getName());
             }
-            if(DeliverContractStatusEnum.NOSIGN.getCode() == deliverDTO.getRecoverContractStatus() && RecoverVehicleType.NORMAL.getCode() == deliverDTO.getRecoverAbnormalFlag()){
+            if (DeliverContractStatusEnum.NOSIGN.getCode() == deliverDTO.getRecoverContractStatus() && RecoverVehicleType.NORMAL.getCode() == deliverDTO.getRecoverAbnormalFlag()) {
                 // 历史数据为正常收车
                 serveRecoverDetailVO.getRecoverVehicleVO().setRecoverTypeDisplay(RecoverVehicleType.NORMAL.getName());
             }
@@ -170,7 +167,7 @@ public class ServeRecoverDetailQryExe {
     private ElecHandoverDocVO getElecHandoverDocVO(DeliverDTO deliverDTO) {
         Result<ElecDocDTO> docDTOResult = contractAggregateRootApi.getDocDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.RECOVER.getCode());
         ElecDocDTO docDTO = ResultDataUtils.getInstance(docDTOResult).getDataOrException();
-        if(null == docDTO){
+        if (null == docDTO) {
             return null;
         }
         ElecHandoverDocVO elecHandoverDocVO = new ElecHandoverDocVO();
@@ -182,7 +179,7 @@ public class ServeRecoverDetailQryExe {
     private RecoverVehicleVO getRecoverVehicleVOFromContract(DeliverDTO deliverDTO) {
         Result<ElecContractDTO> contractDTOSResult = contractAggregateRootApi.getContractDTOByDeliverNoAndDeliverType(deliverDTO.getDeliverNo(), DeliverTypeEnum.RECOVER.getCode());
         ElecContractDTO contractDTO = ResultDataUtils.getInstance(contractDTOSResult).getDataOrException();
-        if(null == contractDTO){
+        if (null == contractDTO) {
             throw new CommonException(400005, "电子交接单查询失败");
         }
 

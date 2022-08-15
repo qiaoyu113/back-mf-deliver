@@ -36,8 +36,8 @@ public class ServeDeliverQryExe {
         List<FieldSortBuilder> fieldSortBuilderList = new LinkedList<>();
         FieldSortBuilder updateTimeSortBuilders = SortBuilders.fieldSort("updateTime").unmappedType("integer").order(SortOrder.DESC);
         fieldSortBuilderList.add(updateTimeSortBuilders);
-        return serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilderList);
-
-
+        ServeListVO serveListVO = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilderList);
+        serveEsDataQryExe.supplyVehicleInsureRequirement(serveListVO.getServeVOList());
+        return serveListVO;
     }
 }
