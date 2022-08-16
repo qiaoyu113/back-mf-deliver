@@ -76,4 +76,14 @@ public class DeliverDTO {
 
     private Integer vehicleBusinessMode;
 
+    private String surrenderBatchAcceptCode;
+
+    private String surrenderApplyId;
+
+    private String surrenderApplyCode;
+
+    private String compulsoryPolicyId;
+
+    private String commercialPolicyId;
+
 }

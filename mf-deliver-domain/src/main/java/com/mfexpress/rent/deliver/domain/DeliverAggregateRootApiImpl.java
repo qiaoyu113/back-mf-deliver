@@ -17,10 +17,10 @@ import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
-import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.deliver.*;
-import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
-import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCompletedCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.*;
+import com.mfexpress.rent.deliver.dto.data.deliver.dto.DeliverInsureApplyDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
@@ -28,16 +28,13 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.entity.DeliverEntity;
 import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
-import com.mfexpress.rent.deliver.entity.ServeEntity;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
+import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.gateway.RecoverVehicleGateway;
-import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
-import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
-import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
 import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +62,9 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Resource
     private DeliverEntityApi deliverEntityApi;
+
+    @Resource
+    private ServeEntityApi serveEntityApi;
 
     @Resource
     private RecoverVehicleGateway recoverVehicleGateway;
@@ -97,6 +97,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @Override
     @PostMapping("/addDeliver")
     @PrintParam
+    @Transactional(rollbackFor = Exception.class)
     public Result<String> addDeliver(@RequestBody List<DeliverDTO> list) {
         List<DeliverEntity> deliverList = list.stream().map(deliverDTO -> {
             long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_DELIVER_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
@@ -104,13 +105,17 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
             BeanUtil.copyProperties(deliverDTO, deliver);
             Long bizId = redisTools.getBizId(Constants.REDIS_BIZ_ID_DELIVER);
             deliver.setDeliverId(bizId);
-            deliver.setDeliverNo(DeliverUtils.getNo(Constants.REDIS_DELIVER_KEY, incr));
+            String deliverNo = DeliverUtils.getNo(Constants.REDIS_DELIVER_KEY, incr);
+            deliver.setDeliverNo(deliverNo);
+            deliverDTO.setDeliverNo(deliverNo);
             if (null != deliverDTO.getInsuranceStartTime()) {
                 deliver.setInsuranceStartTime(DeliverUtils.dateToStringYyyyMMddHHmmss(deliverDTO.getInsuranceStartTime()));
             }
             return deliver;
         }).collect(Collectors.toList());
         int i = deliverGateway.addDeliver(deliverList);
+
+        deliverEntityApi.preSelectedSupplyInsurance(list);
         return i > 0 ? Result.getInstance("预选成功").success() : Result.getInstance("预选失败").fail(-1, "预选失败");
 
     }
@@ -628,4 +633,64 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
         return Result.getInstance(0).success();
     }
+
+    @Override
+    @PrintParam
+    @PostMapping(value = "/insureByCompany")
+    public Result<Integer> insureByCompany(@RequestBody @Validated DeliverInsureCmd cmd) {
+        return Result.getInstance(deliverEntityApi.insureByCompany(cmd)).success();
+    }
+
+    @Override
+    @PrintParam
+    @PostMapping(value = "/insureByCustomer")
+    public Result<Integer> insureByCustomer(@RequestBody @Validated DeliverInsureByCustomerCmd cmd) {
+        return Result.getInstance(deliverEntityApi.insureByCustomer(cmd)).success();
+    }
+
+    @Override
+    @PrintParam
+    @PostMapping(value = "/insureComplete")
+    public Result<Integer> insureComplete(InsureCompleteCmd cmd) {
+        return Result.getInstance(deliverEntityApi.insureComplete(cmd)).success();
+    }
+
+    @Override
+    @PrintParam
+    @PostMapping(value = "/getInsuranceApplyListByDeliverNoList")
+    public Result<List<InsuranceApplyDTO>> getInsuranceApplyListByDeliverNoList(@RequestBody List<String> deliverNoList) {
+        return Result.getInstance(deliverEntityApi.getInsuranceApplyListByDeliverNoList(deliverNoList)).success();
+    }
+
+    @Override
+    @PrintParam
+    @PostMapping(value = "/cancelSelectedByDeliver")
+    @Transactional(rollbackFor = Exception.class)
+    public Result<Integer> cancelSelectedByDeliver(@RequestBody CancelPreSelectedCmd cmd) {
+        deliverEntityApi.cancelSelectedByDeliver(cmd);
+        serveEntityApi.cancelSelected(cmd);
+        return Result.getInstance(0).success();
+    }
+
+    @Override
+    @PrintParam
+    @PostMapping(value = "/backInsure")
+    public Result<Integer> backInsure(@RequestBody @Validated RecoverBackInsureByDeliverCmd cmd) {
+        return Result.getInstance(deliverEntityApi.backInsure(cmd)).success();
+    }
+
+    @Override
+    @PrintParam
+    @PostMapping(value = "/getInsuranceApply")
+    public Result<InsuranceApplyDTO> getInsuranceApply(@RequestBody @Validated InsureApplyQry qry) {
+        return Result.getInstance(deliverEntityApi.getInsuranceApply(qry)).success();
+    }
+
+    @Override
+    @PrintParam
+    @PostMapping(value = "/getDeliverDTOListByDeliverNoList")
+    public Result<List<DeliverDTO>> getDeliverDTOListByDeliverNoList(List<String> deliverNoList) {
+        return Result.getInstance(deliverEntityApi.getDeliverDTOListByDeliverNoList(deliverNoList)).success();
+    }
+
 }

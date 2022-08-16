@@ -92,6 +92,17 @@ public class ServeVO {
 
     @ApiModelProperty(value = "车辆运营模式描述")
     private String vehicleBusinessModeDisplay;
+    @ApiModelProperty(value = "操作按钮显示，目前只会出现在发车待投保列表中，1：显示投保申请按钮，2：显示录入保单信息按钮")
+    private Integer operationButton;
+
+    @ApiModelProperty(value = "是否发起了投保标志位，1：真，0：假")
+    private Integer insureApplyFlag;
+
+    @ApiModelProperty(value = "预选车辆时所要求的车辆保险状态，1：不限制，2：只能选择交强险在保，而商业险不在保的车辆")
+    private Integer vehicleInsureRequirement;
+
+    @ApiModelProperty(value = "合同商品id")
+    private Integer contractCommodityId;
 
 }
 

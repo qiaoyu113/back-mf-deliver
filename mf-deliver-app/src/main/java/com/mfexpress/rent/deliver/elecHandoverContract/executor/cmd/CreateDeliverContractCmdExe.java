@@ -53,7 +53,9 @@ import com.mfexpress.rent.deliver.utils.CommonUtil;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.VehicleValidationAggregateRootApi;
+import com.mfexpress.rent.vehicle.constant.PolicyStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInfoDto;
+import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInsuranceDTO;
 import com.mfexpress.rent.vehicle.data.dto.vehiclevalidation.VehicleValidationFullInfoDTO;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.entity.Customer;
@@ -127,6 +129,9 @@ public class CreateDeliverContractCmdExe {
         initDictData();
 
         List<DeliverImgInfo> deliverImgInfos = cmd.getDeliverImgInfos();
+
+        // 校验车辆的保险状态是否在有效状态
+        checkVehicleInsurance(deliverImgInfos);
         // 获取数据的orgId
         List<String> serveNos = deliverImgInfos.stream().map(DeliverImgInfo::getServeNo).collect(Collectors.toList());
         // 重新激活的服务单在进行发车操作时需要的校验
@@ -221,6 +226,29 @@ public class CreateDeliverContractCmdExe {
         }
 
         return contractIdWithDocIds.getContractId().toString();
+    }
+
+    private void checkVehicleInsurance(List<DeliverImgInfo> deliverImgInfos) {
+        List<Integer> vehicleIds = deliverImgInfos.stream().map(DeliverImgInfo::getCarId).collect(Collectors.toList());
+        Result<List<VehicleInsuranceDTO>> vehicleInsuranceDTOSResult = vehicleAggregateRootApi.getVehicleInsuranceByVehicleIds(vehicleIds);
+        List<VehicleInsuranceDTO> vehicleInsuranceDTOS = ResultDataUtils.getInstance(vehicleInsuranceDTOSResult).getDataOrException();
+        if (null == vehicleInsuranceDTOS || vehicleInsuranceDTOS.isEmpty() || vehicleIds.size() != vehicleInsuranceDTOS.size()) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆保险信息查询失败");
+        }
+        Map<Integer, VehicleInsuranceDTO> insuranceDTOMap = vehicleInsuranceDTOS.stream().collect(Collectors.toMap(VehicleInsuranceDTO::getVehicleId, Function.identity(), (v1, v2) -> v1));
+
+        deliverImgInfos.forEach(deliverImgInfo -> {
+            VehicleInsuranceDTO vehicleInsuranceDTO = insuranceDTOMap.get(deliverImgInfo.getCarId());
+            if (null == vehicleInsuranceDTO) {
+                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆保险信息查询失败");
+            }
+            if (PolicyStatusEnum.EXPIRED.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) {
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "车辆".concat(deliverImgInfo.getCarNum()).concat("的交强险不在在保状态，请重新确认"));
+            }
+            if (PolicyStatusEnum.EXPIRED.getCode() == vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "车辆".concat(deliverImgInfo.getCarNum()).concat("的商业险不在在保状态，请重新确认"));
+            }
+        });
     }
 
     // 调用契约锁域创建合同
@@ -360,7 +388,7 @@ public class CreateDeliverContractCmdExe {
     }
 
     private void checkDate(CreateDeliverContractCmd cmd) {
-        if (DateUtil.between(DateUtil.parseDate(DateUtil.format(cmd.getDeliverInfo().getDeliverVehicleTime(),"yyyy-MM-dd")), DateUtil.parseDate(DateUtil.now()), DateUnit.DAY) > 6) {
+        if (DateUtil.between(DateUtil.parseDate(DateUtil.format(cmd.getDeliverInfo().getDeliverVehicleTime(), "yyyy-MM-dd")), DateUtil.parseDate(DateUtil.now()), DateUnit.DAY) > 6) {
             log.info("发车日期超出可选范围  参数:{}", cmd);
             throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "发车日期超出可选范围");
         }
@@ -371,11 +399,11 @@ public class CreateDeliverContractCmdExe {
         }
 
         Result<List<DeliverDTO>> deliverDTOSResult = deliverAggregateRootApi.getDeliverDTOSByCarIdList(vehicleId);
-        log.info("发车验车 查询deliver 参数:{},结果:{}",vehicleId,deliverDTOSResult);
+        log.info("发车验车 查询deliver 参数:{},结果:{}", vehicleId, deliverDTOSResult);
         if (CollectionUtil.isNotEmpty(deliverDTOSResult.getData())) {
             List<String> deliverNo = deliverDTOSResult.getData().stream().map(DeliverDTO::getDeliverNo).distinct().collect(Collectors.toList());
             Result<List<RecoverVehicleDTO>> recoverVehicleDtosResult = recoverVehicleAggregateRootApi.getRecoverVehicleDTOByDeliverNos(deliverNo);
-            log.info("发车验车 查询发车单 参数:{},结果:{}",deliverNo,recoverVehicleDtosResult);
+            log.info("发车验车 查询发车单 参数:{},结果:{}", deliverNo, recoverVehicleDtosResult);
             if (CollectionUtil.isNotEmpty(recoverVehicleDtosResult.getData())) {
 //                List<RecoverVehicleDTO> recoverVehicleDTOS = recoverVehicleDtosResult.getData().stream().sorted(Comparator.comparing(RecoverVehicleDTO::getRecoverVehicleTime).reversed()).collect(Collectors.toList());
                 if (cmd.getDeliverInfo().getDeliverVehicleTime().before(recoverVehicleDtosResult.getData().get(0).getRecoverVehicleTime())) {
