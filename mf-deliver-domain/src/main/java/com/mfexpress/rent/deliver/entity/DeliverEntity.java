@@ -200,7 +200,7 @@ public class DeliverEntity implements DeliverEntityApi {
             InsuranceApplyPO insuranceApplyPO = new InsuranceApplyPO();
             insuranceApplyPO.setDeliverNo(deliverInsureApplyDTO.getDeliverNo());
             insuranceApplyPO.setType(InsuranceApplyTypeEnum.INSURE.getCode());
-            if (!StringUtils.isEmpty(deliverInsureApplyDTO.getCompulsoryInsurancePolicyNo())) {
+            /*if (!StringUtils.isEmpty(deliverInsureApplyDTO.getCompulsoryInsurancePolicyNo())) {
                 insuranceApplyPO.setCompulsoryPolicyNo(deliverInsureApplyDTO.getCompulsoryInsurancePolicyNo());
                 insuranceApplyPO.setCompulsoryPolicySource(PolicySourceEnum.EXISTS.getCode());
             } else {
@@ -216,7 +216,15 @@ public class DeliverEntity implements DeliverEntityApi {
                 insuranceApplyPO.setCommercialBatchAcceptCode(deliverBatchInsureApplyDTO.getCommercialBatchAcceptCode());
                 insuranceApplyPO.setCommercialApplyId(deliverInsureApplyDTO.getCommercialApplyId());
                 insuranceApplyPO.setCommercialApplyCode(deliverInsureApplyDTO.getCommercialApplyCode());
-            }
+            }*/
+
+            insuranceApplyPO.setCompulsoryBatchAcceptCode(deliverBatchInsureApplyDTO.getCompulsoryBatchAcceptCode());
+            insuranceApplyPO.setCompulsoryApplyId(deliverInsureApplyDTO.getCompulsoryApplyId());
+            insuranceApplyPO.setCompulsoryApplyCode(deliverInsureApplyDTO.getCompulsoryApplyCode());
+
+            insuranceApplyPO.setCommercialBatchAcceptCode(deliverBatchInsureApplyDTO.getCommercialBatchAcceptCode());
+            insuranceApplyPO.setCommercialApplyId(deliverInsureApplyDTO.getCommercialApplyId());
+            insuranceApplyPO.setCommercialApplyCode(deliverInsureApplyDTO.getCommercialApplyCode());
 
             insuranceApplyPO.setCreatorId(cmd.getOperatorId());
             return insuranceApplyPO;
@@ -229,14 +237,9 @@ public class DeliverEntity implements DeliverEntityApi {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Integer insureByCustomer(DeliverInsureByCustomerCmd cmd) {
-        InsuranceApplyPO applyPO = insuranceApplyGateway.getByDeliverNoAndType(cmd.getDeliverNo(), InsuranceApplyTypeEnum.INSURE.getCode());
-        // 由于业务限制，applyPO是必有的
-        if (null == applyPO) {
-            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "数据异常");
-        }
-        if (!StringUtils.isEmpty(applyPO.getCommercialPolicyId())) {
+        /*if (!StringUtils.isEmpty(applyPO.getCommercialPolicyId())) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "商业险保单已存在");
-        }
+        }*/
 
         DeliverEntity deliverEntityToUpdate = new DeliverEntity();
         deliverEntityToUpdate.setDeliverNo(cmd.getDeliverNo());
@@ -244,16 +247,21 @@ public class DeliverEntity implements DeliverEntityApi {
         deliverEntityToUpdate.setUpdateId(cmd.getOperatorId());
         deliverGateway.updateDeliverByDeliverNo(cmd.getDeliverNo(), deliverEntityToUpdate);
 
-        // 补充保单号
+        InsuranceApplyPO originalApplyPO = insuranceApplyGateway.getByDeliverNoAndType(cmd.getDeliverNo(), InsuranceApplyTypeEnum.INSURE.getCode());
         InsuranceApplyPO applyPOToUpdate = new InsuranceApplyPO();
-        applyPOToUpdate.setId(applyPO.getId());
-        applyPOToUpdate.setDeliverNo(cmd.getDeliverNo());
-        applyPOToUpdate.setType(InsuranceApplyTypeEnum.INSURE.getCode());
+        // 补充保单号
         applyPOToUpdate.setCommercialPolicyId(cmd.getCommercialPolicyId());
         applyPOToUpdate.setCommercialPolicyNo(cmd.getPolicyNo());
         applyPOToUpdate.setCommercialPolicySource(PolicySourceEnum.CUSTOMER.getCode());
         applyPOToUpdate.setUpdaterId(cmd.getOperatorId());
-        insuranceApplyGateway.update(applyPOToUpdate);
+        if (null != originalApplyPO) {
+            applyPOToUpdate.setId(originalApplyPO.getId());
+            insuranceApplyGateway.update(applyPOToUpdate);
+        } else {
+            applyPOToUpdate.setDeliverNo(cmd.getDeliverNo());
+            applyPOToUpdate.setType(InsuranceApplyTypeEnum.INSURE.getCode());
+            insuranceApplyGateway.create(applyPOToUpdate);
+        }
 
         return 0;
     }

@@ -1,6 +1,5 @@
 package com.mfexpress.rent.deliver.deliver.executor;
 
-import cn.hutool.json.JSONNull;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
@@ -145,7 +144,7 @@ public class InsureByCompanyCmdExe {
         cmd.setOperatorId(tokenInfo.getId());
 
         // 查询车辆的保险状态，如果在有效状态，取其保单号
-        VehicleDto vehicleDto = new VehicleDto();
+        /*VehicleDto vehicleDto = new VehicleDto();
         for (DeliverInsureApplyDTO deliverInsureApplyDTO : deliverInsureApplyDTOS) {
             if (JudgeEnum.YES.getCode().equals(vehicleDto.getCompulsoryInsuranceStatus())) {
                 deliverInsureApplyDTO.setCompulsoryInsurancePolicyNo(vehicleDto.getCompulsoryInsuranceNo());
@@ -153,7 +152,7 @@ public class InsureByCompanyCmdExe {
             if (JudgeEnum.YES.getCode().equals(vehicleDto.getCommercialInsuranceStatus())) {
                 deliverInsureApplyDTO.setCommercialInsurancePolicyNo(vehicleDto.getCommercialInsuranceNo());
             }
-        }
+        }*/
 
         // 投保申请操作成功，修改交付单的投保状态并补充申请编号
         Result<Integer> insureResult = deliverAggregateRootApi.insureByCompany(cmd);

@@ -23,9 +23,11 @@ public class InsuranceApplyGatewayImpl implements InsuranceApplyGateway {
         for (InsuranceApplyPO insuranceApplyPO : insuranceApplyPOS) {
             InsuranceApplyPO originalApplyPO = getByDeliverNoAndType(insuranceApplyPO.getDeliverNo(), insuranceApplyPO.getType());
             if (null != originalApplyPO) {
-                del(originalApplyPO.getId());
+                insuranceApplyPO.setId(originalApplyPO.getId());
+                update(insuranceApplyPO);
+            }else{
+                insuranceApplyMapper.insertSelective(insuranceApplyPO);
             }
-            insuranceApplyMapper.insertSelective(insuranceApplyPO);
         }
     }
 
