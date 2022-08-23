@@ -14,9 +14,10 @@ import com.mfexpress.rent.deliver.dto.data.deliver.vo.InsuranceApplyRentVO;
 import com.mfexpress.rent.deliver.dto.data.deliver.vo.InsureApplyVO;
 import com.mfexpress.rent.deliver.util.ExternalRequestUtil;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -45,7 +46,13 @@ public class InsureApplyQryExe {
 
         // 根据申请id查询其状态
         ApplyByIdsQryCmd applyByIdsQryCmd = new ApplyByIdsQryCmd();
-        List<String> applyIds = Arrays.asList(insuranceApplyDTO.getCompulsoryApplyId(), insuranceApplyDTO.getCommercialApplyId());
+        List<String> applyIds = new ArrayList<>();
+        if (!StringUtils.isEmpty(insuranceApplyDTO.getCompulsoryApplyId())) {
+            applyIds.add(insuranceApplyDTO.getCompulsoryApplyId());
+        }
+        if (!StringUtils.isEmpty(insuranceApplyDTO.getCommercialApplyId())) {
+            applyIds.add(insuranceApplyDTO.getCommercialApplyId());
+        }
         applyByIdsQryCmd.setApplyIds(applyIds);
         Result<List<InsuranceApplyRentVO>> insuranceApplyInfoResult = externalRequestUtil.getInsuranceApplyInfo(applyByIdsQryCmd);
         List<InsuranceApplyRentVO> insureApplyRentVOS = ResultDataUtils.getInstance(insuranceApplyInfoResult).getDataOrException();

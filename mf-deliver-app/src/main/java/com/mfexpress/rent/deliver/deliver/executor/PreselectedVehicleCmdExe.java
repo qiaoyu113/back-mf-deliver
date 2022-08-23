@@ -6,9 +6,12 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
+import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverPreselectedCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleSelectCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.vo.TipVO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.PolicyStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInsuranceDTO;
@@ -29,6 +32,9 @@ public class PreselectedVehicleCmdExe {
 
     @Resource
     private DeliverToPreselectedExe deliverToPreselectedExe;
+
+    @Resource
+    private ServeAggregateRootApi serveAggregateRootApi;
 
     public TipVO execute(DeliverPreselectedCmd cmd, TokenInfo tokenInfo) {
         List<DeliverVehicleSelectCmd> deliverVehicleSelectCmdList = cmd.getDeliverVehicleSelectCmdList();
@@ -61,10 +67,16 @@ public class PreselectedVehicleCmdExe {
                     }
                 }
             } else if (2 == cmd.getVehicleInsureRequirement()) {
-                tipVO.setTipFlag(JudgeEnum.YES.getCode());
-                String costumerInsureTipMsg = "选择车辆里包含保险失效车辆，根据合同约定不包含商业险，请联系租户获取保单信息，完成信息回填。没有有效的保单信息无法发车！";
-                tipVO.setTipMsg(costumerInsureTipMsg);
-                return tipVO;
+                Result<List<ServeDTO>> serveDTOSResult = serveAggregateRootApi.getServeDTOByServeNoList(cmd.getServeList());
+                List<ServeDTO> serveDTOS = ResultDataUtils.getInstance(serveDTOSResult).getDataOrException();
+                for (ServeDTO serveDTO : serveDTOS) {
+                    if (LeaseModelEnum.SHOW.getCode() != serveDTO.getLeaseModelId()) {
+                        tipVO.setTipFlag(JudgeEnum.YES.getCode());
+                        String costumerInsureTipMsg = "选择车辆里包含保险失效车辆，根据合同约定不包含商业险，请联系租户获取保单信息，完成信息回填。没有有效的保单信息无法发车！";
+                        tipVO.setTipMsg(costumerInsureTipMsg);
+                        return tipVO;
+                    }
+                }
             }
         }
 

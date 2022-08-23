@@ -302,6 +302,7 @@ public class DeliverEntity implements DeliverEntityApi {
             if (!StringUtils.isEmpty(applyPO.getCommercialApplyId())) {
                 insuranceApplyPOToUpdate.setCommercialPolicySource(PolicySourceEnum.H5.getCode());
             }
+            insuranceApplyPOToUpdate.setId(applyPO.getId());
             insuranceApplyGateway.update(insuranceApplyPOToUpdate);
         }
 

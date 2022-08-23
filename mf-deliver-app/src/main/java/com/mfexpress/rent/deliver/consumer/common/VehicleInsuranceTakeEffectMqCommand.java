@@ -77,6 +77,7 @@ public class VehicleInsuranceTakeEffectMqCommand {
 
         if (!DeliverEnum.IS_DELIVER.getCode().equals(deliverDTO.getStatus()) || !JudgeEnum.NO.getCode().equals(deliverDTO.getIsInsurance())) {
             log.error("收到车辆保险生效消息，对应的交付单不在发车中状态或已经操作投保，交付单号：{}", deliverDTO.getDeliverNo());
+            return;
         }
         Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(deliverDTO.getServeNo());
         ServeDTO serveDTO = ResultDataUtils.getInstance(serveDTOResult).getDataOrException();

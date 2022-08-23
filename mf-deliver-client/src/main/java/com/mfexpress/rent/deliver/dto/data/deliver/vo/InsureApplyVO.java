@@ -9,10 +9,10 @@ import java.util.Date;
 
 @ApiModel(value = "投保申请编号VO")
 @Data
-public class InsureApplyVO extends TipVO{
+public class InsureApplyVO extends TipVO {
 
     @ApiModelProperty(value = "申请时间")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date applyDate;
 
     @ApiModelProperty(value = "交强险申请id")

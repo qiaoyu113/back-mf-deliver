@@ -8,8 +8,11 @@ import lombok.Data;
 @ApiModel(value = "后市场端返回的批量退保申请DTO")
 public class RecoverBatchSurrenderApplyDTO {
 
+    @ApiModelProperty(value = "退保批量受理id")
+    private String batchId;
+
     @ApiModelProperty(value = "退保批量受理编号")
-    private String acceptCode;
+    private String batchCode;
 
     @ApiModelProperty(value = "车辆id")
     private Integer vehicleId;
@@ -19,6 +22,9 @@ public class RecoverBatchSurrenderApplyDTO {
 
     @ApiModelProperty(value = "退保申请编号")
     private String applyCode;
+
+    @ApiModelProperty(value = "保险公司id")
+    private Integer insuranceCompanyId;
 
     @ApiModelProperty(value = "保险公司")
     private String insuranceCompany;

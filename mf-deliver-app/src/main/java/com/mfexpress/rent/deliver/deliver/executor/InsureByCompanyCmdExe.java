@@ -24,7 +24,6 @@ import com.mfexpress.rent.deliver.dto.data.deliver.vo.RentInsureApplyResultVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.util.ExternalRequestUtil;
 import com.mfexpress.rent.deliver.utils.CommonUtil;
-import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleDto;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 

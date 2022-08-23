@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
+import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.exception.CommonException;
@@ -15,6 +16,7 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDel
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.vo.SurrenderApplyInfoVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.vo.SurrenderApplyVO;
 import com.mfexpress.rent.deliver.util.ExternalRequestUtil;
+import com.mfexpress.rent.deliver.utils.CommonUtil;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleDto;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInsuranceDTO;
@@ -38,7 +40,13 @@ public class RecoverBackInsuranceByDeliverCmdExe {
     @Resource
     private ExternalRequestUtil externalRequestUtil;
 
+    private Map<String, String> insuranceCompanyDictMap;
+
+    @Resource
+    private DictAggregateRootApi dictAggregateRootApi;
+
     public SurrenderApplyVO execute(RecoverBackInsureByDeliverCmd cmd, TokenInfo tokenInfo) {
+        initDictMap();
         cmd.setOperatorId(tokenInfo.getId());
         if (JudgeEnum.YES.getCode().equals(cmd.getIsInsurance())) {
             List<String> deliverNoList = cmd.getDeliverNoList();
@@ -70,31 +78,44 @@ public class RecoverBackInsuranceByDeliverCmdExe {
         return surrenderApplyVO;
     }
 
+    private void initDictMap() {
+        if (null == insuranceCompanyDictMap) {
+            insuranceCompanyDictMap = CommonUtil.getDictDataDTOMapByDictType(dictAggregateRootApi, "insurance_company");
+        }
+    }
+
     private SurrenderApplyVO createResult(Result<List<RecoverBatchSurrenderApplyDTO>> batchSurrenderApplyDTOResult) {
         List<RecoverBatchSurrenderApplyDTO> batchSurrenderApplyDTOS = batchSurrenderApplyDTOResult.getData();
         SurrenderApplyVO surrenderApplyVO = new SurrenderApplyVO();
-        if (batchSurrenderApplyDTOResult.getCode() == 50003) {
-            surrenderApplyVO.setTipFlag(JudgeEnum.YES.getCode());
-            surrenderApplyVO.setTipMsg(batchSurrenderApplyDTOResult.getMsg());
-        } else {
-            surrenderApplyVO.setTipFlag(JudgeEnum.NO.getCode());
-        }
+        surrenderApplyVO.setTipFlag(JudgeEnum.NO.getCode());
 
         List<SurrenderApplyInfoVO> applyInfoVOS = new ArrayList<>();
         surrenderApplyVO.setSurrenderApplyInfoVOS(applyInfoVOS);
         Set<String> batchApplyCodeSet = new HashSet<>();
         for (RecoverBatchSurrenderApplyDTO applyDTO : batchSurrenderApplyDTOS) {
-            if (!StringUtils.isEmpty(applyDTO.getAcceptCode())) {
-                if (batchApplyCodeSet.add(applyDTO.getAcceptCode())) {
+            if (!StringUtils.isEmpty(applyDTO.getBatchCode())) {
+                if (batchApplyCodeSet.add(applyDTO.getBatchCode())) {
                     SurrenderApplyInfoVO surrenderApplyInfoVO = new SurrenderApplyInfoVO();
-                    surrenderApplyInfoVO.setSurrenderApplyCode(applyDTO.getAcceptCode());
-                    surrenderApplyInfoVO.setInsuranceCompany(applyDTO.getInsuranceCompany());
+                    surrenderApplyInfoVO.setSurrenderApplyCode(applyDTO.getBatchCode());
+                    if (!StringUtils.isEmpty(applyDTO.getInsuranceCompany())) {
+                        surrenderApplyInfoVO.setInsuranceCompany(applyDTO.getInsuranceCompany());
+                    } else {
+                        if (null != applyDTO.getInsuranceCompanyId() && null != insuranceCompanyDictMap) {
+                            surrenderApplyInfoVO.setInsuranceCompany(insuranceCompanyDictMap.get(applyDTO.getInsuranceCompanyId().toString()));
+                        }
+                    }
                     applyInfoVOS.add(surrenderApplyInfoVO);
                 }
             } else {
                 SurrenderApplyInfoVO surrenderApplyInfoVO = new SurrenderApplyInfoVO();
                 surrenderApplyInfoVO.setSurrenderApplyCode(applyDTO.getApplyCode());
-                surrenderApplyInfoVO.setInsuranceCompany(applyDTO.getInsuranceCompany());
+                if (!StringUtils.isEmpty(applyDTO.getInsuranceCompany())) {
+                    surrenderApplyInfoVO.setInsuranceCompany(applyDTO.getInsuranceCompany());
+                } else {
+                    if (null != applyDTO.getInsuranceCompanyId() && null != insuranceCompanyDictMap) {
+                        surrenderApplyInfoVO.setInsuranceCompany(insuranceCompanyDictMap.get(applyDTO.getInsuranceCompanyId().toString()));
+                    }
+                }
                 applyInfoVOS.add(surrenderApplyInfoVO);
             }
         }
