@@ -7,7 +7,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
-import com.mfexpress.component.log.PrintParam;
+import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.DailyAggregateRootApi;
