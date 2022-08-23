@@ -61,8 +61,7 @@ public class ServeInsureQryExe {
         if (serveVOList.isEmpty()) {
             serveListVO.setBatchInsureButtonSwitch(JudgeEnum.NO.getCode());
         } else {
-            Integer batchInsureButtonSwitch = JudgeEnum.NO.getCode();
-            serveListVO.setBatchInsureButtonSwitch(batchInsureButtonSwitch);
+            Integer batchInsureButtonSwitch = 1;
             List<Integer> commodityIdList = serveVOList.stream().map(ServeVO::getContractCommodityId).collect(Collectors.toList());
             Result<List<CommodityDTO>> commodityListResult = contractAggregateRootApi.getCommodityListByIdList(commodityIdList);
             List<CommodityDTO> commodityDTOList = ResultDataUtils.getInstance(commodityListResult).getDataOrException();
@@ -79,13 +78,14 @@ public class ServeInsureQryExe {
                     } else {
                         if (null != insuranceInfo.getThirdPartyLiabilityCoverage() || null != insuranceInfo.getInCarPersonnelLiabilityCoverage()) {
                             serveVO.setOperationButton(1);
-                            batchInsureButtonSwitch = JudgeEnum.YES.getCode();
                         } else {
                             serveVO.setOperationButton(2);
+                            batchInsureButtonSwitch = 0;
                         }
                     }
                 }
             }
+            serveListVO.setBatchInsureButtonSwitch(batchInsureButtonSwitch);
 
             // 补充insureApplyFlag
             List<String> deliverNoList = serveVOList.stream().map(ServeVO::getDeliverNo).collect(Collectors.toList());

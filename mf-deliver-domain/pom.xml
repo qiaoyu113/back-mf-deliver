@@ -30,10 +30,6 @@
         </dependency>
         <dependency>
             <groupId>com.mfexpress</groupId>
-            <artifactId>mf-component-spring-boot-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.mfexpress</groupId>
             <artifactId>mf-component-dto</artifactId>
         </dependency>
         <dependency>
@@ -43,6 +39,10 @@
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mfexpress.base.starter</groupId>
+            <artifactId>mf-logback-spring-boot-starter</artifactId>
         </dependency>
     </dependencies>
 

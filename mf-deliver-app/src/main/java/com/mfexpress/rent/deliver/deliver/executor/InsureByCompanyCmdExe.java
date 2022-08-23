@@ -24,7 +24,6 @@ import com.mfexpress.rent.deliver.dto.data.deliver.vo.RentInsureApplyResultVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.util.ExternalRequestUtil;
 import com.mfexpress.rent.deliver.utils.CommonUtil;
-import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleDto;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -72,16 +71,8 @@ public class InsureByCompanyCmdExe {
         // 判断服务单是否支持投保申请操作
         Map<Integer, CommodityDTO> commodityDTOMap = checkOperationLegitimacy(serveDTOList, deliverDTOList);
 
-        DeliverBatchInsureApplyDTO insureApplyDTO;
         // 发起投保申请
-        try {
-            insureApplyDTO = createInsureApply(cmd, serveDTOList, deliverDTOList, commodityDTOMap, tokenInfo);
-        } catch (BusinessException e) {
-            InsureApplyVO insureApplyVO = new InsureApplyVO();
-            insureApplyVO.setTipFlag(JudgeEnum.YES.getCode());
-            insureApplyVO.setTipMsg(e.getMsg());
-            return insureApplyVO;
-        }
+        DeliverBatchInsureApplyDTO insureApplyDTO = createInsureApply(cmd, serveDTOList, deliverDTOList, commodityDTOMap, tokenInfo);
 
         // 改变交付单状态及保存申请编号
         changeDeliver(cmd, tokenInfo, deliverDTOList, insureApplyDTO);
@@ -185,15 +176,10 @@ public class InsureByCompanyCmdExe {
 
         // 发送请求
         Result<RentInsureApplyResultVO> result = externalRequestUtil.createInsureApply(createInsureApplyCmd);
-        if (ResultErrorEnum.SUCCESSED.getCode() != result.getCode() || null == result.getData()) {
-            if (result.getCode() == ResultErrorEnum.CREATE_ERROR.getCode()) {
-                throw new BusinessException(ResultErrorEnum.CREATE_ERROR.getCode(), result.getMsg());
-            } else {
-                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), result.getMsg());
-            }
+        RentInsureApplyResultVO rentInsureApplyResultVO = ResultDataUtils.getInstance(result).getDataOrException();
+        if (null == rentInsureApplyResultVO) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), result.getMsg());
         }
-
-        RentInsureApplyResultVO rentInsureApplyResultVO = result.getData();
 
         Map<Integer, DeliverInsureApplyDTO> deliverInsureApplyDTOMap = new HashMap<>();
         List<ApplyMobileCreateDTO> compulsoryApplyList = rentInsureApplyResultVO.getCompulsoryApplyList();
