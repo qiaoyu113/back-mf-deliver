@@ -3,8 +3,8 @@ package com.mfexpress.rent.deliver.mobile;
 import com.mfexpress.component.constants.CommonConstants;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.exception.CommonException;
-import com.mfexpress.component.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.token.TokenTools;
 import com.mfexpress.rent.deliver.api.DeliverServiceI;
@@ -39,7 +39,6 @@ public class DeliverController {
     @PostMapping("/toPreselected")
     @ApiOperation("预选车辆")
     @PrintParam
-    @ResponseBody
     public Result<String> toPreselected(@RequestBody @Validated DeliverPreselectedCmd deliverPreselectedCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
 
         //组合生成交付单、交付单状态未1发车中 服务单状态更新未已预选

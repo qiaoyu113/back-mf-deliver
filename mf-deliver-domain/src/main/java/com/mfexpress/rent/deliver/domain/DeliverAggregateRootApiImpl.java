@@ -7,7 +7,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
-import com.mfexpress.component.log.PrintParam;
+import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.response.ResultStatusEnum;
