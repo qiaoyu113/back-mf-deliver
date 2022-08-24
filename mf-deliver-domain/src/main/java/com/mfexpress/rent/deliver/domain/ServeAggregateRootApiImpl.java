@@ -12,7 +12,7 @@ import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
-import com.mfexpress.component.log.PrintParam;
+import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.mq.MqTools;
@@ -550,8 +550,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         Map<String, RenewalServeCmd> renewalServeCmdMap = renewalServeCmdList.stream().collect(Collectors.toMap(RenewalServeCmd::getServeNo, Function.identity(), (v1, v2) -> v1));
         List<String> serveNoList = new ArrayList<>(renewalServeCmdMap.keySet());
 
-        // 租赁开始日期必须大于发车日期校验
-        List<DeliverEntity> deliverEntityList = deliverGateway.getDeliverByServeNoList(serveNoList);
+        // 租赁开始日期必须大于发车日期校验 ----- 20220824 逻辑屏蔽，该校验逻辑已前置到创建编辑合同时
+        /*List<DeliverEntity> deliverEntityList = deliverGateway.getDeliverByServeNoList(serveNoList);
         if (deliverEntityList.size() != serveNoList.size()) {
             throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "交车单查询失败");
         }
@@ -572,7 +572,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             if (leaseBeginDate.isBefore(deliverVehicleTime)) {
                 throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), renewalServeCmd.getCarNum() + "车辆在续约时租赁开始日期小于发车日期，续约失败");
             }
-        });
+        });*/
 
         // 判断服务单是否存在，状态是否为已发车或维修中
         List<ServeEntity> serveList = serveGateway.getServeByServeNoList(serveNoList);

@@ -14,7 +14,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.json.JSONUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
-import com.mfexpress.component.log.PrintParam;
+import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;

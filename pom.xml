@@ -383,6 +383,12 @@
                 <version>${project.dependents.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.mfexpress.base.starter</groupId>
+                <artifactId>mf-logback-spring-boot-starter</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+
             <!--阿里云任务调度相关-->
             <!--<dependency>
                 <groupId>com.aliyun.schedulerx</groupId>

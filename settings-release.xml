@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+    <mirrors>
+        <mirror>
+            <id>mirror</id>
+            <mirrorOf>central,jcenter,!prod,!dev</mirrorOf>
+            <name>mirror</name>
+            <url>https://maven.aliyun.com/nexus/content/groups/public</url>
+        </mirror>
+    </mirrors>
+    <servers>
+        <server>
+            <id>prod</id>
+            <username>623026ac1683c073993d2623</username>
+            <password>o_B=-nfarD9u</password>
+        </server>
+    </servers>
+    <profiles>
+        <profile>
+            <id>prod</id>
+            <properties>
+                <altSnapshotDeploymentRepository>
+                    prod::default::https://packages.aliyun.com/maven/repository/2081909-release-pQCHGf/
+                </altSnapshotDeploymentRepository>
+                <altReleaseDeploymentRepository>
+                    prod::default::https://packages.aliyun.com/maven/repository/2081909-release-pQCHGf/
+                </altReleaseDeploymentRepository>
+            </properties>
+            <repositories>
+                <repository>
+                    <id>central</id>
+                    <url>https://maven.aliyun.com/nexus/content/groups/public</url>
+                </repository>
+                <repository>
+                    <id>prod</id>
+                    <url>https://packages.aliyun.com/maven/repository/2081909-release-pQCHGf/</url>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+    <activeProfiles>
+        <activeProfile>prod</activeProfile>
+    </activeProfiles>
+</settings>
