@@ -346,7 +346,7 @@ public class ServeLeaseTermAmountQryExe {
             boolQueryBuilder.must(QueryBuilders.termQuery("vehicleBusinessMode", qry.getVehicleBusinessMode()));
         }
         if (null != qry.getExpectRecoverDateStart() && null != qry.getExpectRecoverDateEnd()) {
-            boolQueryBuilder.must(QueryBuilders.rangeQuery("beginDate").from(qry.getExpectRecoverDateStart().getTime()).to(qry.getExpectRecoverDateEnd().getTime()));
+            boolQueryBuilder.must(QueryBuilders.rangeQuery("expectRecoverDate").from(qry.getExpectRecoverDateStart().getTime()).to(qry.getExpectRecoverDateEnd().getTime()));
         }
         return boolQueryBuilder;
     }
