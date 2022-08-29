@@ -137,6 +137,7 @@ public class RecoverBackInsuranceByDeliverCmdExe {
             if (null != recoverSurrenderApplyDTO) {
                 deliverDTO.setSurrenderApplyId(recoverSurrenderApplyDTO.getApplyId());
                 deliverDTO.setSurrenderApplyCode(recoverSurrenderApplyDTO.getApplyCode());
+                deliverDTO.setSurrenderApplyTime(recoverSurrenderApplyDTO.getApplyTime());
             }
         });
         cmd.setDeliverDTOList(deliverDTOList);
@@ -151,7 +152,8 @@ public class RecoverBackInsuranceByDeliverCmdExe {
         List<CreateSurrenderApplyCmd.SurrenderInfoDTO> surrenderInfoDTOS = new ArrayList<>();
         createSurrenderApplyCmd.setCreateH5SurrenderApplyCmdList(surrenderInfoDTOS);
         createSurrenderApplyCmd.setAcceptReason("收车任务触发退保");
-        createSurrenderApplyCmd.setApplyTime(new Date());
+        Date applyTime = new Date();
+        createSurrenderApplyCmd.setApplyTime(applyTime);
 
         deliverDTOList.forEach(deliverDTO -> {
             CreateSurrenderApplyCmd.SurrenderInfoDTO surrenderInfoDTO = new CreateSurrenderApplyCmd.SurrenderInfoDTO();
@@ -166,6 +168,9 @@ public class RecoverBackInsuranceByDeliverCmdExe {
         if (null == surrenderApplyDTOS || surrenderApplyDTOS.isEmpty()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "退保失败");
         }
+        surrenderApplyDTOS.forEach(surrenderApplyDTO -> {
+            surrenderApplyDTO.setApplyTime(applyTime);
+        });
 
         return result;
     }

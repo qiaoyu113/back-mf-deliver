@@ -82,6 +82,8 @@ public class DeliverDTO {
 
     private String surrenderApplyCode;
 
+    private Date surrenderApplyTime;
+
     private String compulsoryPolicyId;
 
     private String commercialPolicyId;

@@ -3,6 +3,7 @@ package com.mfexpress.rent.deliver.entity;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.date.DateUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.rent.deliver.constant.*;
@@ -229,6 +230,7 @@ public class DeliverEntity implements DeliverEntityApi {
             insuranceApplyPO.setCommercialApplyCode(deliverInsureApplyDTO.getCommercialApplyCode());
 
             insuranceApplyPO.setCreatorId(cmd.getOperatorId());
+            insuranceApplyPO.setApplyTime(DateUtil.formatDateTime(deliverInsureApplyDTO.getApplyTime()));
             return insuranceApplyPO;
         }).collect(Collectors.toList());
         insuranceApplyGateway.batchCreate(insuranceApplyPOS);
@@ -347,6 +349,7 @@ public class DeliverEntity implements DeliverEntityApi {
             insuranceApplyPO.setCommercialApplyId(deliverDTO.getSurrenderApplyId());
             insuranceApplyPO.setCommercialApplyCode(deliverDTO.getSurrenderApplyCode());
             insuranceApplyPO.setCreatorId(cmd.getOperatorId());
+            insuranceApplyPO.setApplyTime(DateUtil.formatDateTime(deliverDTO.getSurrenderApplyTime()));
             return insuranceApplyPO;
         }).collect(Collectors.toList());
         insuranceApplyGateway.batchCreate(insuranceApplyPOS);
@@ -359,7 +362,10 @@ public class DeliverEntity implements DeliverEntityApi {
         if (null == applyPO) {
             return null;
         }
-        return BeanUtil.toBean(applyPO, InsuranceApplyDTO.class);
+
+        InsuranceApplyDTO insuranceApplyDTO = BeanUtil.toBean(applyPO, InsuranceApplyDTO.class);
+        insuranceApplyDTO.setApplyTime(DateUtil.parseDateTime(applyPO.getApplyTime()));
+        return insuranceApplyDTO;
     }
 
     @Override

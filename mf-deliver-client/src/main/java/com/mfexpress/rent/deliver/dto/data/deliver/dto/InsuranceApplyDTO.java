@@ -60,6 +60,9 @@ public class InsuranceApplyDTO {
     @ApiModelProperty(value = "删除标志位")
     private Integer delFlag;
 
+    @ApiModelProperty(value = "申请时间")
+    private Date applyTime;
+
     @ApiModelProperty(value = "创建时间")
     private Date createTime;
 

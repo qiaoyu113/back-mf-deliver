@@ -45,6 +45,29 @@ public class PreselectedVehicleCmdExe {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆保险信息查询失败");
         }
 
+        Map<Integer, VehicleInsuranceDTO> vehicleInsuranceDTOMap = vehicleInsuranceDTOS.stream().collect(Collectors.toMap(VehicleInsuranceDTO::getVehicleId, Function.identity(), (v1, v2) -> v1));
+        for (DeliverVehicleSelectCmd deliverVehicleSelectCmd : deliverVehicleSelectCmdList) {
+            VehicleInsuranceDTO vehicleInsuranceDTO = vehicleInsuranceDTOMap.get(deliverVehicleSelectCmd.getId());
+            if (null == vehicleInsuranceDTO) {
+                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(deliverVehicleSelectCmd.getPlateNumber()).concat("保险信息查询失败"));
+            }
+            if (null == vehicleInsuranceDTO.getCompulsoryInsuranceStatus() || null == vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
+                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(deliverVehicleSelectCmd.getPlateNumber()).concat("的交强险或商业险状态异常"));
+            }
+            if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) {
+                if (StringUtils.isEmpty(vehicleInsuranceDTO.getCompulsoryInsuranceId())) {
+                    throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(deliverVehicleSelectCmd.getPlateNumber()).concat("的交强险在保，但保单缺失"));
+                }
+                deliverVehicleSelectCmd.setCompulsoryPolicyId(vehicleInsuranceDTO.getCompulsoryInsuranceId().toString());
+            }
+            if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
+                if (StringUtils.isEmpty(vehicleInsuranceDTO.getCommercialInsuranceId())) {
+                    throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(deliverVehicleSelectCmd.getPlateNumber()).concat("的商业险在保，但保单缺失"));
+                }
+                deliverVehicleSelectCmd.setCommercialPolicyId(vehicleInsuranceDTO.getCommercialInsuranceId().toString());
+            }
+        }
+
         if (2 == cmd.getVehicleInsureRequirement()) {
             // 只能选择交强险在保而商业险不在保的车辆
             for (VehicleInsuranceDTO vehicleInsuranceDTO : vehicleInsuranceDTOS) {
@@ -77,26 +100,6 @@ public class PreselectedVehicleCmdExe {
                         return tipVO;
                     }
                 }
-            }
-        }
-
-        Map<Integer, VehicleInsuranceDTO> vehicleInsuranceDTOMap = vehicleInsuranceDTOS.stream().collect(Collectors.toMap(VehicleInsuranceDTO::getVehicleId, Function.identity(), (v1, v2) -> v1));
-        for (DeliverVehicleSelectCmd deliverVehicleSelectCmd : deliverVehicleSelectCmdList) {
-            VehicleInsuranceDTO vehicleInsuranceDTO = vehicleInsuranceDTOMap.get(deliverVehicleSelectCmd.getId());
-            if (null == vehicleInsuranceDTO) {
-                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(deliverVehicleSelectCmd.getPlateNumber()).concat("保险信息查询失败"));
-            }
-            if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) {
-                if (StringUtils.isEmpty(vehicleInsuranceDTO.getCompulsoryInsuranceId())) {
-                    throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(deliverVehicleSelectCmd.getPlateNumber()).concat("的交强险在保，但保单缺失"));
-                }
-                deliverVehicleSelectCmd.setCompulsoryPolicyId(vehicleInsuranceDTO.getCompulsoryInsuranceId().toString());
-            }
-            if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
-                if (StringUtils.isEmpty(vehicleInsuranceDTO.getCommercialInsuranceId())) {
-                    throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(deliverVehicleSelectCmd.getPlateNumber()).concat("的商业险在保，但保单缺失"));
-                }
-                deliverVehicleSelectCmd.setCommercialPolicyId(vehicleInsuranceDTO.getCommercialInsuranceId().toString());
             }
         }
 

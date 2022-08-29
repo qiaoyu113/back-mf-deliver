@@ -25,6 +25,8 @@ public class InsuranceApplyPO {
 
     private Integer vehicleId;
 
+    private String applyTime;
+
     private String compulsoryBatchAcceptCode;
 
     private String commercialBatchAcceptCode;

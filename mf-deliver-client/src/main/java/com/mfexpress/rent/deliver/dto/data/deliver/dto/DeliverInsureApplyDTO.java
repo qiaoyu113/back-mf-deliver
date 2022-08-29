@@ -4,6 +4,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
 @ApiModel(value = "后市场端返回的车辆投保申请DTO")
 public class DeliverInsureApplyDTO {
@@ -31,6 +33,9 @@ public class DeliverInsureApplyDTO {
 
     @ApiModelProperty(value = "商业险保单号")
     private String commercialInsurancePolicyNo;
+
+    @ApiModelProperty(value = "申请时间")
+    private Date applyTime;
 
     // private Integer
 
