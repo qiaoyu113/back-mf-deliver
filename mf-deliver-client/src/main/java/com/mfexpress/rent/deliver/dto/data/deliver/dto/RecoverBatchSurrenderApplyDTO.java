@@ -4,6 +4,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
 @ApiModel(value = "后市场端返回的批量退保申请DTO")
 public class RecoverBatchSurrenderApplyDTO {
@@ -28,4 +30,7 @@ public class RecoverBatchSurrenderApplyDTO {
 
     @ApiModelProperty(value = "保险公司")
     private String insuranceCompany;
+
+    @ApiModelProperty(value = "申请时间")
+    private Date applyTime;
 }

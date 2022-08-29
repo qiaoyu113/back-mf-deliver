@@ -32,6 +32,9 @@ public class CreateInsureApplyCmd {
     @ApiModelProperty(value = "备注")
     private String remarks;
 
+    @ApiModelProperty(value = "操作时间")
+    private Date operatorTime;
+
     @ApiModel(value = "投保信息")
     @Data
     public static class InsureInfoDTO {

@@ -152,11 +152,13 @@ public class InsureByCompanyCmdExe {
 
     private DeliverBatchInsureApplyDTO createInsureApply(DeliverInsureCmd cmd, List<ServeDTO> serveDTOList, List<DeliverDTO> deliverDTOList, Map<Integer, CommodityDTO> commodityDTOMap, TokenInfo tokenInfo) {
         // 拼接投保请求参数
+        Date applyTime = new Date();
         CreateInsureApplyCmd createInsureApplyCmd = new CreateInsureApplyCmd();
         createInsureApplyCmd.setStartInsureDate(cmd.getStartInsureDate());
         createInsureApplyCmd.setEndInsureDate(cmd.getEndInsureDate());
         createInsureApplyCmd.setOperatorUserId(tokenInfo.getId());
         createInsureApplyCmd.setRemarks(serveDTOList.get(0).getOaContractCode());
+        createInsureApplyCmd.setOperatorTime(applyTime);
 
         Map<String, DeliverDTO> deliverDTOMap = deliverDTOList.stream().collect(Collectors.toMap(DeliverDTO::getServeNo, Function.identity(), (v1, v2) -> v1));
         List<CreateInsureApplyCmd.InsureInfoDTO> insuranceInfoDTOS = serveDTOList.stream().map(serveDTO -> {
@@ -177,7 +179,8 @@ public class InsureByCompanyCmdExe {
         // 发送请求
         Result<RentInsureApplyResultVO> result = externalRequestUtil.createInsureApply(createInsureApplyCmd);
         RentInsureApplyResultVO rentInsureApplyResultVO = ResultDataUtils.getInstance(result).getDataOrException();
-        if (null == rentInsureApplyResultVO) {
+        if (null == rentInsureApplyResultVO || (null == rentInsureApplyResultVO.getCommercialApplyList() && null == rentInsureApplyResultVO.getCompulsoryApplyList()) ||
+                (rentInsureApplyResultVO.getCommercialApplyList().isEmpty() && rentInsureApplyResultVO.getCompulsoryApplyList().isEmpty())) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), result.getMsg());
         }
 
@@ -193,6 +196,7 @@ public class InsureByCompanyCmdExe {
                 deliverInsureApplyDTO.setVehicleId(vehicleId);
                 deliverInsureApplyDTO.setCompulsoryApplyId(applyMobileCreateDTO.getApplyId().toString());
                 deliverInsureApplyDTO.setCompulsoryApplyCode(applyMobileCreateDTO.getApplyCode());
+                deliverInsureApplyDTO.setApplyTime(applyTime);
                 deliverInsureApplyDTOMap.put(vehicleId, deliverInsureApplyDTO);
             } else {
                 deliverInsureApplyDTO.setVehicleId(vehicleId);
@@ -209,6 +213,7 @@ public class InsureByCompanyCmdExe {
                 deliverInsureApplyDTO.setVehicleId(vehicleId);
                 deliverInsureApplyDTO.setCommercialApplyId(applyMobileCreateDTO.getApplyId().toString());
                 deliverInsureApplyDTO.setCommercialApplyCode(applyMobileCreateDTO.getApplyCode());
+                deliverInsureApplyDTO.setApplyTime(applyTime);
                 deliverInsureApplyDTOMap.put(vehicleId, deliverInsureApplyDTO);
             } else {
                 deliverInsureApplyDTO.setVehicleId(vehicleId);

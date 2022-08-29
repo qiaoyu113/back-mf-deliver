@@ -42,7 +42,7 @@ public class InsureApplyQryExe {
         InsureApplyVO insureApplyVO = BeanUtil.toBean(insuranceApplyDTO, InsureApplyVO.class);
         insureApplyVO.setCompulsoryInsuranceApplyCode(insuranceApplyDTO.getCompulsoryApplyCode());
         insureApplyVO.setCommercialInsuranceApplyCode(insuranceApplyDTO.getCommercialApplyCode());
-        insureApplyVO.setApplyDate(insuranceApplyDTO.getCreateTime());
+        insureApplyVO.setApplyDate(insuranceApplyDTO.getApplyTime());
 
         // 根据申请id查询其状态
         ApplyByIdsQryCmd applyByIdsQryCmd = new ApplyByIdsQryCmd();

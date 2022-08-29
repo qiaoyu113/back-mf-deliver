@@ -27,6 +27,7 @@ import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInsuranceDTO;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import com.mfexpress.rent.vehicle.data.dto.vehicleinsurance.VehicleInsuranceDto;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.Collections;
@@ -52,8 +53,10 @@ public class DeliverToReplaceExe {
 
     public TipVO execute(DeliverReplaceCmd deliverReplaceCmd) {
         String serveNo = deliverReplaceCmd.getServeList().get(0);
-        List<DeliverVehicleSelectCmd> deliverVehicleSelectCmd = deliverReplaceCmd.getDeliverVehicleSelectCmd();
-        Integer vehicleId = deliverVehicleSelectCmd.get(0).getId();
+        List<DeliverVehicleSelectCmd> deliverVehicleSelectCmdList = deliverReplaceCmd.getDeliverVehicleSelectCmd();
+        DeliverVehicleSelectCmd deliverVehicleSelectCmd = deliverVehicleSelectCmdList.get(0);
+        Integer vehicleId = deliverVehicleSelectCmd.getId();
+        String plateNumber = deliverVehicleSelectCmd.getPlateNumber();
 
         // 重新激活的服务单在进行重新预选操作时需要的校验
         ReactivateServeCheckCmd reactivateServeCheckCmd = ReactivateServeCheckCmd.builder().serveNoList(Collections.singletonList(serveNo)).build();
@@ -65,8 +68,21 @@ public class DeliverToReplaceExe {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆保险信息查询失败");
         }
         VehicleInsuranceDTO vehicleInsuranceDTO = vehicleInsuranceDTOS.get(0);
-        // 进行保险校验
+        if (null == vehicleInsuranceDTO.getCompulsoryInsuranceStatus() || null == vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(deliverVehicleSelectCmd.getPlateNumber()).concat("的交强险或商业险状态异常"));
+        }
+        if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) {
+            if (StringUtils.isEmpty(vehicleInsuranceDTO.getCompulsoryInsuranceId())) {
+                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(deliverVehicleSelectCmd.getPlateNumber()).concat("的交强险在保，但保单缺失"));
+            }
+        }
+        if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
+            if (StringUtils.isEmpty(vehicleInsuranceDTO.getCommercialInsuranceId())) {
+                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(deliverVehicleSelectCmd.getPlateNumber()).concat("的商业险在保，但保单缺失"));
+            }
+        }
 
+        // 进行保险校验
         if (2 == deliverReplaceCmd.getVehicleInsureRequirement()) {
             if (PolicyStatusEnum.EFFECT.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus() || PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "所选车辆中包含交强险在保而商业险不在保的车辆，请重新确认！");
@@ -136,13 +152,13 @@ public class DeliverToReplaceExe {
         }
 
         deliverDTO.setServeNo(deliverReplaceCmd.getServeList().get(0));
-        deliverDTO.setCarNum(deliverVehicleSelectCmd.get(0).getPlateNumber());
+        deliverDTO.setCarNum(deliverVehicleSelectCmd.getPlateNumber());
         deliverDTO.setCarId(vehicleId);
         deliverDTO.setDeliverStatus(DeliverEnum.IS_DELIVER.getCode());
         deliverDTO.setStatus(ValidStatusEnum.VALID.getCode());
-        deliverDTO.setFrameNum(deliverVehicleSelectCmd.get(0).getVin());
-        deliverDTO.setMileage(deliverVehicleSelectCmd.get(0).getMileage());
-        deliverDTO.setVehicleAge(deliverVehicleSelectCmd.get(0).getVehicleAge());
+        deliverDTO.setFrameNum(deliverVehicleSelectCmd.getVin());
+        deliverDTO.setMileage(deliverVehicleSelectCmd.getMileage());
+        deliverDTO.setVehicleAge(deliverVehicleSelectCmd.getVehicleAge());
         deliverDTO.setCarServiceId(deliverReplaceCmd.getCarServiceId());
         if(PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus()){
             deliverDTO.setCompulsoryPolicyId(vehicleInsuranceDTO.getCompulsoryInsuranceId().toString());
