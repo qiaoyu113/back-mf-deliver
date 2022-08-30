@@ -363,7 +363,7 @@ public class DeliverEntity implements DeliverEntityApi {
             return null;
         }
 
-        InsuranceApplyDTO insuranceApplyDTO = BeanUtil.toBean(applyPO, InsuranceApplyDTO.class);
+        InsuranceApplyDTO insuranceApplyDTO = BeanUtil.toBeanIgnoreError(applyPO, InsuranceApplyDTO.class);
         if (!StringUtils.isEmpty(applyPO.getApplyTime())) {
             insuranceApplyDTO.setApplyTime(DateUtil.parseDateTime(applyPO.getApplyTime()));
         }

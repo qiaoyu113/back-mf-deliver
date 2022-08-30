@@ -171,7 +171,7 @@ public class InsureByCompanyCmdExe {
             InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
             insureInfo.setSeatInsuredAmount(seatInsuredAmountDictMap.get(insuranceInfo.getInCarPersonnelLiabilityCoverage().toString()).replace("（万）", ""));
             insureInfo.setThirdInsuredAmount(thirdInsuranceAmountDictMap.get(insuranceInfo.getThirdPartyLiabilityCoverage().toString()).replace("（万）", ""));
-            insureInfo.setDamageFlag(JudgeEnum.NO.getCode());
+            insureInfo.setDamageFlag(JudgeEnum.YES.getCode());
             return insureInfo;
         }).collect(Collectors.toList());
         createInsureApplyCmd.setInsuranceApplyList(insuranceInfoDTOS);

@@ -18,6 +18,7 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.vo.SurrenderApplyVO;
 import com.mfexpress.rent.deliver.util.ExternalRequestUtil;
 import com.mfexpress.rent.deliver.utils.CommonUtil;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleDto;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInsuranceDTO;
 import org.springframework.stereotype.Component;
@@ -57,7 +58,10 @@ public class RecoverBackInsuranceByDeliverCmdExe {
             }
 
             // 校验退保时间是否在商业险保险有效期内
-            checkOperationLegitimacy(cmd);
+            SurrenderApplyVO surrenderApplyVO = checkOperationLegitimacy(cmd);
+            if (JudgeEnum.YES.getCode().equals(surrenderApplyVO.getTipFlag())) {
+                return surrenderApplyVO;
+            }
 
             // 发起退保申请
             Result<List<RecoverBatchSurrenderApplyDTO>> batchSurrenderApplyDTOResult = createSurrenderApply(cmd, deliverDTOList);
@@ -168,14 +172,12 @@ public class RecoverBackInsuranceByDeliverCmdExe {
         if (null == surrenderApplyDTOS || surrenderApplyDTOS.isEmpty()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "退保失败");
         }
-        surrenderApplyDTOS.forEach(surrenderApplyDTO -> {
-            surrenderApplyDTO.setApplyTime(applyTime);
-        });
+        surrenderApplyDTOS.forEach(surrenderApplyDTO -> surrenderApplyDTO.setApplyTime(applyTime));
 
         return result;
     }
 
-    private void checkOperationLegitimacy(RecoverBackInsureByDeliverCmd cmd) {
+    private SurrenderApplyVO checkOperationLegitimacy(RecoverBackInsureByDeliverCmd cmd) {
         Result<List<VehicleDto>> vehicleDTOSResult = vehicleAggregateRootApi.getVehicleDTOByIds(cmd.getCarIdList());
         List<VehicleDto> vehicleDTOS = ResultDataUtils.getInstance(vehicleDTOSResult).getDataOrException();
         if (null == vehicleDTOS || vehicleDTOS.isEmpty()) {
@@ -183,21 +185,38 @@ public class RecoverBackInsuranceByDeliverCmdExe {
         }
         Map<Integer, VehicleDto> vehicleDTOMap = vehicleDTOS.stream().collect(Collectors.toMap(VehicleDto::getId, Function.identity(), (v1, v2) -> v1));
 
+        SurrenderApplyVO surrenderApplyVO = new SurrenderApplyVO();
+        for (VehicleDto vehicleDTO : vehicleDTOS) {
+            if (ValidSelectStatusEnum.CHECKED.getCode().equals(vehicleDTO.getSelectStatus())) {
+                surrenderApplyVO.setTipFlag(JudgeEnum.YES.getCode());
+                surrenderApplyVO.setTipMsg("您选择的车辆".concat(vehicleDTO.getPlateNumber()).concat("已被预选，暂不支持退保操作！"));
+            }
+            if (ValidSelectStatusEnum.LEASE.getCode().equals(vehicleDTO.getSelectStatus())) {
+                surrenderApplyVO.setTipFlag(JudgeEnum.YES.getCode());
+                surrenderApplyVO.setTipMsg("您选择的车辆".concat(vehicleDTO.getPlateNumber()).concat("已被租赁，暂不支持退保操作！"));
+            }
+        }
+
         Result<List<VehicleInsuranceDTO>> vehicleInsuranceDTOSResult = vehicleAggregateRootApi.getVehicleInsuranceByVehicleIds(cmd.getCarIdList());
         List<VehicleInsuranceDTO> vehicleInsuranceDTOS = ResultDataUtils.getInstance(vehicleInsuranceDTOSResult).getDataOrException();
         if (null == vehicleInsuranceDTOS || vehicleInsuranceDTOS.isEmpty()) {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆查询失败");
         }
 
+
         for (VehicleInsuranceDTO vehicleInsuranceDTO : vehicleInsuranceDTOS) {
             VehicleDto vehicleDTO = vehicleDTOMap.get(vehicleInsuranceDTO.getVehicleId());
             if (ValidStatusEnum.INVALID.getCode().equals(vehicleInsuranceDTO.getCommercialInsuranceStatus())) {
-                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "您选择的车辆".concat(vehicleDTO.getPlateNumber()).concat("的商业险已在失效状态，不能发起退保申请"));
+                surrenderApplyVO.setTipFlag(JudgeEnum.YES.getCode());
+                surrenderApplyVO.setTipMsg("您选择的车辆".concat(vehicleDTO.getPlateNumber()).concat("的商业险已在失效状态，不能发起退保申请"));
             }
             if (cmd.getInsuranceTime().before(vehicleInsuranceDTO.getCommercialInsuranceStartDate()) || cmd.getInsuranceTime().after(vehicleInsuranceDTO.getCommercialInsuranceEndDate())) {
-                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "你选择的车辆".concat(vehicleDTO.getPlateNumber()).concat("的退保时间不在车辆保险有限期内，请重新选择"));
+                surrenderApplyVO.setTipFlag(JudgeEnum.YES.getCode());
+                surrenderApplyVO.setTipMsg("你选择的车辆".concat(vehicleDTO.getPlateNumber()).concat("的退保时间不在车辆保险有限期内，请重新选择"));
             }
         }
+
+        return surrenderApplyVO;
     }
 
 }
