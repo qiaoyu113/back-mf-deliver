@@ -3,6 +3,8 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.date.DateField;
+import cn.hutool.core.date.DateUtil;
 import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
 import com.mfexpress.common.domain.dto.SysOfficeDto;
 import com.mfexpress.component.dto.TokenInfo;
@@ -32,10 +34,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -120,14 +119,14 @@ public class RecoverEsDataQryExe {
                     Integer compulsoryInsuranceStatus = vehicleInsuranceDTO.getCompulsoryInsuranceStatus();
                     recoverVehicleVO.setVehicleCompulsoryInsuranceStatus(compulsoryInsuranceStatus);
                     if (null != compulsoryInsuranceStatus) {
-                        recoverVehicleVO.setVehicleCompulsoryInsuranceStatusDisplay(PolicyStatusEnum.getName(compulsoryInsuranceStatus));
+                        recoverVehicleVO.setVehicleCompulsoryInsuranceStatusDisplay(getInsuranceStatusName(vehicleInsuranceDTO.getCompulsoryInsuranceStatus(), vehicleInsuranceDTO.getCompulsoryInsuranceEndDate()));
                     }
                     recoverVehicleVO.setVehicleCompulsoryInsuranceEndDate(vehicleInsuranceDTO.getCompulsoryInsuranceEndDate());
 
                     Integer commercialInsuranceStatus = vehicleInsuranceDTO.getCommercialInsuranceStatus();
                     recoverVehicleVO.setVehicleCommercialInsuranceStatus(commercialInsuranceStatus);
                     if (null != commercialInsuranceStatus) {
-                        recoverVehicleVO.setVehicleCommercialInsuranceStatusDisplay(PolicyStatusEnum.getName(commercialInsuranceStatus));
+                        recoverVehicleVO.setVehicleCommercialInsuranceStatusDisplay(getInsuranceStatusName(vehicleInsuranceDTO.getCommercialInsuranceStatus(), vehicleInsuranceDTO.getCommercialInsuranceEndDate()));
                     }
                     recoverVehicleVO.setVehicleCommercialInsuranceEndDate(vehicleInsuranceDTO.getCommercialInsuranceEndDate());
                 }
@@ -144,5 +143,22 @@ public class RecoverEsDataQryExe {
 
         return recoverTaskListVO;
 
+    }
+
+    private String getInsuranceStatusName(Integer status, Date endDate) {
+        if (Objects.isNull(status)) {
+            return "";
+        }
+        if (status == PolicyStatusEnum.EXPIRED.getCode()) {
+            return PolicyStatusEnum.EXPIRED.getName();
+        } else {
+            StringBuilder statusName = new StringBuilder();
+            if (new Date().after(DateUtil.offset(endDate, DateField.DAY_OF_YEAR, -30))) {
+                statusName.append("即将过期");
+            } else {
+                statusName.append("生效中");
+            }
+            return statusName.append("(").append(DateUtil.format(endDate, "yyyy-MM-dd")).append(")").toString();
+        }
     }
 }
