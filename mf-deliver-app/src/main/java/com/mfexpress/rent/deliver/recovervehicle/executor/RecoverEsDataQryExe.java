@@ -151,7 +151,7 @@ public class RecoverEsDataQryExe {
             } else {
                 statusName.append("生效中");
             }
-            return statusName.append("(").append(DateUtil.format(endDate, "yyyy-MM-dd")).append(")").toString();
+            return statusName.toString();
         }
     }
 }
