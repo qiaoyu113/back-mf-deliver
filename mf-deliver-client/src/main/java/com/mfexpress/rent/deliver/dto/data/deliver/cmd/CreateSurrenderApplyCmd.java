@@ -36,6 +36,9 @@ public class CreateSurrenderApplyCmd {
     @Data
     public static class SurrenderInfoDTO {
 
+        @ApiModelProperty(value = "车牌号")
+        private String plateNo;
+
         @ApiModelProperty(value = "车辆id")
         private Integer vehicleId;
 
