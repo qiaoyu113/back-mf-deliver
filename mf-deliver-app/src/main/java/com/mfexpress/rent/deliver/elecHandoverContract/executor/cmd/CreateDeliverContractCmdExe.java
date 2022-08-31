@@ -31,6 +31,7 @@ import com.mfexpress.order.dto.qry.ReviewOrderQry;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
 import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
+import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
@@ -130,21 +131,20 @@ public class CreateDeliverContractCmdExe {
 
         List<DeliverImgInfo> deliverImgInfos = cmd.getDeliverImgInfos();
 
-        // 校验车辆的保险状态是否在有效状态
-        checkVehicleInsurance(deliverImgInfos);
-        // 获取数据的orgId
         List<String> serveNos = deliverImgInfos.stream().map(DeliverImgInfo::getServeNo).collect(Collectors.toList());
-        // 重新激活的服务单在进行发车操作时需要的校验
-        ReactivateServeCheckCmd reactivateServeCheckCmd = ReactivateServeCheckCmd.builder().serveNoList(serveNos)
-                .deliverVehicleTime(cmd.getDeliverInfo().getDeliverVehicleTime())
-                .build();
-        reactiveServeCheck.execute(reactivateServeCheckCmd);
-
         Result<Map<String, Serve>> serveMapResult = serveAggregateRootApi.getServeMapByServeNoList(serveNos);
         if (ResultErrorEnum.SUCCESSED.getCode() != serveMapResult.getCode() || null == serveMapResult.getData() || serveMapResult.getData().isEmpty()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单查询失败");
         }
         Map<String, Serve> serveMap = serveMapResult.getData();
+        // 校验车辆的保险状态是否在有效状态
+        checkVehicleInsurance(deliverImgInfos, serveMap);
+
+        // 重新激活的服务单在进行发车操作时需要的校验
+        ReactivateServeCheckCmd reactivateServeCheckCmd = ReactivateServeCheckCmd.builder().serveNoList(serveNos)
+                .deliverVehicleTime(cmd.getDeliverInfo().getDeliverVehicleTime())
+                .build();
+        reactiveServeCheck.execute(reactivateServeCheckCmd);
 
         ReviewOrderQry qry = new ReviewOrderQry();
         Long orderId = serveMap.get(deliverImgInfos.get(0).getServeNo()).getOrderId();
@@ -228,7 +228,7 @@ public class CreateDeliverContractCmdExe {
         return contractIdWithDocIds.getContractId().toString();
     }
 
-    private void checkVehicleInsurance(List<DeliverImgInfo> deliverImgInfos) {
+    private void checkVehicleInsurance(List<DeliverImgInfo> deliverImgInfos, Map<String, Serve> serveMap) {
         List<Integer> vehicleIds = deliverImgInfos.stream().map(DeliverImgInfo::getCarId).collect(Collectors.toList());
         Result<List<VehicleInsuranceDTO>> vehicleInsuranceDTOSResult = vehicleAggregateRootApi.getVehicleInsuranceByVehicleIds(vehicleIds);
         List<VehicleInsuranceDTO> vehicleInsuranceDTOS = ResultDataUtils.getInstance(vehicleInsuranceDTOSResult).getDataOrException();
@@ -245,8 +245,14 @@ public class CreateDeliverContractCmdExe {
             if (PolicyStatusEnum.EXPIRED.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "车辆".concat(deliverImgInfo.getCarNum()).concat("的交强险不在在保状态，请重新确认"));
             }
-            if (PolicyStatusEnum.EXPIRED.getCode() == vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
-                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "车辆".concat(deliverImgInfo.getCarNum()).concat("的商业险不在在保状态，请重新确认"));
+            Serve serve = serveMap.get(deliverImgInfo.getServeNo());
+            if (null == serve) {
+                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单查询失败");
+            }
+            if (LeaseModelEnum.SHOW.getCode() != serve.getLeaseModelId()) {
+                if (PolicyStatusEnum.EXPIRED.getCode() == vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
+                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "车辆".concat(deliverImgInfo.getCarNum()).concat("的商业险不在在保状态，请重新确认"));
+                }
             }
         });
     }
