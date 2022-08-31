@@ -162,6 +162,7 @@ public class RecoverBackInsuranceByDeliverCmdExe {
         deliverDTOList.forEach(deliverDTO -> {
             CreateSurrenderApplyCmd.SurrenderInfoDTO surrenderInfoDTO = new CreateSurrenderApplyCmd.SurrenderInfoDTO();
             surrenderInfoDTO.setVehicleId(deliverDTO.getCarId());
+            surrenderInfoDTO.setPlateNo(deliverDTO.getCarNum());
             surrenderInfoDTO.setApplyReason("收车任务触发退保");
             surrenderInfoDTOS.add(surrenderInfoDTO);
         });
