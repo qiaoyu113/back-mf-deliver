@@ -200,12 +200,18 @@ public class RecoverBackInsuranceByDeliverCmdExe {
         Result<List<VehicleInsuranceDTO>> vehicleInsuranceDTOSResult = vehicleAggregateRootApi.getVehicleInsuranceByVehicleIds(cmd.getCarIdList());
         List<VehicleInsuranceDTO> vehicleInsuranceDTOS = ResultDataUtils.getInstance(vehicleInsuranceDTOSResult).getDataOrException();
         if (null == vehicleInsuranceDTOS || vehicleInsuranceDTOS.isEmpty()) {
-            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆查询失败");
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆保险信息查询失败");
         }
 
 
         for (VehicleInsuranceDTO vehicleInsuranceDTO : vehicleInsuranceDTOS) {
             VehicleDto vehicleDTO = vehicleDTOMap.get(vehicleInsuranceDTO.getVehicleId());
+            if (null == vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
+                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(vehicleDTO.getPlateNumber()).concat("的商业险状态异常"));
+            }
+            if (null == vehicleInsuranceDTO.getCommercialInsuranceStartDate() || null == vehicleInsuranceDTO.getCommercialInsuranceEndDate()) {
+                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(vehicleDTO.getPlateNumber()).concat("的商业险起保日期或终保日期缺失"));
+            }
             if (ValidStatusEnum.INVALID.getCode().equals(vehicleInsuranceDTO.getCommercialInsuranceStatus())) {
                 surrenderApplyVO.setTipFlag(JudgeEnum.YES.getCode());
                 surrenderApplyVO.setTipMsg("您选择的车辆".concat(vehicleDTO.getPlateNumber()).concat("的商业险已在失效状态，不能发起退保申请"));

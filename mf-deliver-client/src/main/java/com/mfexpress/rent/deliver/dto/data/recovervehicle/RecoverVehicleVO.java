@@ -134,6 +134,7 @@ public class RecoverVehicleVO {
     private String vehicleCompulsoryInsuranceStatusDisplay;
 
     @ApiModelProperty(value = "车辆交强险终保日期")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date vehicleCompulsoryInsuranceEndDate;
 
     @ApiModelProperty(value = "车辆商业险状态")
@@ -143,6 +144,7 @@ public class RecoverVehicleVO {
     private String vehicleCommercialInsuranceStatusDisplay;
 
     @ApiModelProperty(value = "车辆商业险终保日期")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date vehicleCommercialInsuranceEndDate;
 
 }

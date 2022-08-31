@@ -34,7 +34,7 @@ public class ReplaceVehicleCheckCmdExe {
     @Resource
     private ExternalRequestUtil externalRequestUtil;
 
-    String tipMsg = "针对当前车辆已经发起了%s投保申请，目前处于投保中，无法终止，请与保险专员联系协商后继处理办法是否继续换车操作？";
+    String tipMsg = "针对当前车辆已经发起了%s投保申请，目前处于投保中，无法终止，请与保险专员联系协商后继处理办法。\n是否继续换车操作？";
 
     public TipVO execute(DeliverReplaceVehicleCheckCmd cmd) {
         Result<DeliverDTO> deliverDTOResult = null;

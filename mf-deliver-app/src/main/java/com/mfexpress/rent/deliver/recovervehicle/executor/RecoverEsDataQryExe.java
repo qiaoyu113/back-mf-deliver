@@ -8,6 +8,7 @@ import com.mfexpress.common.domain.dto.SysOfficeDto;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.dto.data.Page;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
@@ -15,6 +16,9 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
+import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.rent.vehicle.constant.PolicyStatusEnum;
+import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInsuranceDTO;
 import com.mfexpress.rent.deliver.utils.ServeDictDataUtil;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -28,9 +32,12 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class RecoverEsDataQryExe {
@@ -41,6 +48,9 @@ public class RecoverEsDataQryExe {
 
     @Resource
     private BeanFactory beanFactory;
+
+    @Resource
+    private VehicleAggregateRootApi vehicleAggregateRootApi;
 
     public RecoverTaskListVO getEsData(RecoverQryListCmd recoverQryListCmd, BoolQueryBuilder boolQueryBuilder
             , List<FieldSortBuilder> fieldSortBuilderList, TokenInfo tokenInfo, String index, String type) {
@@ -88,6 +98,7 @@ public class RecoverEsDataQryExe {
         List<Map<String, Object>> data = (List<Map<String, Object>>) map.get("data");
         long total = (long) map.get("total");
         LinkedList<RecoverVehicleVO> recoverVehicleVOList = new LinkedList<>();
+        List<Integer> vehicleIdList = new ArrayList<>();
         for (Map<String, Object> dataMap : data) {
             RecoverVehicleVO recoverVehicleVO = new RecoverVehicleVO();
             ServeES serveEs = BeanUtil.mapToBean(dataMap, ServeES.class, false, new CopyOptions());
@@ -96,6 +107,31 @@ public class RecoverEsDataQryExe {
                 recoverVehicleVO.setVehicleBusinessModeDisplay(ServeDictDataUtil.vehicleBusinessModeMap.get(recoverVehicleVO.getVehicleBusinessMode().toString()));
             }
             recoverVehicleVOList.add(recoverVehicleVO);
+            vehicleIdList.add(recoverVehicleVO.getCarId());
+        }
+
+        if (!vehicleIdList.isEmpty()) {
+            Result<List<VehicleInsuranceDTO>> vehicleInsuranceDTOSResult = vehicleAggregateRootApi.getVehicleInsuranceByVehicleIds(vehicleIdList);
+            List<VehicleInsuranceDTO> vehicleInsuranceDTOS = ResultDataUtils.getInstance(vehicleInsuranceDTOSResult).getDataOrException();
+            Map<Integer, VehicleInsuranceDTO> vehicleInsuranceDTOMap = vehicleInsuranceDTOS.stream().collect(Collectors.toMap(VehicleInsuranceDTO::getVehicleId, Function.identity(), (v1, v2) -> v1));
+            for (RecoverVehicleVO recoverVehicleVO : recoverVehicleVOList) {
+                VehicleInsuranceDTO vehicleInsuranceDTO = vehicleInsuranceDTOMap.get(recoverVehicleVO.getCarId());
+                if (null != vehicleInsuranceDTO) {
+                    Integer compulsoryInsuranceStatus = vehicleInsuranceDTO.getCompulsoryInsuranceStatus();
+                    recoverVehicleVO.setVehicleCompulsoryInsuranceStatus(compulsoryInsuranceStatus);
+                    if (null != compulsoryInsuranceStatus) {
+                        recoverVehicleVO.setVehicleCompulsoryInsuranceStatusDisplay(PolicyStatusEnum.getName(compulsoryInsuranceStatus));
+                    }
+                    recoverVehicleVO.setVehicleCompulsoryInsuranceEndDate(vehicleInsuranceDTO.getCompulsoryInsuranceEndDate());
+
+                    Integer commercialInsuranceStatus = vehicleInsuranceDTO.getCommercialInsuranceStatus();
+                    recoverVehicleVO.setVehicleCommercialInsuranceStatus(commercialInsuranceStatus);
+                    if (null != commercialInsuranceStatus) {
+                        recoverVehicleVO.setVehicleCommercialInsuranceStatusDisplay(PolicyStatusEnum.getName(commercialInsuranceStatus));
+                    }
+                    recoverVehicleVO.setVehicleCommercialInsuranceEndDate(vehicleInsuranceDTO.getCommercialInsuranceEndDate());
+                }
+            }
         }
 
         BigDecimal bigDecimalTotal = new BigDecimal(total);
