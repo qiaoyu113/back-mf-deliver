@@ -121,16 +121,20 @@ public class RecoverEsDataQryExe {
                         String compulsoryInsuranceStatusName = getInsuranceStatusName(vehicleInsuranceDTO.getCompulsoryInsuranceStatus(), vehicleInsuranceDTO.getCompulsoryInsuranceEndDate());
                         recoverVehicleVO.setVehicleCompulsoryInsuranceStatusDisplay(compulsoryInsuranceStatusName);
                         recoverVehicleVO.setVehicleCompulsoryInsuranceStatus(compulsoryInsuranceStatusName.startsWith("即将过期") ? PolicyStatusEnum.ABOUT_EXPIRED.getCode() : compulsoryInsuranceStatus);
+                        if (PolicyStatusEnum.EXPIRED.getCode() != recoverVehicleVO.getVehicleCompulsoryInsuranceStatus()) {
+                            recoverVehicleVO.setVehicleCompulsoryInsuranceEndDate(vehicleInsuranceDTO.getCompulsoryInsuranceEndDate());
+                        }
                     }
-                    recoverVehicleVO.setVehicleCompulsoryInsuranceEndDate(vehicleInsuranceDTO.getCompulsoryInsuranceEndDate());
 
                     Integer commercialInsuranceStatus = vehicleInsuranceDTO.getCommercialInsuranceStatus();
                     if (null != commercialInsuranceStatus) {
                         String commercialInsuranceStatusName = getInsuranceStatusName(vehicleInsuranceDTO.getCommercialInsuranceStatus(), vehicleInsuranceDTO.getCommercialInsuranceEndDate());
                         recoverVehicleVO.setVehicleCommercialInsuranceStatusDisplay(commercialInsuranceStatusName);
                         recoverVehicleVO.setVehicleCommercialInsuranceStatus(commercialInsuranceStatusName.startsWith("即将过期") ? PolicyStatusEnum.ABOUT_EXPIRED.getCode() : commercialInsuranceStatus);
+                        if (PolicyStatusEnum.EXPIRED.getCode() != recoverVehicleVO.getVehicleCommercialInsuranceStatus()) {
+                            recoverVehicleVO.setVehicleCommercialInsuranceEndDate(vehicleInsuranceDTO.getCommercialInsuranceEndDate());
+                        }
                     }
-                    recoverVehicleVO.setVehicleCommercialInsuranceEndDate(vehicleInsuranceDTO.getCommercialInsuranceEndDate());
                 }
             }
         }
