@@ -69,10 +69,11 @@ public class PreselectedVehicleCmdExe {
         }
 
         if (2 == cmd.getVehicleInsureRequirement()) {
-            // 只能选择交强险在保而商业险不在保的车辆
             for (VehicleInsuranceDTO vehicleInsuranceDTO : vehicleInsuranceDTOS) {
-                if (PolicyStatusEnum.EFFECT.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus() || PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
-                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "所选车辆中包含交强险在保而商业险不在保的车辆，请重新确认！");
+                if (PolicyStatusEnum.EFFECT.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) {
+                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "仅能选择交强险在保车辆。");
+                } else if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
+                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "合同约定不包含商业险，请选择其他车辆。");
                 }
             }
         }
