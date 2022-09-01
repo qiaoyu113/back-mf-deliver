@@ -101,13 +101,13 @@ public class RecoverBackInsuranceByDeliverCmdExe {
                 if (batchApplyCodeSet.add(applyDTO.getBatchCode())) {
                     SurrenderApplyInfoVO surrenderApplyInfoVO = new SurrenderApplyInfoVO();
                     surrenderApplyInfoVO.setSurrenderApplyCode(applyDTO.getBatchCode());
-                    if (!StringUtils.isEmpty(applyDTO.getInsuranceCompany())) {
+                    /*if (!StringUtils.isEmpty(applyDTO.getInsuranceCompany())) {
                         surrenderApplyInfoVO.setInsuranceCompany(applyDTO.getInsuranceCompany());
                     } else {
                         if (null != applyDTO.getInsuranceCompanyId() && null != insuranceCompanyDictMap) {
                             surrenderApplyInfoVO.setInsuranceCompany(insuranceCompanyDictMap.get(applyDTO.getInsuranceCompanyId().toString()));
                         }
-                    }
+                    }*/
                     applyInfoVOS.add(surrenderApplyInfoVO);
                 }
             } else {
