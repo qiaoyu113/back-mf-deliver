@@ -84,8 +84,10 @@ public class DeliverToReplaceExe {
 
         // 进行保险校验
         if (2 == deliverReplaceCmd.getVehicleInsureRequirement()) {
-            if (PolicyStatusEnum.EFFECT.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus() || PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
-                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "所选车辆中包含交强险在保而商业险不在保的车辆，请重新确认！");
+            if (PolicyStatusEnum.EFFECT.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) {
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "仅能选择交强险在保车辆。");
+            } else if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "合同约定不包含商业险，请选择其他车辆。");
             }
         }
         TipVO tipVO = new TipVO();
@@ -160,10 +162,10 @@ public class DeliverToReplaceExe {
         deliverDTO.setMileage(deliverVehicleSelectCmd.getMileage());
         deliverDTO.setVehicleAge(deliverVehicleSelectCmd.getVehicleAge());
         deliverDTO.setCarServiceId(deliverReplaceCmd.getCarServiceId());
-        if(PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus()){
+        if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) {
             deliverDTO.setCompulsoryPolicyId(vehicleInsuranceDTO.getCompulsoryInsuranceId().toString());
         }
-        if(PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()){
+        if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
             deliverDTO.setCommercialPolicyId(vehicleInsuranceDTO.getCommercialInsuranceId().toString());
         }
         deliverDTO.setDeliverNo(deliver.getDeliverNo());
