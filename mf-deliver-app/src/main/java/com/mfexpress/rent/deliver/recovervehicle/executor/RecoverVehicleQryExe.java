@@ -1,14 +1,13 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import com.mfexpress.base.starter.common.dto.DataScopeInfoDTO;
+import com.mfexpress.base.starter.datascope.util.TmsDataScopeThreadLocalUtil;
 import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
 import com.mfexpress.common.domain.dto.SysOfficeDto;
 import com.mfexpress.component.dto.TokenInfo;
@@ -40,15 +39,25 @@ public class RecoverVehicleQryExe {
     private OfficeAggregateRootApi officeAggregateRootApi;
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
+    @Resource
+    private TmsDataScopeThreadLocalUtil tmsDataScopeThreadLocalUtil;
 
     public List<RecoverApplyVO> execute(RecoverApplyQryCmd recoverApplyQryCmd, TokenInfo tokenInfo) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-        Result<List<SysOfficeDto>> sysOfficeResult = officeAggregateRootApi.getOfficeCityListByRegionId(tokenInfo.getOfficeId());
-        if (sysOfficeResult.getCode() == 0 && sysOfficeResult.getData() != null) {
-            Object[] orgIdList = sysOfficeResult.getData().stream().map(SysOfficeDto::getId).toArray();
-            boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIdList));
+        DataScopeInfoDTO dataScopeInfoDTO = tmsDataScopeThreadLocalUtil.getPaddingDataScope();
+        if (Objects.nonNull(dataScopeInfoDTO)) {
+            boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", dataScopeInfoDTO.getOrgIdList()));
+
+        } else {
+            Result<List<SysOfficeDto>> sysOfficeResult = officeAggregateRootApi.getOfficeCityListByRegionId(tokenInfo.getOfficeId());
+            if (sysOfficeResult.getCode() == 0 && sysOfficeResult.getData() != null) {
+                Object[] orgIdList = sysOfficeResult.getData().stream().map(SysOfficeDto::getId).toArray();
+                boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIdList));
+            }
         }
+
+
         // 去除维修中的服务单不可选择限制
 //        boolQueryBuilder.mustNot(QueryBuilders.matchQuery("serveStatus", ServeEnum.REPAIR.getCode()));
         boolQueryBuilder.must(QueryBuilders.matchQuery("customerId", recoverApplyQryCmd.getCustomerId()))

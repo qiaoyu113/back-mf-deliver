@@ -5,6 +5,8 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
+import com.mfexpress.base.starter.common.dto.DataScopeInfoDTO;
+import com.mfexpress.base.starter.datascope.util.TmsDataScopeThreadLocalUtil;
 import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
 import com.mfexpress.common.domain.dto.SysOfficeDto;
 import com.mfexpress.common.domain.enums.OfficeCodeMsgEnum;
@@ -63,6 +65,8 @@ public class RenewableServeListQryExe {
 
     @Resource
     private RentalCustomerAggregateRootApi rentalCustomerAggregateRootApi;
+    @Resource
+    private TmsDataScopeThreadLocalUtil tmsDataScopeThreadLocalUtil;
 
     // 续约时查询的服务单的状态默认值，现在目前只能是已发车和维修中
     private final List<Integer> defaultServeStatus = Arrays.asList(ServeEnum.DELIVER.getCode(), ServeEnum.REPAIR.getCode());
@@ -78,13 +82,19 @@ public class RenewableServeListQryExe {
 
         // 查询条件拼装
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        if (OfficeCodeMsgEnum.OFFICE_LEVEL_HQ.getCode() != officeCityListResult.getCode()) {
-            if (null == officeCityListResult.getData()) {
-                throw new CommonException(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+        DataScopeInfoDTO dataScopeInfoDTO = tmsDataScopeThreadLocalUtil.getPaddingDataScope();
+        if (Objects.nonNull(dataScopeInfoDTO)) {
+            boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", dataScopeInfoDTO.getOrgIdList()));
+        } else {
+            if (OfficeCodeMsgEnum.OFFICE_LEVEL_HQ.getCode() != officeCityListResult.getCode()) {
+                if (null == officeCityListResult.getData()) {
+                    throw new CommonException(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+                }
+                List<Integer> orgIds = officeCityListResult.getData().stream().map(SysOfficeDto::getId).collect(Collectors.toList());
+                boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIds));
             }
-            List<Integer> orgIds = officeCityListResult.getData().stream().map(SysOfficeDto::getId).collect(Collectors.toList());
-            boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIds));
         }
+
         boolQueryBuilder.must(QueryBuilders.termQuery("customerId", qry.getCustomerId()));
         if (null != qry.getCarId() && 0 != qry.getCarId()) {
             boolQueryBuilder.must(QueryBuilders.termQuery("carId", qry.getCarId()));
@@ -102,7 +112,7 @@ public class RenewableServeListQryExe {
         }
         if (null != qry.getLeaseMode() && !qry.getLeaseMode().isEmpty()) {
             // 如果前端只传leaseModel为3（展示），进行限制查询，其他的不限制
-            if(qry.getLeaseMode().size() == 1 && qry.getLeaseMode().get(0).equals(3)){
+            if (qry.getLeaseMode().size() == 1 && qry.getLeaseMode().get(0).equals(3)) {
                 boolQueryBuilder.must(QueryBuilders.termsQuery("leaseModelId", qry.getLeaseMode()));
             }
         }

@@ -2,6 +2,9 @@ package com.mfexpress.rent.deliver.serve.executor;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import com.mfexpress.base.starter.common.dto.DataScopeInfoDTO;
+import com.mfexpress.base.starter.datascope.util.DataScopeThreadLocalUtil;
+import com.mfexpress.base.starter.datascope.util.TmsDataScopeThreadLocalUtil;
 import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
 import com.mfexpress.common.domain.dto.SysOfficeDto;
 import com.mfexpress.component.dto.TokenInfo;
@@ -32,20 +35,28 @@ public class ServeDeliverTaskListQryExe {
     private ElasticsearchTools elasticsearchTools;
     @Resource
     private OfficeAggregateRootApi officeAggregateRootApi;
+    @Resource
+    private TmsDataScopeThreadLocalUtil tmsDataScopeThreadLocalUtil;
 
     public ServeDeliverTaskListVO execute(ServeDeliverTaskQryCmd serveDeliverTaskQryCmd, TokenInfo tokenInfo) {
 
         ServeDeliverTaskListVO serveDeliverTaskListVO = new ServeDeliverTaskListVO();
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         List<ServeDeliverTaskVO> serveDeliverTaskVOList = new LinkedList<>();
-        try {
 
-            Result<List<SysOfficeDto>> sysOfficeResult = officeAggregateRootApi.getOfficeCityListByRegionId(tokenInfo.getOfficeId());
-            if (sysOfficeResult.getCode() == 0 && sysOfficeResult.getData() != null) {
-                List<SysOfficeDto> sysOfficeDtoList = sysOfficeResult.getData();
-                Object[] orgIdList = sysOfficeDtoList.stream().map(SysOfficeDto::getId).toArray();
-                boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIdList));
+        try {
+            DataScopeInfoDTO dataScopeInfoDTO = tmsDataScopeThreadLocalUtil.getPaddingDataScope();
+            if (Objects.nonNull(dataScopeInfoDTO)) {
+                boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", dataScopeInfoDTO.getOrgIdList()));
+            } else {
+                Result<List<SysOfficeDto>> sysOfficeResult = officeAggregateRootApi.getOfficeCityListByRegionId(tokenInfo.getOfficeId());
+                if (sysOfficeResult.getCode() == 0 && sysOfficeResult.getData() != null) {
+                    List<SysOfficeDto> sysOfficeDtoList = sysOfficeResult.getData();
+                    Object[] orgIdList = sysOfficeDtoList.stream().map(SysOfficeDto::getId).toArray();
+                    boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIdList));
+                }
             }
+
         } catch (Exception e) {
             boolQueryBuilder.must(QueryBuilders.termQuery("orgId", tokenInfo.getOfficeId()));
         }

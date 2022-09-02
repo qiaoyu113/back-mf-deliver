@@ -3,6 +3,8 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import com.mfexpress.base.starter.common.dto.DataScopeInfoDTO;
+import com.mfexpress.base.starter.datascope.util.TmsDataScopeThreadLocalUtil;
 import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
 import com.mfexpress.common.domain.dto.SysOfficeDto;
 import com.mfexpress.component.dto.TokenInfo;
@@ -31,6 +33,7 @@ import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 public class RecoverEsDataQryExe {
@@ -38,6 +41,8 @@ public class RecoverEsDataQryExe {
     private ElasticsearchTools elasticsearchTools;
     @Resource
     private OfficeAggregateRootApi officeAggregateRootApi;
+    @Resource
+    private TmsDataScopeThreadLocalUtil tmsDataScopeThreadLocalUtil;
 
     @Resource
     private BeanFactory beanFactory;
@@ -53,12 +58,19 @@ public class RecoverEsDataQryExe {
         sortBuilderList.add(scoreSortBuilder);
         sortBuilderList.addAll(fieldSortBuilderList);
 
-        Result<List<SysOfficeDto>> sysOfficeResult = officeAggregateRootApi.getOfficeCityListByRegionId(tokenInfo.getOfficeId());
-        if (sysOfficeResult.getCode() == 0 && sysOfficeResult.getData() != null) {
-            List<SysOfficeDto> sysOfficeDtoList = sysOfficeResult.getData();
-            Object[] orgIdList = sysOfficeDtoList.stream().map(SysOfficeDto::getId).toArray();
-            boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIdList));
+        DataScopeInfoDTO dataScopeInfoDTO = tmsDataScopeThreadLocalUtil.getPaddingDataScope();
+        if (Objects.nonNull(dataScopeInfoDTO)) {
+            boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", dataScopeInfoDTO.getOrgIdList()));
+        } else {
+            Result<List<SysOfficeDto>> sysOfficeResult = officeAggregateRootApi.getOfficeCityListByRegionId(tokenInfo.getOfficeId());
+            if (sysOfficeResult.getCode() == 0 && sysOfficeResult.getData() != null) {
+                List<SysOfficeDto> sysOfficeDtoList = sysOfficeResult.getData();
+                Object[] orgIdList = sysOfficeDtoList.stream().map(SysOfficeDto::getId).toArray();
+                boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIdList));
+            }
+
         }
+
 
         if (StringUtils.isNotBlank(recoverQryListCmd.getKeyword())) {
             boolQueryBuilder.must(QueryBuilders.multiMatchQuery(recoverQryListCmd.getKeyword(), "customerName", "customerPhone"));
