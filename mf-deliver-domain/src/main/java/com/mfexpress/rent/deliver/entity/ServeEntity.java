@@ -15,6 +15,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeUpdatePayableDepositCmd;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
 import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
@@ -307,5 +308,14 @@ public class ServeEntity implements ServeEntityApi {
         updateServe.setPaidInDeposit(serve.getPaidInDeposit().add(cmd.getChargeDepositAmount()));
 
         return serveGateway.updateServeByServeNo(cmd.getServeNo(), updateServe);
+    }
+
+    @Override
+    public Integer updateServePayableDeposit(ServeUpdatePayableDepositCmd cmd) {
+        ServeEntity serveEntity = new ServeEntity();
+        serveEntity.setContractCommodityId(cmd.getContractCommodityId());
+        serveEntity.setDeposit(cmd.getDepositAmount());
+        serveEntity.setPayableDeposit(cmd.getDepositAmount());
+        return serveGateway.updateServePayableDepositByContractCommodityId(serveEntity);
     }
 }

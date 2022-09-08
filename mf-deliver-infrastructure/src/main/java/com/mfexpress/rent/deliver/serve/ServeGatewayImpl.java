@@ -267,5 +267,13 @@ public class ServeGatewayImpl implements ServeGateway {
         return serveMapper.selectCountByExample(example);
     }
 
+    @Override
+    public Integer updateServePayableDepositByContractCommodityId(ServeEntity serveEntity) {
+        Example example = new Example(ServeEntity.class);
+        example.createCriteria().andEqualTo("contractCommodityId", serveEntity.getContractCommodityId());
+
+        return serveMapper.updateByExampleSelective(serveEntity, example);
+    }
+
 
 }
