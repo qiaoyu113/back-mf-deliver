@@ -18,8 +18,8 @@ import java.util.Date;
 @NoArgsConstructor
 public class ServeUpdatePayableDepositCmd extends BaseCmd {
 
-    @ApiModelProperty(value = "合同商品id")
-    private Integer contractCommodityId;
+    @ApiModelProperty(value = "服务单号")
+    private String serveNo;
 
     @ApiModelProperty(value = "押金金额")
     private BigDecimal depositAmount;
