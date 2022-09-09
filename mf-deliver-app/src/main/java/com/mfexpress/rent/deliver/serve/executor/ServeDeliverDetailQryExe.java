@@ -16,6 +16,9 @@ import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.InsureApplyQry;
+import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.vo.PolicyVO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleVO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
@@ -24,6 +27,7 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecDocDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.ElecHandoverDocVO;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.util.ExternalRequestUtil;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
@@ -31,6 +35,7 @@ import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
@@ -65,6 +70,9 @@ public class ServeDeliverDetailQryExe {
 
     @Resource
     private ElecHandoverContractAggregateRootApi contractAggregateRootApi;
+
+    @Resource
+    private ExternalRequestUtil externalRequestUtil;
 
     @Resource
     private BeanFactory beanFactory;
@@ -167,6 +175,44 @@ public class ServeDeliverDetailQryExe {
     public VehicleInsuranceVO getVehicleInsuranceVO(DeliverDTO deliverDTO) {
         VehicleInsuranceVO vehicleInsuranceVO = new VehicleInsuranceVO();
         vehicleInsuranceVO.setStartTime(deliverDTO.getInsuranceStartTime());
+
+        // 判断是否需要展示保单数据
+        InsureApplyQry insureApplyQry = new InsureApplyQry();
+        insureApplyQry.setDeliverNo(deliverDTO.getDeliverNo());
+        insureApplyQry.setType(InsuranceApplyTypeEnum.INSURE.getCode());
+        Result<InsuranceApplyDTO> insuranceApplyDTOResult = deliverAggregateRootApi.getInsuranceApply(insureApplyQry);
+        InsuranceApplyDTO insuranceApplyDTO = ResultDataUtils.getInstance(insuranceApplyDTOResult).getDataOrNull();
+        if (null == insuranceApplyDTO) {
+            return vehicleInsuranceVO;
+        }
+
+        // 需要展示
+        vehicleInsuranceVO.setDeliverInsuranceInfoTemplate(2);
+        String compulsoryPolicyId = insuranceApplyDTO.getCompulsoryPolicyId();
+        if (!StringUtils.isEmpty(compulsoryPolicyId)) {
+            Result<PolicyVO> policyResult = externalRequestUtil.getCompulsoryPolicy(compulsoryPolicyId);
+            PolicyVO policyVO = ResultDataUtils.getInstance(policyResult).getDataOrException();
+            if (null != policyVO) {
+                vehicleInsuranceVO.setCompulsoryInsuranceAcceptParty(policyVO.getInsuranceCompanyName());
+                vehicleInsuranceVO.setCompulsoryInsuranceInsureParty(policyVO.getPolicyHolder());
+                vehicleInsuranceVO.setCompulsoryInsurancePolicyNo(policyVO.getPolicyNo());
+                vehicleInsuranceVO.setCompulsoryInsuranceStartDate(policyVO.getStartInsureDate());
+                vehicleInsuranceVO.setCompulsoryInsuranceEndDate(policyVO.getEndInsureDate());
+            }
+        }
+        String commercialPolicyId = insuranceApplyDTO.getCommercialPolicyId();
+        if (!StringUtils.isEmpty(commercialPolicyId)) {
+            Result<PolicyVO> policyResult = externalRequestUtil.getCommercialPolicy(commercialPolicyId);
+            PolicyVO policyVO = ResultDataUtils.getInstance(policyResult).getDataOrException();
+            if (null != policyVO) {
+                vehicleInsuranceVO.setCommercialInsuranceAcceptParty(policyVO.getInsuranceCompanyName());
+                vehicleInsuranceVO.setCommercialInsuranceInsureParty(policyVO.getPolicyHolder());
+                vehicleInsuranceVO.setCommercialInsurancePolicyNo(policyVO.getPolicyNo());
+                vehicleInsuranceVO.setCommercialInsuranceStartDate(policyVO.getStartInsureDate());
+                vehicleInsuranceVO.setCommercialInsuranceEndDate(policyVO.getEndInsureDate());
+            }
+        }
+
         return vehicleInsuranceVO;
     }
 
