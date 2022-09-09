@@ -550,8 +550,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         Map<String, RenewalServeCmd> renewalServeCmdMap = renewalServeCmdList.stream().collect(Collectors.toMap(RenewalServeCmd::getServeNo, Function.identity(), (v1, v2) -> v1));
         List<String> serveNoList = new ArrayList<>(renewalServeCmdMap.keySet());
 
-        // 租赁开始日期必须大于发车日期校验
-        List<DeliverEntity> deliverEntityList = deliverGateway.getDeliverByServeNoList(serveNoList);
+        // 租赁开始日期必须大于发车日期校验 ----- 20220824 逻辑屏蔽，该校验逻辑已前置到创建编辑合同时
+        /*List<DeliverEntity> deliverEntityList = deliverGateway.getDeliverByServeNoList(serveNoList);
         if (deliverEntityList.size() != serveNoList.size()) {
             throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "交车单查询失败");
         }
@@ -572,7 +572,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             if (leaseBeginDate.isBefore(deliverVehicleTime)) {
                 throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), renewalServeCmd.getCarNum() + "车辆在续约时租赁开始日期小于发车日期，续约失败");
             }
-        });
+        });*/
 
         // 判断服务单是否存在，状态是否为已发车或维修中
         List<ServeEntity> serveList = serveGateway.getServeByServeNoList(serveNoList);
@@ -656,6 +656,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 renewalChargeCmd.setRentEffectDate(renewalServeCmd.getBillingAdjustmentDate());
             }*/
             renewalChargeCmd.setRenewalDate(renewalServeCmd.getLeaseEndDate());
+            renewalChargeCmd.setVehicleBusinessMode(deliver.getVehicleBusinessMode());
             mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
             return serve;
         }).collect(Collectors.toList());
@@ -749,6 +750,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                     renewalChargeCmd.setEffectFlag(false);
                     renewalChargeCmd.setRenewalDate(replaceServe.getExpectRecoverDate());
                     renewalChargeCmd.setRentRatio(commodityDTOMap.get(replaceServe.getContractCommodityId()).getRentRatio());
+                    renewalChargeCmd.setVehicleBusinessMode(deliver.getVehicleBusinessMode());
                     mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
                 }
             });
@@ -845,6 +847,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             } else {
                 renewalChargeCmd.setRentRatio(0.00);
             }
+            renewalChargeCmd.setVehicleBusinessMode(deliver.getVehicleBusinessMode());
             mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
 
             return serveToUpdate;

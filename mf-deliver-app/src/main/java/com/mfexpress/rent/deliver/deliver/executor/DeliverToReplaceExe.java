@@ -162,6 +162,7 @@ public class DeliverToReplaceExe {
         deliverDTO.setMileage(deliverVehicleSelectCmd.getMileage());
         deliverDTO.setVehicleAge(deliverVehicleSelectCmd.getVehicleAge());
         deliverDTO.setCarServiceId(deliverReplaceCmd.getCarServiceId());
+        deliverDTO.setVehicleBusinessMode(vehicleInfoDto.getVehicleBusinessMode());
         if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) {
             deliverDTO.setCompulsoryPolicyId(vehicleInsuranceDTO.getCompulsoryInsuranceId().toString());
         }

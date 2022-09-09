@@ -33,6 +33,7 @@ import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -72,6 +73,9 @@ public class ServeDeliverDetailQryExe {
 
     @Resource
     private ExternalRequestUtil externalRequestUtil;
+
+    @Resource
+    private BeanFactory beanFactory;
 
     public ServeDeliverDetailVO execute(ServeQryCmd cmd) {
         String serveNo = cmd.getServeNo();
@@ -227,6 +231,10 @@ public class ServeDeliverDetailQryExe {
         vehicleVO.setVin(deliverDTO.getFrameNum());
         vehicleVO.setMileage(deliverDTO.getMileage());
         vehicleVO.setVehicleAge(deliverDTO.getVehicleAge());
+        vehicleVO.setVehicleBusinessMode(deliverDTO.getVehicleBusinessMode());
+        if (null != deliverDTO.getVehicleBusinessMode()) {
+            vehicleVO.setVehicleBusinessModeDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.VEHICLE_BUSINESS_MODE), deliverDTO.getVehicleBusinessMode().toString()));
+        }
         return vehicleVO;
     }
 

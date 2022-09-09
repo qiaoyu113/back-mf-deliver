@@ -87,6 +87,11 @@ public class ServeVO {
     @ApiModelProperty(value = "押金")
     private BigDecimal deposit;
 
+    @ApiModelProperty(value = "车辆运营模式")
+    private Integer vehicleBusinessMode;
+
+    @ApiModelProperty(value = "车辆运营模式描述")
+    private String vehicleBusinessModeDisplay;
     @ApiModelProperty(value = "操作按钮显示，目前只会出现在发车待投保列表中，1：显示投保申请按钮，2：显示录入保单信息按钮")
     private Integer operationButton;
 

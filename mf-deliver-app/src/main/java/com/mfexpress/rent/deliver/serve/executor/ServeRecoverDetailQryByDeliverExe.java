@@ -200,6 +200,10 @@ public class ServeRecoverDetailQryByDeliverExe {
         vehicleVO.setVin(deliverDTO.getFrameNum());
         vehicleVO.setDeliverVehicleTime(deliverVehicleDTO.getDeliverVehicleTime());
         vehicleVO.setExpectRecoverTime(recoverVehicleDTO.getExpectRecoverTime());
+        vehicleVO.setVehicleBusinessMode(deliverDTO.getVehicleBusinessMode());
+        if (null != deliverDTO.getVehicleBusinessMode()) {
+            vehicleVO.setVehicleBusinessModeDisplay(getDictDataDtoLabelByValue(getDictDataDtoMapByDictType(Constants.VEHICLE_BUSINESS_MODE), deliverDTO.getVehicleBusinessMode().toString()));
+        }
         return vehicleVO;
     }
 

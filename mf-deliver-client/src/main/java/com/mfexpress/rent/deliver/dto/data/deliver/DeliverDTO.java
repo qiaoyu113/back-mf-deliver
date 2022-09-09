@@ -86,4 +86,6 @@ public class DeliverDTO {
 
     private String commercialPolicyId;
 
+    private Integer vehicleBusinessMode;
+
 }
