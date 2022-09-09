@@ -119,7 +119,7 @@ public class DeliverToPreselectedExe {
             deliverDTO.setVehicleAge(deliverVehicleSelectCmd.getVehicleAge());
             deliverDTO.setCustomerId(deliverPreselectedCmd.getCustomerId());
             deliverDTO.setCarServiceId(deliverPreselectedCmd.getCarServiceId());
-            deliverDTO.setVehicleBusinessMode(vehicleInfoDto.getVehicleBusinessMode());
+//            deliverDTO.setVehicleBusinessMode(vehicleInfoDto.getVehicleBusinessMode());
             deliverDTO.setCompulsoryPolicyId(deliverVehicleSelectCmd.getCompulsoryPolicyId());
             deliverDTO.setCommercialPolicyId(deliverVehicleSelectCmd.getCommercialPolicyId());
             deliverList.add(deliverDTO);
