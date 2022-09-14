@@ -56,7 +56,6 @@ import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.parameters.P;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
@@ -87,9 +86,6 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
     @Resource
     private DeliverGateway deliverGateway;
-
-    @Resource
-    private DeliverVehicleGateway deliverVehicleGateway;
 
     @Resource
     private DeliverEntityApi deliverEntityApi;
@@ -610,6 +606,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             // goodsId为合同商品id，不应更改服务单的商品id字段
             serve.setContractCommodityId(renewalServeCmd.getContractCommodityId());
             serve.setGoodsId(null);
+            BigDecimal deposit = new BigDecimal(renewalServeCmd.getDeposit().toString());
+            serve.setDeposit(deposit);
+            serve.setPayableDeposit(deposit);
 
             ServeChangeRecordPO record = new ServeChangeRecordPO();
             ServeEntity rawDataServe = serveMap.get(serve.getServeNo());
@@ -1207,7 +1206,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         return Result.getInstance(0).fail(ResultErrorEnum.OPER_ERROR.getCode(), "更新服务单失败");
     }
 
-    @Override
+    /*@Override
     @PostMapping(value = "/serve/update/payableDeposit")
     @PrintParam
     public Result<Integer> updateServePayableDeposit(@RequestBody ServeUpdatePayableDepositCmd cmd) {
@@ -1216,5 +1215,5 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             return Result.getInstance(updateServePayableDeposit).success();
         }
         return Result.getInstance(0).fail(ResultErrorEnum.OPER_ERROR.getCode(), "更新服务单应缴押金失败");
-    }
+    }*/
 }

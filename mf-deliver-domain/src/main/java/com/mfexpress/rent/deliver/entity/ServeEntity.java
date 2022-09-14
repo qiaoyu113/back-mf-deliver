@@ -310,12 +310,12 @@ public class ServeEntity implements ServeEntityApi {
         return serveGateway.updateServeByServeNo(cmd.getServeNo(), updateServe);
     }
 
-    @Override
+    /*@Override
     public Integer updateServePayableDeposit(ServeUpdatePayableDepositCmd cmd) {
         ServeEntity serveEntity = new ServeEntity();
         serveEntity.setServeNo(cmd.getServeNo());
         serveEntity.setDeposit(cmd.getDepositAmount());
         serveEntity.setPayableDeposit(cmd.getDepositAmount());
         return serveGateway.updateServePayableDepositByContractCommodityId(serveEntity);
-    }
+    }*/
 }

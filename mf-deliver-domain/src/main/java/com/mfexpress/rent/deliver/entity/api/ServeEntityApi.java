@@ -54,5 +54,5 @@ public interface ServeEntityApi {
 
     Integer updateServePaidInDeposit(ServePaidInDepositUpdateCmd cmd);
 
-    Integer updateServePayableDeposit(ServeUpdatePayableDepositCmd cmd);
+    /*Integer updateServePayableDeposit(ServeUpdatePayableDepositCmd cmd);*/
 }
