@@ -4,6 +4,7 @@ package com.mfexpress.rent.deliver.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
@@ -639,9 +640,24 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             if (StringUtils.isEmpty(renewalServeCmd.getBillingAdjustmentDate())) {
                 renewalChargeCmd.setEffectFlag(false);
             } else {
+                // 续签时，选择的计费调整日期，如选择的本月，但是续签合同在次月生效后，则系统中客户月账单从次月1日开始根据新月租金计费
                 renewalChargeCmd.setEffectFlag(true);
                 renewalChargeCmd.setRent(serve.getRent());
-                renewalChargeCmd.setRentEffectDate(renewalServeCmd.getBillingAdjustmentDate());
+                String billingAdjustmentDate = renewalServeCmd.getBillingAdjustmentDate();
+                int billingAdjustmentYear = DateUtil.parseDate(billingAdjustmentDate).getField(DateField.YEAR);
+                int billingAdjustmentMonth = DateUtil.parseDate(billingAdjustmentDate).getField(DateField.MONTH);
+                DateTime nowDateTime = new DateTime();
+                int nowDateYear = nowDateTime.getField(DateField.YEAR);
+                int nowDateMonth = nowDateTime.getField(DateField.MONTH);
+                if (billingAdjustmentYear != nowDateYear) {
+                    renewalChargeCmd.setRentEffectDate(DateUtil.beginOfMonth(nowDateTime).toString("yyyy-MM-dd"));
+                } else {
+                    if (billingAdjustmentMonth != nowDateMonth) {
+                        renewalChargeCmd.setRentEffectDate(DateUtil.beginOfMonth(nowDateTime).toString("yyyy-MM-dd"));
+                    } else {
+                        renewalChargeCmd.setRentEffectDate(renewalServeCmd.getBillingAdjustmentDate());
+                    }
+                }
             }
             if (Objects.nonNull(commodityDTOMap.get(serve.getContractCommodityId()))) {
                 renewalChargeCmd.setRentRatio(commodityDTOMap.get(serve.getContractCommodityId()).getRentRatio());
