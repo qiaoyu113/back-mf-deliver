@@ -30,7 +30,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import tk.mybatis.mapper.entity.Example;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
