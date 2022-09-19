@@ -131,6 +131,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             BeanUtils.copyProperties(serve, serveDTO);
             if (!StringUtils.isEmpty(serve.getLeaseEndDate())) {
                 serveDTO.setLeaseEndDate(DateUtil.parseDate(serve.getLeaseEndDate()));
+            }
+            if (!StringUtils.isEmpty(serve.getLeaseBeginDate())) {
                 serveDTO.setLeaseBeginDate(DateUtil.parseDate(serve.getLeaseBeginDate()));
             }
             return Result.getInstance(serveDTO).success();
