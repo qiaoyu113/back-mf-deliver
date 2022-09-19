@@ -23,6 +23,7 @@ import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.VehicleInsuranceAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.PolicyStatusEnum;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
+import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInfoDto;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInsuranceDTO;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import com.mfexpress.rent.vehicle.data.dto.vehicleinsurance.VehicleInsuranceDto;
@@ -96,6 +97,12 @@ public class DeliverToPreselectedExe {
             if (null == vehicleInsuranceDTO) {
                 throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆保险信息查询失败");
             }
+
+            Result<VehicleInfoDto> vehicleResult = vehicleAggregateRootApi.getVehicleInfoVOById(deliverVehicleSelectCmd.getId());
+            if (vehicleResult.getCode() != 0 || vehicleResult.getData() == null) {
+                throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), vehicleResult.getMsg());
+            }
+            VehicleInfoDto vehicleInfoDto = vehicleResult.getData();
 
             if (((PolicyStatusEnum.EFFECT.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus() || PolicyStatusEnum.ABOUT_EXPIRED.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) &&
                     (PolicyStatusEnum.EFFECT.getCode() == vehicleInsuranceDTO.getCommercialInsuranceStatus() || PolicyStatusEnum.ABOUT_EXPIRED.getCode() == vehicleInsuranceDTO.getCommercialInsuranceStatus())) ||

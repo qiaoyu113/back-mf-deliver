@@ -190,11 +190,11 @@ public class RecoverBackInsuranceByDeliverCmdExe {
         for (VehicleDto vehicleDTO : vehicleDTOS) {
             if (ValidSelectStatusEnum.CHECKED.getCode().equals(vehicleDTO.getSelectStatus())) {
                 surrenderApplyVO.setTipFlag(JudgeEnum.YES.getCode());
-                surrenderApplyVO.setTipMsg("您选择的车辆".concat(vehicleDTO.getPlateNumber()).concat("已被预选，暂不支持退保操作！"));
+                surrenderApplyVO.setTipMsg("您选择的车辆".concat(vehicleDTO.getPlateNumber()).concat("已被预选，暂不支持退保操作！请选择暂不退保继续收车动作。"));
             }
             if (ValidSelectStatusEnum.LEASE.getCode().equals(vehicleDTO.getSelectStatus())) {
                 surrenderApplyVO.setTipFlag(JudgeEnum.YES.getCode());
-                surrenderApplyVO.setTipMsg("您选择的车辆".concat(vehicleDTO.getPlateNumber()).concat("已被租赁，暂不支持退保操作！"));
+                surrenderApplyVO.setTipMsg("您选择的车辆".concat(vehicleDTO.getPlateNumber()).concat("已被租赁，暂不支持退保操作！请选择暂不退保继续收车动作。"));
             }
         }
 
