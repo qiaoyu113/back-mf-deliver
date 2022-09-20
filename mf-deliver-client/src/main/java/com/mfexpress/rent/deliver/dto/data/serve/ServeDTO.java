@@ -76,4 +76,7 @@ public class ServeDTO {
     private BigDecimal payableDeposit;
 
     private BigDecimal paidInDeposit;
+
+    private Long contractId;
+
 }
