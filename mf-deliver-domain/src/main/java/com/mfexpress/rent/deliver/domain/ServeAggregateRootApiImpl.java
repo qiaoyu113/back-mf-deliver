@@ -537,7 +537,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         if (CollectionUtil.isEmpty(serveListByOrderIds)) {
             return Result.getInstance((List<ServeDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
-        List<ServeDTO> serveDTOS = BeanUtil.copyToList(serveListByOrderIds, ServeDTO.class, CopyOptions.create());
+        List<ServeDTO> serveDTOS = BeanUtil.copyToList(serveListByOrderIds, ServeDTO.class, CopyOptions.create().ignoreCase().ignoreError());
         return Result.getInstance(serveDTOS).success();
     }
 
@@ -943,7 +943,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
         PagePagination<ServeEntity> pagePagination = serveGateway.getPageServeByQry(qry);
         PagePagination<Serve> servePagePagination = new PagePagination<>();
-        BeanUtil.copyProperties(pagePagination, servePagePagination);
+        BeanUtil.copyProperties(pagePagination, servePagePagination, new CopyOptions().ignoreError());
         List<ServeEntity> serveEntityList = pagePagination.getList();
         List<Serve> serveList = BeanUtil.copyToList(serveEntityList, Serve.class, new CopyOptions().ignoreError());
         servePagePagination.setList(serveList);
