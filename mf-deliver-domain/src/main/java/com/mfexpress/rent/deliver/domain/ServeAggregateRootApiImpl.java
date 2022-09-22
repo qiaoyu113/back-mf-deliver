@@ -654,7 +654,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 if (billingAdjustmentYear != nowDateYear) {
                     renewalChargeCmd.setRentEffectDate(DateUtil.beginOfMonth(nowDateTime).toString("yyyy-MM-dd"));
                 } else {
-                    if (billingAdjustmentMonth != nowDateMonth) {
+                    if (billingAdjustmentMonth < nowDateMonth) {
                         renewalChargeCmd.setRentEffectDate(DateUtil.beginOfMonth(nowDateTime).toString("yyyy-MM-dd"));
                     } else {
                         renewalChargeCmd.setRentEffectDate(renewalServeCmd.getBillingAdjustmentDate());
