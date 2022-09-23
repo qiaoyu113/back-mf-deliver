@@ -14,4 +14,5 @@ public interface DeliverVehicleServiceI {
     String toDeliver(DeliverVehicleCmd deliverVehicleCmd);
 
     LinkmanVo getDeliverByDeliverNo(Integer customerCmd);
+    LinkmanVo getLinkmanByCustomerId(Integer customerId);
 }
