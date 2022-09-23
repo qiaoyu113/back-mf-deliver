@@ -12,8 +12,10 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
 import com.mfexpress.rent.deliver.entity.DeliverEntity;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
+import com.mfexpress.rent.deliver.entity.vo.ServeReplaceVehicleVO;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.serve.repository.ServeMapper;
+import com.mfexpress.rent.deliver.serve.repository.ServeReplaceVehicleVOMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import tk.mybatis.mapper.entity.Example;
@@ -27,6 +29,8 @@ public class ServeGatewayImpl implements ServeGateway {
 
     @Resource
     private ServeMapper serveMapper;
+    @Resource
+    private ServeReplaceVehicleVOMapper serveReplaceVehicleVOMapper;
 
     @Override
     public int updateServeByServeNo(String serveNo, ServeEntity serve) {
@@ -265,6 +269,12 @@ public class ServeGatewayImpl implements ServeGateway {
         example.createCriteria().andIn("status", Arrays.asList(ServeEnum.DELIVER.getCode(), ServeEnum.REPAIR.getCode()))
                 .andEqualTo("customerId", customerId);
         return serveMapper.selectCountByExample(example);
+    }
+
+    @Override
+    public Integer addServeReplaceVehicle(ServeReplaceVehicleVO serveReplaceVehicleVO) {
+
+        return serveReplaceVehicleVOMapper.insertSelective(serveReplaceVehicleVO);
     }
 
 

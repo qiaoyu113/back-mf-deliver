@@ -6,6 +6,8 @@ import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
+import com.mfexpress.rent.deliver.entity.vo.ServeReplaceVehicleVO;
+import io.swagger.models.auth.In;
 
 import java.util.List;
 import java.util.Map;
@@ -47,4 +49,6 @@ public interface ServeGateway {
     Map<Integer,Integer> getReplaceNumByCustomerIds(List<Integer> customerIds);
 
     Integer getRentingServeNumByCustomerId(Integer customerId);
+
+    Integer addServeReplaceVehicle(ServeReplaceVehicleVO serveReplaceVehicleVO);
 }
