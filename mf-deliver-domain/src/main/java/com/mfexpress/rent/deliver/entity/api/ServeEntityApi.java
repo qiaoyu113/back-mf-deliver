@@ -55,4 +55,6 @@ public interface ServeEntityApi {
     Integer updateServePaidInDeposit(ServePaidInDepositUpdateCmd cmd);
 
     Integer cancelSelected(CancelPreSelectedCmd cmd);
+
+    int cancelServeReplaceVehicle(String serveNo);
 }

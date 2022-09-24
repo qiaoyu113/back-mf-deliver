@@ -17,6 +17,10 @@
             <groupId>com.mfexpress.rent.deliver</groupId>
             <artifactId>mf-deliver-client</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.hx.backmarket</groupId>
+            <artifactId>backmarket-maintain-client</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.mfexpress.rent.deliver</groupId>

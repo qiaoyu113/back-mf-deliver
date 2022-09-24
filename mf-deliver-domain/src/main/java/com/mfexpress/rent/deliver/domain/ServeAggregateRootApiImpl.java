@@ -1100,6 +1100,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             // 取消交付单
             deliverAggregateRootApi.cancelDeliver(deliverCancelCmd);
 
+            serveEntityApi.cancelServeReplaceVehicle(cmd.getServeNo());
+
             // 修改车辆状态
             VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
             vehicleSaveCmd.setId(Collections.singletonList(deliverDTO.getCarId()));

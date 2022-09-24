@@ -277,5 +277,19 @@ public class ServeGatewayImpl implements ServeGateway {
         return serveReplaceVehicleVOMapper.insertSelective(serveReplaceVehicleVO);
     }
 
+    @Override
+    public List<ServeReplaceVehicleVO> getServeReplaceVehicle(String serveNo) {
+        Example example = new Example(ServeReplaceVehicleVO.class);
+        example.createCriteria().andEqualTo("targetServeNo", serveNo);
+        return serveReplaceVehicleVOMapper.selectByExample(example);
+    }
+
+    @Override
+    public int saveServeReplaceVehicle(ServeReplaceVehicleVO serveReplaceVehicle) {
+        Example example = new Example(ServeReplaceVehicleVO.class);
+        example.createCriteria().andEqualTo("id", serveReplaceVehicle.getCreateId());
+        return serveReplaceVehicleVOMapper.updateByExampleSelective(serveReplaceVehicle, example);
+    }
+
 
 }
