@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.entity.api;
 
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.CancelPreSelectedCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 
 import com.mfexpress.component.response.PagePagination;
@@ -50,5 +51,5 @@ public interface ServeEntityApi {
 
     Integer updateServePaidInDeposit(ServePaidInDepositUpdateCmd cmd);
 
-    /*Integer updateServePayableDeposit(ServeUpdatePayableDepositCmd cmd);*/
+    Integer cancelSelected(CancelPreSelectedCmd cmd);
 }

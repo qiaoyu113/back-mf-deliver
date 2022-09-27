@@ -14,8 +14,8 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverInsureCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverQry;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverVehicleMqDTO;
-import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
-import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCompletedCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.*;
+import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
@@ -146,4 +146,28 @@ public interface DeliverAggregateRootApi {
      */
     @PostMapping(value = "/deliver/completed")
     Result<Integer> completedDeliver(@RequestBody DeliverCompletedCmd cmd);
+
+    @PostMapping(value = "/insureByCompany")
+    Result<Integer> insureByCompany(@RequestBody @Validated DeliverInsureCmd cmd);
+
+    @PostMapping(value = "/insureByCustomer")
+    Result<Integer> insureByCustomer(@RequestBody @Validated DeliverInsureByCustomerCmd cmd);
+
+    @PostMapping(value = "/insureComplete")
+    Result<Integer> insureComplete(@RequestBody @Validated InsureCompleteCmd cmd);
+
+    @PostMapping(value = "/getInsuranceApplyListByDeliverNoList")
+    Result<List<InsuranceApplyDTO>> getInsuranceApplyListByDeliverNoList(@RequestBody List<String> deliverNoList);
+
+    @PostMapping(value = "/cancelSelectedByDeliver")
+    Result<Integer> cancelSelectedByDeliver(@RequestBody CancelPreSelectedCmd cmd);
+
+    @PostMapping(value = "/backInsure")
+    Result<Integer> backInsure(@RequestBody @Validated RecoverBackInsureByDeliverCmd cmd);
+
+    @PostMapping(value = "/getInsuranceApply")
+    Result<InsuranceApplyDTO> getInsuranceApply(@RequestBody @Validated InsureApplyQry qry);
+
+    @PostMapping(value = "/getDeliverDTOListByDeliverNoList")
+    Result<List<DeliverDTO>> getDeliverDTOListByDeliverNoList(@RequestBody List<String> deliverNoList);
 }

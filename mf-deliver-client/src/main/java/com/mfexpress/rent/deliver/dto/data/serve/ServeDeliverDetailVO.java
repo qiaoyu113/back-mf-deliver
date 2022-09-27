@@ -29,5 +29,7 @@ public class ServeDeliverDetailVO {
     @ApiModelProperty(value = "电子交接单信息")
     private ElecHandoverDocVO elecHandoverDocVO;
 
+
+
 }
 

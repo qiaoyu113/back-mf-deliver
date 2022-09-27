@@ -26,20 +26,8 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
-import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverAbnormalCmdExe;
-import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverAbnormalQryExe;
-import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverApplyExe;
-import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverBackInsureByDeliverExe;
-import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverBackInsureExe;
-import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverCancelByDeliverExe;
-import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverCancelExe;
-import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverDeductionByDeliverExe;
-import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverDeductionExe;
-import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverToCheckExe;
-import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverVehicleCheckInfoCacheExe;
-import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverVehicleCheckInfoQryExe;
-import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverVehicleDetailQryExe;
-import com.mfexpress.rent.deliver.recovervehicle.executor.RecoverVehicleQryExe;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.vo.SurrenderApplyVO;
+import com.mfexpress.rent.deliver.recovervehicle.executor.*;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.entity.vo.LinkmanVo;
 import lombok.extern.slf4j.Slf4j;
@@ -91,6 +79,8 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     @Resource
     private CustomerAggregateRootApi  customerAggregateRootApi;
 
+    @Resource
+    private RecoverBackInsuranceByDeliverCmdExe recoverBackInsuranceByDeliverCmdExe;
 
     @Override
     public List<RecoverApplyVO> getRecoverVehicleListVO(RecoverApplyQryCmd recoverApplyQryCmd, TokenInfo tokenInfo) {
@@ -186,4 +176,10 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
         }
        return new LinkmanVo();
     }
+
+    @Override
+    public SurrenderApplyVO backInsureByDeliver(RecoverBackInsureByDeliverCmd cmd, TokenInfo tokenInfo) {
+        return recoverBackInsuranceByDeliverCmdExe.execute(cmd, tokenInfo);
+    }
+
 }
