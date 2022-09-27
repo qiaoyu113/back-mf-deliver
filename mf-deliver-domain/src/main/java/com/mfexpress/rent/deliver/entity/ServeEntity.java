@@ -27,7 +27,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import tk.mybatis.mapper.entity.Example;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -308,4 +307,13 @@ public class ServeEntity implements ServeEntityApi {
 
         return serveGateway.updateServeByServeNo(cmd.getServeNo(), updateServe);
     }
+
+    /*@Override
+    public Integer updateServePayableDeposit(ServeUpdatePayableDepositCmd cmd) {
+        ServeEntity serveEntity = new ServeEntity();
+        serveEntity.setServeNo(cmd.getServeNo());
+        serveEntity.setDeposit(cmd.getDepositAmount());
+        serveEntity.setPayableDeposit(cmd.getDepositAmount());
+        return serveGateway.updateServePayableDepositByContractCommodityId(serveEntity);
+    }*/
 }

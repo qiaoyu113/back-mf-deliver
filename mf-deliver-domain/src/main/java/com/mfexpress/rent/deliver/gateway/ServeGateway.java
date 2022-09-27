@@ -47,4 +47,6 @@ public interface ServeGateway {
     Map<Integer,Integer> getReplaceNumByCustomerIds(List<Integer> customerIds);
 
     Integer getRentingServeNumByCustomerId(Integer customerId);
+
+    // Integer updateServePayableDepositByContractCommodityId(ServeEntity serveEntity);
 }
