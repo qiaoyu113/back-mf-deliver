@@ -1,16 +1,15 @@
 package com.mfexpress.rent.deliver.web;
 
+import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.constants.CommonConstants;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.exception.CommonException;
-import com.mfexpress.base.starter.logback.log.PrintParam;
-import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.token.TokenTools;
 import com.mfexpress.rent.deliver.api.DeliverServiceI;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverEachLeaseTermAmountVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeQryCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeInfoVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -31,8 +30,9 @@ public class DeliverWebController {
     @ApiOperation("交付单各租期费用列表查询")
     @PostMapping("/getDeliverLeaseTermAmountVOList")
     @PrintParam
-    public Result<PagePagination<DeliverEachLeaseTermAmountVO>> getDeliverLeaseTermAmountVOList(@RequestBody @Validated ServeQryCmd qry) {
-        return Result.getInstance(deliverServiceI.getDeliverLeaseTermAmountVOList(qry)).success();
+    public Result<ServeInfoVO> getDeliverLeaseTermAmountVOList(@RequestBody @Validated ServeQryCmd qry) {
+//        return Result.getInstance(deliverServiceI.getDeliverLeaseTermAmountVOList(qry)).success();
+        return null;
     }
 
     @ApiOperation("导出交付单各租期费用")
