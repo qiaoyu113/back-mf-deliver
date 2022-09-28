@@ -27,7 +27,7 @@ public class DeliverWebController {
     @Resource
     private DeliverServiceI deliverServiceI;
 
-    @ApiOperation("交付单各租期费用列表查询")
+    @ApiOperation("交付单各租期费用列表查询 v1.13")
     @PostMapping("/getDeliverLeaseTermAmountVOList")
     @PrintParam
     public Result<ServeInfoVO> getDeliverLeaseTermAmountVOList(@RequestBody @Validated ServeQryCmd qry) {

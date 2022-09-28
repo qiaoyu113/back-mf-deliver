@@ -1,6 +1,5 @@
 package com.mfexpress.rent.deliver.dto.data.serve.vo;
 
-import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverEachLeaseTermAmountVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -19,7 +18,7 @@ import java.util.List;
 public class ServeInfoVO {
 
     @ApiModelProperty(value = "数据")
-    private PagePagination<DeliverEachLeaseTermAmountVO> data;
+    private List<DeliverEachLeaseTermAmountVO> data;
 
     @ApiModelProperty(value = "操作记录")
     private List<ServeOperationRecordVO> recordVOS;

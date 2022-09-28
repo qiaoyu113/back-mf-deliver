@@ -110,7 +110,7 @@ public class ServeWebController {
     }
 
 
-    @ApiOperation(value = "终止服务")
+    @ApiOperation(value = "终止服务 v1.13")
     @PostMapping(value = "/serve/terminationService")
     @PrintParam
     public Result<Boolean> terminationService(@RequestBody TerminationServiceCmd terminationServiceCmd) {
