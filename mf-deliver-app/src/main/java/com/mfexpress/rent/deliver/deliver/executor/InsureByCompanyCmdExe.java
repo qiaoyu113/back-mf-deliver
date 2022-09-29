@@ -168,8 +168,12 @@ public class InsureByCompanyCmdExe {
             insureInfo.setApplyReason(serveDTO.getOaContractCode().concat(",").concat(serveDTO.getServeNo()));
             CommodityDTO commodityDTO = commodityDTOMap.get(serveDTO.getContractCommodityId());
             InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
-            insureInfo.setSeatInsuredAmount(seatInsuredAmountDictMap.get(insuranceInfo.getInCarPersonnelLiabilityCoverage().toString()).replace("（万）", ""));
-            insureInfo.setThirdInsuredAmount(thirdInsuranceAmountDictMap.get(insuranceInfo.getThirdPartyLiabilityCoverage().toString()).replace("（万）", ""));
+            if(null != insuranceInfo.getInCarPersonnelLiabilityCoverage() && 0 != insuranceInfo.getInCarPersonnelLiabilityCoverage()){
+                insureInfo.setSeatInsuredAmount(seatInsuredAmountDictMap.get(insuranceInfo.getInCarPersonnelLiabilityCoverage().toString()).replace("（万）", ""));
+            }
+            if(null != insuranceInfo.getThirdPartyLiabilityCoverage() && 0 != insuranceInfo.getThirdPartyLiabilityCoverage()){
+                insureInfo.setThirdInsuredAmount(seatInsuredAmountDictMap.get(insuranceInfo.getThirdPartyLiabilityCoverage().toString()).replace("（万）", ""));
+            }
             insureInfo.setDamageFlag(JudgeEnum.YES.getCode());
             return insureInfo;
         }).collect(Collectors.toList());
