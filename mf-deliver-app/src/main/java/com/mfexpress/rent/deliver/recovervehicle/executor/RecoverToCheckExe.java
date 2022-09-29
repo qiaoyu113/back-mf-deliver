@@ -41,9 +41,6 @@ public class RecoverToCheckExe {
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
     @Resource
-    private DeliverAggregateRootApi deliverAggregateRootApi;
-
-    @Resource
     private ContractAggregateRootApi contractAggregateRootApi;
     @Resource
     private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
@@ -57,8 +54,9 @@ public class RecoverToCheckExe {
      * 4. 替换车服务单是否发车
      *      1. 未发车 替换车申请是否取消
      *      2. 已发车 是否存在服务单调整单
+     * 5. 判断服务单是否已被合同续约
      */
-    public String execute(RecoverVechicleCmd cmd) {
+    public Boolean execute(RecoverVechicleCmd cmd) {
 
         Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(cmd.getServeNo());
         ResultValidUtils.checkResultException(serveDTOResult);
@@ -95,9 +93,8 @@ public class RecoverToCheckExe {
                     if (Objects.isNull(sourceServeDTO)) {
                         throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "替换车原车服务单不存在");
                     }
-                    ServeDTO replaceServeDTO = sourceServeDTO;
                     // 替换服务单状态为0、1、2、5时，判断是否有调整工单，如果没有则不允许原车验车
-                    if (Optional.ofNullable(replaceServeDTO).filter(o -> ServeEnum.NOT_PRESELECTED.getCode().equals(o.getStatus())
+                    if (Optional.ofNullable(sourceServeDTO).filter(o -> ServeEnum.NOT_PRESELECTED.getCode().equals(o.getStatus())
                             || ServeEnum.PRESELECTED.getCode().equals(o.getStatus()) || ServeEnum.DELIVER.getCode().equals(o.getStatus())
                             || ServeEnum.REPAIR.getCode().equals(o.getStatus())).isPresent()) {
 
@@ -114,8 +111,8 @@ public class RecoverToCheckExe {
             }
         }
 
-        Result<Integer> countResult = contractAggregateRootApi.getRenewalContractCountByStatusAndServeNo(ContractStatusEnum.CREATED.getCode(), cmd.getServeNo());
-        Integer count = ResultDataUtils.getInstance(countResult).getDataOrException();
+        Result<Integer> contractCountResult = contractAggregateRootApi.getRenewalContractCountByStatusAndServeNo(ContractStatusEnum.CREATED.getCode(), cmd.getServeNo());
+        Integer count = ResultDataUtils.getInstance(contractCountResult).getDataOrException();
         if (null == count) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "判断服务单是否已被合同续约失败");
         }
@@ -123,7 +120,7 @@ public class RecoverToCheckExe {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "该服务单已被合同预续约，不支持收车操作");
         }
 
-        return null;
+        return Boolean.TRUE;
     }
 
 }
