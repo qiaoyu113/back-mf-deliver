@@ -9,7 +9,11 @@ public enum ServeChangeRecordEnum {
 
     REPLACE_ADJUST(5, "替换车调整"),
 
-    CANCEL(6, "服务单取消");
+    CANCEL(6, "服务单取消"),
+    TERMINATION(7,"终止服务"),
+
+    ;
+
 
     private int code;
     private String name;

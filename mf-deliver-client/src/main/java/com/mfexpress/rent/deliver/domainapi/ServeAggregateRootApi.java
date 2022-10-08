@@ -215,4 +215,7 @@ public interface ServeAggregateRootApi {
     /*@PostMapping(value = "/serve/update/payableDeposit")
     Result<Integer> updateServePayableDeposit(@RequestBody ServeUpdatePayableDepositCmd cmd);*/
 
+    @PostMapping(value = "/terminationServe")
+    Result<Boolean> terminationServe(@RequestBody ServeDTO serveDTO);
+
 }

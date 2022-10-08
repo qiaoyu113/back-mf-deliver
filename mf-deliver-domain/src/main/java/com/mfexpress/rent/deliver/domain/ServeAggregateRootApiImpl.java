@@ -1224,6 +1224,15 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         return Result.getInstance(0).fail(ResultErrorEnum.OPER_ERROR.getCode(), "更新服务单失败");
     }
 
+    @Override
+    @PostMapping(value = "/terminationServe")
+    @PrintParam
+    public Result<Boolean> terminationServe(@RequestBody ServeDTO serveDTO) {
+
+        return Result.getInstance(serveEntityApi.terminationServe(serveDTO)).success();
+
+    }
+
     /*@Override
     @PostMapping(value = "/serve/update/payableDeposit")
     @PrintParam

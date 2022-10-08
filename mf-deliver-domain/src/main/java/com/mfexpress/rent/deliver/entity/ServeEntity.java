@@ -28,16 +28,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import javax.annotation.Resource;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import java.math.BigDecimal;
+import java.util.*;
 
 @Data
 @AllArgsConstructor
@@ -306,6 +302,21 @@ public class ServeEntity implements ServeEntityApi {
         updateServe.setPaidInDeposit(serve.getPaidInDeposit().add(cmd.getChargeDepositAmount()));
 
         return serveGateway.updateServeByServeNo(cmd.getServeNo(), updateServe);
+    }
+
+    @Override
+    public Boolean terminationServe(ServeDTO serveDTO) {
+        ServeEntity serveEntity = BeanUtil.toBean(serveDTO, ServeEntity.class);
+        serveEntity.setStatus(ServeEnum.TERMINATION.getCode());
+        serveGateway.updateServe(serveEntity);
+
+        ServeChangeRecordPO serveChangeRecordPO = new ServeChangeRecordPO();
+        serveChangeRecordPO.setServeNo(serveDTO.getServeNo());
+        serveChangeRecordPO.setType(ServeChangeRecordEnum.TERMINATION.getCode());
+        serveChangeRecordPO.setCreatorId(serveDTO.getCreateId());
+        serveChangeRecordGateway.insert(serveChangeRecordPO);
+
+        return Boolean.TRUE;
     }
 
     /*@Override

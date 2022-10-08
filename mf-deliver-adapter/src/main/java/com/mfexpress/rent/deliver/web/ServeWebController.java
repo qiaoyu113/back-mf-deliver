@@ -113,8 +113,14 @@ public class ServeWebController {
     @ApiOperation(value = "终止服务 v1.13")
     @PostMapping(value = "/serve/terminationService")
     @PrintParam
-    public Result<Boolean> terminationService(@RequestBody TerminationServiceCmd terminationServiceCmd) {
-        return null;
+    public Result<Boolean> terminationService(@RequestBody TerminationServiceCmd terminationServiceCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            throw new CommonException(ResultErrorEnum.LOGIN_OVERDUE.getCode(), ResultErrorEnum.LOGIN_OVERDUE.getName());
+        }
+
+        return Result.getInstance(serveServiceI.terminationService(terminationServiceCmd, tokenInfo)).success();
     }
 
 

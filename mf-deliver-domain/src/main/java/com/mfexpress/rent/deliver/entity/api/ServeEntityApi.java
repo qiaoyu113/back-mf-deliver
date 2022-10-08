@@ -1,9 +1,8 @@
 package com.mfexpress.rent.deliver.entity.api;
 
-import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
-
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
@@ -51,4 +50,6 @@ public interface ServeEntityApi {
     Integer updateServePaidInDeposit(ServePaidInDepositUpdateCmd cmd);
 
     /*Integer updateServePayableDeposit(ServeUpdatePayableDepositCmd cmd);*/
+
+    Boolean terminationServe(ServeDTO serveDTO);
 }
