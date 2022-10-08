@@ -55,4 +55,6 @@ public interface ServeGateway {
     List<ServeReplaceVehicleVO> getServeReplaceVehicle(String serveNo);
 
     int saveServeReplaceVehicle(ServeReplaceVehicleVO serveReplaceVehicle);
+
+    List<ServeReplaceVehicleVO> getServeReplaceVehicleList(Long serveId);
 }

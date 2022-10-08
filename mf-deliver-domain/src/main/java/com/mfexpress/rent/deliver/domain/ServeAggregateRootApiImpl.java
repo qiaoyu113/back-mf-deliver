@@ -1216,4 +1216,12 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         }
         return Result.getInstance(0).fail(ResultErrorEnum.OPER_ERROR.getCode(), "更新服务单失败");
     }
+
+    @GetMapping("/getServeReplaceVehicleList")
+    @Override
+    @PrintParam
+    public Result<List<ServeReplaceVehicleDTO>> getServeReplaceVehicleList(@RequestParam("serveId") Long serveId) {
+        List<ServeReplaceVehicleVO> serveReplaceVehicleVOList = serveEntityApi.getServeReplaceVehicleList(serveId);
+
+    }
 }

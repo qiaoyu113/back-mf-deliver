@@ -291,5 +291,12 @@ public class ServeGatewayImpl implements ServeGateway {
         return serveReplaceVehicleVOMapper.updateByExampleSelective(serveReplaceVehicle, example);
     }
 
+    @Override
+    public List<ServeReplaceVehicleVO> getServeReplaceVehicleList(Long serveId) {
+        Example example = new Example(ServeReplaceVehicleVO.class);
+        example.createCriteria().andEqualTo("sourceServeId", serveId);
+        return serveReplaceVehicleVOMapper.selectByExample(example);
+    }
+
 
 }

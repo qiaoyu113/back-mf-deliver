@@ -342,4 +342,9 @@ public class ServeEntity implements ServeEntityApi {
         }
         return 0;
     }
+
+    @Override
+    public List<ServeReplaceVehicleVO> getServeReplaceVehicleList(Long serveId) {
+        return serveGateway.getServeReplaceVehicleList(serveId);
+    }
 }

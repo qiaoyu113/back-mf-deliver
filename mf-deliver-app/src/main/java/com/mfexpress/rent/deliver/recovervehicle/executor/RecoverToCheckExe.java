@@ -110,27 +110,29 @@ public class RecoverToCheckExe {
                 throw new CommonException(ResultErrorEnum.NOT_FOUND.getCode(), "事故维修未完成，不允许收车");
             }
             if (maintainApplyDTO.getMaintenanceType() == MaintenanceTypeEnum.ACCIDENT_REPAIR.getCode()) {
-                List<ServeReplaceVehicleDTO> serveReplaceVehicleDTOS = serveAggregateRootApi.getServeReplaceVehicleList();
+                Result<List<ServeReplaceVehicleDTO>> serveReplaceVehicleDTOResult = serveAggregateRootApi.getServeReplaceVehicleList(serveDTO.getServeId());
+                ResultValidUtils.checkResultException(serveReplaceVehicleDTOResult);
+                List<ServeReplaceVehicleDTO> serveReplaceVehicleDTOS = serveReplaceVehicleDTOResult.getData();
                 // 是否存在替换车
                 if (CollectionUtil.isNotEmpty(serveReplaceVehicleDTOS)) {
                     ServeReplaceVehicleDTO serveReplaceVehicleDTO = serveReplaceVehicleDTOS.get(0);
-                    Result<ServeDTO> sourceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(serveReplaceVehicleDTO.getSourceServeNo());
-                    ResultValidUtils.checkResultException(sourceServeDTOResult);
-                    ServeDTO sourceServeDTO = sourceServeDTOResult.getData();
-                    if (Objects.isNull(sourceServeDTO)) {
-                        throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "替换车原车服务单不存在");
+                    Result<ServeDTO> targetServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(serveReplaceVehicleDTO.getTargetServeNo());
+                    ResultValidUtils.checkResultException(targetServeDTOResult);
+                    ServeDTO targetServeDTO = targetServeDTOResult.getData();
+                    if (Objects.isNull(targetServeDTO)) {
+                        throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "替换车服务单不存在");
                     }
                     ServeReplaceVehicleDTO serveReplace = serveReplaceVehicleDTOS.get(serveReplaceVehicleDTOS.size() - 1);
                     if (serveReplace.getStatus() == MaintenanceReplaceVehicleStatusEnum.TACK_EFFECT.getCode()) {
                         throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在未发车的替换单或存在替换车，无法进行收车。");
                     }
                     // 替换服务单状态为0、1、2、5时，判断是否有调整工单，如果没有则不允许原车验车
-                    if (Optional.ofNullable(sourceServeDTO).filter(o -> ServeEnum.NOT_PRESELECTED.getCode().equals(o.getStatus())
+                    if (Optional.ofNullable(targetServeDTO).filter(o -> ServeEnum.NOT_PRESELECTED.getCode().equals(o.getStatus())
                             || ServeEnum.PRESELECTED.getCode().equals(o.getStatus()) || ServeEnum.DELIVER.getCode().equals(o.getStatus())
                             || ServeEnum.REPAIR.getCode().equals(o.getStatus())).isPresent()) {
 
                         // 查询是否存在调整工单
-                        ServeAdjustQry serveAdjustQry = ServeAdjustQry.builder().serveNo(sourceServeDTO.getServeNo()).build();
+                        ServeAdjustQry serveAdjustQry = ServeAdjustQry.builder().serveNo(targetServeDTO.getServeNo()).build();
 
                         ServeAdjustDTO serveAdjustDTO = ResultDataUtils.getInstance(serveAggregateRootApi.getServeAdjust(serveAdjustQry)).getDataOrNull();
 

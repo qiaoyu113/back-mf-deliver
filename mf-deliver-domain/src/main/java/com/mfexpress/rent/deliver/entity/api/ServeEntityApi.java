@@ -12,6 +12,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
+import com.mfexpress.rent.deliver.entity.vo.ServeReplaceVehicleVO;
 import io.swagger.models.auth.In;
 
 import java.math.BigDecimal;
@@ -57,4 +58,6 @@ public interface ServeEntityApi {
     Integer cancelSelected(CancelPreSelectedCmd cmd);
 
     int cancelServeReplaceVehicle(String serveNo);
+
+    List<ServeReplaceVehicleVO> getServeReplaceVehicleList(Long serveId);
 }
