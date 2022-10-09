@@ -26,8 +26,6 @@ public class RecoverQryContext {
     @Resource
     private ApplicationContext applicationContext;
     @Resource
-    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
-    @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
 
     public RecoverTaskListVO execute(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo) {
