@@ -51,8 +51,6 @@ public class RecoverToCheckExe {
     @Resource
     private ContractAggregateRootApi contractAggregateRootApi;
     @Resource
-    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
-    @Resource
     private MaintainApplyAggregateRootApi maintainApplyAggregateRootApi;
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
