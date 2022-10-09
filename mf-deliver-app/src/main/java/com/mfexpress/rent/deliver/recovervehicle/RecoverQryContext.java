@@ -35,10 +35,6 @@ public class RecoverQryContext {
         RecoverTaskListVO recoverTaskListVO = bean.execute(recoverQryListCmd, tokenInfo);
         List<RecoverVehicleVO> recoverVehicleVOList = recoverTaskListVO.getRecoverVehicleVOList();
         for (RecoverVehicleVO v : recoverVehicleVOList) {
-            Result<MaintenanceDTO> maintainResult = maintenanceAggregateRootApi.getMaintenanceByServeNo(v.getServeNo());
-            if (maintainResult.getData() != null) {
-                v.setConfirmDate(maintainResult.getData().getConfirmDate());
-            }
             Result<ServeDTO> serveDtoByServeNo = serveAggregateRootApi.getServeDtoByServeNo(v.getServeNo());
             v.setRent(serveDtoByServeNo.getData().getRent());
             v.setDeposit(serveDtoByServeNo.getData().getDeposit());
