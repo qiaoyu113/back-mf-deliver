@@ -1222,6 +1222,12 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     public Result<List<ServeReplaceVehicleDTO>> getServeReplaceVehicleList(@RequestParam("serveId") Long serveId) {
         List<ServeReplaceVehicleVO> serveReplaceVehicleVOList = serveEntityApi.getServeReplaceVehicleList(serveId);
-
+        List<ServeReplaceVehicleDTO> replaceVehicleDTOS = new ArrayList<>(serveReplaceVehicleVOList.size());
+        if (CollectionUtil.isNotEmpty(serveReplaceVehicleVOList)) {
+            for (ServeReplaceVehicleVO serveReplaceVehicleVO : serveReplaceVehicleVOList) {
+                replaceVehicleDTOS.add(BeanUtil.toBean(serveReplaceVehicleVO, ServeReplaceVehicleDTO.class));
+            }
+        }
+        return Result.getInstance(replaceVehicleDTOS).success();
     }
 }
