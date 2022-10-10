@@ -38,4 +38,7 @@ public class Constants {
 
     // 电子交接合同每天可发送几次催签短信
     public static final int EVERY_DAY_ENABLE_SEND_SMS_COUNT = 1;
+
+    public static final String VEHICLE_INSURANCE_TAKE_EFFECT_EVENT_TAG = "insurance_effect";
+
 }

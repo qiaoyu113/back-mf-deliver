@@ -21,6 +21,10 @@ public class ServePreselectedQryExe {
 
     @Resource
     private ServeEsDataQryExe serveEsDataQryExe;
+
+    /*@Resource
+    private ContractAggregateRootApi contractAggregateRootApi;*/
+
     /*@Resource
     private SyncServiceI syncServiceI;*/
 
@@ -37,6 +41,7 @@ public class ServePreselectedQryExe {
         fieldSortBuilderList.add(updateTimeSortBuilders);
         ServeListVO serveListVO = serveEsDataQryExe.execute(serveQryListCmd.getOrderId(), boolQueryBuilder, serveQryListCmd.getPage(), serveQryListCmd.getLimit(), fieldSortBuilderList);
         List<ServeVO> serveVOList = serveListVO.getServeVOList();
+        serveEsDataQryExe.supplyVehicleInsureRequirement(serveVOList);
         //车型聚合数据
         if (serveVOList != null) {
             List<ServePreselectedVO> servePreselectedVoList = new LinkedList<>();
@@ -62,6 +67,14 @@ public class ServePreselectedQryExe {
             servePreselectedListVO.setCustomerName(serveListVO.getCustomerName());
             servePreselectedListVO.setPage(serveListVO.getPage());
             servePreselectedListVO.setCustomerId(serveListVO.getCustomerId());
+
+            for (ServePreselectedVO servePreselectedVO : servePreselectedVoList) {
+                List<ServeVO> preServeVOList = servePreselectedVO.getServeVOList();
+                if (!preServeVOList.isEmpty() && null != preServeVOList.get(0)) {
+                    ServeVO serveVO = preServeVOList.get(0);
+                    servePreselectedVO.setVehicleInsureRequirement(serveVO.getVehicleInsureRequirement());
+                }
+            }
         }
 
         return servePreselectedListVO;

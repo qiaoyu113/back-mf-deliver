@@ -4,7 +4,11 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
+import com.mfexpress.component.utils.util.ResultDataUtils;
+import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
+import com.mfexpress.order.dto.data.CommodityDTO;
+import com.mfexpress.order.dto.data.InsuranceInfoDTO;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.data.ProductDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
@@ -31,6 +35,7 @@ import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -44,6 +49,9 @@ public class ServeEsDataQryExe {
     private CustomerAggregateRootApi customerAggregateRootApi;
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
+
+    @Resource
+    private ContractAggregateRootApi contractAggregateRootApi;
 
     @Resource
     private BeanFactory beanFactory;
@@ -131,4 +139,30 @@ public class ServeEsDataQryExe {
         return serveListVO;
 
     }
+
+    public void supplyVehicleInsureRequirement(List<ServeVO> serveVOList) {
+        if (null == serveVOList || serveVOList.isEmpty()) {
+            return;
+        }
+        List<Integer> commodityIds = serveVOList.stream().map(ServeVO::getContractCommodityId).collect(Collectors.toList());
+        Result<List<CommodityDTO>> commodityListResult = contractAggregateRootApi.getCommodityListByIdList(commodityIds);
+        List<CommodityDTO> commodityList = ResultDataUtils.getInstance(commodityListResult).getDataOrNull();
+        if (null != commodityList) {
+            Map<Integer, CommodityDTO> commodityDTOMap = commodityList.stream().collect(Collectors.toMap(CommodityDTO::getId, Function.identity(), (v1, v2) -> v1));
+            for (ServeVO serveVO : serveVOList) {
+                CommodityDTO commodityDTO = commodityDTOMap.get(serveVO.getContractCommodityId());
+                if (null != commodityDTO) {
+                    InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
+                    if (null != insuranceInfo.getInCarPersonnelLiabilityCoverage() || null != insuranceInfo.getThirdPartyLiabilityCoverage()) {
+                        // 对车辆保险状态不做要求
+                        serveVO.setVehicleInsureRequirement(1);
+                    } else {
+                        // 只能选择交强险在保，而商业险不在保的车辆
+                        serveVO.setVehicleInsureRequirement(2);
+                    }
+                }
+            }
+        }
+    }
+
 }

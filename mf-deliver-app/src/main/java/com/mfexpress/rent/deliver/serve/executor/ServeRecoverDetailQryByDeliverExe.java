@@ -13,12 +13,17 @@ import com.mfexpress.order.dto.qry.ReviewOrderQry;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.ApplyByIdsQryCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.InsureApplyQry;
+import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.vo.InsuranceApplyRentVO;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecDocDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.ElecHandoverDocVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
+import com.mfexpress.rent.deliver.util.ExternalRequestUtil;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
@@ -27,8 +32,10 @@ import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +74,9 @@ public class ServeRecoverDetailQryByDeliverExe {
 
     @Resource
     private ElecHandoverContractAggregateRootApi contractAggregateRootApi;
+
+    @Resource
+    private ExternalRequestUtil externalRequestUtil;
 
     public ServeRecoverDetailVO execute(ServeQryByDeliverCmd cmd) {
         String deliverNo = cmd.getDeliverNo();
@@ -232,6 +242,25 @@ public class ServeRecoverDetailQryByDeliverExe {
             vehicleInsuranceVO.setIsInsurance(JudgeEnum.YES.getCode());
             vehicleInsuranceVO.setIsInsuranceDisplay(JudgeEnum.YES.getName());
             vehicleInsuranceVO.setEndTime(deliverDTO.getInsuranceEndTime());
+
+            InsureApplyQry insureApplyQry = new InsureApplyQry();
+            insureApplyQry.setDeliverNo(deliverDTO.getDeliverNo());
+            insureApplyQry.setType(InsuranceApplyTypeEnum.SURRENDER.getCode());
+            Result<InsuranceApplyDTO> insuranceApplyDTOResult = deliverAggregateRootApi.getInsuranceApply(insureApplyQry);
+            InsuranceApplyDTO insuranceApplyDTO = ResultDataUtils.getInstance(insuranceApplyDTOResult).getDataOrNull();
+            if (null != insuranceApplyDTO && !StringUtils.isEmpty(insuranceApplyDTO.getCommercialApplyId())) {
+                ApplyByIdsQryCmd applyByIdsQryCmd = new ApplyByIdsQryCmd();
+                applyByIdsQryCmd.setApplyIds(Collections.singletonList(insuranceApplyDTO.getCommercialApplyId()));
+                Result<List<InsuranceApplyRentVO>> insuranceApplyRentVOResult = externalRequestUtil.getInsuranceApplyInfo(applyByIdsQryCmd);
+                List<InsuranceApplyRentVO> insuranceApplyRentVOS = ResultDataUtils.getInstance(insuranceApplyRentVOResult).getDataOrNull();
+                if (null != insuranceApplyRentVOS && !insuranceApplyRentVOS.isEmpty() && null != insuranceApplyRentVOS.get(0)) {
+                    InsuranceApplyRentVO insuranceApplyRentVO = insuranceApplyRentVOS.get(0);
+                    vehicleInsuranceVO.setCommercialInsurancePolicyNo(insuranceApplyRentVO.getPolicyNo());
+                    vehicleInsuranceVO.setSurrenderApplyNo(insuranceApplyRentVO.getApplyCode());
+                    vehicleInsuranceVO.setSurrenderApplyStatus(insuranceApplyRentVO.getApplyStatus());
+                    vehicleInsuranceVO.setSurrenderApplyStatusDisplay(insuranceApplyRentVO.getApplyStatusName());
+                }
+            }
         } else {
             // 暂不退保 补全原因
             vehicleInsuranceVO.setIsInsurance(JudgeEnum.NO.getCode());

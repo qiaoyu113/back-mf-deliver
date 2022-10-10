@@ -1,8 +1,10 @@
 package com.mfexpress.rent.deliver.entity.api;
 
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
-import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
-import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCompletedCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverInsureCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.*;
+import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 
 import java.util.List;
@@ -33,4 +35,22 @@ public interface DeliverEntityApi {
      * @param cmd
      */
     void completedDeliver(DeliverCompletedCmd cmd);
+
+    Integer insureByCompany(DeliverInsureCmd cmd);
+
+    Integer insureByCustomer(DeliverInsureByCustomerCmd cmd);
+
+    Integer insureComplete(InsureCompleteCmd cmd);
+
+    List<InsuranceApplyDTO> getInsuranceApplyListByDeliverNoList(List<String> deliverNoList);
+
+    Integer cancelSelectedByDeliver(CancelPreSelectedCmd cmd);
+
+    Integer backInsure(RecoverBackInsureByDeliverCmd cmd);
+
+    InsuranceApplyDTO getInsuranceApply(InsureApplyQry qry);
+
+    List<DeliverDTO> getDeliverDTOListByDeliverNoList(List<String> deliverNoList);
+
+    Integer preSelectedSupplyInsurance(List<DeliverDTO> list);
 }
