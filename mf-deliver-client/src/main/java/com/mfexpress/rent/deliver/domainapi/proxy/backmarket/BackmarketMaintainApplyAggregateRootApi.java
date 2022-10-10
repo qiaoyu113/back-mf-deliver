@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
 
 @FeignClient(name = "backmarket-maintain", path = "/domain/maintain/v3/apply", url = "${gateway.backmarket}")
-public interface MaintainApplyAggregateRootApi {
+public interface BackmarketMaintainApplyAggregateRootApi {
 
     @PostMapping("/create")
     Result<Long> create(@RequestBody @Validated CreateMaintainApplyCmd cmd);

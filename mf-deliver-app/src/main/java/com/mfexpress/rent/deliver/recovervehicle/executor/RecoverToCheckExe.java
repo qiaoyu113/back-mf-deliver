@@ -19,7 +19,7 @@ import com.mfexpress.rent.deliver.constant.MaintenanceReplaceVehicleStatusEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
-import com.mfexpress.rent.deliver.domainapi.proxy.backmarket.MaintainApplyAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.proxy.backmarket.BackmarketMaintainApplyAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
@@ -47,7 +47,7 @@ public class RecoverToCheckExe {
     @Resource
     private ContractAggregateRootApi contractAggregateRootApi;
     @Resource
-    private MaintainApplyAggregateRootApi maintainApplyAggregateRootApi;
+    private BackmarketMaintainApplyAggregateRootApi backmarketMaintainApplyAggregateRootApi;
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
 
@@ -83,7 +83,7 @@ public class RecoverToCheckExe {
         if (vehicleInfoDto.getStatus().intValue() == UsageStatusEnum.MAINTAINING.getCode()) {
             MaintainApplyListQry maintainApplyListQry = new MaintainApplyListQry();
             maintainApplyListQry.setVehicleId(deliverDTO.getCarId());
-            Result<PagePagination<MaintainApplyDTO>> maintainApplyResult = maintainApplyAggregateRootApi.list(maintainApplyListQry);
+            Result<PagePagination<MaintainApplyDTO>> maintainApplyResult = backmarketMaintainApplyAggregateRootApi.list(maintainApplyListQry);
             ResultValidUtils.checkResultException(maintainApplyResult);
             List<MaintainApplyDTO> maintainApplyDTOS = maintainApplyResult.getData().getList();
             if (CollectionUtil.isEmpty(maintainApplyDTOS)) {
