@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@FeignClient(name = "backmarket-maintain", path = "/domain/maintain/v3/apply", url = "${gateway.backmarket}")
+@FeignClient(name = "backmarket-maintain", contextId = "backmarket-maintain-apply-aggregate-root-api", path = "/domain/maintain/v3/apply", url = "${gateway.backmarket}")
 public interface BackmarketMaintainApplyAggregateRootApi {
 
     @PostMapping("/create")
