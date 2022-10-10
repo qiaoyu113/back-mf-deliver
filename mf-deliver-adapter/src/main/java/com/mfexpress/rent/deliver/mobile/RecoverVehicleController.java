@@ -118,12 +118,12 @@ public class RecoverVehicleController {
     @ApiOperation(value = "是否可收车验车")
     @PrintParam
     @Deprecated
-    public Result<String> whetherToCheck(@RequestBody RecoverVechicleCmd recoverVechicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+    public Result<Boolean> whetherToCheck(@RequestBody RecoverVechicleCmd recoverVechicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
 
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果
-            return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+            return Result.getInstance((Boolean) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         recoverVechicleCmd.setCarServiceId(tokenInfo.getId());
         //交付单更新待验车状态 完善收车单还车人合照信息

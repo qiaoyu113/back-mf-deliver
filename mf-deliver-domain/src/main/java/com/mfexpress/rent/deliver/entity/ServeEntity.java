@@ -9,6 +9,7 @@ import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.starter.tools.mq.MqTools;
+import com.mfexpress.rent.deliver.constant.MaintenanceReplaceVehicleStatusEnum;
 import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.CancelPreSelectedCmd;
@@ -19,6 +20,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
+import com.mfexpress.rent.deliver.entity.vo.ServeReplaceVehicleVO;
 import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import lombok.AllArgsConstructor;
@@ -321,5 +323,27 @@ public class ServeEntity implements ServeEntityApi {
         ServeEntity serveEntityToUpdate = ServeEntity.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
         serveGateway.updateServeByServeNo(serveEntity.getServeNo(), serveEntityToUpdate);
         return 0;
+    }
+
+    @Override
+    public int cancelServeReplaceVehicle(String serveNo) {
+        List<ServeReplaceVehicleVO> serveReplaceVehicleVOS = serveGateway.getServeReplaceVehicle(serveNo);
+        ServeReplaceVehicleVO serveReplaceVehicle = new ServeReplaceVehicleVO();
+        for (ServeReplaceVehicleVO serveReplaceVehicleVO : serveReplaceVehicleVOS) {
+            if (serveReplaceVehicleVO.getStatus() == MaintenanceReplaceVehicleStatusEnum.TACK_EFFECT.getCode()) {
+                serveReplaceVehicle.setId(serveReplaceVehicleVO.getId());
+                serveReplaceVehicle.setStatus(MaintenanceReplaceVehicleStatusEnum.NOT_EFFECT.getCode());
+            }
+        }
+        if (Objects.nonNull(serveReplaceVehicle.getId())) {
+
+            return serveGateway.saveServeReplaceVehicle(serveReplaceVehicle);
+        }
+        return 0;
+    }
+
+    @Override
+    public List<ServeReplaceVehicleVO> getServeReplaceVehicleList(Long serveId) {
+        return serveGateway.getServeReplaceVehicleList(serveId);
     }
 }

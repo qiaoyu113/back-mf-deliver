@@ -3,7 +3,6 @@ package com.mfexpress.rent.deliver.deliver.executor;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
-import com.mfexpress.component.exception.BusinessException;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
@@ -223,8 +222,8 @@ public class InsureByCompanyCmdExe {
         }
 
         DeliverBatchInsureApplyDTO insureApplyDTO = new DeliverBatchInsureApplyDTO();
-        insureApplyDTO.setCompulsoryBatchAcceptCode(rentInsureApplyResultVO.getCompulsoryBatchAcceptCode());
-        insureApplyDTO.setCommercialBatchAcceptCode(rentInsureApplyResultVO.getCommercialBatchAcceptCode());
+        insureApplyDTO.setCompulsoryBatchAcceptCode(rentInsureApplyResultVO.getCompulsoryBatchCode());
+        insureApplyDTO.setCommercialBatchAcceptCode(rentInsureApplyResultVO.getCommercialBatchCode());
         insureApplyDTO.setDeliverInsureApplyDTOS(new ArrayList<>(deliverInsureApplyDTOMap.values()));
 
         return insureApplyDTO;

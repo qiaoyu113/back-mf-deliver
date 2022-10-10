@@ -10,8 +10,10 @@ import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
+import com.mfexpress.rent.deliver.entity.vo.ServeReplaceVehicleVO;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.serve.repository.ServeMapper;
+import com.mfexpress.rent.deliver.serve.repository.ServeReplaceVehicleVOMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import tk.mybatis.mapper.entity.Example;
@@ -25,6 +27,8 @@ public class ServeGatewayImpl implements ServeGateway {
 
     @Resource
     private ServeMapper serveMapper;
+    @Resource
+    private ServeReplaceVehicleVOMapper serveReplaceVehicleVOMapper;
 
     @Override
     public int updateServeByServeNo(String serveNo, ServeEntity serve) {
@@ -263,6 +267,33 @@ public class ServeGatewayImpl implements ServeGateway {
         example.createCriteria().andIn("status", Arrays.asList(ServeEnum.DELIVER.getCode(), ServeEnum.REPAIR.getCode()))
                 .andEqualTo("customerId", customerId);
         return serveMapper.selectCountByExample(example);
+    }
+
+    @Override
+    public Integer addServeReplaceVehicle(ServeReplaceVehicleVO serveReplaceVehicleVO) {
+
+        return serveReplaceVehicleVOMapper.insertSelective(serveReplaceVehicleVO);
+    }
+
+    @Override
+    public List<ServeReplaceVehicleVO> getServeReplaceVehicle(String serveNo) {
+        Example example = new Example(ServeReplaceVehicleVO.class);
+        example.createCriteria().andEqualTo("targetServeNo", serveNo);
+        return serveReplaceVehicleVOMapper.selectByExample(example);
+    }
+
+    @Override
+    public int saveServeReplaceVehicle(ServeReplaceVehicleVO serveReplaceVehicle) {
+        Example example = new Example(ServeReplaceVehicleVO.class);
+        example.createCriteria().andEqualTo("id", serveReplaceVehicle.getCreateId());
+        return serveReplaceVehicleVOMapper.updateByExampleSelective(serveReplaceVehicle, example);
+    }
+
+    @Override
+    public List<ServeReplaceVehicleVO> getServeReplaceVehicleList(Long serveId) {
+        Example example = new Example(ServeReplaceVehicleVO.class);
+        example.createCriteria().andEqualTo("sourceServeId", serveId);
+        return serveReplaceVehicleVOMapper.selectByExample(example);
     }
 
     /*@Override

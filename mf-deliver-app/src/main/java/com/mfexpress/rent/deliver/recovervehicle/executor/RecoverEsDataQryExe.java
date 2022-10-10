@@ -46,10 +46,10 @@ public class RecoverEsDataQryExe {
     private OfficeAggregateRootApi officeAggregateRootApi;
 
     @Resource
-    private BeanFactory beanFactory;
+    private VehicleAggregateRootApi vehicleAggregateRootApi;
 
     @Resource
-    private VehicleAggregateRootApi vehicleAggregateRootApi;
+    private BeanFactory beanFactory;
 
     public RecoverTaskListVO getEsData(RecoverQryListCmd recoverQryListCmd, BoolQueryBuilder boolQueryBuilder
             , List<FieldSortBuilder> fieldSortBuilderList, TokenInfo tokenInfo, String index, String type) {

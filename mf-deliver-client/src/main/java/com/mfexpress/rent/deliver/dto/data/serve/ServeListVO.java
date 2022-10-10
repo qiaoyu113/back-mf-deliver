@@ -38,4 +38,5 @@ public class ServeListVO extends ListVO {
     @ApiModelProperty(value = "批量投保")
     private Integer batchInsureButtonSwitch;
 
+
 }

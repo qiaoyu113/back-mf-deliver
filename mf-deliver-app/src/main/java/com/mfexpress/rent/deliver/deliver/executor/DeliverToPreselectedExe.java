@@ -93,16 +93,18 @@ public class DeliverToPreselectedExe {
             }
 
             DeliverVehicleSelectCmd deliverVehicleSelectCmd = deliverVehicleSelectCmdList.get(i);
+
+            VehicleInsuranceDTO vehicleInsuranceDTO = vehicleInsuranceDTOMap.get(deliverVehicleSelectCmd.getId());
+            if (null == vehicleInsuranceDTO) {
+                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆保险信息查询失败");
+            }
+
             Result<VehicleInfoDto> vehicleResult = vehicleAggregateRootApi.getVehicleInfoVOById(deliverVehicleSelectCmd.getId());
             if (vehicleResult.getCode() != 0 || vehicleResult.getData() == null) {
                 throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), vehicleResult.getMsg());
             }
             VehicleInfoDto vehicleInfoDto = vehicleResult.getData();
 
-            VehicleInsuranceDTO vehicleInsuranceDTO = vehicleInsuranceDTOMap.get(deliverVehicleSelectCmd.getId());
-            if (null == vehicleInsuranceDTO) {
-                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆保险信息查询失败");
-            }
             if (((PolicyStatusEnum.EFFECT.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus() || PolicyStatusEnum.ABOUT_EXPIRED.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) &&
                     (PolicyStatusEnum.EFFECT.getCode() == vehicleInsuranceDTO.getCommercialInsuranceStatus() || PolicyStatusEnum.ABOUT_EXPIRED.getCode() == vehicleInsuranceDTO.getCommercialInsuranceStatus())) ||
                     (PolicyStatusEnum.EFFECT.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus() || PolicyStatusEnum.ABOUT_EXPIRED.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) &&

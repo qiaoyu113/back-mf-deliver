@@ -72,10 +72,10 @@ public class ServeDeliverDetailQryExe {
     private ElecHandoverContractAggregateRootApi contractAggregateRootApi;
 
     @Resource
-    private BeanFactory beanFactory;
+    private ExternalRequestUtil externalRequestUtil;
 
     @Resource
-    private ExternalRequestUtil externalRequestUtil;
+    private BeanFactory beanFactory;
 
     public ServeDeliverDetailVO execute(ServeQryCmd cmd) {
         String serveNo = cmd.getServeNo();
