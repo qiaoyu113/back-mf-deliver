@@ -98,6 +98,10 @@
             <groupId>com.mfexpress.billing.customer</groupId>
             <artifactId>mf-customer-billing-client</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.hx.backmarket</groupId>
+            <artifactId>backmarket-maintain-client</artifactId>
+        </dependency>
         <!--        测试使用-->
 
         <!--        测试使用-->
