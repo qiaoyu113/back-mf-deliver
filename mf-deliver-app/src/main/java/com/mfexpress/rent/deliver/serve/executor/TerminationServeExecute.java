@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
 import com.mfexpress.billing.customer.api.aggregate.BookAggregateRootApi;
+import com.mfexpress.billing.customer.constant.AccountBookTypeEnum;
 import com.mfexpress.billing.customer.data.dto.book.BookMoveBalanceDTO;
 import com.mfexpress.billing.customer.data.dto.book.CustomerBookDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
@@ -59,8 +60,22 @@ public class TerminationServeExecute {
         OrderDTO orderDTO = ResultDataUtils.getInstance(orderDTOResult).getDataOrException();
 
         //解锁服务单押金
-        Result<Boolean> unLockDepositResult = serveAggregateRootApi.unLockDeposit(Arrays.asList(terminationServiceCmd.getServeNo()), tokenInfo.getId());
+        Result<Boolean> unLockDepositResult = serveAggregateRootApi.unLockDeposit(Arrays.asList(terminationServiceCmd.getServeNo()), tokenInfo.getId(), true);
         ResultDataUtils.getInstance(unLockDepositResult).getDataOrException();
+
+        // 原车押金转移记录
+        BookMoveBalanceDTO unLockDeposit = BookMoveBalanceDTO.builder()
+                .accountId(bookListResult.getData().get(0).getAccountId())
+                .userId(tokenInfo.getId())
+                .targetType(AccountBookTypeEnum.DEPOSIT_BALANCE.getCode())
+                .amount(serveDTO.getPaidInDeposit())
+                .sourceType(AccountBookTypeEnum.DEPOSIT.getCode()).build();
+
+        Result<Boolean> lockDepositResult = bookAggregateRootApi.unLockDeposit(unLockDeposit);
+        ResultValidUtils.checkResultException(lockDepositResult);
+        if (!lockDepositResult.getData()) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "解除押金操作异常");
+        }
 
         //更改服务单状态
         ServeDTO newServeDto = new ServeDTO();
@@ -70,14 +85,13 @@ public class TerminationServeExecute {
 
         //转移预付款金额
         //预付款->租金
-        // todo 账本类型
         BookMoveBalanceDTO bookMoveBalanceDTO = BookMoveBalanceDTO.builder()
                 .accountId(bookListResult.getData().get(0).getAccountId())
                 .amount(new BigDecimal(orderDTO.getDownPayment()))
                 .oaNo("")
-                .sourceType(1)
+                .sourceType(AccountBookTypeEnum.ADVANCE.getCode())
                 .targetAccountId(bookListResult.getData().get(0).getAccountId())
-                .targetType(1)
+                .targetType(AccountBookTypeEnum.RENT_BALANCE.getCode())
                 .userId(tokenInfo.getId()).build();
         Result<Long> moveBalanceResult = bookAggregateRootApi.moveBalance(bookMoveBalanceDTO);
         ResultDataUtils.getInstance(moveBalanceResult).getDataOrException();

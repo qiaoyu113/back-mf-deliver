@@ -212,7 +212,7 @@ public class ServeEntity implements ServeEntityApi {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId, Boolean isLockFlag) {
+    public void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId, Boolean isLockFlag, Boolean isTermination) {
         List<String> serveNoList = new ArrayList<>(updateDepositMap.keySet());
         List<ServeEntity> serveList = serveGateway.getServeByServeNoList(serveNoList);
         List<ServeChangeRecordPO> recordList = new ArrayList<>();
@@ -221,21 +221,24 @@ public class ServeEntity implements ServeEntityApi {
             BigDecimal paidInDeposit = serveEntity.getPaidInDeposit();
             updateDeposit.setServeNo(serveEntity.getServeNo());
             updateDeposit.setPaidInDeposit(paidInDeposit.add(updateDepositMap.get(serveEntity.getServeNo())));
-            updateDeposit.setStatus(isLockFlag ? serveEntity.getStatus() : ServeEnum.COMPLETED.getCode());
+            if (!isTermination) {
+                updateDeposit.setStatus(isLockFlag ? serveEntity.getStatus() : ServeEnum.COMPLETED.getCode());
+            }
             serveGateway.updateServeByServeNo(serveEntity.getServeNo(), updateDeposit);
 
-            if (updateDeposit.getStatus().equals(ServeEnum.COMPLETED.getCode())) {
-                // 向合同域发送服务单已完成消息
-                ServeDTO serveDTOToNoticeContract = new ServeDTO();
-                serveDTOToNoticeContract.setServeNo(serveEntity.getServeNo());
-                serveDTOToNoticeContract.setOaContractCode(serveEntity.getOaContractCode());
-                // serveDTOToNoticeContract.setGoodsId(serveEntity.getContractCommodityId());
-                serveDTOToNoticeContract.setCarServiceId(creatorId);
-                serveDTOToNoticeContract.setRenewalType(serveEntity.getRenewalType());
-                serveDTOToNoticeContract.setContractCommodityId(serveEntity.getContractCommodityId());
-                mqTools.send(event, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));
+            if (!isTermination) {
+                if (updateDeposit.getStatus().equals(ServeEnum.COMPLETED.getCode())) {
+                    // 向合同域发送服务单已完成消息
+                    ServeDTO serveDTOToNoticeContract = new ServeDTO();
+                    serveDTOToNoticeContract.setServeNo(serveEntity.getServeNo());
+                    serveDTOToNoticeContract.setOaContractCode(serveEntity.getOaContractCode());
+                    // serveDTOToNoticeContract.setGoodsId(serveEntity.getContractCommodityId());
+                    serveDTOToNoticeContract.setCarServiceId(creatorId);
+                    serveDTOToNoticeContract.setRenewalType(serveEntity.getRenewalType());
+                    serveDTOToNoticeContract.setContractCommodityId(serveEntity.getContractCommodityId());
+                    mqTools.send(event, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));
+                }
             }
-
             //变更记录
             ServeChangeRecordPO serveChangeRecord = new ServeChangeRecordPO();
             serveChangeRecord.setServeNo(serveEntity.getServeNo());
@@ -252,8 +255,13 @@ public class ServeEntity implements ServeEntityApi {
             serveChangeRecord.setDeliverNo("");
             serveChangeRecord.setReactiveReason(0);
             serveChangeRecord.setRemark("");
-            serveChangeRecord.setType(updateDeposit.getStatus().equals(ServeEnum.COMPLETED.getCode()) ?
-                    ServeChangeRecordEnum.DEPOSIT_UNLOCK.getCode() : ServeChangeRecordEnum.DEPOSIT_LOCK.getCode());
+            if (!isTermination) {
+                serveChangeRecord.setType(updateDeposit.getStatus().equals(ServeEnum.COMPLETED.getCode()) ?
+                        ServeChangeRecordEnum.DEPOSIT_UNLOCK.getCode() : ServeChangeRecordEnum.DEPOSIT_LOCK.getCode());
+            }else {
+                serveChangeRecord.setType(ServeChangeRecordEnum.DEPOSIT_UNLOCK.getCode());
+            }
+
             recordList.add(serveChangeRecord);
         }
         serveChangeRecordGateway.insertList(recordList);
@@ -314,9 +322,19 @@ public class ServeEntity implements ServeEntityApi {
         serveChangeRecordPO.setServeNo(serveDTO.getServeNo());
         serveChangeRecordPO.setType(ServeChangeRecordEnum.TERMINATION.getCode());
         serveChangeRecordPO.setCreatorId(serveDTO.getCreateId());
+        serveChangeRecordPO.setRenewalType(0);
         serveChangeRecordGateway.insert(serveChangeRecordPO);
 
         return Boolean.TRUE;
+    }
+
+    @Override
+    public List<ServeDTO> getServeDTOByCustomerId(Integer customerId) {
+        List<ServeEntity> serve = serveGateway.getServeByCustomerId(customerId);
+        if (CollectionUtil.isEmpty(serve)){
+            return new ArrayList<>();
+        }
+        return BeanUtil.copyToList(serve, ServeDTO.class, CopyOptions.create().ignoreError());
     }
 
     /*@Override

@@ -31,8 +31,7 @@ public class DeliverWebController {
     @PostMapping("/getDeliverLeaseTermAmountVOList")
     @PrintParam
     public Result<ServeInfoVO> getDeliverLeaseTermAmountVOList(@RequestBody @Validated ServeQryCmd qry) {
-//        return Result.getInstance(deliverServiceI.getDeliverLeaseTermAmountVOList(qry)).success();
-        return null;
+        return Result.getInstance(deliverServiceI.getDeliverLeaseTermAmountVOList(qry)).success();
     }
 
     @ApiOperation("导出交付单各租期费用")

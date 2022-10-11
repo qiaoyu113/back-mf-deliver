@@ -37,7 +37,7 @@ public interface ServeEntityApi {
 
     ServeDTO getServeByServeNo(String serveNo);
 
-    void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId,Boolean isLockFlag);
+    void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId, Boolean isLockFlag, Boolean isTermination);
 
     /**
      * 服务单取消(作废)
@@ -52,4 +52,6 @@ public interface ServeEntityApi {
     /*Integer updateServePayableDeposit(ServeUpdatePayableDepositCmd cmd);*/
 
     Boolean terminationServe(ServeDTO serveDTO);
+
+    List<ServeDTO> getServeDTOByCustomerId(Integer customerId);
 }

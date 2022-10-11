@@ -30,4 +30,13 @@ public enum ServeChangeRecordEnum {
     public String getName() {
         return this.name;
     }
+
+    public static ServeChangeRecordEnum getServeChangeRecordEnum(Integer code) {
+        for (ServeChangeRecordEnum serveEnum : ServeChangeRecordEnum.values()) {
+            if (serveEnum.getCode() == code) {
+                return serveEnum;
+            }
+        }
+        return null;
+    }
 }
