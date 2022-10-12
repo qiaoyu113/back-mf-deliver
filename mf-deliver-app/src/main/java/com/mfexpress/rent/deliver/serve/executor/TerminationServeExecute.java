@@ -92,11 +92,10 @@ public class TerminationServeExecute {
                 .sourceType(AccountBookTypeEnum.ADVANCE.getCode())
                 .targetAccountId(bookListResult.getData().get(0).getAccountId())
                 .targetType(AccountBookTypeEnum.RENT_BALANCE.getCode())
+                .advancePayment(true)
                 .userId(tokenInfo.getId()).build();
         Result<Long> moveBalanceResult = bookAggregateRootApi.moveBalance(bookMoveBalanceDTO);
         ResultDataUtils.getInstance(moveBalanceResult).getDataOrException();
-
-
 
         return Boolean.TRUE;
 
