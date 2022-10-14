@@ -352,6 +352,18 @@ public class ServeEntity implements ServeEntityApi {
         return BeanUtil.copyToList(serve, ServeDTO.class, CopyOptions.create().ignoreError());
     }
 
+    @Override
+    public Integer cancelSelected(CancelPreSelectedCmd cmd) {
+        ServeEntity serveEntity = serveGateway.getServeByServeNo(cmd.getServeNo());
+        if (null == serveEntity) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单查询失败");
+        }
+
+        ServeEntity serveEntityToUpdate = ServeEntity.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
+        serveGateway.updateServeByServeNo(serveEntity.getServeNo(), serveEntityToUpdate);
+        return 0;
+    }
+
     /*@Override
     public Integer updateServePayableDeposit(ServeUpdatePayableDepositCmd cmd) {
         ServeEntity serveEntity = new ServeEntity();
