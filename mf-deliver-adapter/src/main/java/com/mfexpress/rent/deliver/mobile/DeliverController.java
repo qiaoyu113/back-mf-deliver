@@ -4,13 +4,20 @@ import com.mfexpress.component.constants.CommonConstants;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.base.starter.logback.log.PrintParam;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.utils.TokenTools;
+import com.mfexpress.component.starter.tools.token.TokenTools;
 import com.mfexpress.rent.deliver.api.DeliverServiceI;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCheckCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverInsureCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverPreselectedCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverReplaceCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.CancelPreSelectedCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverInsureByCustomerCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverReplaceVehicleCheckCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.InsureApplyQry;
+import com.mfexpress.rent.deliver.dto.data.deliver.vo.InsureApplyVO;
+import com.mfexpress.rent.deliver.dto.data.deliver.vo.TipVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiSort;
@@ -46,6 +53,29 @@ public class DeliverController {
         return Result.getInstance(deliverServiceI.toPreselected(deliverPreselectedCmd)).success();
     }
 
+    @PostMapping("/preselectedVehicle")
+    @ApiOperation("预选车辆->新版->关联保险逻辑")
+    @PrintParam
+    public Result<TipVO> preselectedVehicle(@RequestBody @Validated DeliverPreselectedCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            throw new CommonException(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+        }
+        return Result.getInstance(deliverServiceI.preselectedVehicle(cmd, tokenInfo)).success();
+    }
+
+    @PostMapping("/replaceVehicle")
+    @ApiOperation("更换车辆->新版->关联保险逻辑")
+    @PrintParam
+    public Result<TipVO> replaceVehicle(@RequestBody DeliverReplaceCmd deliverReplaceCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            throw new CommonException(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+        }
+        deliverReplaceCmd.setCarServiceId(tokenInfo.getId());
+        return Result.getInstance(deliverServiceI.toReplace(deliverReplaceCmd)).success();
+    }
+
     @PostMapping("/toCheck")
     @ApiOperation("验车")
     @PrintParam
@@ -63,12 +93,11 @@ public class DeliverController {
     @PostMapping("/toReplace")
     @ApiOperation("更换车辆")
     @PrintParam
-    public Result<String> toReplace(@RequestBody DeliverReplaceCmd deliverReplaceCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+    public Result<TipVO> toReplace(@RequestBody DeliverReplaceCmd deliverReplaceCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         // 当前交付单设未失效  新生成收付单 服务单初始化预选状态 调用车辆服务更新为未预选
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
-            //提示失败结果
-            return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+            throw new CommonException(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         deliverReplaceCmd.setCarServiceId(tokenInfo.getId());
         return Result.getInstance(deliverServiceI.toReplace(deliverReplaceCmd)).success();
@@ -90,5 +119,54 @@ public class DeliverController {
         return Result.getInstance(deliverServiceI.toInsure(deliverInsureCmd)).success();
     }
 
+    /**
+     * 新版投保接口
+     */
+    @PostMapping("/insureByCompany")
+    @ApiOperation("由公司投保-投保申请")
+    @PrintParam
+    public Result<InsureApplyVO> insureByCompany(@RequestBody @Validated DeliverInsureCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            throw new CommonException(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+        }
+        return Result.getInstance(deliverServiceI.insureByCompany(cmd, tokenInfo)).success();
+    }
+
+    @PostMapping("/insureByCustomer")
+    @ApiOperation("由客户投保-录入保单信息")
+    @PrintParam
+    public Result<Integer> insureByCustomer(@RequestBody DeliverInsureByCustomerCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            throw new CommonException(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+        }
+        return Result.getInstance(deliverServiceI.insureByCustomer(cmd, tokenInfo)).success();
+    }
+
+    @PostMapping("/replaceVehicleShowTip")
+    @ApiOperation("更换车辆按钮提示信息展示")
+    @PrintParam
+    public Result<TipVO> replaceVehicleShowTip(@RequestBody DeliverReplaceVehicleCheckCmd cmd) {
+        return Result.getInstance(deliverServiceI.replaceVehicleShowTip(cmd)).success();
+    }
+
+    @PostMapping("/getInsureInfo")
+    @ApiOperation("查看投保状态接口")
+    @PrintParam
+    public Result<InsureApplyVO> getInsureInfo(@RequestBody InsureApplyQry qry) {
+        return Result.getInstance(deliverServiceI.getInsureInfo(qry)).success();
+    }
+
+    @PostMapping("/cancelPreSelected")
+    @ApiOperation("取消预选")
+    @PrintParam
+    public Result<TipVO> cancelPreSelected(@RequestBody @Validated CancelPreSelectedCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            throw new CommonException(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+        }
+        return Result.getInstance(deliverServiceI.cancelPreSelected(cmd, tokenInfo)).success();
+    }
 
 }

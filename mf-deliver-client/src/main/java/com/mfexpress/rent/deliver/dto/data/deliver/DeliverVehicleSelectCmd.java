@@ -28,4 +28,9 @@ public class DeliverVehicleSelectCmd {
 
     @ApiModelProperty(value = "里程")
     private Double mileage;
+
+    private String compulsoryPolicyId;
+
+    private String commercialPolicyId;
+
 }

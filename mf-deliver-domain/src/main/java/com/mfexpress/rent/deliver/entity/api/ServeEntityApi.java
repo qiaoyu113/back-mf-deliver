@@ -1,5 +1,9 @@
 package com.mfexpress.rent.deliver.entity.api;
 
+import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.CancelPreSelectedCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
+
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
@@ -48,6 +52,8 @@ public interface ServeEntityApi {
     public void saveChangeRecord(ServeEntity rawServe, ServeEntity newServe, Integer type, String deliverNo, Integer reason, String remark, Integer createId);
 
     Integer updateServePaidInDeposit(ServePaidInDepositUpdateCmd cmd);
+
+    Integer cancelSelected(CancelPreSelectedCmd cmd);
 
     /*Integer updateServePayableDeposit(ServeUpdatePayableDepositCmd cmd);*/
 

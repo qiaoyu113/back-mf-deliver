@@ -35,4 +35,8 @@ public class ServeListVO extends ListVO {
     @ApiModelProperty(value = "租赁服务单列表")
     private List<ServeVO> serveVOList;
 
+    @ApiModelProperty(value = "批量投保")
+    private Integer batchInsureButtonSwitch;
+
+
 }

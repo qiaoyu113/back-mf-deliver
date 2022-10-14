@@ -5,10 +5,13 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
+import com.mfexpress.component.constants.ResultErrorEnum;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.CancelPreSelectedCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
@@ -310,6 +313,18 @@ public class ServeEntity implements ServeEntityApi {
         updateServe.setPaidInDeposit(serve.getPaidInDeposit().add(cmd.getChargeDepositAmount()));
 
         return serveGateway.updateServeByServeNo(cmd.getServeNo(), updateServe);
+    }
+
+    @Override
+    public Integer cancelSelected(CancelPreSelectedCmd cmd) {
+        ServeEntity serveEntity = serveGateway.getServeByServeNo(cmd.getServeNo());
+        if (null == serveEntity) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单查询失败");
+        }
+
+        ServeEntity serveEntityToUpdate = ServeEntity.builder().status(ServeEnum.NOT_PRESELECTED.getCode()).build();
+        serveGateway.updateServeByServeNo(serveEntity.getServeNo(), serveEntityToUpdate);
+        return 0;
     }
 
     @Override

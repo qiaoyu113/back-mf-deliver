@@ -150,7 +150,8 @@ public class DeliverGatewayImpl implements DeliverGateway {
     public List<DeliverEntity> getDeliverDTOSByCarIdList(List<Integer> carIds) {
         Example example = new Example(DeliverEntity.class);
         example.createCriteria()
-                .andIn("carId", carIds);
+                .andIn("carId", carIds)
+                .andEqualTo("status", DeliverStatusEnum.VALID.getCode());
         return deliverMapper.selectByExample(example);
     }
 
