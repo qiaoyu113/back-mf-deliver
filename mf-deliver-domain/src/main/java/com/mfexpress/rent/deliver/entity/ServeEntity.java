@@ -330,7 +330,7 @@ public class ServeEntity implements ServeEntityApi {
     @Override
     public Boolean terminationServe(ServeDTO serveDTO) {
         ServeEntity serveEntity = BeanUtil.toBean(serveDTO, ServeEntity.class);
-        serveEntity.setStatus(ServeEnum.TERMINATION.getCode());
+        serveEntity.setStatus(ServeEnum.CANCEL.getCode());
         serveGateway.updateServe(serveEntity);
 
         ServeChangeRecordPO serveChangeRecordPO = new ServeChangeRecordPO();
