@@ -2,18 +2,39 @@ package com.mfexpress.rent.deliver.recovervehicle.executor;
 
 import javax.annotation.Resource;
 
+import cn.hutool.core.collection.CollectionUtil;
+import com.hx.backmarket.maintain.constant.MaintenanceTypeEnum;
+import com.hx.backmarket.maintain.constant.maintainapply.MaintainApplyStatusEnum;
+import com.hx.backmarket.maintain.data.cmd.maintainapply.MaintainApplyListQry;
+import com.hx.backmarket.maintain.data.dto.maintainapply.MaintainApplyDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
+import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.constant.ContractStatusEnum;
+import com.mfexpress.rent.deliver.constant.MaintenanceReplaceVehicleStatusEnum;
+import com.mfexpress.rent.deliver.constant.ServeEnum;
+import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.proxy.backmarket.BackmarketMaintainApplyAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeReplaceVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
+import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.rent.vehicle.constant.UsageStatusEnum;
+import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInfoDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Component
 @Slf4j
@@ -21,19 +42,104 @@ public class RecoverToCheckExe {
 
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
-
+    @Resource
+    private DeliverAggregateRootApi deliverAggregateRootApi;
     @Resource
     private ContractAggregateRootApi contractAggregateRootApi;
+    @Resource
+    private BackmarketMaintainApplyAggregateRootApi backmarketMaintainApplyAggregateRootApi;
+    @Resource
+    private VehicleAggregateRootApi vehicleAggregateRootApi;
 
-    public String execute(RecoverVechicleCmd recoverVechicleCmd) {
+    /**
+     * 1. 是否为维修中
+     * 2. 维修性质 事故维修不允许收车
+     * 3. 是否存在替换车
+     * 4. 替换车服务单是否发车
+     *      1. 未发车 替换车申请是否取消
+     *      2. 已发车 是否存在服务单调整单
+     * 5. 判断服务单是否已被合同续约
+     */
+    public Boolean execute(RecoverVechicleCmd cmd) {
 
-        // 判断是否可以验车
-        RecoverCheckJudgeCmd cmd = new RecoverCheckJudgeCmd();
-        cmd.setServeNo(recoverVechicleCmd.getServeNo());
-        ResultValidUtils.checkResultException(serveAggregateRootApi.recoverCheckJudge(cmd));
+        Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(cmd.getServeNo());
+        ResultValidUtils.checkResultException(serveDTOResult);
+        ServeDTO serveDTO = serveDTOResult.getData();
+        if (Objects.isNull(serveDTO)) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单不存在");
+        }
+        Result<DeliverDTO> deliverResult = deliverAggregateRootApi.getDeliverByServeNo(cmd.getServeNo());
+        ResultValidUtils.checkResultException(deliverResult);
+        DeliverDTO deliverDTO = deliverResult.getData();
+        if (Objects.isNull(deliverDTO)) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单不存在");
+        }
+        Result<VehicleInfoDto> vehicleInfoDtoResult = vehicleAggregateRootApi.getVehicleInfoVOById(deliverDTO.getCarId());
+        ResultValidUtils.checkResultException(vehicleInfoDtoResult);
+        VehicleInfoDto vehicleInfoDto = vehicleInfoDtoResult.getData();
+        if (Objects.isNull(vehicleInfoDto)) {
+            throw new CommonException(ResultErrorEnum.NOT_FOUND.getCode(), "车辆不存在");
+        }
+        if (vehicleInfoDto.getStatus().intValue() == UsageStatusEnum.MAINTAINING.getCode()) {
+            MaintainApplyListQry maintainApplyListQry = new MaintainApplyListQry();
+            maintainApplyListQry.setVehicleId(deliverDTO.getCarId());
+            Result<PagePagination<MaintainApplyDTO>> maintainApplyResult = backmarketMaintainApplyAggregateRootApi.list(maintainApplyListQry);
+            ResultValidUtils.checkResultException(maintainApplyResult);
+            List<MaintainApplyDTO> maintainApplyDTOS = maintainApplyResult.getData().getList();
+            if (CollectionUtil.isEmpty(maintainApplyDTOS)) {
+                throw new CommonException(ResultErrorEnum.NOT_FOUND.getCode(), "未查询到维修信息");
+            }
+            MaintainApplyDTO maintainApplyDTO = null;
+            for (MaintainApplyDTO applyDTO : maintainApplyDTOS) {
+                if (applyDTO.getStatus().intValue() != MaintainApplyStatusEnum.CANCELED.getCode() &&
+                        applyDTO.getStatus().intValue() != MaintainApplyStatusEnum.REJECTED.getCode()) {
+                    maintainApplyDTO = applyDTO;
+                }
+            }
+            if (Objects.isNull(maintainApplyDTO)) {
+                throw new CommonException(ResultErrorEnum.NOT_FOUND.getCode(), "未查询到维修信息");
+            }
 
-        Result<Integer> countResult = contractAggregateRootApi.getRenewalContractCountByStatusAndServeNo(ContractStatusEnum.CREATED.getCode(), recoverVechicleCmd.getServeNo());
-        Integer count = ResultDataUtils.getInstance(countResult).getDataOrException();
+            if (maintainApplyDTO.getMaintenanceType() == MaintenanceTypeEnum.ACCIDENT_REPAIR.getCode()) {
+                throw new CommonException(ResultErrorEnum.NOT_FOUND.getCode(), "事故维修未完成，不允许收车");
+            }
+            if (maintainApplyDTO.getMaintenanceType() == MaintenanceTypeEnum.ACCIDENT_REPAIR.getCode()) {
+                Result<List<ServeReplaceVehicleDTO>> serveReplaceVehicleDTOResult = serveAggregateRootApi.getServeReplaceVehicleList(serveDTO.getServeId());
+                ResultValidUtils.checkResultException(serveReplaceVehicleDTOResult);
+                List<ServeReplaceVehicleDTO> serveReplaceVehicleDTOS = serveReplaceVehicleDTOResult.getData();
+                // 是否存在替换车
+                if (CollectionUtil.isNotEmpty(serveReplaceVehicleDTOS)) {
+                    ServeReplaceVehicleDTO serveReplaceVehicleDTO = serveReplaceVehicleDTOS.get(0);
+                    Result<ServeDTO> targetServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(serveReplaceVehicleDTO.getTargetServeNo());
+                    ResultValidUtils.checkResultException(targetServeDTOResult);
+                    ServeDTO targetServeDTO = targetServeDTOResult.getData();
+                    if (Objects.isNull(targetServeDTO)) {
+                        throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "替换车服务单不存在");
+                    }
+                    ServeReplaceVehicleDTO serveReplace = serveReplaceVehicleDTOS.get(serveReplaceVehicleDTOS.size() - 1);
+                    if (serveReplace.getStatus() == MaintenanceReplaceVehicleStatusEnum.TACK_EFFECT.getCode()) {
+                        throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在未发车的替换单或存在替换车，无法进行收车。");
+                    }
+                    // 替换服务单状态为0、1、2、5时，判断是否有调整工单，如果没有则不允许原车验车
+                    if (Optional.ofNullable(targetServeDTO).filter(o -> ServeEnum.NOT_PRESELECTED.getCode().equals(o.getStatus())
+                            || ServeEnum.PRESELECTED.getCode().equals(o.getStatus()) || ServeEnum.DELIVER.getCode().equals(o.getStatus())
+                            || ServeEnum.REPAIR.getCode().equals(o.getStatus())).isPresent()) {
+
+                        // 查询是否存在调整工单
+                        ServeAdjustQry serveAdjustQry = ServeAdjustQry.builder().serveNo(targetServeDTO.getServeNo()).build();
+
+                        ServeAdjustDTO serveAdjustDTO = ResultDataUtils.getInstance(serveAggregateRootApi.getServeAdjust(serveAdjustQry)).getDataOrNull();
+
+                        if (!Optional.ofNullable(serveAdjustDTO).isPresent()) {
+                            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在未发车的替换单或存在替换车，无法进行收车。");
+                        }
+                    }
+                }
+            }
+        }
+
+        Result<Integer> contractCountResult = contractAggregateRootApi.getRenewalContractCountByStatusAndServeNo(ContractStatusEnum.CREATED.getCode(), cmd.getServeNo());
+        Integer count = ResultDataUtils.getInstance(contractCountResult).getDataOrException();
         if (null == count) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "判断服务单是否已被合同续约失败");
         }
@@ -41,153 +147,8 @@ public class RecoverToCheckExe {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "该服务单已被合同预续约，不支持收车操作");
         }
 
-        return null;
+        return Boolean.TRUE;
     }
 
-
-    /*@Resource
-    private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
-
-    @Resource
-    private DeliverAggregateRootApi deliverAggregateRootApi;
-    @Resource
-    private SyncServiceI syncServiceI;
-    @Resource
-    private VehicleAggregateRootApi vehicleAggregateRootApi;
-    @Resource
-    private WarehouseAggregateRootApi warehouseAggregateRootApi;
-
-    @Resource
-    private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
-
-    @Resource
-    private RedisTools redisTools;
-    @Resource
-    private MqTools mqTools;
-    @Value("${rocketmq.listenEventTopic}")
-    private String topic;*/
-
-//    public String execute(RecoverVechicleCmd recoverVechicleCmd) {
-//        //完善收车单信息
-//        /*Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(recoverVechicleCmd.getServeNo());
-//        if (deliverDTOResult.getData() == null) {
-//            log.error("不存在交付单，服务单号，{}" + recoverVechicleCmd.getServeNo());
-//            return ResultErrorEnum.DATA_NOT_FOUND.getName();
-//        }
-//        DeliverDTO deliverDTO = deliverDTOResult.getData();
-//        Result<VehicleInfoDto> vehicleDtoResult = vehicleAggregateRootApi.getVehicleInfoVOById(deliverDTO.getCarId());
-//        if (vehicleDtoResult == null) {
-//            log.error("不存在车辆，服务单号，{}" + recoverVechicleCmd.getServeNo());
-//            return ResultErrorEnum.DATA_NOT_FOUND.getName();
-//        }*/
-//        Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(recoverVechicleCmd.getServeNo());
-//        if (serveDTOResult.getCode() != 0) {
-//            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), ResultErrorEnum.OPER_ERROR.getName());
-//        }
-//        ServeDTO serve = serveDTOResult.getData();
-//
-//        if (serve.getStatus().equals(ServeEnum.REPAIR.getCode())) {
-//            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单维修中不允许收车");
-//        }
-//
-//        Result<Integer> countResult = contractAggregateRootApi.getRenewalContractCountByStatusAndServeNo(ContractStatusEnum.CREATED.getCode(), recoverVechicleCmd.getServeNo());
-//        Integer count = ResultDataUtils.getInstance(countResult).getDataOrException();
-//        if(null == count){
-//            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "判断服务单是否已被合同续约失败");
-//        }
-//        if(0 != count){
-//            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "该服务单已被合同预续约，不支持收车操作");
-//        }
-//
-//        //收车验车时 收车日期不能早于发车日期
-//        // 2020-11-23 00:00:00.before(2021-11-20 00:00:00)
-//        /*Result<DeliverVehicleDTO> deliverVehicleDTOResult = deliverVehicleAggregateRootApi.getDeliverVehicleDto(deliverDTO.getDeliverNo());
-//        if (!ResultStatusEnum.SUCCESSED.getCode().equals(deliverVehicleDTOResult.getCode()) || null == deliverVehicleDTOResult.getData()) {
-//            throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "发车单查询失败");
-//        }
-//        Date deliverVehicleTime = deliverVehicleDTOResult.getData().getDeliverVehicleTime();
-//        if (!deliverVehicleTime.equals(recoverVechicleCmd.getRecoverVehicleTime())) {
-//            if (!deliverVehicleTime.before(recoverVechicleCmd.getRecoverVehicleTime())) {
-//                throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "收车日期不能早于发车日期");
-//            }
-//        }
-//
-//        Result<String> recoverResult = recoverVehicleAggregateRootApi.toCheck(recoverVehicleDTO);
-//        if (recoverResult.getCode() != 0) {
-//            return recoverResult.getMsg();
-//        }
-//        // 删除缓存中暂存的验车信息
-//        String serveNo = recoverVechicleCmd.getServeNo();
-//        String key = DeliverUtils.concatCacheKey(Constants.RECOVER_VEHICLE_CHECK_INFO_CACHE_KEY, serveNo, "*");
-//        Set<String> keys = redisTools.getKeys(key);
-//        if (!keys.isEmpty()) {
-//            redisTools.delKeys(new ArrayList<>(keys));
-//            log.info("收车验车信息保存操作，服务单号为{}的收车验车暂存信息被删除，key分别是:{}", serveNo, keys);
-//        }
-//
-//        // 保存费用到计费域
-//        /*CreateVehicleDamageCmd cmd = new CreateVehicleDamageCmd();
-//        cmd.setServeNo(serve.getServeNo());
-//        cmd.setOrderId(serve.getOrderId());
-//        cmd.setCustomerId(serve.getCustomerId());
-//        cmd.setCarNum(deliverDTO.getCarNum());
-//        cmd.setFrameNum(deliverDTO.getFrameNum());
-//        cmd.setDamageFee(recoverVechicleCmd.getDamageFee());
-//        cmd.setParkFee(recoverVechicleCmd.getParkFee());
-//        Result<Integer> createVehicleDamageResult = vehicleDamageAggregateRootApi.createVehicleDamage(cmd);
-//        if (createVehicleDamageResult.getCode() != 0) {
-//            // 目前没有分布式事务，如果保存费用失败不应影响后续逻辑的执行
-//            log.error("收车时验车，保存费用到计费域失败，serveNo：{}", serve.getServeNo());
-//        }
-//
-//        //更新交付单状态未 已验车 已收车
-//        Result<Integer> deliverResult = deliverAggregateRootApi.toCheck(recoverVechicleCmd.getServeNo(), recoverVechicleCmd.get);
-//        if (deliverResult.getCode() == 0) {
-//            //更新车辆状态
-//            VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
-//            vehicleSaveCmd.setId(Arrays.asList(deliverResult.getData()));
-//            vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.UNCHECKED.getCode());
-//            vehicleSaveCmd.setStockStatus(ValidStockStatusEnum.IN.getCode());
-//            vehicleSaveCmd.setWarehouseId(recoverVechicleCmd.getWareHouseId());
-//            Result<WarehouseDto> wareHouseResult = warehouseAggregateRootApi.getWarehouseById(vehicleSaveCmd.getWarehouseId());
-//            if (wareHouseResult.getData() != null) {
-//                vehicleSaveCmd.setAddress(wareHouseResult.getData().getName());
-//            }
-//            vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
-//        }
-//        //服务单更新已收车
-//        Result<String> serveResult = serveAggregateRootApi.recover(Arrays.asList(recoverVechicleCmd.getServeNo()));
-//        if (serveResult.getCode() != 0) {
-//            return serveResult.getMsg();
-//        }
-//
-//        // 发送收车信息到mq，由合同域判断服务单所属的合同是否到已履约完成状态
-//        ServeDTO serveDTOToNoticeContract = new ServeDTO();
-//        serveDTOToNoticeContract.setServeNo(serve.getServeNo());
-//        serveDTOToNoticeContract.setOaContractCode(serve.getOaContractCode());
-//        serveDTOToNoticeContract.setGoodsId(serve.getGoodsId());
-//        serveDTOToNoticeContract.setCarServiceId(recoverVechicleCmd.getCarServiceId());
-//        serveDTOToNoticeContract.setRenewalType(serve.getRenewalType());
-//        mqTools.send(topic, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));
-//
-//        DeliverCarServiceDTO deliverCarServiceDTO = new DeliverCarServiceDTO();
-//        deliverCarServiceDTO.setCarServiceId(recoverVechicleCmd.getCarServiceId());
-//        deliverCarServiceDTO.setServeNoList(Arrays.asList(recoverVechicleCmd.getServeNo()));
-//        deliverAggregateRootApi.saveCarServiceId(deliverCarServiceDTO);
-//
-//        //收车计费
-//        RecoverVehicleCmd recoverVehicleCmd = new RecoverVehicleCmd();
-//        recoverVehicleCmd.setServeNo(serveNo);
-//        recoverVehicleCmd.setVehicleId(deliverDTO.getCarId());
-//        recoverVehicleCmd.setDeliverNo(deliverDTO.getDeliverNo());
-//        recoverVehicleCmd.setCustomerId(serve.getCustomerId());
-//        recoverVehicleCmd.setCreateId(recoverVechicleCmd.getCarServiceId());
-//        recoverVehicleCmd.setRecoverDate(DateUtil.formatDate(recoverVechicleCmd.getRecoverVehicleTime()));
-//        mqTools.send(topic, "recover_vehicle", null, JSON.toJSONString(recoverVehicleCmd));
-//        //同步
-//        syncServiceI.execOne(recoverVechicleCmd.getServeNo());
-//        return deliverResult.getMsg();*/
-//        return null;
-//    }
 }
 

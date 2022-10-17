@@ -28,4 +28,6 @@ public class ServeReplaceVehicleAddDTO {
     @ApiModelProperty(value = "创建人id", required = true)
     private Integer creatorId;
 
+
+
 }

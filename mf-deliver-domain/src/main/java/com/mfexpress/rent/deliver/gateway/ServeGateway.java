@@ -6,6 +6,8 @@ import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
+import com.mfexpress.rent.deliver.entity.vo.ServeReplaceVehicleVO;
+import io.swagger.models.auth.In;
 
 import java.util.List;
 import java.util.Map;
@@ -49,4 +51,12 @@ public interface ServeGateway {
     Integer getRentingServeNumByCustomerId(Integer customerId);
 
     // Integer updateServePayableDepositByContractCommodityId(ServeEntity serveEntity);
+
+    Integer addServeReplaceVehicle(ServeReplaceVehicleVO serveReplaceVehicleVO);
+
+    List<ServeReplaceVehicleVO> getServeReplaceVehicle(String serveNo);
+
+    int saveServeReplaceVehicle(ServeReplaceVehicleVO serveReplaceVehicle);
+
+    List<ServeReplaceVehicleVO> getServeReplaceVehicleList(Long serveId);
 }

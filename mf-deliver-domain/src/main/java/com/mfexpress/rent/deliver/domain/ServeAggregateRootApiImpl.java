@@ -39,6 +39,7 @@ import com.mfexpress.rent.deliver.entity.*;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.entity.api.ServeAdjustEntityApi;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
+import com.mfexpress.rent.deliver.entity.vo.ServeReplaceVehicleVO;
 import com.mfexpress.rent.deliver.gateway.*;
 import com.mfexpress.rent.deliver.po.ServeAdjustPO;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
@@ -497,6 +498,11 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         if (!ServeEnum.REPAIR.getCode().equals(serve.getStatus())) {
             return Result.getInstance("原服务单状态异常").fail(ResultErrorEnum.CREATE_ERROR.getCode(), "原服务单状态异常");
         }
+        ServeReplaceVehicleVO serveReplaceVehicleVO = ServeReplaceVehicleVO.builder().sourceServeId(serve.getServeId())
+                .sourceServeNo(serveNo)
+                .status(MaintenanceReplaceVehicleStatusEnum.TACK_EFFECT.getCode())
+                .createId(serveAddDTO.getCreatorId())
+                .createTime(new Date()).build();
 
         Long newServeId = redisTools.getBizId(Constants.REDIS_BIZ_ID_SERVER);
         long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_SERVE_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
@@ -518,9 +524,12 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         serve.setDeposit(BigDecimal.ZERO);
         serve.setPaidInDeposit(BigDecimal.ZERO);
         serve.setPayableDeposit(BigDecimal.ZERO);
+        serveReplaceVehicleVO.setTargetServeId(newServeId);
+        serveReplaceVehicleVO.setTargetServeNo(newServeNo);
 
         try {
             serveGateway.addServeList(Collections.singletonList(serve));
+            serveGateway.addServeReplaceVehicle(serveReplaceVehicleVO);
         } catch (Exception e) {
             e.printStackTrace();
             return Result.getInstance(serveAddDTO.getServeNo()).fail(ResultErrorEnum.CREATE_ERROR.getCode(), "替换车服务单生成失败");
@@ -1109,6 +1118,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             // 取消交付单
             deliverAggregateRootApi.cancelDeliver(deliverCancelCmd);
 
+            serveEntityApi.cancelServeReplaceVehicle(cmd.getServeNo());
+
             // 修改车辆状态
             VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
             vehicleSaveCmd.setId(Collections.singletonList(deliverDTO.getCarId()));
@@ -1234,4 +1245,18 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         }
         return Result.getInstance(0).fail(ResultErrorEnum.OPER_ERROR.getCode(), "更新服务单应缴押金失败");
     }*/
+
+    @GetMapping("/getServeReplaceVehicleList")
+    @Override
+    @PrintParam
+    public Result<List<ServeReplaceVehicleDTO>> getServeReplaceVehicleList(@RequestParam("serveId") Long serveId) {
+        List<ServeReplaceVehicleVO> serveReplaceVehicleVOList = serveEntityApi.getServeReplaceVehicleList(serveId);
+        List<ServeReplaceVehicleDTO> replaceVehicleDTOS = new ArrayList<>(serveReplaceVehicleVOList.size());
+        if (CollectionUtil.isNotEmpty(serveReplaceVehicleVOList)) {
+            for (ServeReplaceVehicleVO serveReplaceVehicleVO : serveReplaceVehicleVOList) {
+                replaceVehicleDTOS.add(BeanUtil.toBean(serveReplaceVehicleVO, ServeReplaceVehicleDTO.class));
+            }
+        }
+        return Result.getInstance(replaceVehicleDTOS).success();
+    }
 }

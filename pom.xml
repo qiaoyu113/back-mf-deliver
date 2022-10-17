@@ -183,6 +183,13 @@
                 <artifactId>mf-maintain-client</artifactId>
                 <version>${project.dependents.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>com.hx.backmarket</groupId>
+                <artifactId>backmarket-maintain-client</artifactId>
+                <version>${project.dependents.version}</version>
+            </dependency>
+
             <!--COLA Components-->
             <dependency>
                 <groupId>com.alibaba.cola</groupId>

@@ -4,28 +4,14 @@ import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockConfirmDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockListDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.PassiveRenewalServeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.RenewalCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.RenewalReplaceServeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeAddDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeChangeRecordDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeCycleQryCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDailyDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
-import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeReplaceVehicleAddDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.*;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -215,4 +201,7 @@ public interface ServeAggregateRootApi {
     /*@PostMapping(value = "/serve/update/payableDeposit")
     Result<Integer> updateServePayableDeposit(@RequestBody ServeUpdatePayableDepositCmd cmd);*/
 
+
+    @GetMapping("/getServeReplaceVehicleList")
+    Result<List<ServeReplaceVehicleDTO>> getServeReplaceVehicleList(@RequestParam("serveId") Long serveId);
 }
