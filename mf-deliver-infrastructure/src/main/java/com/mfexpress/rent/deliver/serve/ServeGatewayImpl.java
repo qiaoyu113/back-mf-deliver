@@ -3,14 +3,12 @@ package com.mfexpress.rent.deliver.serve;
 import cn.hutool.core.collection.CollectionUtil;
 import com.github.pagehelper.PageHelper;
 import com.mfexpress.component.response.PagePagination;
-import com.mfexpress.rent.deliver.constant.DeliverStatusEnum;
 import com.mfexpress.rent.deliver.constant.DeliverEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
-import com.mfexpress.rent.deliver.entity.DeliverEntity;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
 import com.mfexpress.rent.deliver.entity.vo.ServeReplaceVehicleVO;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
@@ -270,6 +268,14 @@ public class ServeGatewayImpl implements ServeGateway {
                 .andEqualTo("customerId", customerId);
         return serveMapper.selectCountByExample(example);
     }
+
+    /*@Override
+    public Integer updateServePayableDepositByContractCommodityId(ServeEntity serveEntity) {
+        Example example = new Example(ServeEntity.class);
+        example.createCriteria().andEqualTo("serveNo", serveEntity.getServeNo());
+
+        return serveMapper.updateByExampleSelective(serveEntity, example);
+    }*/
 
     @Override
     public Integer addServeReplaceVehicle(ServeReplaceVehicleVO serveReplaceVehicleVO) {

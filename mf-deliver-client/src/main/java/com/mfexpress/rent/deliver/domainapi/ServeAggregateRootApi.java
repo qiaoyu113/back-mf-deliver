@@ -5,11 +5,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCompletedCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustStartBillingCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.*;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
@@ -204,6 +200,10 @@ public interface ServeAggregateRootApi {
 
     @PostMapping(value = "/serve/paid-in-depost/update")
     Result<Integer> updateServePaidInDeposit(@RequestBody ServePaidInDepositUpdateCmd cmd);
+
+    /*@PostMapping(value = "/serve/update/payableDeposit")
+    Result<Integer> updateServePayableDeposit(@RequestBody ServeUpdatePayableDepositCmd cmd);*/
+
 
     @GetMapping("/getServeReplaceVehicleList")
     Result<List<ServeReplaceVehicleDTO>> getServeReplaceVehicleList(@RequestParam("serveId") Long serveId);

@@ -4,6 +4,7 @@ package com.mfexpress.rent.deliver.domain;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
@@ -134,6 +135,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             BeanUtils.copyProperties(serve, serveDTO);
             if (!StringUtils.isEmpty(serve.getLeaseEndDate())) {
                 serveDTO.setLeaseEndDate(DateUtil.parseDate(serve.getLeaseEndDate()));
+            }
+            if (!StringUtils.isEmpty(serve.getLeaseBeginDate())) {
                 serveDTO.setLeaseBeginDate(DateUtil.parseDate(serve.getLeaseBeginDate()));
             }
             return Result.getInstance(serveDTO).success();
@@ -547,7 +550,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         if (CollectionUtil.isEmpty(serveListByOrderIds)) {
             return Result.getInstance((List<ServeDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
-        List<ServeDTO> serveDTOS = BeanUtil.copyToList(serveListByOrderIds, ServeDTO.class, CopyOptions.create());
+        List<ServeDTO> serveDTOS = BeanUtil.copyToList(serveListByOrderIds, ServeDTO.class, CopyOptions.create().ignoreCase().ignoreError());
         return Result.getInstance(serveDTOS).success();
     }
 
@@ -619,6 +622,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             // goodsId为合同商品id，不应更改服务单的商品id字段
             serve.setContractCommodityId(renewalServeCmd.getContractCommodityId());
             serve.setGoodsId(null);
+            BigDecimal deposit = new BigDecimal(renewalServeCmd.getDeposit().toString());
+            serve.setDeposit(deposit);
+            serve.setPayableDeposit(deposit);
 
             ServeChangeRecordPO record = new ServeChangeRecordPO();
             ServeEntity rawDataServe = serveMap.get(serve.getServeNo());
@@ -649,9 +655,24 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             if (StringUtils.isEmpty(renewalServeCmd.getBillingAdjustmentDate())) {
                 renewalChargeCmd.setEffectFlag(false);
             } else {
+                // 续签时，选择的计费调整日期，如选择的本月，但是续签合同在次月生效后，则系统中客户月账单从次月1日开始根据新月租金计费
                 renewalChargeCmd.setEffectFlag(true);
                 renewalChargeCmd.setRent(serve.getRent());
-                renewalChargeCmd.setRentEffectDate(renewalServeCmd.getBillingAdjustmentDate());
+                String billingAdjustmentDate = renewalServeCmd.getBillingAdjustmentDate();
+                int billingAdjustmentYear = DateUtil.parseDate(billingAdjustmentDate).getField(DateField.YEAR);
+                int billingAdjustmentMonth = DateUtil.parseDate(billingAdjustmentDate).getField(DateField.MONTH);
+                DateTime nowDateTime = new DateTime();
+                int nowDateYear = nowDateTime.getField(DateField.YEAR);
+                int nowDateMonth = nowDateTime.getField(DateField.MONTH);
+                if (billingAdjustmentYear != nowDateYear) {
+                    renewalChargeCmd.setRentEffectDate(DateUtil.beginOfMonth(nowDateTime).toString("yyyy-MM-dd"));
+                } else {
+                    if (billingAdjustmentMonth < nowDateMonth) {
+                        renewalChargeCmd.setRentEffectDate(DateUtil.beginOfMonth(nowDateTime).toString("yyyy-MM-dd"));
+                    } else {
+                        renewalChargeCmd.setRentEffectDate(renewalServeCmd.getBillingAdjustmentDate());
+                    }
+                }
             }
             if (Objects.nonNull(commodityDTOMap.get(serve.getContractCommodityId()))) {
                 renewalChargeCmd.setRentRatio(commodityDTOMap.get(serve.getContractCommodityId()).getRentRatio());
@@ -935,7 +956,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
         PagePagination<ServeEntity> pagePagination = serveGateway.getPageServeByQry(qry);
         PagePagination<Serve> servePagePagination = new PagePagination<>();
-        BeanUtil.copyProperties(pagePagination, servePagePagination);
+        BeanUtil.copyProperties(pagePagination, servePagePagination, new CopyOptions().ignoreError());
         List<ServeEntity> serveEntityList = pagePagination.getList();
         List<Serve> serveList = BeanUtil.copyToList(serveEntityList, Serve.class, new CopyOptions().ignoreError());
         servePagePagination.setList(serveList);
@@ -1217,6 +1238,17 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         }
         return Result.getInstance(0).fail(ResultErrorEnum.OPER_ERROR.getCode(), "更新服务单失败");
     }
+
+    /*@Override
+    @PostMapping(value = "/serve/update/payableDeposit")
+    @PrintParam
+    public Result<Integer> updateServePayableDeposit(@RequestBody ServeUpdatePayableDepositCmd cmd) {
+        Integer updateServePayableDeposit = serveEntityApi.updateServePayableDeposit(cmd);
+        if (updateServePayableDeposit > 0) {
+            return Result.getInstance(updateServePayableDeposit).success();
+        }
+        return Result.getInstance(0).fail(ResultErrorEnum.OPER_ERROR.getCode(), "更新服务单应缴押金失败");
+    }*/
 
     @GetMapping("/getServeReplaceVehicleList")
     @Override

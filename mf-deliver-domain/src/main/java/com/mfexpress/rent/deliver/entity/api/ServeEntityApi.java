@@ -6,6 +6,9 @@ import com.mfexpress.rent.deliver.dto.data.serve.*;
 
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
@@ -54,6 +57,8 @@ public interface ServeEntityApi {
     Integer updateServePaidInDeposit(ServePaidInDepositUpdateCmd cmd);
 
     Integer cancelSelected(CancelPreSelectedCmd cmd);
+
+    /*Integer updateServePayableDeposit(ServeUpdatePayableDepositCmd cmd);*/
 
     int cancelServeReplaceVehicle(String serveNo);
 

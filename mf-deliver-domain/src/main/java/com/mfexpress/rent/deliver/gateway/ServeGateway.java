@@ -50,6 +50,8 @@ public interface ServeGateway {
 
     Integer getRentingServeNumByCustomerId(Integer customerId);
 
+    // Integer updateServePayableDepositByContractCommodityId(ServeEntity serveEntity);
+
     Integer addServeReplaceVehicle(ServeReplaceVehicleVO serveReplaceVehicleVO);
 
     List<ServeReplaceVehicleVO> getServeReplaceVehicle(String serveNo);
