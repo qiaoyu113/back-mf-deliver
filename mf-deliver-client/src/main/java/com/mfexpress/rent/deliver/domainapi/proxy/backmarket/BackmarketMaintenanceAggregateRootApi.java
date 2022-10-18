@@ -46,7 +46,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
-@FeignClient(name = "backmarket-maintain", contextId = "maintenance-aggregate-root-api", path = "/domain/maintenance", url = "${gateway.backmarket}")
+@FeignClient(name = "backmarket-maintain", contextId = "backmarket-maintenance-aggregate-root-api", path = "/domain/maintenance", url = "${gateway.backmarket}")
 public interface BackmarketMaintenanceAggregateRootApi {
 
 /*********************** 维修工单 start ***********************/
