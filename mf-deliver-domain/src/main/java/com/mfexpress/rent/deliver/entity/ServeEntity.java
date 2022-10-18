@@ -13,16 +13,14 @@ import com.mfexpress.rent.deliver.constant.MaintenanceReplaceVehicleStatusEnum;
 import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.CancelPreSelectedCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
 import com.mfexpress.rent.deliver.entity.vo.ServeReplaceVehicleVO;
 import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
+import com.mfexpress.rent.deliver.gateway.ServeRepairRecordGateway;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -133,6 +131,9 @@ public class ServeEntity implements ServeEntityApi {
 
     @Resource
     private ServeChangeRecordGateway serveChangeRecordGateway;
+
+    @Resource
+    private ServeRepairRecordGateway serveRepairRecordGateway;
 
     @Resource
     private MqTools mqTools;
@@ -346,5 +347,14 @@ public class ServeEntity implements ServeEntityApi {
     @Override
     public List<ServeReplaceVehicleVO> getServeReplaceVehicleList(Long serveId) {
         return serveGateway.getServeReplaceVehicleList(serveId);
+    }
+
+    @Override
+    public ServeRepairDTO getServeRepairDTOByMaintenanceId(Long maintenanceId) {
+        ServeRepairRecordPO serveRepairRecordPO = serveRepairRecordGateway.getServeRepairByMaintenanceId(maintenanceId);
+        if (Objects.nonNull(serveRepairRecordPO)) {
+            return BeanUtil.copyProperties(serveRepairRecordPO, ServeRepairDTO.class);
+        }
+        return null;
     }
 }

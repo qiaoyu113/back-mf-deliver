@@ -9,4 +9,6 @@ public interface ServeRepairRecordGateway {
     Integer create(ServeRepairRecordPO serveRepairRecordPO);
 
     List<ServeRepairRecordPO> getListByServeNo(String serveNo);
+
+    ServeRepairRecordPO getServeRepairByMaintenanceId(Long maintenanceId);
 }

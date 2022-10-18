@@ -1244,4 +1244,12 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         return Result.getInstance(serveRepairDTOS).success();
     }
 
+    @Override
+    @PostMapping("getServeRepairDTOByMaintenanceId")
+    @PrintParam
+    public Result<ServeRepairDTO> getServeRepairDTOByMaintenanceId(@RequestParam("maintenanceId") Long maintenanceId) {
+
+        return Result.getInstance(serveEntityApi.getServeRepairDTOByMaintenanceId(maintenanceId)).success();
+    }
+
 }

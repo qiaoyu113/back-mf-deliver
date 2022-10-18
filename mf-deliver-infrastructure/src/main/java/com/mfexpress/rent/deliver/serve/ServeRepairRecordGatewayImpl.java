@@ -27,4 +27,12 @@ public class ServeRepairRecordGatewayImpl implements ServeRepairRecordGateway {
         example.orderBy("createTime").desc();
         return serveRepairRecordMapper.selectByExample(example);
     }
+
+    @Override
+    public ServeRepairRecordPO getServeRepairByMaintenanceId(Long maintenanceId) {
+        Example example = new Example(ServeRepairRecordPO.class);
+        example.createCriteria().andEqualTo("maintenanceId", maintenanceId);
+        return serveRepairRecordMapper.selectOneByExample(example);
+
+    }
 }

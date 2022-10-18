@@ -2,12 +2,9 @@ package com.mfexpress.rent.deliver.entity.api;
 
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.CancelPreSelectedCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.*;
 
 import com.mfexpress.component.response.PagePagination;
-import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
@@ -39,14 +36,15 @@ public interface ServeEntityApi {
      */
     PagePagination<ServeDepositDTO> getServeDepositByQry(CustomerDepositListDTO customerDepositLisDTO);
 
-    List<ServeDTO>getServeListByServeNoList(List<String>serveNoList);
+    List<ServeDTO> getServeListByServeNoList(List<String> serveNoList);
 
     ServeDTO getServeByServeNo(String serveNo);
 
-    void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId,Boolean isLockFlag);
+    void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId, Boolean isLockFlag);
 
     /**
      * 服务单取消(作废)
+     *
      * @param cmd
      */
     void cancelServe(ServeCancelCmd cmd);
@@ -60,4 +58,6 @@ public interface ServeEntityApi {
     int cancelServeReplaceVehicle(String serveNo);
 
     List<ServeReplaceVehicleVO> getServeReplaceVehicleList(Long serveId);
+
+    ServeRepairDTO getServeRepairDTOByMaintenanceId(Long maintenanceId);
 }

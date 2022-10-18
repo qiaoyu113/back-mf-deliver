@@ -13,6 +13,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -147,11 +148,12 @@ public interface ServeAggregateRootApi {
 
     /**
      * 锁定押金
+     *
      * @param confirmDTOList 锁定押金列表
      * @return
      */
     @PostMapping("/lockDeposit")
-    Result <Boolean> lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList);
+    Result<Boolean> lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList);
 
     @PostMapping("/reactiveServe")
     Result<Integer> reactiveServe(@RequestBody ReactivateServeCmd cmd);
@@ -160,7 +162,7 @@ public interface ServeAggregateRootApi {
     Result<PagePagination<String>> getServeNoListByPage(@RequestBody ListQry listQry);
 
     @PostMapping("/getReplaceNumByCustomerIds")
-    Result<Map<Integer,Integer>> getReplaceNumByCustomerIds(@RequestBody List<Integer> customerIds);
+    Result<Map<Integer, Integer>> getReplaceNumByCustomerIds(@RequestBody List<Integer> customerIds);
 
     @PostMapping("/getRentingServeNumByCustomerId")
     Result<Integer> getRentingServeNumByCustomerId(@RequestParam("customerId") Integer customerId);
@@ -188,6 +190,7 @@ public interface ServeAggregateRootApi {
 
     /**
      * 替换车服务单调整
+     *
      * @param cmd
      */
     @PostMapping(value = "/serve/adjust")
@@ -207,4 +210,9 @@ public interface ServeAggregateRootApi {
 
     @PostMapping(value = "/getServeRepairDTOSByServeNo")
     Result<List<ServeRepairDTO>> getServeRepairDTOSByServeNo(@RequestParam("serveNo") String serveNo);
+
+
+    @PostMapping("getServeRepairDTOByMaintenanceId")
+    @ApiOperation("根据维修工单id查询维修记录")
+    Result<ServeRepairDTO> getServeRepairDTOByMaintenanceId(@RequestParam("maintenanceId") Long maintenanceId);
 }
