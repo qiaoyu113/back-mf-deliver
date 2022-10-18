@@ -117,6 +117,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     private ServeAdjustEntityApi serveAdjustEntityApi;
 
     @Resource
+    private ServeRepairRecordGateway serveRepairRecordGateway;
+
+    @Resource
     private MqTools mqTools;
 
     @Value("${rocketmq.listenEventTopic}")
@@ -443,7 +446,8 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @Override
     @PostMapping("/toRepair")
     @PrintParam
-    public Result<String> toRepair(@RequestParam("serveNo") String serveNo) {
+    @Transactional(rollbackFor = Exception.class)
+    public Result<String> toRepair(@RequestParam("serveNo") String serveNo, @RequestParam("maintenanceId") Long maintenanceId) {
         ServeEntity serve = serveGateway.getServeByServeNo(serveNo);
         if (null == serve) {
             return Result.getInstance("服务单不存在").fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单不存在");
@@ -453,13 +457,13 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         }
         ServeEntity serveToUpdate = new ServeEntity();
         serveToUpdate.setStatus(ServeEnum.REPAIR.getCode());
-        try {
-            serveGateway.updateServeByServeNo(serveNo, serveToUpdate);
-            return Result.getInstance("修改成功").success();
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            return Result.getInstance("修改失败").fail(ResultErrorEnum.UPDATE_ERROR.getCode(), "修改失败");
-        }
+        serveGateway.updateServeByServeNo(serveNo, serveToUpdate);
+        // 保存服务单与维修工单的绑定关系
+        ServeRepairRecordPO serveRepairRecordPO = new ServeRepairRecordPO();
+        serveRepairRecordPO.setServeNo(serveNo);
+        serveRepairRecordPO.setMaintenanceId(maintenanceId);
+        serveRepairRecordGateway.create(serveRepairRecordPO);
+        return Result.getInstance("修改成功").success();
     }
 
     @Override
@@ -1259,4 +1263,25 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         }
         return Result.getInstance(replaceVehicleDTOS).success();
     }
+
+    @PostMapping(value = "/getServeRepairDTOSByServeNo")
+    @PrintParam
+    @Override
+    public Result<List<ServeRepairDTO>> getServeRepairDTOSByServeNo(@RequestParam("serveNo") String serveNo) {
+        List<ServeRepairRecordPO> serveRepairRecordPOS = serveRepairRecordGateway.getListByServeNo(serveNo);
+        if (serveRepairRecordPOS.isEmpty()) {
+            return Result.getInstance((List<ServeRepairDTO>) null).success();
+        }
+        List<ServeRepairDTO> serveRepairDTOS = BeanUtil.copyToList(serveRepairRecordPOS, ServeRepairDTO.class, CopyOptions.create().ignoreError());
+        return Result.getInstance(serveRepairDTOS).success();
+    }
+
+    @Override
+    @PostMapping("getServeRepairDTOByMaintenanceId")
+    @PrintParam
+    public Result<ServeRepairDTO> getServeRepairDTOByMaintenanceId(@RequestParam("maintenanceId") Long maintenanceId) {
+
+        return Result.getInstance(serveEntityApi.getServeRepairDTOByMaintenanceId(maintenanceId)).success();
+    }
+
 }
