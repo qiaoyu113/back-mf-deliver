@@ -78,7 +78,7 @@ public interface ServeAggregateRootApi {
     Result<PagePagination<ServeDTO>> getCycleServe(@RequestBody ServeCycleQryCmd serveCycleQryCmd);
 
     @PostMapping("/toRepair")
-    Result<String> toRepair(@RequestParam("serveNo") String serveNo);
+    Result<String> toRepair(@RequestParam("serveNo") String serveNo, @RequestParam("maintenanceId") Long maintenanceId);
 
     @PostMapping("/cancelOrCompleteRepair")
     Result<String> cancelOrCompleteRepair(@RequestParam("serveNo") String serveNo);
@@ -204,4 +204,7 @@ public interface ServeAggregateRootApi {
 
     @GetMapping("/getServeReplaceVehicleList")
     Result<List<ServeReplaceVehicleDTO>> getServeReplaceVehicleList(@RequestParam("serveId") Long serveId);
+
+    @PostMapping(value = "/getServeRepairDTOSByServeNo")
+    Result<List<ServeRepairDTO>> getServeRepairDTOSByServeNo(@RequestParam("serveNo") String serveNo);
 }

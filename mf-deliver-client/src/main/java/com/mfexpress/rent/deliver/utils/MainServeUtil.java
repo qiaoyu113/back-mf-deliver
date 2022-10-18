@@ -1,9 +1,11 @@
 package com.mfexpress.rent.deliver.utils;
 
+import com.hx.backmarket.maintain.data.cmd.maintenance.MaintenanceIdCmd;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
+import com.mfexpress.rent.deliver.domainapi.proxy.backmarket.BackmarketMaintenanceAggregateRootApi;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
 import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
 import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
@@ -43,4 +45,16 @@ public class MainServeUtil {
 
         return maintenanceDTO;
     }
+
+    public static com.hx.backmarket.maintain.data.dto.MaintenanceDTO getMaintenanceByMaintenanceId(BackmarketMaintenanceAggregateRootApi backmarketMaintenanceAggregateRootApi, Long maintenanceId) {
+        MaintenanceIdCmd maintenanceIdCmd = new MaintenanceIdCmd();
+        maintenanceIdCmd.setMaintenanceId(maintenanceId);
+        Result<com.hx.backmarket.maintain.data.dto.MaintenanceDTO> maintenanceDTOResult = backmarketMaintenanceAggregateRootApi.getOne(maintenanceIdCmd);
+        com.hx.backmarket.maintain.data.dto.MaintenanceDTO maintenanceDTO = ResultDataUtils.getInstance(maintenanceDTOResult).getDataOrNull();
+        if (maintenanceDTO == null) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到维修单");
+        }
+        return maintenanceDTO;
+    }
+
 }
