@@ -7,16 +7,11 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
-import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
-import com.mfexpress.transportation.customer.api.RentalCustomerAggregateRootApi;
-import com.mfexpress.transportation.customer.dto.rent.RentalCustomerDTO;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Component

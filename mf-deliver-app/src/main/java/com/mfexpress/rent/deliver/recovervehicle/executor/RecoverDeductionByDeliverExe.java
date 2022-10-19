@@ -13,6 +13,7 @@ import com.mfexpress.rent.deliver.constant.DepositPayTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.proxy.backmarket.BackmarketMaintenanceAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCarServiceDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionByDeliverCmd;
@@ -26,12 +27,11 @@ import com.mfexpress.rent.deliver.serve.executor.cmd.ServeAdjustCompletedCmdExe;
 import com.mfexpress.rent.deliver.serve.executor.cmd.ServeDepositPayCmdExe;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
-import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
-import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -52,8 +52,7 @@ public class RecoverDeductionByDeliverExe {
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
 
     @Resource
-    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
-
+    private BackmarketMaintenanceAggregateRootApi backmarketMaintenanceAggregateRootApi;
 
     @Resource
     private ServeDepositPayCmdExe serveDepositPayCmdExe;
@@ -115,15 +114,15 @@ public class RecoverDeductionByDeliverExe {
         }
 
         // 查询是否有替换车服务单
-        ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, serveDTO.getServeNo());
-        if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
+        String replaceServeNo = MainServeUtil.getReplaceServeNoBySourceServeNo(backmarketMaintenanceAggregateRootApi, serveDTO.getServeNo());
+        if (!StringUtils.isEmpty(replaceServeNo)) {
             // 查询调整工单
-            Result<ServeAdjustDTO> serveAdjustDTOResult = serveAggregateRootApi.getServeAdjust(new ServeAdjustQry(replaceVehicleDTO.getServeNo()));
+            Result<ServeAdjustDTO> serveAdjustDTOResult = serveAggregateRootApi.getServeAdjust(new ServeAdjustQry(replaceServeNo));
 
             ServeAdjustDTO serveAdjustDTO = ResultDataUtils.getInstance(serveAdjustDTOResult).getDataOrException();
             if (Optional.ofNullable(serveAdjustDTO).filter(o -> DepositPayTypeEnum.SOURCE_DEPOSIT_PAY.getCode() == o.getDepositPayType()).isPresent()) {
                 // 账本扣除
-                Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceVehicleDTO.getServeNo());
+                Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceServeNo);
                 ServeDTO replaceServe = ResultDataUtils.getInstance(replaceServeDTOResult).getDataOrException();
 
                 // 押金扣除

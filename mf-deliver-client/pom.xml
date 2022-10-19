@@ -70,10 +70,10 @@
             <groupId>com.mfexpress.rent.order</groupId>
             <artifactId>mf-order-client</artifactId>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>com.mfexpress.rent.maintain</groupId>
             <artifactId>mf-maintain-client</artifactId>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>com.mfexpress.rent.vehicle</groupId>
             <artifactId>mf-vehicle-client</artifactId>

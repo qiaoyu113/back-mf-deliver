@@ -1,5 +1,8 @@
 package com.mfexpress.rent.deliver.serve.executor.cmd;
 
+import com.hx.backmarket.maintain.constant.MaintenanceTypeEnum;
+import com.hx.backmarket.maintain.data.dto.MaintenanceDTO;
+import com.hx.backmarket.maintain.data.dto.MaintenanceReplaceVehicleDTO;
 import com.mfexpress.billing.customer.api.aggregate.BookAggregateRootApi;
 import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
 import com.mfexpress.component.constants.ResultErrorEnum;
@@ -13,6 +16,7 @@ import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.proxy.backmarket.BackmarketMaintenanceAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
@@ -23,10 +27,6 @@ import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
 import com.mfexpress.rent.deliver.utils.PermissionUtil;
 import com.mfexpress.rent.deliver.utils.ServeDictDataUtil;
-import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
-import com.mfexpress.rent.maintain.constant.MaintenanceTypeEnum;
-import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
-import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
@@ -34,7 +34,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -42,7 +41,7 @@ import java.util.Optional;
 public class ServeAdjustCheckCmdExe {
 
     @Resource
-    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
+    private BackmarketMaintenanceAggregateRootApi backmarketMaintenanceAggregateRootApi;
 
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
@@ -94,17 +93,21 @@ public class ServeAdjustCheckCmdExe {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "替换车未发车，无法进行服务单变更");
             }
             // 查找原车维修单
-            MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceDTOByReplaceServeNo(maintenanceAggregateRootApi, cmd.getServeNo());
-            if (Optional.ofNullable(maintenanceDTO).filter(m -> MaintenanceTypeEnum.ACCIDENT.getCode().equals(m.getType())).isPresent()) {
+            MaintenanceReplaceVehicleDTO replaceInfo = MainServeUtil.getReplaceInfoByTargetServeNo(backmarketMaintenanceAggregateRootApi, cmd.getServeNo());
+            if (null == replaceInfo) {
+                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "替换记录查询失败");
+            }
+            MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByMaintenanceId(backmarketMaintenanceAggregateRootApi, replaceInfo.getMaintenanceId());
+            if (MaintenanceTypeEnum.ACCIDENT_REPAIR.getCode() == maintenanceDTO.getMaintenanceType()) {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "原车处于事故维修，申请的替换车不能进行调整");
             }
             // 查找交付单
-            Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(maintenanceDTO.getServeNo());
+            Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(replaceInfo.getSourceServeNo());
             DeliverDTO sourceDeliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrException();
             if (!Optional.ofNullable(sourceDeliverDTO).filter(deliver -> DeliverEnum.IS_RECOVER.getCode().equals(deliver.getDeliverStatus())).isPresent()) {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "原车未申请收车，无法进行服务单变更");
             }
-            Result<ReplaceVehicleDTO> replaceVehicleDTOResult = maintenanceAggregateRootApi.getReplaceVehicleByServeNo(cmd.getServeNo());
+            /*Result<ReplaceVehicleDTO> replaceVehicleDTOResult = maintenanceAggregateRootApi.getReplaceVehicleByServeNo(cmd.getServeNo());
             if (Objects.isNull(replaceVehicleDTOResult.getData())) {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "未查询到替换车信息");
             }
@@ -113,8 +116,7 @@ public class ServeAdjustCheckCmdExe {
             if (Objects.isNull(maintenanceDTOResult.getData())) {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "未查询到维修单");
             }
-            MaintenanceDTO sourceMaintenanceDTO = maintenanceDTOResult.getData();
-            sourceServeNo = sourceMaintenanceDTO.getServeNo();
+            MaintenanceDTO sourceMaintenanceDTO = maintenanceDTOResult.getData();*/
             log.info("sourceServeNo---->{}", sourceServeNo);
         }
 

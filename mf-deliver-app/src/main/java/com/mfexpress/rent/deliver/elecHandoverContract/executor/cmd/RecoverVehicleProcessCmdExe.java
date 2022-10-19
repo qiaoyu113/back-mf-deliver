@@ -3,39 +3,41 @@ package com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
+import com.hx.backmarket.maintain.data.cmd.maintenance.MaintenanceReplaceVehicleQryCmd;
+import com.hx.backmarket.maintain.data.dto.MaintenanceDTO;
+import com.hx.backmarket.maintain.data.dto.MaintenanceReplaceVehicleDTO;
 import com.mfexpress.billing.rentcharge.dto.data.deliver.RecoverVehicleCmd;
 import com.mfexpress.billing.rentcharge.dto.data.deliver.RenewalCmd;
+import com.mfexpress.component.constants.ResultErrorEnum;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
-import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.constant.MaintenanceReplaceVehicleStatusEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.DailyAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.proxy.backmarket.BackmarketMaintenanceAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.daily.CreateDailyCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverVehicleProcessCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.RenewalChargeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeRepairDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustStartBillingCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
-import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
-import com.mfexpress.rent.maintain.constant.MaintenanceStatusEnum;
-import com.mfexpress.rent.maintain.constant.MaintenanceTypeEnum;
-import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
-import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
+import com.hx.backmarket.maintain.constant.MaintenanceTypeEnum;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
-import com.mfexpress.rent.vehicle.constant.UsageStatusEnum;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
 import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
@@ -44,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 
@@ -66,7 +69,7 @@ public class RecoverVehicleProcessCmdExe {
     private ServeAggregateRootApi serveAggregateRootApi;
 
     @Resource
-    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
+    private BackmarketMaintenanceAggregateRootApi backmarketMaintenanceAggregateRootApi;
 
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
@@ -74,8 +77,6 @@ public class RecoverVehicleProcessCmdExe {
     @Resource
     private DailyAggregateRootApi dailyAggregateRootApi;
 
-    @Resource
-    private ServeServiceI serveServiceI;
 
     private MqTools mqTools;
 
@@ -141,23 +142,30 @@ public class RecoverVehicleProcessCmdExe {
             // 服务单维修中
             if (ServeEnum.REPAIR.getCode().equals(cmd.getServeStatus())) {
                 // 查找维修单
-                MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByServeNo(maintenanceAggregateRootApi, cmd.getServeNo());
+                Result<List<ServeRepairDTO>> serveRepairDTOSResult = serveAggregateRootApi.getServeRepairDTOSByServeNo(cmd.getServeNo());
+                List<ServeRepairDTO> serveRepairDTOS = serveRepairDTOSResult.getData();
+                if (null == serveRepairDTOS || serveRepairDTOS.isEmpty()) {
+                    throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "查询维修单失败");
+                }
+                ServeRepairDTO serveRepairDTO = serveRepairDTOS.get(0);
+
+                MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByMaintenanceId(backmarketMaintenanceAggregateRootApi, serveRepairDTO.getMaintenanceId());
                 // 维修性质为故障维修
-                if (MaintenanceTypeEnum.FAULT.getCode().intValue() == maintenanceDTO.getType()) {
+                if (MaintenanceTypeEnum.FAULT_REPAIR.getCode() == maintenanceDTO.getMaintenanceType()) {
                     // 原车维修单变为库存中维修
-                    ResultValidUtils.checkResultException(maintenanceAggregateRootApi.updateMaintenanceDetailByServeNo(cmd.getServeNo()));
-                    if (MaintenanceStatusEnum.MAINTAINED.getCode().equals(maintenanceDTO.getStatus())) {
+                    ResultValidUtils.checkResultException(backmarketMaintenanceAggregateRootApi.replaceDeliverRecoverVehicle(cmd.getServeNo()));
+                    /*if (MaintenanceStatusEnum.MAINTAINED.getCode().equals(maintenanceDTO.getStatus())) {
                         // 维修单将在维修域由租赁中维修变更为库存中维修，如果其状态在已维修，需要变更为已完成，同时需要通知车辆修改其状态为正常
                         vehicleSaveCmd = new VehicleSaveCmd();
                         vehicleSaveCmd.setId(Collections.singletonList(maintenanceDTO.getVehicleId()));
                         vehicleSaveCmd.setStatus(UsageStatusEnum.NORMAL.getCode());
                         vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
-                    }
+                    }*/
 
                     // 查询替换车服务单
-                    ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, cmd.getServeNo());
-                    if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
-                        Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceVehicleDTO.getServeNo());
+                    String replaceServeNo = MainServeUtil.getReplaceServeNoBySourceServeNo(backmarketMaintenanceAggregateRootApi, cmd.getServeNo());
+                    if (!StringUtils.isEmpty(replaceServeNo)) {
+                        Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceServeNo);
                         ServeDTO replaceServe = ResultDataUtils.getInstance(replaceServeDTOResult).getDataOrException();
 
                         ServeAdjustQry qry = new ServeAdjustQry();
@@ -199,9 +207,9 @@ public class RecoverVehicleProcessCmdExe {
                             serveAggregateRootApi.serveAdjustStartBilling(startBillingCmd);
 
                             // 修改replace_vehicle的租金为原车租金,租金比例改为原车租金比例
-                            replaceVehicleDTO.setRent(serveAdjustDTO.getChargeRentAmount());
+                            /*replaceVehicleDTO.setRent(serveAdjustDTO.getChargeRentAmount());
                             replaceVehicleDTO.setRentRatio(serveAdjustDTO.getChargeRentRatio());
-                            maintenanceAggregateRootApi.updateReplaceVehicle(replaceVehicleDTO);
+                            maintenanceAggregateRootApi.updateReplaceVehicle(replaceVehicleDTO);*/
                         }
                     }
                 }

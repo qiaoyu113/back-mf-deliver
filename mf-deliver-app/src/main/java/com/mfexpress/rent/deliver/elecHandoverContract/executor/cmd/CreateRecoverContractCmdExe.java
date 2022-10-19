@@ -10,6 +10,8 @@ import javax.annotation.Resource;
 
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
+import com.hx.backmarket.maintain.constant.MaintenanceStatusEnum;
+import com.hx.backmarket.maintain.data.dto.MaintenanceDTO;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
@@ -32,6 +34,7 @@ import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.proxy.backmarket.BackmarketMaintenanceAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
@@ -45,12 +48,10 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgIn
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.RecoverInfo;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeRepairDTO;
 import com.mfexpress.rent.deliver.utils.CommonUtil;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
-import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
-import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
-import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.VehicleValidationAggregateRootApi;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInfoDto;
@@ -61,6 +62,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Component
 @Slf4j
@@ -94,9 +96,6 @@ public class CreateRecoverContractCmdExe {
     private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
 
     @Resource
-    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
-
-    @Resource
     private MFContractTools contractTools;
 
     @Resource
@@ -106,7 +105,7 @@ public class CreateRecoverContractCmdExe {
     private RecoverVehicleProcessCmdExe recoverVehicleProcessCmdExe;
 
     @Resource
-    private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
+    private BackmarketMaintenanceAggregateRootApi backmarketMaintenanceAggregateRootApi;
 
     /**
      * 收车签署开关
@@ -136,10 +135,10 @@ public class CreateRecoverContractCmdExe {
         ServeDTO serveDTO = serveDTOResult.getData();
 
         // 收车日期不能在替换车发车日期之前
-        ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, serveDTO.getServeNo());
-        if (Optional.ofNullable(replaceVehicleDTO).map(ReplaceVehicleDTO::getServeNo).isPresent()) {
+        String replaceServeNo = MainServeUtil.getReplaceServeNoBySourceServeNo(backmarketMaintenanceAggregateRootApi, serveDTO.getServeNo());
+        if (!StringUtils.isEmpty(replaceServeNo)) {
             // 查找替换车发车信息
-            Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(replaceVehicleDTO.getServeNo());
+            Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByServeNo(replaceServeNo);
             if (!Optional.ofNullable(deliverDTOResult).map(Result::getData).isPresent()) {
                 throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到交付单");
             }
@@ -311,7 +310,8 @@ public class CreateRecoverContractCmdExe {
 
     private ContractIdWithDocIds createContractWithDocInLocal(CreateRecoverContractFrontCmd cmd, TokenInfo tokenInfo, Integer orgId) {
         // 组合成原对象继续往下走 需要吗？主要是domain层得改
-        Date recoverVehicleTime = cmd.getRecoverInfo().getRecoverVehicleTime();
+        // 20221018屏蔽 校验逻辑重复
+        /*Date recoverVehicleTime = cmd.getRecoverInfo().getRecoverVehicleTime();
         Result<DeliverVehicleDTO> deliverVehicleDTOResult = deliverVehicleAggregateRootApi.getDeliverVehicleDto(cmd.getRecoverInfo().getDeliverNo());
         DeliverVehicleDTO deliverVehicleDTO = ResultDataUtils.getInstance(deliverVehicleDTOResult).getDataOrException();
         Date deliverVehicleTime = deliverVehicleDTO.getDeliverVehicleTime();
@@ -320,7 +320,19 @@ public class CreateRecoverContractCmdExe {
         }
 
         // 查询完成的维修单
-        Result<MaintenanceDTO> maintainResult = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getRecoverInfo().getServeNo());
+        Result<List<ServeRepairDTO>> serveRepairDTOSResult = serveAggregateRootApi.getServeRepairDTOSByServeNo(cmd.getRecoverInfo().getServeNo());
+        List<ServeRepairDTO> serveRepairDTOS = ResultDataUtils.getInstance(serveRepairDTOSResult).getDataOrException();
+        if (null != serveRepairDTOS && !serveRepairDTOS.isEmpty()) {
+            ServeRepairDTO serveRepairDTO = serveRepairDTOS.get(0);
+            MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByMaintenanceId(backmarketMaintenanceAggregateRootApi, serveRepairDTO.getMaintenanceId());
+            if (MaintenanceStatusEnum.FINISHED.getCode() == maintenanceDTO.getMaintenanceStatus()) {
+                String finishTime = maintenanceDTO.getFinishTime();
+                if (recoverVehicleTime.before(DateUtil.parseDate(finishTime))) {
+                    throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "收车日期请晚于维修交车日期");
+                }
+            }
+        }*/
+        /*Result<MaintenanceDTO> maintainResult = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getRecoverInfo().getServeNo());
         if (ResultValidUtils.checkResult(maintainResult)) {
             MaintenanceDTO maintenanceDTO = maintainResult.getData();
             //格式化为yyyy-MM-dd
@@ -328,7 +340,7 @@ public class CreateRecoverContractCmdExe {
             if (recoverVehicleTime.before(DateUtil.parseDate(confirmDate))) {
                 throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "收车日期请晚于维修交车日期");
             }
-        }
+        }*/
 //        DateTime endDate = DateUtil.endOfMonth(new Date());
 //        DateTime startDate = DateUtil.beginOfMonth(new Date());
         //增加收车日期限制
@@ -399,11 +411,23 @@ public class CreateRecoverContractCmdExe {
         }
 
         // 查询完成的维修单
-        Result<MaintenanceDTO> maintenanceByServeNo = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getRecoverInfo().getServeNo());
+        /*Result<MaintenanceDTO> maintenanceByServeNo = maintenanceAggregateRootApi.getMaintenanceByServeNo(cmd.getRecoverInfo().getServeNo());
         if (ResultValidUtils.checkResult(maintenanceByServeNo)) {
             if (cmd.getRecoverInfo().getRecoverVehicleTime().before(maintenanceByServeNo.getData().getConfirmDate())) {
                 log.info("收车日期超出可选范围  参数:{}", cmd);
                 throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "收车日期不可小于维修交车日期");
+            }
+        }*/
+        Result<List<ServeRepairDTO>> serveRepairDTOSResult = serveAggregateRootApi.getServeRepairDTOSByServeNo(cmd.getRecoverInfo().getServeNo());
+        List<ServeRepairDTO> serveRepairDTOS = ResultDataUtils.getInstance(serveRepairDTOSResult).getDataOrException();
+        if (null != serveRepairDTOS && !serveRepairDTOS.isEmpty()) {
+            ServeRepairDTO serveRepairDTO = serveRepairDTOS.get(0);
+            MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByMaintenanceId(backmarketMaintenanceAggregateRootApi, serveRepairDTO.getMaintenanceId());
+            if (MaintenanceStatusEnum.FINISHED.getCode() == maintenanceDTO.getMaintenanceStatus()) {
+                String finishTime = maintenanceDTO.getFinishTime();
+                if (cmd.getRecoverInfo().getRecoverVehicleTime().before(DateUtil.parseDate(finishTime))) {
+                    throw new CommonException(ResultErrorEnum.UPDATE_ERROR.getCode(), "收车日期请晚于维修交车日期");
+                }
             }
         }
 

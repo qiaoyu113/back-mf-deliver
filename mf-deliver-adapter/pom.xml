@@ -29,10 +29,10 @@
             <groupId>com.mfexpress</groupId>
             <artifactId>mf-component-dto</artifactId>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>com.mfexpress.rent.maintain</groupId>
             <artifactId>mf-maintain-client</artifactId>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>com.mfexpress.base.starter</groupId>
             <artifactId>mf-logback-spring-boot-starter</artifactId>
