@@ -10,12 +10,11 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
-import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.proxy.backmarket.BackmarketMaintenanceAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCompletedCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
@@ -24,9 +23,8 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
-import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
-import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Component
 public class RecoverCancelByDeliverExe {
@@ -41,7 +39,7 @@ public class RecoverCancelByDeliverExe {
     private ServeAggregateRootApi serveAggregateRootApi;
 
     @Resource
-    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
+    private BackmarketMaintenanceAggregateRootApi backmarketMaintenanceAggregateRootApi;
 
 
     public Integer execute(RecoverCancelByDeliverCmd cmd, TokenInfo tokenInfo) {
@@ -58,19 +56,14 @@ public class RecoverCancelByDeliverExe {
         ServeDTO serveDTO = ResultDataUtils.getInstance(serveDTOResult).getDataOrException();
 
         if (Optional.ofNullable(serveDTO).filter(serve -> ServeEnum.REPAIR.getCode().equals(serve.getStatus())).isPresent()) {
-            String serveNo = serveDTOResult.getData().getServeNo();
+            String sourceServeNo = serveDTOResult.getData().getServeNo();
 
             // 查询替换单
-            ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, serveNo);
-
-            if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
-                String replaceServeNo = replaceVehicleDTO.getServeNo();
-
+            String replaceServeNo = MainServeUtil.getReplaceServeNoBySourceServeNo(backmarketMaintenanceAggregateRootApi, sourceServeNo);
+            if (!StringUtils.isEmpty(replaceServeNo)) {
                 // 查询是否存在调整工单
                 ServeAdjustQry serveAdjustQry = ServeAdjustQry.builder().serveNo(replaceServeNo).build();
-
                 ServeAdjustDTO serveAdjustDTO = ResultDataUtils.getInstance(serveAggregateRootApi.getServeAdjust(serveAdjustQry)).getDataOrNull();
-
                 // 存在调整工单 不允许取消收车
                 if (Optional.ofNullable(serveAdjustDTO).isPresent()) {
                     throw new CommonException(ResultStatusEnum.UNKNOWS.getCode(), "不可取消收车");

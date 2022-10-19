@@ -173,6 +173,7 @@ public interface ServeAggregateRootApi {
      * @return
      */
     @PostMapping(value = "/recover/check/judge")
+    @Deprecated
     Result<Integer> recoverCheckJudge(@RequestBody RecoverCheckJudgeCmd cmd);
 
     /**

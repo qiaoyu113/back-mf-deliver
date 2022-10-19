@@ -44,12 +44,6 @@ import com.mfexpress.rent.deliver.gateway.*;
 import com.mfexpress.rent.deliver.po.ServeAdjustPO;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
-import com.mfexpress.rent.deliver.utils.MainServeUtil;
-import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
-import com.mfexpress.rent.maintain.constant.MaintenanceStatusEnum;
-import com.mfexpress.rent.maintain.constant.MaintenanceTypeEnum;
-import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
-import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
 import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
@@ -97,9 +91,6 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     private ServeDomainServiceI serveDomainServiceI;
     @Resource
     private RecoverVehicleGateway recoverVehicleGateway;
-
-    @Resource
-    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
 
     @Resource
     private ServeAdjustGateway serveAdjustGateway;
@@ -1139,9 +1130,11 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @Override
     @PostMapping(value = "/recover/check/judge")
     @PrintParam
+    @Deprecated
+    // 20221018 将关联维修单的逻辑向上抽离到app层，此接口废弃
     public Result<Integer> recoverCheckJudge(RecoverCheckJudgeCmd cmd) {
 
-        Result<ServeDTO> serveDTOResult = getServeDtoByServeNo(cmd.getServeNo());
+        /*Result<ServeDTO> serveDTOResult = getServeDtoByServeNo(cmd.getServeNo());
 
         if (!Optional.ofNullable(serveDTOResult).map(r -> r.getData()).isPresent()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), ResultErrorEnum.OPER_ERROR.getName());
@@ -1185,7 +1178,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 }
 
             }
-        }
+        }*/
 
         return Result.getInstance(0).success();
     }

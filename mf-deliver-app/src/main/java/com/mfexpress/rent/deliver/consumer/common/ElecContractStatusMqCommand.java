@@ -40,10 +40,6 @@ import com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd.DeliverVehic
 import com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd.RecoverVehicleProcessCmdExe;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
-import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
-import com.mfexpress.rent.maintain.constant.MaintenanceTypeEnum;
-import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
-import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
@@ -96,9 +92,6 @@ public class ElecContractStatusMqCommand {
     private CustomerAggregateRootApi customerAggregateRootApi;
     @Resource
     private DailyAggregateRootApi dailyAggregateRootApi;
-
-    @Resource
-    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
 
     @Resource
     private DeliverVehicleProcessCmdExe deliverVehicleProcessCmdExe;
@@ -237,7 +230,8 @@ public class ElecContractStatusMqCommand {
 //        });
     }
 
-    @Deprecated
+    /*@Deprecated
+    // 逻辑转移到recoverVehicleProcessCmdExe.execute方法中
     private List<String> recoverVehicleProcess(ServeDTO serveDTO, DeliverDTO deliverDTO, ContractResultTopicDTO contractStatusInfo, ElecContractDTO contractDTO) {
         List<String> serveNoList = new LinkedList<>();
         // 交付单、服务单修改
@@ -265,7 +259,7 @@ public class ElecContractStatusMqCommand {
         }
         // 发送收车信息到mq，由合同域判断服务单所属的合同是否到已履约完成状态
         // 租赁服务单1.1迭代，改为当服务单状态到已完成时，再向合同域发送此消息
-        /*if (JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {
+        *//*if (JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {
             ServeDTO serveDTOToNoticeContract = new ServeDTO();
             serveDTOToNoticeContract.setServeNo(serveDTO.getServeNo());
             serveDTOToNoticeContract.setOaContractCode(serveDTO.getOaContractCode());
@@ -274,7 +268,7 @@ public class ElecContractStatusMqCommand {
             serveDTOToNoticeContract.setRenewalType(serveDTO.getRenewalType());
             log.info("正常收车时，交付域向合同域发送的收车单信息：{}", serveDTOToNoticeContract);
             mqTools.send(event, "recover_serve_to_contract", null, JSON.toJSONString(serveDTOToNoticeContract));
-        }*/
+        }*//*
 
         // 判断实际收车日期和预计收车日期的前后关系，如果实际收车日期在预计收车日期之前或当天，发送收车计费消息，反之，发送自动续约消息
         Date recoverVehicleTime = contractDTO.getRecoverVehicleTime();
@@ -373,9 +367,9 @@ public class ElecContractStatusMqCommand {
         //操作日报
         createDaily(serveNoList, contractDTO.getRecoverVehicleTime(), false);
         return serveNoList;
-    }
+    }*/
 
-    @Deprecated
+    /*@Deprecated
     private List<String> deliverVehicleProcess(ServeDTO serveDTO, ElecContractDTO contractDTO) {
         // 数据收集
         List<DeliverImgInfo> deliverImgInfos = JSONUtil.toList(contractDTO.getPlateNumberWithImgs(), DeliverImgInfo.class);
@@ -451,9 +445,9 @@ public class ElecContractStatusMqCommand {
         //生成日报
         createDaily(serveNoList, contractDTO.getDeliverVehicleTime(), true);
         return serveNoList;
-    }
+    }*/
 
-    private String getExpectRecoverDate(Date deliverVehicleDate, Integer offsetMonths, Integer offsetDays) {
+    /*private String getExpectRecoverDate(Date deliverVehicleDate, Integer offsetMonths, Integer offsetDays) {
         DateTime dateTime = DateUtil.endOfMonth(deliverVehicleDate);
         String deliverDate = DateUtil.formatDate(deliverVehicleDate);
         String endDate = DateUtil.formatDate(dateTime);
@@ -498,5 +492,5 @@ public class ElecContractStatusMqCommand {
             //收车
             dailyAggregateRootApi.recoverDaily(dailyCreateCmd);
         }
-    }
+    }*/
 }

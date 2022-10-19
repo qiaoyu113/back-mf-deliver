@@ -9,11 +9,12 @@ import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.proxy.backmarket.BackmarketMaintenanceAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.serve.PassiveRenewalServeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.RenewalReplaceServeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
-import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
+import com.mfexpress.rent.deliver.utils.MainServeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -33,7 +34,7 @@ public class ServeRenewalScheduler {
     private ServeAggregateRootApi serveAggregateRootApi;
 
     @Resource
-    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
+    private BackmarketMaintenanceAggregateRootApi backmarketMaintenanceAggregateRootApi;
 
     @Resource
     private RedisTools redisTools;
@@ -117,9 +118,8 @@ public class ServeRenewalScheduler {
 
                 // 被续约的服务单状态如果是维修中的话，访问维修域获取其替换车的服务单，如果有的话
                 if(!repairServeNoList.isEmpty()){
-                    Result<Map<String, String>> serveNoWithReplaceServeNoMapResult = maintenanceAggregateRootApi.getReplaceServeNoListByRepairServeNoList(repairServeNoList);
-                    log.info("续签合同操作，访问维修域，根据维修状态的服务单号：{}，查询到的替换车的服务单号：{}", repairServeNoList, serveNoWithReplaceServeNoMapResult);
-                    Map<String, String> serveNoWithReplaceServeNoMap = ResultDataUtils.getInstance(serveNoWithReplaceServeNoMapResult).getDataOrException();
+                    Map<String, String> serveNoWithReplaceServeNoMap = MainServeUtil.getServeNoWithReplaceServeNoMap(backmarketMaintenanceAggregateRootApi, repairServeNoList);
+                    log.info("续签合同操作，访问维修域，根据维修状态的服务单号：{}，查询到的替换车的服务单号：{}", repairServeNoList, serveNoWithReplaceServeNoMap);
                     if(null != serveNoWithReplaceServeNoMap && !serveNoWithReplaceServeNoMap.isEmpty()){
                         // 替换车续约
                         RenewalReplaceServeCmd renewalReplaceServeCmd = new RenewalReplaceServeCmd();

@@ -19,7 +19,6 @@ import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.*;
-import com.mfexpress.rent.deliver.dto.data.deliver.dto.DeliverInsureApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
@@ -34,8 +33,6 @@ import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.gateway.RecoverVehicleGateway;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
-import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
-import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -71,9 +68,6 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
-
-    @Resource
-    private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
 
     @Override
     @PostMapping("/getDeliverByServeNo")
@@ -523,10 +517,12 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping("/cancelRecoverByDeliver")
     @PrintParam
     @Transactional(rollbackFor = Exception.class)
+    @Deprecated
+    // 因取消收车逻辑向上抽离到app层而废弃
     public Result<Integer> cancelRecoverByDeliver(@RequestBody @Validated RecoverCancelByDeliverCmd cmd) {
 
         // 2022-05-31 增加不可取消收车规则判断
-        DeliverEntity deliverEntity = deliverGateway.getDeliverByDeliverNo(cmd.getDeliverNo());
+        /*DeliverEntity deliverEntity = deliverGateway.getDeliverByDeliverNo(cmd.getDeliverNo());
         if (deliverEntity == null) {
             return Result.getInstance(0).fail(ResultStatusEnum.UNKNOWS.getCode(), "数据错误");
         }
@@ -538,7 +534,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
             String serveNo = serveDTOResult.getData().getServeNo();
 
             // 查询替换单
-            ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, serveNo);
+            ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceServeNoBySourceServeNo(maintenanceAggregateRootApi, serveNo);
 
             if (Optional.ofNullable(replaceVehicleDTO).isPresent()) {
                 String replaceServeNo = replaceVehicleDTO.getServeNo();
@@ -559,7 +555,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
         BeanUtils.copyProperties(cmd, recoverVehicle);
         recoverVehicle.setStatus(ValidStatusEnum.INVALID.getCode());
         recoverVehicle.setUpdateId(cmd.getOperatorId());
-        recoverVehicleGateway.updateRecoverVehicleByDeliverNo(recoverVehicle);
+        recoverVehicleGateway.updateRecoverVehicleByDeliverNo(recoverVehicle);*/
 
         return Result.getInstance(0).success();
     }
