@@ -168,11 +168,25 @@ public class InsureByCompanyCmdExe {
             insureInfo.setApplyReason(serveDTO.getOaContractCode().concat(",").concat(serveDTO.getServeNo()));
             CommodityDTO commodityDTO = commodityDTOMap.get(serveDTO.getContractCommodityId());
             InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
-            if(null != insuranceInfo.getInCarPersonnelLiabilityCoverage() && 0 != insuranceInfo.getInCarPersonnelLiabilityCoverage()){
-                insureInfo.setSeatInsuredAmount(seatInsuredAmountDictMap.get(insuranceInfo.getInCarPersonnelLiabilityCoverage().toString()).replace("（万）", ""));
+            if (null != insuranceInfo.getInCarPersonnelLiabilityCoverage() && 0 != insuranceInfo.getInCarPersonnelLiabilityCoverage()) {
+                String value = seatInsuredAmountDictMap.get(insuranceInfo.getInCarPersonnelLiabilityCoverage().toString());
+                if (!StringUtils.isEmpty(value)) {
+                    if (value.equals("无")) {
+                        insureInfo.setSeatInsuredAmount("0");
+                    } else {
+                        insureInfo.setSeatInsuredAmount(value.replace("（万）", ""));
+                    }
+                }
             }
-            if(null != insuranceInfo.getThirdPartyLiabilityCoverage() && 0 != insuranceInfo.getThirdPartyLiabilityCoverage()){
-                insureInfo.setThirdInsuredAmount(seatInsuredAmountDictMap.get(insuranceInfo.getThirdPartyLiabilityCoverage().toString()).replace("（万）", ""));
+            if (null != insuranceInfo.getThirdPartyLiabilityCoverage() && 0 != insuranceInfo.getThirdPartyLiabilityCoverage()) {
+                String value = thirdInsuranceAmountDictMap.get(insuranceInfo.getThirdPartyLiabilityCoverage().toString());
+                if (!StringUtils.isEmpty(value)) {
+                    if (value.equals("无")) {
+                        insureInfo.setThirdInsuredAmount("0");
+                    } else {
+                        insureInfo.setThirdInsuredAmount(value.replace("（万）", ""));
+                    }
+                }
             }
             insureInfo.setDamageFlag(JudgeEnum.YES.getCode());
             return insureInfo;
