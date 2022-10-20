@@ -108,7 +108,7 @@ public class RecoverToCheckExe {
             if (null == maintenanceDTO) {
                 throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "维修单查询失败");
             }
-            if (MaintenanceTypeEnum.FAULT_REPAIR.getCode() == maintenanceDTO.getMaintenanceType() && (MaintenanceStatusEnum.WAIT_REPAIR.getCode() == maintenanceDTO.getMaintenanceStatus() ||
+            if (MaintenanceTypeEnum.ACCIDENT_REPAIR.getCode() == maintenanceDTO.getMaintenanceType() && (MaintenanceStatusEnum.WAIT_REPAIR.getCode() == maintenanceDTO.getMaintenanceStatus() ||
                     MaintenanceStatusEnum.REPAIRING.getCode() == maintenanceDTO.getMaintenanceStatus() || MaintenanceStatusEnum.WAIT_FETCH.getCode() == maintenanceDTO.getMaintenanceStatus())) {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆处于事故维修中，无法进行收车。");
             } else {
