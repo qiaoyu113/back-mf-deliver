@@ -117,6 +117,7 @@ public class ServeAdjustCheckCmdExe {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "未查询到维修单");
             }
             MaintenanceDTO sourceMaintenanceDTO = maintenanceDTOResult.getData();*/
+            sourceServeNo = replaceInfo.getSourceServeNo();
             log.info("sourceServeNo---->{}", sourceServeNo);
         }
 
