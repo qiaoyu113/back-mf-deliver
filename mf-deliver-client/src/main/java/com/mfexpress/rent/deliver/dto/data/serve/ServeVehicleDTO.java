@@ -55,4 +55,7 @@ public class ServeVehicleDTO {
     @ApiModelProperty(value = "比例")
     private Double rentRatio;
 
+    @ApiModelProperty(value = "预付款")
+    private BigDecimal advancePaymentAmount;
+
 }

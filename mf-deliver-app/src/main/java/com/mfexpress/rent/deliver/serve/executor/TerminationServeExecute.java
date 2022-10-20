@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.serve.executor;
 
 import com.mfexpress.billing.customer.api.aggregate.BookAggregateRootApi;
 import com.mfexpress.billing.customer.constant.AccountBookTypeEnum;
+import com.mfexpress.billing.customer.constant.BusinessTypeEnum;
 import com.mfexpress.billing.customer.data.dto.book.BookMoveBalanceDTO;
 import com.mfexpress.billing.customer.data.dto.book.CustomerBookDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
@@ -93,6 +94,7 @@ public class TerminationServeExecute {
                 .targetAccountId(bookListResult.getData().get(0).getAccountId())
                 .targetType(AccountBookTypeEnum.RENT_BALANCE.getCode())
                 .advancePayment(true)
+                .operType(BusinessTypeEnum.TERMINATION_OF_SERVICE.getCode())
                 .userId(tokenInfo.getId()).build();
         Result<Long> moveBalanceResult = bookAggregateRootApi.moveBalance(bookMoveBalanceDTO);
         ResultDataUtils.getInstance(moveBalanceResult).getDataOrException();
