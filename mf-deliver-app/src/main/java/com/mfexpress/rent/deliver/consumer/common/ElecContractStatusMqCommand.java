@@ -136,13 +136,14 @@ public class ElecContractStatusMqCommand {
         } else if (ContractStatusEnum.COMPLETE.getValue().equals(contractStatusInfo.getStatus())) {
             // 合同状态改为完成
             // 加锁避免重复回调
-            Lock obtain = this.redisLockRegistry.obtain(StringUtils.join(contractSignedRedisKey, ":", contractStatusInfo.getThirdPartContractId()));
-            obtain.lock();
+            Lock lock = this.redisLockRegistry.obtain(StringUtils.join(contractSignedRedisKey, ":", contractStatusInfo.getThirdPartContractId()));
+            if (!lock.tryLock()) {
+                return;
+            }
             try {
                 contractCompleted(contractStatusInfo);
-
             } finally {
-                obtain.unlock();
+                lock.unlock();
             }
         } else if (ContractStatusEnum.EXPIRED.getValue().equals(contractStatusInfo.getStatus())) {
             // 合同状态改为失败，失败原因为过期；不需要更新交付单状态，因为失败原因为过期的话需要用户确认后才会去改变交付单的状态
