@@ -1,66 +1,34 @@
 package com.mfexpress.rent.deliver.consumer.common;
 
-import cn.hutool.core.date.DateTime;
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
-import com.alibaba.fastjson.JSON;
-import com.mfexpress.billing.rentcharge.dto.data.deliver.DeliverVehicleCmd;
-import com.mfexpress.billing.rentcharge.dto.data.deliver.RecoverVehicleCmd;
-import com.mfexpress.billing.rentcharge.dto.data.deliver.RenewalCmd;
-import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.contract.ContractResultTopicDTO;
 import com.mfexpress.component.enums.contract.ContractFailTypeEnum;
 import com.mfexpress.component.enums.contract.ContractStatusEnum;
-import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessClass;
 import com.mfexpress.component.starter.mq.relation.common.MFMqCommonProcessMethod;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
-import com.mfexpress.order.api.app.ContractAggregateRootApi;
-import com.mfexpress.order.dto.data.CommodityDTO;
-import com.mfexpress.rent.deliver.api.ServeServiceI;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.*;
-import com.mfexpress.rent.deliver.dto.data.daily.DailyOperateCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractSigningCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.cmd.ContractStatusChangeCmd;
-import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.RenewalChargeCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverVehicleProcessCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
-import com.mfexpress.rent.deliver.dto.entity.Deliver;
-import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd.DeliverVehicleProcessCmdExe;
 import com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd.RecoverVehicleProcessCmdExe;
-import com.mfexpress.rent.deliver.utils.FormatUtil;
-import com.mfexpress.rent.deliver.utils.MainServeUtil;
-import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
-import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
-import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
-import com.mfexpress.rent.vehicle.constant.ValidStockStatusEnum;
-import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
-import com.mfexpress.rent.vehicle.data.dto.warehouse.WarehouseDto;
-import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
-import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.redis.util.RedisLockRegistry;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
-import java.util.*;
 import java.util.concurrent.locks.Lock;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Component
 @MFMqCommonProcessClass(topicKey = "rocketmq.listenContractTopic")
@@ -71,27 +39,10 @@ public class ElecContractStatusMqCommand {
     private ElecHandoverContractAggregateRootApi contractAggregateRootApi;
 
     @Resource
-    private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
-
-    @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
 
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
-
-    @Resource
-    private WarehouseAggregateRootApi warehouseAggregateRootApi;
-
-    @Resource
-    private VehicleAggregateRootApi vehicleAggregateRootApi;
-
-    @Resource
-    private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
-
-    @Resource
-    private CustomerAggregateRootApi customerAggregateRootApi;
-    @Resource
-    private DailyAggregateRootApi dailyAggregateRootApi;
 
     @Resource
     private DeliverVehicleProcessCmdExe deliverVehicleProcessCmdExe;
@@ -99,18 +50,10 @@ public class ElecContractStatusMqCommand {
     @Resource
     private RecoverVehicleProcessCmdExe recoverVehicleProcessCmdExe;
 
-    @Resource
-    private ServeServiceI serveServiceI;
-    @Resource
-    private ContractAggregateRootApi orderContractAggregateRootApi;
-
     private MqTools mqTools;
 
     @Resource
     private BeanFactory beanFactory;
-
-    @Value("${rocketmq.listenEventTopic}")
-    private String event;
 
     private final String contractSignedRedisKey = "lock:mf-deliver:contractSigned:contractId:";
 
@@ -136,10 +79,13 @@ public class ElecContractStatusMqCommand {
         } else if (ContractStatusEnum.COMPLETE.getValue().equals(contractStatusInfo.getStatus())) {
             // 合同状态改为完成
             // 加锁避免重复回调
+            log.info("----------收到电子交接单签署完成消息------------当前线程：{}--------------当前时间：{}",Thread.currentThread().getName() , System.currentTimeMillis());
             Lock lock = this.redisLockRegistry.obtain(StringUtils.join(contractSignedRedisKey, ":", contractStatusInfo.getThirdPartContractId()));
             if (!lock.tryLock()) {
+                log.info("---未获取到锁-------收到电子交接单签署完成消息------------当前线程：{}--------------当前时间：{}",Thread.currentThread().getName() , System.currentTimeMillis());
                 return;
             }
+            log.info("---成功获取到锁-------收到电子交接单签署完成消息------------当前线程：{}--------------当前时间：{}",Thread.currentThread().getName() , System.currentTimeMillis());
             try {
                 contractCompleted(contractStatusInfo);
             } finally {
@@ -209,8 +155,10 @@ public class ElecContractStatusMqCommand {
         cmd.setContractForeignNo(contractStatusInfo.getThirdPartContractId());
         cmd.setContractId(Long.valueOf(contractStatusInfo.getLocalContractId()));
         cmd.setDocPdfUrlMap(contractStatusInfo.getDocUrlMapping());
+        log.info("----------收到电子交接单签署完成消息------------准备执行电子交接单完成操作，请求参数：{}", JSONUtil.toJsonStr(cmd));
         Result<Integer> completedResult = contractAggregateRootApi.completed(cmd);
         ResultValidUtils.checkResultException(completedResult);
+        log.info("----------收到电子交接单签署完成消息------------电子交接单完成操作执行成功");
 
 //        List<String> serveNoList;
         if (DeliverTypeEnum.DELIVER.getCode() == contractDTO.getDeliverType()) {
@@ -219,7 +167,9 @@ public class ElecContractStatusMqCommand {
 //            serveNoList = deliverVehicleProcess(serveDTO, contractDTO);
         } else {
             // 收车处理
-            recoverVehicleProcessCmdExe.execute(recoverVehicleProcessCmdExe.turnToCmd(contractDTO, deliverDTO, serveDTO));
+            RecoverVehicleProcessCmd recoverVehicleProcessCmd = recoverVehicleProcessCmdExe.turnToCmd(contractDTO, deliverDTO, serveDTO);
+            log.info("----------收到电子交接单签署完成消息------------准备执行收车逻辑，命令：{}", recoverVehicleProcessCmd);
+            recoverVehicleProcessCmdExe.execute(recoverVehicleProcessCmd);
 //            serveNoList = recoverVehicleProcess(serveDTO, deliverDTO, contractStatusInfo, contractDTO);
         }
 
