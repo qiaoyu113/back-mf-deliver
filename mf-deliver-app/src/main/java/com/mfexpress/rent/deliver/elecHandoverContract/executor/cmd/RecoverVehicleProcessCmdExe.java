@@ -99,6 +99,7 @@ public class RecoverVehicleProcessCmdExe {
         // 交付单、服务单修改
         Result<Integer> recoveredResult = recoverVehicleAggregateRootApi.recovered(cmd.getDeliverNo(), cmd.getContractForeignNo());
         ResultValidUtils.checkResultException(recoveredResult);
+        log.info("----------收到电子交接单签署完成消息------------执行收车逻辑成功");
 
         //更新车辆状态
         VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
@@ -115,6 +116,7 @@ public class RecoverVehicleProcessCmdExe {
         Result<String> changeVehicleStatusResult = vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
 
         ResultValidUtils.checkResultException(changeVehicleStatusResult);
+        log.info("----------收到电子交接单签署完成消息------------修改车辆状态成功");
 
         // 判断实际收车日期和预计收车日期的前后关系，如果实际收车日期在预计收车日期之前或当天，发送收车计费消息，反之，发送自动续约消息
 
@@ -123,6 +125,7 @@ public class RecoverVehicleProcessCmdExe {
         DateTime expectRecoverDate = DateUtil.parseDate(expectRecoverDateChar);
         // 发送收车计费消息
         if (expectRecoverDate.isAfterOrEquals(recoverVehicleTime)) {
+            log.info("----------收到电子交接单签署完成消息------------未提前收车");
             Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByDeliverNo(cmd.getDeliverNo());
             DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrException();
             //收车计费
@@ -141,6 +144,7 @@ public class RecoverVehicleProcessCmdExe {
 
             // 服务单维修中
             if (ServeEnum.REPAIR.getCode().equals(cmd.getServeStatus())) {
+                log.info("----------收到电子交接单签署完成消息------------收车服务单在维修中");
                 // 查找维修单
                 Result<List<ServeRepairDTO>> serveRepairDTOSResult = serveAggregateRootApi.getServeRepairDTOSByServeNo(cmd.getServeNo());
                 List<ServeRepairDTO> serveRepairDTOS = serveRepairDTOSResult.getData();
@@ -152,6 +156,7 @@ public class RecoverVehicleProcessCmdExe {
                 MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByMaintenanceId(backmarketMaintenanceAggregateRootApi, serveRepairDTO.getMaintenanceId());
                 // 维修性质为故障维修
                 if (MaintenanceTypeEnum.FAULT_REPAIR.getCode() == maintenanceDTO.getMaintenanceType()) {
+                    log.info("----------收到电子交接单签署完成消息------------维修性质为故障维修");
                     // 原车维修单变为库存中维修
                     ResultValidUtils.checkResultException(backmarketMaintenanceAggregateRootApi.replaceDeliverRecoverVehicle(cmd.getServeNo()));
                     /*if (MaintenanceStatusEnum.MAINTAINED.getCode().equals(maintenanceDTO.getStatus())) {
@@ -165,6 +170,7 @@ public class RecoverVehicleProcessCmdExe {
                     // 查询替换车服务单
                     String replaceServeNo = MainServeUtil.getReplaceServeNoBySourceServeNo(backmarketMaintenanceAggregateRootApi, cmd.getServeNo());
                     if (!StringUtils.isEmpty(replaceServeNo)) {
+                        log.info("----------收到电子交接单签署完成消息------------收车服务单存在替换单");
                         Result<ServeDTO> replaceServeDTOResult = serveAggregateRootApi.getServeDtoByServeNo(replaceServeNo);
                         ServeDTO replaceServe = ResultDataUtils.getInstance(replaceServeDTOResult).getDataOrException();
 
@@ -180,6 +186,7 @@ public class RecoverVehicleProcessCmdExe {
                                         && JudgeEnum.YES.getCode().equals(o.getReplaceFlag())).isPresent()) {
 
                             // 替换车开始计费
+                            log.info("----------收到电子交接单签署完成消息------------替换单已发车");
                             Result<DeliverDTO> replaceDeliverResult = deliverAggregateRootApi.getDeliverByServeNo(replaceServe.getServeNo());
                             DeliverDTO replaceDeliver = ResultDataUtils.getInstance(replaceDeliverResult).getDataOrException();
 
@@ -216,6 +223,7 @@ public class RecoverVehicleProcessCmdExe {
             }
         } else {
             // 发送自动续约消息
+            log.info("----------收到电子交接单签署完成消息------------提前收车,执行自动续约逻辑");
             RenewalChargeCmd renewalChargeCmd = new RenewalChargeCmd();
             renewalChargeCmd.setServeNo(cmd.getServeNo());
             renewalChargeCmd.setCreateId(cmd.getOperatorId());
