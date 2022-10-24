@@ -1,16 +1,15 @@
 package com.mfexpress.rent.deliver.mobile;
 
+import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.constants.CommonConstants;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
-import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.TokenTools;
 import com.mfexpress.rent.deliver.api.DeliverVehicleServiceI;
+import com.mfexpress.rent.deliver.constant.DeliverProjectProperties;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleCmd;
-import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.CustomerCmd;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.DeliverNoCmd;
 import com.mfexpress.transportation.customer.dto.entity.vo.LinkmanVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -43,11 +42,19 @@ public class DeliverVehicleController {
         deliverVehicleCmd.setCarServiceId(tokenInfo.getId());
         return Result.getInstance(deliverVehicleServiceI.toDeliver(deliverVehicleCmd)).success();
     }
+
     @PostMapping("/selectContactsByDeliverNo")
     @ApiOperation("根据交付单编号查询提车人信息")
     @PrintParam
-    public Result<LinkmanVo>selectContactsByDeliverNo(@RequestBody @Validated CustomerCmd customerCmd){
+    public Result<LinkmanVo> selectContactsByDeliverNo(@RequestBody @Validated CustomerCmd customerCmd) {
         return Result.getInstance(deliverVehicleServiceI.getLinkmanByCustomerId(customerCmd.getCustomerId()));
+    }
+
+    @PostMapping("/getDeliverVehicleTimeRange")
+    @ApiOperation("获取发车时间范围")
+    @PrintParam
+    public Result<DeliverProjectProperties.TimeRange> getDeliverVehicleTimeRange() {
+        return Result.getInstance(DeliverProjectProperties.DELIVER_TIMERANGE).success();
     }
 
 }

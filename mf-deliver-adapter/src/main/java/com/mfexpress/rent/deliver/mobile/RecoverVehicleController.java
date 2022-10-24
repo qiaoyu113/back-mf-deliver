@@ -1,13 +1,14 @@
 package com.mfexpress.rent.deliver.mobile;
 
+import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.constants.CommonConstants;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.exception.CommonException;
-import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.token.TokenTools;
 import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
+import com.mfexpress.rent.deliver.constant.DeliverProjectProperties;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.vo.SurrenderApplyVO;
 import com.mfexpress.transportation.customer.dto.entity.vo.LinkmanVo;
@@ -219,7 +220,7 @@ public class RecoverVehicleController {
 
     // ---------------------luzheng add end----------------------------
 
-    // 异常收车        æbˈnɔːml
+    // 异常收车
     @PostMapping("/abnormalRecover")
     @ApiOperation(value = "异常收车")
     @PrintParam
@@ -257,4 +258,10 @@ public class RecoverVehicleController {
         return Result.getInstance(recoverVehicleServiceI.backInsureByDeliver(cmd, tokenInfo)).success();
     }
 
+    @PostMapping("/getRecoverVehicleTimeRange")
+    @ApiOperation("获取收车时间范围")
+    @PrintParam
+    public Result<DeliverProjectProperties.TimeRange> getRecoverVehicleTimeRange() {
+        return Result.getInstance(DeliverProjectProperties.RECOVER_TIMERANGE).success();
+    }
 }
