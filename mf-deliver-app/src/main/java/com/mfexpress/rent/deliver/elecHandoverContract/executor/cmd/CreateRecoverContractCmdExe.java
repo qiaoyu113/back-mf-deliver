@@ -1,6 +1,5 @@
 package com.mfexpress.rent.deliver.elecHandoverContract.executor.cmd;
 
-import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.component.constants.ResultErrorEnum;
@@ -11,6 +10,7 @@ import com.mfexpress.component.enums.contract.ContractModeEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.contract.MFContractTools;
+import com.mfexpress.component.utils.util.DateUtils;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
@@ -18,6 +18,7 @@ import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
 import com.mfexpress.rent.deliver.constant.ContractFailureReasonEnum;
 import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
+import com.mfexpress.rent.deliver.constant.DeliverProjectProperties;
 import com.mfexpress.rent.deliver.constant.DeliverTypeEnum;
 import com.mfexpress.rent.deliver.domainapi.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverContractGeneratingCmd;
@@ -384,9 +385,10 @@ public class CreateRecoverContractCmdExe {
 
 
     private void checkDate(CreateRecoverContractFrontCmd cmd) {
-        //todo
-        if (DateUtil.between(DateUtil.parseDate(DateUtil.format(cmd.getRecoverInfo().getRecoverVehicleTime(), "yyyy-MM-dd")), DateUtil.parseDate(DateUtil.now()), DateUnit.DAY) > 6) {
-            log.info("收车日期超出可选范围  参数:{}", cmd);
+
+        Date recoverVehicleTime = cmd.getRecoverInfo().getRecoverVehicleTime();
+        if (recoverVehicleTime.before(DateUtils.addDate(new Date(), -DeliverProjectProperties.RECOVER_TIMERANGE.getPre())) ||
+                recoverVehicleTime.after(DateUtils.addDate(new Date(), DeliverProjectProperties.RECOVER_TIMERANGE.getSuf()))) {
             throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "收车日期超出可选范围");
         }
 
