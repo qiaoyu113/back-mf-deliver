@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.serve.executor;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import com.github.pagehelper.PageInfo;
@@ -28,6 +29,10 @@ import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
+import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
+import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeAllLeaseTermAmountVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
@@ -45,19 +50,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.annotation.Resource;
 
 @Component
 public class ServeLeaseTermAmountQryExe {
@@ -78,6 +76,13 @@ public class ServeLeaseTermAmountQryExe {
 
     @Resource
     private ContractAggregateRootApi contractAggregateRootApi;
+
+    @Resource
+    private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
+
+    @Resource
+    private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
+
 
     @Resource
     private BeanFactory beanFactory;
@@ -224,10 +229,38 @@ public class ServeLeaseTermAmountQryExe {
         if (null != commodityMapDTO && null != commodityMapDTO.getContractCommodityDTOMap() && !commodityMapDTO.getContractCommodityDTOMap().isEmpty()) {
             contractCommodityDTOMap = commodityMapDTO.getContractCommodityDTOMap();
         }
+
+
+        //查询发车单
+        List<String> serveNos = voList.stream().map(ServeAllLeaseTermAmountVO::getServeNo).distinct().collect(Collectors.toList());
+        Result<List<DeliverVehicleDTO>> deliverVehicleResult = deliverVehicleAggregateRootApi.getDeliverVehicleByServeNoList(serveNos);
+        List<DeliverVehicleDTO> deliverVehicleDTOS = ResultDataUtils.getInstance(deliverVehicleResult).getDataOrException();
+        Map<String, List<DeliverVehicleDTO>> deliverVehicleMap = deliverVehicleDTOS.stream().collect(Collectors.groupingBy(DeliverVehicleDTO::getServeNo));
+
+        Result<List<RecoverVehicleDTO>> recoverVehicleDTOResult = recoverVehicleAggregateRootApi.getRecoverVehicleDTOByServeNos(serveNos);
+        List<RecoverVehicleDTO> recoverVehicleDTOS = ResultDataUtils.getInstance(recoverVehicleDTOResult).getDataOrException();
+        Map<String, List<RecoverVehicleDTO>> recoverVehicleMap = recoverVehicleDTOS.stream().collect(Collectors.groupingBy(RecoverVehicleDTO::getServeNo));
         // 数据查询 --------------------------- end
 
         // 数据拼装 --------------------------- start
         for (ServeAllLeaseTermAmountVO vo : voList) {
+
+            //发车日期 最近发车日期
+            List<DeliverVehicleDTO> deliverVehicleDTOList = deliverVehicleMap.getOrDefault(vo.getServeNo(), new ArrayList<>());
+            if (CollectionUtil.isNotEmpty(deliverVehicleDTOList)) {
+                List<DeliverVehicleDTO> deliverVehicleDTOList1 = deliverVehicleDTOList.stream().sorted(Comparator.comparing(DeliverVehicleDTO::getDeliverVehicleTime)).collect(Collectors.toList());
+                vo.setFirstIssueDate(deliverVehicleDTOList1.get(0).getDeliverVehicleTime());
+                vo.setRecentlyIssueDate(deliverVehicleDTOList1.get(deliverVehicleDTOList1.size() - 1).getDeliverVehicleTime());
+            }
+
+            // 售后收车日期
+            List<RecoverVehicleDTO> recoverVehicleDTOList = recoverVehicleMap.getOrDefault(vo.getServeNo(), new ArrayList<>());
+            if (CollectionUtil.isNotEmpty(recoverVehicleDTOList)) {
+                List<RecoverVehicleDTO> recoverVehicleDTOS1 = recoverVehicleDTOList.stream().sorted(Comparator.comparing(RecoverVehicleDTO::getRecoverVehicleTime)).collect(Collectors.toList());
+                vo.setRecentlyRecoverDate(recoverVehicleDTOS1.get(recoverVehicleDTOS1.size() - 1).getRecoverVehicleTime());
+            }
+
+
             // 所属管理区名称补充
             if (null != sysOfficeDtoMap) {
                 SysOfficeDto sysOfficeDto = sysOfficeDtoMap.get(vo.getOrgId());

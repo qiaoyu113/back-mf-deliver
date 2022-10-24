@@ -9,4 +9,6 @@ public interface RecoverVehicleEntityApi {
     List<RecoverVehicleDTO> getRecoverListByDeliverNoList(List<String> deliverNoList);
 
     RecoverVehicleDTO getRecoverVehicleByDeliverNo(String deliverNo);
+
+    List<RecoverVehicleDTO> getRecoverVehicleByServeNos(List<String> serveNos);
 }

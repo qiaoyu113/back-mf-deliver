@@ -1,30 +1,31 @@
 package com.mfexpress.rent.deliver.deliver.executor;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUtil;
 import com.mfexpress.billing.customer.api.aggregate.SubBillItemAggregateRootApi;
 import com.mfexpress.billing.customer.constant.CyclicBillPaymentStatusEnum;
 import com.mfexpress.billing.customer.data.dto.billitem.SubBillItemDTO;
-import com.mfexpress.billing.rentcharge.api.DetailAggregateRootApi;
 import com.mfexpress.billing.rentcharge.api.FeeAggregeateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.fee.ServeLeaseTermInfoDTO;
+import com.mfexpress.common.app.userCentre.dto.EmployeeDTO;
+import com.mfexpress.common.app.userCentre.dto.qry.UserListByEmployeeIdsQry;
+import com.mfexpress.common.domain.api.UserAggregateRootApi;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
-import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
-import com.mfexpress.rent.deliver.constant.DeliverStatusEnum;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
-import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
+import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverEachLeaseTermAmountVO;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverQry;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeChangeRecordDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeQryCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeInfoVO;
+import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeOperationRecordVO;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleDto;
-import com.mfexpress.rent.vehicle.data.dto.vehiclebrand.VehicleBrandDto;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.entity.Customer;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -61,7 +62,10 @@ public class DeliverEachLeaseTermAmountQryExe {
 
     private Map<Integer, String> vehicleTypeMap;
 
-    public PagePagination<DeliverEachLeaseTermAmountVO> execute(ServeQryCmd qry) {
+    @Resource
+    private UserAggregateRootApi userAggregateRootApi;
+
+    public ServeInfoVO execute(ServeQryCmd qry) {
         initDictData();
         /*DeliverQry deliverQry = new DeliverQry();
         deliverQry.setStatus((Arrays.asList(DeliverStatusEnum.VALID.getCode(), DeliverStatusEnum.HISTORICAL.getCode())));
@@ -81,10 +85,10 @@ public class DeliverEachLeaseTermAmountQryExe {
 
         Result<List<ServeLeaseTermInfoDTO>> serveLeaseTermInfoDTOListResult = feeAggregeateRootApi.getServeLeaseTermInfoByServeNo(qry.getServeNo());
         List<ServeLeaseTermInfoDTO> serveLeaseTermInfoDTOList = ResultDataUtils.getInstance(serveLeaseTermInfoDTOListResult).getDataOrNull();
-        if (null == serveLeaseTermInfoDTOList || serveLeaseTermInfoDTOList.isEmpty()) {
-            log.info("serveNo:{}租期数据查询失败或暂无租期数据", serveDTO.getServeNo());
-            return PagePagination.getInstance(new ArrayList<>());
-        }
+//        if (null == serveLeaseTermInfoDTOList || serveLeaseTermInfoDTOList.isEmpty()) {
+//            log.info("serveNo:{}租期数据查询失败或暂无租期数据", serveDTO.getServeNo());
+//            return new ServeInfoVO();
+//        }
 
         // 刨去租期为当月及以后月的服务单租期信息
         /*Date nowDate = new Date();
@@ -101,19 +105,24 @@ public class DeliverEachLeaseTermAmountQryExe {
         }).collect(Collectors.toList());
         Result<Map<Long, SubBillItemDTO>> detailIdWithSubBillItemDTOMapResult = subBillItemAggregateRootApi.getSubBillItemByDetailList(detailIdList);
         Map<Long, SubBillItemDTO> detailIdWithSubBillItemDTOMap = ResultDataUtils.getInstance(detailIdWithSubBillItemDTOMapResult).getDataOrNull();
-        if (null == detailIdWithSubBillItemDTOMap || detailIdWithSubBillItemDTOMap.isEmpty()) {
-            log.error("查询租期费用失败，详单id：{}", detailIdList);
-            return PagePagination.getInstance(new ArrayList<>());
-        }
-        List<String> subBillItemIdList = detailIdWithSubBillItemDTOMap.values().stream().map(subBillItemDTO -> String.valueOf(subBillItemDTO.getSubBillItemId())).collect(Collectors.toList());
-        Result<List<SubBillItemDTO.SubBillItemRecordDTO>> subBillItemAdjustRecordResult = subBillItemAggregateRootApi.getSubBillItemAdjustRecord(subBillItemIdList);
-        List<SubBillItemDTO.SubBillItemRecordDTO> subBillItemRecordDTOList = ResultDataUtils.getInstance(subBillItemAdjustRecordResult).getDataOrNull();
-        Map<Long, List<SubBillItemDTO.SubBillItemRecordDTO>> subBillItemRecordDTOMap = null;
-        if (null == subBillItemRecordDTOList || subBillItemRecordDTOList.isEmpty()) {
-            log.error("查询调账金额失败，子帐项id：{}", subBillItemIdList);
+//        if (null == detailIdWithSubBillItemDTOMap || detailIdWithSubBillItemDTOMap.isEmpty()) {
+//            log.error("查询租期费用失败，详单id：{}", detailIdList);
+//            return new ServeInfoVO();
+//        }
+        Map<Long, List<SubBillItemDTO.SubBillItemRecordDTO>> subBillItemRecordDTOMap = new HashMap<>();
+        if (CollectionUtil.isNotEmpty(detailIdWithSubBillItemDTOMap)) {
+            List<String> subBillItemIdList = detailIdWithSubBillItemDTOMap.values().stream().map(subBillItemDTO -> String.valueOf(subBillItemDTO.getSubBillItemId())).collect(Collectors.toList());
+            Result<List<SubBillItemDTO.SubBillItemRecordDTO>> subBillItemAdjustRecordResult = subBillItemAggregateRootApi.getSubBillItemAdjustRecord(subBillItemIdList);
+            List<SubBillItemDTO.SubBillItemRecordDTO> subBillItemRecordDTOList = ResultDataUtils.getInstance(subBillItemAdjustRecordResult).getDataOrNull();
+            if (null == subBillItemRecordDTOList || subBillItemRecordDTOList.isEmpty()) {
+                log.error("查询调账金额失败，子帐项id：{}", subBillItemIdList);
+            } else {
+                subBillItemRecordDTOMap = subBillItemRecordDTOList.stream().collect(Collectors.groupingBy(SubBillItemDTO.SubBillItemRecordDTO::getSubBillItemId));
+            }
         } else {
-            subBillItemRecordDTOMap = subBillItemRecordDTOList.stream().collect(Collectors.groupingBy(SubBillItemDTO.SubBillItemRecordDTO::getSubBillItemId));
+            detailIdWithSubBillItemDTOMap = new HashMap<>();
         }
+
 
         // 车牌号查询
         Result<List<VehicleDto>> vehicleDTOListResult = vehicleAggregateRootApi.getVehicleDTOByIds(vehicleIdList);
@@ -123,8 +132,12 @@ public class DeliverEachLeaseTermAmountQryExe {
             vehicleDtoMap = vehicleDtoList.stream().collect(Collectors.toMap(VehicleDto::getId, Function.identity(), (v1, v2) -> v1));
         }
 
+        Result<List<ServeChangeRecordDTO>> serveChangeRecordListResult = serveAggregateRootApi.getServeChangeRecordList(qry.getServeNo());
+        List<ServeChangeRecordDTO> serveChangeRecordDTOS = ResultDataUtils.getInstance(serveChangeRecordListResult).getDataOrNull();
+
         Map<Integer, VehicleDto> finalVehicleDtoMap = vehicleDtoMap;
         Map<Long, List<SubBillItemDTO.SubBillItemRecordDTO>> finalSubBillItemRecordDTOMap = subBillItemRecordDTOMap;
+        Map<Long, SubBillItemDTO> finalDetailIdWithSubBillItemDTOMap = detailIdWithSubBillItemDTOMap;
         List<DeliverEachLeaseTermAmountVO> voList = serveLeaseTermInfoDTOList.stream().map(serveLeaseTermInfoDTO -> {
             Long detailId = serveLeaseTermInfoDTO.getDetailId();
             DeliverEachLeaseTermAmountVO deliverEachLeaseTermAmountVO = new DeliverEachLeaseTermAmountVO();
@@ -159,16 +172,16 @@ public class DeliverEachLeaseTermAmountQryExe {
 
             // 回款状态和待还金额
             BigDecimal amount = BigDecimal.ZERO;
-            SubBillItemDTO subBillItemDTO = detailIdWithSubBillItemDTOMap.get(detailId);
+            SubBillItemDTO subBillItemDTO = finalDetailIdWithSubBillItemDTOMap.get(detailId);
             if (null != subBillItemDTO) {
                 deliverEachLeaseTermAmountVO.setUnpaidAmount(subBillItemDTO.getUnpaidAmount().toString());
                 deliverEachLeaseTermAmountVO.setRepaymentStatus(subBillItemDTO.getStatus());
                 // 客户账单域没有合适的枚举类，故此处先写死
-                if(0 == deliverEachLeaseTermAmountVO.getRepaymentStatus()){
+                if (0 == deliverEachLeaseTermAmountVO.getRepaymentStatus()) {
                     deliverEachLeaseTermAmountVO.setRepaymentStatusDisplay("待回款");
-                }else if(1 == deliverEachLeaseTermAmountVO.getRepaymentStatus()){
+                } else if (1 == deliverEachLeaseTermAmountVO.getRepaymentStatus()) {
                     deliverEachLeaseTermAmountVO.setRepaymentStatusDisplay("部分回款");
-                }else if(2 == deliverEachLeaseTermAmountVO.getRepaymentStatus()){
+                } else if (2 == deliverEachLeaseTermAmountVO.getRepaymentStatus()) {
                     deliverEachLeaseTermAmountVO.setRepaymentStatusDisplay("已回款");
                 }
 
@@ -198,7 +211,34 @@ public class DeliverEachLeaseTermAmountQryExe {
             return deliverEachLeaseTermAmountVO;
         }).collect(Collectors.toList());
 
-        return PagePagination.getInstance(voList);
+        Map<Integer, EmployeeDTO> employeeDTOMap = new HashMap<>();
+        if (CollectionUtil.isNotEmpty(serveChangeRecordDTOS)) {
+            UserListByEmployeeIdsQry userListByEmployeeIdsQry = new UserListByEmployeeIdsQry();
+            List<Integer> employeeIds = serveChangeRecordDTOS.stream().map(ServeChangeRecordDTO::getCreatorId).distinct().collect(Collectors.toList());
+            StringBuilder saleIdStr = new StringBuilder();
+            for (Integer saleId : employeeIds) {
+                saleIdStr.append(saleId).append(",");
+            }
+            Result<List<EmployeeDTO>> employeeListByEmployees = userAggregateRootApi.getEmployeeListByEmployees(userListByEmployeeIdsQry);
+            if (CollectionUtil.isNotEmpty(employeeListByEmployees.getData())) {
+                employeeDTOMap = employeeListByEmployees.getData().stream().collect(Collectors.toMap(EmployeeDTO::getId, a -> a));
+            }
+        }
+        List<ServeOperationRecordVO> serveOperationRecordVOS = new ArrayList<>();
+        if (CollectionUtil.isNotEmpty(serveChangeRecordDTOS)) {
+            for (ServeChangeRecordDTO serveChangeRecordDTO : serveChangeRecordDTOS) {
+                ServeOperationRecordVO serveOperationRecordVO = new ServeOperationRecordVO();
+                serveOperationRecordVO.setOperationTime(DateUtil.formatDateTime(serveChangeRecordDTO.getCreateTime()));
+                serveOperationRecordVO.setCategory(ServeChangeRecordEnum.getServeChangeRecordEnum(serveChangeRecordDTO.getType()).getName());
+                serveOperationRecordVO.setOperator(employeeDTOMap.getOrDefault(serveChangeRecordDTO.getCreatorId(), new EmployeeDTO()).getNickName());
+                serveOperationRecordVOS.add(serveOperationRecordVO);
+            }
+        }
+        ServeInfoVO serveInfoVO = new ServeInfoVO();
+        serveInfoVO.setData(voList);
+        serveInfoVO.setRecordVOS(serveOperationRecordVOS);
+        return serveInfoVO;
+
     }
 
     public void initDictData() {

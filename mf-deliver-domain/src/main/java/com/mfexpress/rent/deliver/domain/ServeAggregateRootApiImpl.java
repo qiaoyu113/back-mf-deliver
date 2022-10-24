@@ -960,13 +960,16 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @Override
     @PostMapping("/unLockDeposit")
     @PrintParam
-    public Result unLockDeposit(@RequestParam("serveNoList") List<String> serveNoList, @RequestParam("creatorId") Integer creatorId) {
+    public Result unLockDeposit(@RequestParam("serveNoList") List<String> serveNoList, @RequestParam("creatorId") Integer creatorId, @RequestParam("isTermination") Boolean isTermination) {
         List<ServeDTO> serveDTOList = serveEntityApi.getServeListByServeNoList(serveNoList);
         if (CollectionUtil.isNotEmpty(serveDTOList)) {
             serveDTOList.forEach(serveDTO -> {
-                if (!ServeEnum.RECOVER.getCode().equals(serveDTO.getStatus())) {
-                    log.error("解锁 ------- 服务单不满足解锁条件 参数：{}", serveDTO);
-                    throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "服务单不满足解锁条件");
+                //不是终止服务单
+                if (!isTermination) {
+                    if (!ServeEnum.RECOVER.getCode().equals(serveDTO.getStatus())) {
+                        log.error("解锁 ------- 服务单不满足解锁条件 参数：{}", serveDTO);
+                        throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "服务单不满足解锁条件");
+                    }
                 }
             });
         }
@@ -976,7 +979,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         serveList.forEach(serveDTO -> {
             updateDepositMap.put(serveDTO.getServeNo(), serveDTO.getPaidInDeposit().negate());
         });
-        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, creatorId, false);
+        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, creatorId, false, isTermination);
         return Result.getInstance(true).success();
     }
 
@@ -1008,7 +1011,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         confirmDTOList.forEach(confirmDTO -> {
             updateDepositMap.put(confirmDTO.getServeNo(), confirmDTO.getLockAmount());
         });
-        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, confirmDTOList.get(0).getCreatorId(), true);
+        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, confirmDTOList.get(0).getCreatorId(), true, false);
         return Result.getInstance(true).success();
     }
 
@@ -1223,6 +1226,23 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         }
         return Result.getInstance(0).fail(ResultErrorEnum.OPER_ERROR.getCode(), "更新服务单失败");
     }
+
+    @Override
+    @PostMapping(value = "/terminationServe")
+    @PrintParam
+    public Result<Boolean> terminationServe(@RequestBody ServeDTO serveDTO) {
+
+        return Result.getInstance(serveEntityApi.terminationServe(serveDTO)).success();
+
+    }
+
+    @Override
+    @PostMapping(value = "/getServeDTOByCustomerId")
+    @PrintParam
+    public Result<List<ServeDTO>> getServeDTOByCustomerId(@RequestBody Integer customerId) {
+        return Result.getInstance(serveEntityApi.getServeDTOByCustomerId(customerId)).success();
+    }
+
 
     /*@Override
     @PostMapping(value = "/serve/update/payableDeposit")
