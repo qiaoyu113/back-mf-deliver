@@ -19,7 +19,6 @@ import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
 import com.mfexpress.rent.deliver.constant.*;
-import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
@@ -393,8 +392,8 @@ public class CreateDeliverContractCmdExe {
 //        }
 
         Date deliverVehicleTime = cmd.getDeliverInfo().getDeliverVehicleTime();
-        if (deliverVehicleTime.before(DateUtils.addDate(new Date(), -DeliverProjectProperties.DELIVER_TIMERANGE.getPre())) ||
-                deliverVehicleTime.after(DateUtils.addDate(new Date(), DeliverProjectProperties.DELIVER_TIMERANGE.getSuf()))) {
+        if (deliverVehicleTime.before(DateUtils.addDate(new Date(), -DeliverProjectProperties.DELIVER_TIME_RANGE.getPre())) ||
+                deliverVehicleTime.after(DateUtils.addDate(new Date(), DeliverProjectProperties.DELIVER_TIME_RANGE.getSuf()))) {
             throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "收车日期超出可选范围");
         }
 

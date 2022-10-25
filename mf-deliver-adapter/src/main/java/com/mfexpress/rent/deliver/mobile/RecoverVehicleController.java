@@ -262,6 +262,6 @@ public class RecoverVehicleController {
     @ApiOperation("获取收车时间范围")
     @PrintParam
     public Result<DeliverProjectProperties.TimeRange> getRecoverVehicleTimeRange() {
-        return Result.getInstance(DeliverProjectProperties.RECOVER_TIMERANGE).success();
+        return Result.getInstance(DeliverProjectProperties.RECOVER_TIME_RANGE).success();
     }
 }

@@ -387,8 +387,8 @@ public class CreateRecoverContractCmdExe {
     private void checkDate(CreateRecoverContractFrontCmd cmd) {
 
         Date recoverVehicleTime = cmd.getRecoverInfo().getRecoverVehicleTime();
-        if (recoverVehicleTime.before(DateUtils.addDate(new Date(), -DeliverProjectProperties.RECOVER_TIMERANGE.getPre())) ||
-                recoverVehicleTime.after(DateUtils.addDate(new Date(), DeliverProjectProperties.RECOVER_TIMERANGE.getSuf()))) {
+        if (recoverVehicleTime.before(DateUtils.addDate(new Date(), -DeliverProjectProperties.RECOVER_TIME_RANGE.getPre())) ||
+                recoverVehicleTime.after(DateUtils.addDate(new Date(), DeliverProjectProperties.RECOVER_TIME_RANGE.getSuf()))) {
             throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "收车日期超出可选范围");
         }
 

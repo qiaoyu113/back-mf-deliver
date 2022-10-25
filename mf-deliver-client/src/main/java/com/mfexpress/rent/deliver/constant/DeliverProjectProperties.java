@@ -21,13 +21,13 @@ public class DeliverProjectProperties implements InitializingBean {
     private TimeRange recoverTimeRange;
     private TimeRange deliverTimeRange;
 
-    public static TimeRange RECOVER_TIMERANGE;
-    public static TimeRange DELIVER_TIMERANGE;
+    public static TimeRange RECOVER_TIME_RANGE;
+    public static TimeRange DELIVER_TIME_RANGE;
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        RECOVER_TIMERANGE = recoverTimeRange;
-        DELIVER_TIMERANGE = deliverTimeRange;
+        RECOVER_TIME_RANGE = recoverTimeRange;
+        DELIVER_TIME_RANGE = deliverTimeRange;
     }
 
     @Data

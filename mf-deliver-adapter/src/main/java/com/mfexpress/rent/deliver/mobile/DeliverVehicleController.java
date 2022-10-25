@@ -54,7 +54,7 @@ public class DeliverVehicleController {
     @ApiOperation("获取发车时间范围")
     @PrintParam
     public Result<DeliverProjectProperties.TimeRange> getDeliverVehicleTimeRange() {
-        return Result.getInstance(DeliverProjectProperties.DELIVER_TIMERANGE).success();
+        return Result.getInstance(DeliverProjectProperties.DELIVER_TIME_RANGE).success();
     }
 
 }
