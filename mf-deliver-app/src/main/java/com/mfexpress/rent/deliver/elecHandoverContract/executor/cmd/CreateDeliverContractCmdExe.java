@@ -392,8 +392,10 @@ public class CreateDeliverContractCmdExe {
 //        }
 
         Date deliverVehicleTime = cmd.getDeliverInfo().getDeliverVehicleTime();
-        if (deliverVehicleTime.before(DateUtils.addDate(new Date(), -DeliverProjectProperties.DELIVER_TIME_RANGE.getPre())) ||
-                deliverVehicleTime.after(DateUtils.addDate(new Date(), DeliverProjectProperties.DELIVER_TIME_RANGE.getSuf()))) {
+        Date tSubNDate = DateUtils.addDate(DateUtil.parseDate(DateUtil.now()), -DeliverProjectProperties.DELIVER_TIME_RANGE.getPre());
+        Date tAddNDate = DateUtils.addDate(DateUtil.parseDate(DateUtil.now()), DeliverProjectProperties.DELIVER_TIME_RANGE.getSuf());
+        if (deliverVehicleTime.before(tSubNDate) ||
+                deliverVehicleTime.after(tAddNDate)) {
             throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "收车日期超出可选范围");
         }
 
