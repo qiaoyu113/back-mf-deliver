@@ -1,44 +1,23 @@
 package com.mfexpress.rent.deliver.domain;
 
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
+import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
-import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
-import com.mfexpress.rent.deliver.constant.DeliverEnum;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
-import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
+import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecContractDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.po.ElectronicHandoverContractPO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.GroupPhotoVO;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalCmd;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalDTO;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalQry;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionByDeliverCmd;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDeductionCmd;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverInvalidCmd;
 import com.mfexpress.rent.deliver.dto.entity.RecoverAbnormal;
 import com.mfexpress.rent.deliver.dto.entity.RecoverVehicle;
@@ -46,12 +25,8 @@ import com.mfexpress.rent.deliver.entity.DeliverEntity;
 import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
 import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
-import com.mfexpress.rent.deliver.gateway.DeliverGateway;
-import com.mfexpress.rent.deliver.gateway.DeliverVehicleGateway;
-import com.mfexpress.rent.deliver.gateway.ElecHandoverContractGateway;
-import com.mfexpress.rent.deliver.gateway.RecoverAbnormalGateway;
-import com.mfexpress.rent.deliver.gateway.RecoverVehicleGateway;
-import com.mfexpress.rent.deliver.gateway.ServeGateway;
+import com.mfexpress.rent.deliver.entity.api.RecoverVehicleEntityApi;
+import com.mfexpress.rent.deliver.gateway.*;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import io.swagger.annotations.Api;
@@ -59,11 +34,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -91,6 +67,9 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
 
     @Resource
     private ElecHandoverContractGateway contractGateway;
+
+    @Resource
+    private RecoverVehicleEntityApi recoverVehicleEntityApi;
 
     @Override
     @PostMapping("/getRecoverVehicleDtoByDeliverNo")
@@ -381,5 +360,14 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     public Result<Integer> invalidRecover(RecoverInvalidCmd cmd) {
 
         return Result.getInstance(recoverVehicleGateway.invalidRecover(cmd)).success();
+    }
+
+    @Override
+    @PostMapping("/getRecoverVehicleDTOByServeNos")
+    @PrintParam
+    public Result<List<RecoverVehicleDTO>> getRecoverVehicleDTOByServeNos(@RequestBody List<String> serveNos) {
+
+        return Result.getInstance(recoverVehicleEntityApi.getRecoverVehicleByServeNos(serveNos)).success();
+
     }
 }

@@ -23,4 +23,6 @@ public interface RecoverVehicleGateway {
     int updateRecoverVehicleByDeliverNo(RecoverVehicleEntity recoverVehicle);
 
     int invalidRecover(RecoverInvalidCmd cmd);
+
+    List<RecoverVehicleEntity> getRecoverVehicleByServeNos(List<String> serveNos);
 }

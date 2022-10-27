@@ -66,7 +66,7 @@ public class ServeDepositPayCmdExe {
             // 在服务单解锁押金前查询
             ServeDTO sourceServe = ResultDataUtils.getInstance(serveAggregateRootApi.getServeDtoByServeNo(cmd.getSourceServeNo())).getDataOrException();
 
-            Result<Boolean> unLockDepositResult = serveAggregateRootApi.unLockDeposit(serveNoList, cmd.getOperatorId());
+            Result<Boolean> unLockDepositResult = serveAggregateRootApi.unLockDeposit(serveNoList, cmd.getOperatorId(),false);
             ResultValidUtils.checkResultException(unLockDepositResult);
             if (!unLockDepositResult.getData()) {
                 // 不记录log了 查看入参排错吧

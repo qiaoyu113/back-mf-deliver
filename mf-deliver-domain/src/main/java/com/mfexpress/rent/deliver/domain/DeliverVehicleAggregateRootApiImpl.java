@@ -1,27 +1,13 @@
 package com.mfexpress.rent.deliver.domain;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.json.JSONUtil;
-import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.base.starter.logback.log.PrintParam;
+import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.redis.RedisTools;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.DeliverContractStatusEnum;
-import com.mfexpress.rent.deliver.constant.DeliverEnum;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
+import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.DeliverImgInfo;
@@ -39,11 +25,11 @@ import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -192,5 +178,12 @@ public class DeliverVehicleAggregateRootApiImpl implements DeliverVehicleAggrega
             return Result.getInstance(deliverVehicleDTOList).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
         return Result.getInstance(deliverVehicleDTOList).success();
+    }
+
+    @Override
+    @PostMapping("/getDeliverVehicleByServeNoList")
+    @PrintParam
+    public Result<List<DeliverVehicleDTO>> getDeliverVehicleByServeNoList(@RequestBody List<String> serveNoList) {
+        return Result.getInstance(deliverVehicleEntityApi.getDeliverVehicleByServeNoList(serveNoList)).success();
     }
 }

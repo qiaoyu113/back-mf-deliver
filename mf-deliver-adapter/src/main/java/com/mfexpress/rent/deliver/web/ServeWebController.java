@@ -1,10 +1,10 @@
 package com.mfexpress.rent.deliver.web;
 
+import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.constants.CommonConstants;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.exception.CommonException;
-import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.token.TokenTools;
@@ -14,19 +14,16 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeAllLeaseTermAmountVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.TerminationServiceCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Resource;
 
 @RestController("serveWebController")
 @RequestMapping("/api/deliver/v3/serve/web")
@@ -111,4 +108,22 @@ public class ServeWebController {
 
         return Result.getInstance(0).success();
     }
+
+
+    @ApiOperation(value = "终止服务 v1.13")
+    @PostMapping(value = "/serve/terminationService")
+    @PrintParam
+    public Result<Boolean> terminationService(@RequestBody TerminationServiceCmd terminationServiceCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            throw new CommonException(ResultErrorEnum.LOGIN_OVERDUE.getCode(), ResultErrorEnum.LOGIN_OVERDUE.getName());
+        }
+
+        return Result.getInstance(serveServiceI.terminationService(terminationServiceCmd, tokenInfo)).success();
+    }
+
+
+
+
 }
