@@ -11,9 +11,9 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
+import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
-import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.mq.MqTools;
@@ -33,9 +33,13 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeC
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.*;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ServePrepaymentDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
-import com.mfexpress.rent.deliver.entity.*;
+import com.mfexpress.rent.deliver.entity.DeliverEntity;
+import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
+import com.mfexpress.rent.deliver.entity.ServeChangeRecordPO;
+import com.mfexpress.rent.deliver.entity.ServeEntity;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.entity.api.ServeAdjustEntityApi;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
@@ -192,6 +196,14 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setPaidInDeposit(BigDecimal.valueOf(serveVehicleDTO.getDeposit()));
                 serve.setRentRatio(BigDecimal.valueOf(serveVehicleDTO.getRentRatio()));
                 serveList.add(serve);
+
+                ServePrepaymentDTO servePrepaymentDTO = new ServePrepaymentDTO();
+                servePrepaymentDTO.setServeNo(serve.getServeNo());
+                servePrepaymentDTO.setPrepaymentAmount(serveVehicleDTO.getAdvancePaymentAmount());
+                servePrepaymentDTO.setCustomerId(serve.getCustomerId());
+                servePrepaymentDTO.setOrgId(serve.getOrgId());
+                servePrepaymentDTO.setCityId(serve.getCityId());
+                mqTools.send(event, "prepayment_serve", null, JSON.toJSONString(servePrepaymentDTO));
             }
         }
         try {
@@ -964,13 +976,16 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @Override
     @PostMapping("/unLockDeposit")
     @PrintParam
-    public Result unLockDeposit(@RequestParam("serveNoList") List<String> serveNoList, @RequestParam("creatorId") Integer creatorId) {
+    public Result unLockDeposit(@RequestParam("serveNoList") List<String> serveNoList, @RequestParam("creatorId") Integer creatorId, @RequestParam("isTermination") Boolean isTermination) {
         List<ServeDTO> serveDTOList = serveEntityApi.getServeListByServeNoList(serveNoList);
         if (CollectionUtil.isNotEmpty(serveDTOList)) {
             serveDTOList.forEach(serveDTO -> {
-                if (!ServeEnum.RECOVER.getCode().equals(serveDTO.getStatus())) {
-                    log.error("解锁 ------- 服务单不满足解锁条件 参数：{}", serveDTO);
-                    throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "服务单不满足解锁条件");
+                //不是终止服务单
+                if (!isTermination) {
+                    if (!ServeEnum.RECOVER.getCode().equals(serveDTO.getStatus())) {
+                        log.error("解锁 ------- 服务单不满足解锁条件 参数：{}", serveDTO);
+                        throw new CommonException(ResultErrorEnum.VILAD_ERROR.getCode(), "服务单不满足解锁条件");
+                    }
                 }
             });
         }
@@ -980,7 +995,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         serveList.forEach(serveDTO -> {
             updateDepositMap.put(serveDTO.getServeNo(), serveDTO.getPaidInDeposit().negate());
         });
-        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, creatorId, false);
+        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, creatorId, false, isTermination);
         return Result.getInstance(true).success();
     }
 
@@ -1012,7 +1027,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         confirmDTOList.forEach(confirmDTO -> {
             updateDepositMap.put(confirmDTO.getServeNo(), confirmDTO.getLockAmount());
         });
-        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, confirmDTOList.get(0).getCreatorId(), true);
+        serveEntityApi.updateServeDepositByServeNoList(updateDepositMap, confirmDTOList.get(0).getCreatorId(), true, false);
         return Result.getInstance(true).success();
     }
 
@@ -1231,6 +1246,23 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         }
         return Result.getInstance(0).fail(ResultErrorEnum.OPER_ERROR.getCode(), "更新服务单失败");
     }
+
+    @Override
+    @PostMapping(value = "/terminationServe")
+    @PrintParam
+    public Result<Boolean> terminationServe(@RequestBody ServeDTO serveDTO) {
+
+        return Result.getInstance(serveEntityApi.terminationServe(serveDTO)).success();
+
+    }
+
+    @Override
+    @PostMapping(value = "/getServeDTOByCustomerId")
+    @PrintParam
+    public Result<List<ServeDTO>> getServeDTOByCustomerId(@RequestBody Integer customerId) {
+        return Result.getInstance(serveEntityApi.getServeDTOByCustomerId(customerId)).success();
+    }
+
 
     /*@Override
     @PostMapping(value = "/serve/update/payableDeposit")

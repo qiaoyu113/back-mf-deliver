@@ -3,25 +3,11 @@ package com.mfexpress.rent.deliver.api;
 
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.response.PagePagination;
-import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.RenewableServeQry;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeAddCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeAllLeaseTermAmountVO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDeliverDetailVO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDeliverTaskListVO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDeliverTaskQryCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeFastPreselectedListVO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeListVO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedListVO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeQryByDeliverCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeQryCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeQryListCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeRecoverDetailVO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeToRenewalVO;
+import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCheckCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeDepositPayCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.TerminationServiceCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeAdjustVO;
 
 import java.util.List;
@@ -73,4 +59,7 @@ public interface ServeServiceI {
      * @param cmd
      */
     void serveDepositPay(ServeDepositPayCmd cmd);
+
+    //作废
+    Boolean terminationService(TerminationServiceCmd terminationServiceCmd, TokenInfo tokenInfo);
 }

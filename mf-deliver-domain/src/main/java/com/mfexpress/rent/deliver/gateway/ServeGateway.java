@@ -59,4 +59,8 @@ public interface ServeGateway {
     int saveServeReplaceVehicle(ServeReplaceVehicleVO serveReplaceVehicle);
 
     List<ServeReplaceVehicleVO> getServeReplaceVehicleList(Long serveId);
+
+    int updateServe(ServeEntity serveEntity);
+
+    List<ServeEntity> getServeByCustomerId(Integer customerId);
 }

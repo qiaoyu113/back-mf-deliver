@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -92,4 +93,14 @@ public class RecoverVehicleEntity implements RecoverVehicleEntityApi {
         RecoverVehicleEntity recoverVehicleEntity = recoverVehicleGateway.getRecoverVehicleByDeliverNo(deliverNo);
         return Objects.isNull(recoverVehicleEntity) ? null : BeanUtil.copyProperties(recoverVehicleEntity, RecoverVehicleDTO.class);
     }
+
+    @Override
+    public List<RecoverVehicleDTO> getRecoverVehicleByServeNos(List<String> serveNos) {
+        List<RecoverVehicleEntity> recoverVehicleByServeNos = recoverVehicleGateway.getRecoverVehicleByServeNos(serveNos);
+        if (CollectionUtil.isEmpty(recoverVehicleByServeNos)) {
+            return new ArrayList<>();
+        }
+        return BeanUtil.copyToList(recoverVehicleByServeNos, RecoverVehicleDTO.class, CopyOptions.create().ignoreError());
+    }
+
 }

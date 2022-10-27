@@ -16,6 +16,10 @@ public class RentInsureApplyResultVO {
 
     @ApiModelProperty(value = "商业险受理编号")
     private String commercialBatchCode;
+    private String compulsoryBatchAcceptCode;
+
+    @ApiModelProperty(value = "商业险受理编号")
+    private String commercialBatchAcceptCode;
 
     @ApiModelProperty(value = "商业险申请返回结果")
     private List<ApplyMobileCreateDTO> commercialApplyList;

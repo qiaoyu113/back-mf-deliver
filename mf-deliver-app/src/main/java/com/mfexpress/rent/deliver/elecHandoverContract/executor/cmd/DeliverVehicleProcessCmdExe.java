@@ -4,6 +4,9 @@ import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
+import com.mfexpress.billing.pay.api.app.AdvancePaymentAggregateRootApi;
+import com.mfexpress.billing.pay.dto.data.PrepaymentServeMappingDTO;
+import com.mfexpress.billing.pay.dto.qry.PrepaymentServeMappingQry;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
@@ -11,7 +14,8 @@ import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.tools.mq.MqTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
-import com.mfexpress.order.api.app.ContractAggregateRootApi;
+import com.mfexpress.order.api.app.OrderAggregateRootApi;
+import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.domainapi.DailyAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
@@ -36,6 +40,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -63,7 +68,7 @@ public class DeliverVehicleProcessCmdExe {
     private CustomerAggregateRootApi customerAggregateRootApi;
 
     @Resource
-    private ContractAggregateRootApi orderContractAggregateRootApi;
+    private OrderAggregateRootApi orderAggregateRootApi;
 
     @Resource(name = "serveSyncServiceImpl")
     private EsSyncHandlerI serveSyncServiceI;
@@ -75,6 +80,9 @@ public class DeliverVehicleProcessCmdExe {
 
     @Resource
     private BeanFactory beanFactory;
+
+    @Resource
+    private AdvancePaymentAggregateRootApi advancePaymentAggregateRootApi;
 
 
     public void execute(DeliverVehicleProcessCmd cmd) {
@@ -94,12 +102,21 @@ public class DeliverVehicleProcessCmdExe {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "服务单信息不存在");
         }
 
+        List<Long> orderIds = serveDTOList.stream().map(ServeDTO::getOrderId).distinct().collect(Collectors.toList());
+        Result<List<OrderDTO>> orderDTOResult = orderAggregateRootApi.getOrderDTOByOrderIds(orderIds);
+        List<OrderDTO> orderDTOList = ResultDataUtils.getInstance(orderDTOResult).getDataOrException();
+        Map<Long, OrderDTO> orderDTOMap = orderDTOList.stream().collect(Collectors.toMap(OrderDTO::getOrderId, a -> a));
+
         Result<List<DeliverDTO>> deliverDTOListResult = deliverAggregateRootApi.getDeliverDTOListByServeNoList(serveNoList);
         List<DeliverDTO> deliverDTOList = ResultDataUtils.getInstance(deliverDTOListResult).getDataOrNull();
         if (CollectionUtils.isEmpty(deliverDTOList)) {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "交付单信息不存在");
         }
-
+        PrepaymentServeMappingQry prepaymentServeMappingQry = new PrepaymentServeMappingQry();
+        prepaymentServeMappingQry.setServeNos(serveNoList);
+        Result<List<PrepaymentServeMappingDTO>> prepaymentServeMappingDTOSResult = advancePaymentAggregateRootApi.getPrepaymentServeMappingDTOS(prepaymentServeMappingQry);
+        List<PrepaymentServeMappingDTO> prepaymentServeMappingDTOS = Optional.ofNullable(ResultDataUtils.getInstance(prepaymentServeMappingDTOSResult).getDataOrNull()).orElse(new ArrayList<>());
+        Map<String, PrepaymentServeMappingDTO> prepaymentServeMappingDTOMap = prepaymentServeMappingDTOS.stream().collect(Collectors.toMap(PrepaymentServeMappingDTO::getServeNo, a -> a));
         Map<String, ServeDTO> serveDTOMap = serveDTOList.stream().collect(Collectors.toMap(ServeDTO::getServeNo, Function.identity(), (v1, v2) -> v1));
         Map<String, DeliverDTO> deliverDTOMap = deliverDTOList.stream().collect(Collectors.toMap(DeliverDTO::getDeliverNo, Function.identity(), (v1, v2) -> v1));
         //每个服务单对应的预计收车日期
@@ -126,6 +143,7 @@ public class DeliverVehicleProcessCmdExe {
             rentChargeCmd.setDeliverNo(deliverImgInfo.getDeliverNo());
             rentChargeCmd.setRent(serve.getRent());
             String expectRecoverDate = expectRecoverDateMap.get(deliverImgInfo.getServeNo());
+            OrderDTO orderDTO = orderDTOMap.get(serve.getOrderId());
             if (Objects.isNull(expectRecoverDate)) {
                 //替换车使用原车的预计收车日期作为计费截止日期，重新激活服务单使用原来的预计收车日期作为计费截止日期
                 rentChargeCmd.setExpectRecoverDate(serve.getExpectRecoverDate());
@@ -138,6 +156,14 @@ public class DeliverVehicleProcessCmdExe {
             rentChargeCmd.setVehicleId(deliverImgInfo.getCarId());
             rentChargeCmd.setDeliverDate(DateUtil.formatDate(contractDTO.getDeliverVehicleTime()));
             rentChargeCmd.setRentRatio(serve.getRentRatio().doubleValue());
+
+            PrepaymentServeMappingDTO prepaymentServeMappingDTO = prepaymentServeMappingDTOMap.get(serve.getServeNo());
+            if (Objects.isNull(prepaymentServeMappingDTO)) {
+                rentChargeCmd.setAdvancePaymentAmount(BigDecimal.ZERO);
+            }else {
+                rentChargeCmd.setAdvancePaymentAmount(prepaymentServeMappingDTO.getPrepaymentAmount());
+            }
+
             DeliverDTO deliverDTO = deliverDTOMap.get(deliverImgInfo.getDeliverNo());
             if (null != deliverDTO) {
                 rentChargeCmd.setVehicleBusinessMode(deliverDTO.getVehicleBusinessMode());

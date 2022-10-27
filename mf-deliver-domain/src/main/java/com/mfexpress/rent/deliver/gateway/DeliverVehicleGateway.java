@@ -13,5 +13,7 @@ public interface DeliverVehicleGateway {
     List<DeliverVehicleEntity>getDeliverVehicleByServeNo(List<String>serveNoList);
     List<DeliverVehicleEntity>getDeliverVehicleByDeliverNoList(List<String>deliverNoList);
 
+    List<DeliverVehicleEntity> getDeliverVehicleByServeNoList(List<String> serveNoList);
+
 
 }

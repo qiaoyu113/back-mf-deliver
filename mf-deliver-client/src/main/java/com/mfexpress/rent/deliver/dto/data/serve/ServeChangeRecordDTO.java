@@ -26,4 +26,6 @@ public class ServeChangeRecordDTO {
 
     private Date createTime;
 
+    private Integer type;
+
 }

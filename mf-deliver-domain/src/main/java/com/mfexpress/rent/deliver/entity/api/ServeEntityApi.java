@@ -7,6 +7,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeAdjustCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
@@ -43,7 +44,7 @@ public interface ServeEntityApi {
 
     ServeDTO getServeByServeNo(String serveNo);
 
-    void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId, Boolean isLockFlag);
+    void updateServeDepositByServeNoList(Map<String, BigDecimal> updateDepositMap, Integer creatorId, Boolean isLockFlag, Boolean isTermination);
 
     /**
      * 服务单取消(作废)
@@ -65,4 +66,8 @@ public interface ServeEntityApi {
     List<ServeReplaceVehicleVO> getServeReplaceVehicleList(Long serveId);
 
     ServeRepairDTO getServeRepairDTOByMaintenanceId(Long maintenanceId);
+
+    Boolean terminationServe(ServeDTO serveDTO);
+
+    List<ServeDTO> getServeDTOByCustomerId(Integer customerId);
 }
