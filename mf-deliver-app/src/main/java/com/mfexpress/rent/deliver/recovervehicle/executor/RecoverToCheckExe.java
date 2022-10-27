@@ -141,7 +141,7 @@ public class RecoverToCheckExe {
                 MaintainApplyDTO maintainApplyDTO = maintainApplyDTOS.get(0);
                 if (MaintenanceNatureEnum.RENT_REPAIR.getCode() == maintainApplyDTO.getMaintenanceType()) {
                     if (!MaintainApplyStatusEnum.CANCELED.getCode().equals(maintainApplyDTO.getStatus())) {
-                        throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在未完成的维修申请，请完成后重试。");
+                        throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在未审批通过的维修申请，请先取消维修申请。");
                     }
                 }
             }
