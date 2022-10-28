@@ -8,7 +8,7 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.token.TokenTools;
 import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
-import com.mfexpress.rent.deliver.constant.DeliverProjectProperties;
+import com.mfexpress.rent.deliver.config.DeliverProjectProperties;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.vo.SurrenderApplyVO;
 import com.mfexpress.transportation.customer.dto.entity.vo.LinkmanVo;

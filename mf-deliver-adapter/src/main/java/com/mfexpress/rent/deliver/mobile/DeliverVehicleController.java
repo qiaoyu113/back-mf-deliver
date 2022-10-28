@@ -7,7 +7,7 @@ import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.TokenTools;
 import com.mfexpress.rent.deliver.api.DeliverVehicleServiceI;
-import com.mfexpress.rent.deliver.constant.DeliverProjectProperties;
+import com.mfexpress.rent.deliver.config.DeliverProjectProperties;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.CustomerCmd;
 import com.mfexpress.transportation.customer.dto.entity.vo.LinkmanVo;

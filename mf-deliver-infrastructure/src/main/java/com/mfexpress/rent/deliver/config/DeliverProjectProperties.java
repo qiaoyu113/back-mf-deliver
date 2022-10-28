@@ -1,5 +1,6 @@
-package com.mfexpress.rent.deliver.constant;
+package com.mfexpress.rent.deliver.config;
 
+import com.mfexpress.rent.deliver.constant.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
