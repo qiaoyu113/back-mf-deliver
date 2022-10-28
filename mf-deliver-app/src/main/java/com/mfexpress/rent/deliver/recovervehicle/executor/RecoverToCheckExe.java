@@ -139,7 +139,7 @@ public class RecoverToCheckExe {
             if (null != maintainApplyDTOPage && null != maintainApplyDTOPage.getList() && !maintainApplyDTOPage.getList().isEmpty()) {
                 List<MaintainApplyDTO> maintainApplyDTOS = maintainApplyDTOPage.getList();
                 MaintainApplyDTO maintainApplyDTO = maintainApplyDTOS.get(0);
-                if (MaintenanceNatureEnum.RENT_REPAIR.getCode() == maintainApplyDTO.getMaintenanceType()) {
+                if (MaintenanceNatureEnum.RENT_REPAIR.getCode() == maintainApplyDTO.getMaintenanceNature()) {
                     if (!MaintainApplyStatusEnum.CANCELED.getCode().equals(maintainApplyDTO.getStatus())) {
                         throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在未审批通过的维修申请，请先取消维修申请。");
                     }
