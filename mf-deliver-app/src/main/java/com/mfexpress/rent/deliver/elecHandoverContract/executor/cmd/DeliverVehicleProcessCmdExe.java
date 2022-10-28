@@ -37,7 +37,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -148,7 +147,7 @@ public class DeliverVehicleProcessCmdExe {
             rentChargeCmd.setRentRatio(serve.getRentRatio().doubleValue());
             if (Objects.isNull(orderDTO)) {
                 rentChargeCmd.setAdvancePaymentAmount(BigDecimal.ZERO);
-            }else {
+            } else {
                 rentChargeCmd.setAdvancePaymentAmount(new BigDecimal(orderDTO.getDownPayment()));
             }
 

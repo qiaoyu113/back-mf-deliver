@@ -43,7 +43,7 @@ public class TerminationServeExecute {
     @Resource
     private BookAggregateRootApi bookAggregateRootApi;
 
-    public Boolean execute(TerminationServiceCmd terminationServiceCmd, TokenInfo tokenInfo){
+    public Boolean execute(TerminationServiceCmd terminationServiceCmd, TokenInfo tokenInfo) {
 
         Result<ServeDTO> serveDtoResult = serveAggregateRootApi.getServeDtoByServeNo(terminationServiceCmd.getServeNo());
         ServeDTO serveDTO = ResultDataUtils.getInstance(serveDtoResult).getDataOrException();
