@@ -129,6 +129,8 @@ public class RecoverToCheckExe {
                             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在未发车的替换单或存在替换车，无法进行收车。");
                         }
                     }
+                } else {
+                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆正在维修，不能进行验车操作。");
                 }
             }
         } else {
