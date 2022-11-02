@@ -23,7 +23,9 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author hzq
@@ -57,8 +59,19 @@ public class TerminationServeExecute {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "客户账户异常");
         }
 
+        Map<Integer, CustomerBookDTO> customerBookDTOMap = bookListResult.getData().stream().collect(Collectors.toMap(CustomerBookDTO::getBookType, a -> a));
+
         Result<OrderDTO> orderDTOResult = orderAggregateRootApi.getOrderDTOByOrderId(serveDTO.getOrderId().toString());
         OrderDTO orderDTO = ResultDataUtils.getInstance(orderDTOResult).getDataOrException();
+
+        CustomerBookDTO customerBookDTO = customerBookDTOMap.get(AccountBookTypeEnum.LOCK_ADVANCE.getCode());
+        if (Objects.isNull(customerBookDTO)) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到锁定预付款账本");
+        }
+        if (customerBookDTO.getBalance().compareTo(new BigDecimal(orderDTO.getDownPayment())) < 0) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "锁定预付款账本余额不足");
+        }
+
 
         //解锁服务单押金
         Result<Boolean> unLockDepositResult = serveAggregateRootApi.unLockDeposit(Arrays.asList(terminationServiceCmd.getServeNo()), tokenInfo.getId(), true);
@@ -90,7 +103,7 @@ public class TerminationServeExecute {
                 .accountId(bookListResult.getData().get(0).getAccountId())
                 .amount(new BigDecimal(orderDTO.getDownPayment()))
                 .oaNo("")
-                .sourceType(AccountBookTypeEnum.ADVANCE.getCode())
+                .sourceType(AccountBookTypeEnum.LOCK_ADVANCE.getCode())
                 .targetAccountId(bookListResult.getData().get(0).getAccountId())
                 .targetType(AccountBookTypeEnum.RENT_BALANCE.getCode())
                 .advancePayment(true)
