@@ -5,6 +5,8 @@ import com.mfexpress.billing.customer.constant.AccountBookTypeEnum;
 import com.mfexpress.billing.customer.constant.BusinessTypeEnum;
 import com.mfexpress.billing.customer.data.dto.book.BookMoveBalanceDTO;
 import com.mfexpress.billing.customer.data.dto.book.CustomerBookDTO;
+import com.mfexpress.billing.pay.api.app.AdvancePaymentAggregateRootApi;
+import com.mfexpress.billing.pay.dto.data.PrepaymentDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.exception.CommonException;
@@ -46,6 +48,9 @@ public class TerminationServeExecute {
     @Resource
     private BookAggregateRootApi bookAggregateRootApi;
 
+    @Resource
+    private AdvancePaymentAggregateRootApi advancePaymentAggregateRootApi;
+
     public Boolean execute(TerminationServiceCmd terminationServiceCmd, TokenInfo tokenInfo){
 
         Result<ServeDTO> serveDtoResult = serveAggregateRootApi.getServeDtoByServeNo(terminationServiceCmd.getServeNo());
@@ -63,6 +68,10 @@ public class TerminationServeExecute {
 
         Result<OrderDTO> orderDTOResult = orderAggregateRootApi.getOrderDTOByOrderId(serveDTO.getOrderId().toString());
         OrderDTO orderDTO = ResultDataUtils.getInstance(orderDTOResult).getDataOrException();
+
+        Result<List<PrepaymentDTO>> prepaymentDTOResult = advancePaymentAggregateRootApi.getPrepaymentDTOByServeNo(terminationServiceCmd.getServeNo());
+        List<PrepaymentDTO> prepaymentDTOS = ResultDataUtils.getInstance(prepaymentDTOResult).getDataOrException();
+        double totalPrepayAmount = prepaymentDTOS.stream().mapToDouble(a->a.getPrepaymentAmount().doubleValue()).sum();
 
         CustomerBookDTO customerBookDTO = customerBookDTOMap.get(AccountBookTypeEnum.LOCK_ADVANCE.getCode());
         if (Objects.isNull(customerBookDTO)) {
@@ -101,7 +110,7 @@ public class TerminationServeExecute {
         //预付款->租金
         BookMoveBalanceDTO bookMoveBalanceDTO = BookMoveBalanceDTO.builder()
                 .accountId(bookListResult.getData().get(0).getAccountId())
-                .amount(new BigDecimal(orderDTO.getDownPayment()))
+                .amount(new BigDecimal(totalPrepayAmount))
                 .oaNo("")
                 .sourceType(AccountBookTypeEnum.LOCK_ADVANCE.getCode())
                 .targetAccountId(bookListResult.getData().get(0).getAccountId())
