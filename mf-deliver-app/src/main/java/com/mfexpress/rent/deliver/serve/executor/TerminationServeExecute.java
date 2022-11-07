@@ -119,6 +119,9 @@ public class TerminationServeExecute {
         Result<Long> moveBalanceResult = bookAggregateRootApi.moveBalance(bookMoveBalanceDTO);
         ResultDataUtils.getInstance(moveBalanceResult).getDataOrException();
 
+        Result<PrepaymentServeMappingDTO> serveMappingDTOResult = advancePaymentAggregateRootApi.terminationServe(terminationServiceCmd.getServeNo(), tokenInfo.getId());
+        ResultDataUtils.getInstance(serveMappingDTOResult).getDataOrException();
+
         return Boolean.TRUE;
 
     }
