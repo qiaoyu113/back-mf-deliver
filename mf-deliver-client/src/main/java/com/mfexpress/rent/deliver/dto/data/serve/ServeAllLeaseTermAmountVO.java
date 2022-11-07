@@ -96,15 +96,15 @@ public class ServeAllLeaseTermAmountVO {
     private BigDecimal actualDeposit;
 
     @ApiModelProperty(value = "首次发车日期")
-    @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN)
+    @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN, timezone = "GMT+8")
     private Date firstIssueDate;
 
     @ApiModelProperty(value = "最近发车日期")
-    @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN)
+    @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN, timezone = "GMT+8")
     private Date recentlyIssueDate;
 
     @ApiModelProperty(value = "最近收车日期")
-    @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN)
+    @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN, timezone = "GMT+8")
     private Date recentlyRecoverDate;
 
 }
