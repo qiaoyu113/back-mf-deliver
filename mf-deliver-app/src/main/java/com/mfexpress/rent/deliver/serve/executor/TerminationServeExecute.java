@@ -6,7 +6,6 @@ import com.mfexpress.billing.customer.constant.BusinessTypeEnum;
 import com.mfexpress.billing.customer.data.dto.book.BookMoveBalanceDTO;
 import com.mfexpress.billing.customer.data.dto.book.CustomerBookDTO;
 import com.mfexpress.billing.pay.api.app.AdvancePaymentAggregateRootApi;
-import com.mfexpress.billing.pay.dto.data.PrepaymentDTO;
 import com.mfexpress.billing.pay.dto.data.PrepaymentServeMappingDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
@@ -23,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +50,7 @@ public class TerminationServeExecute {
     @Resource
     private AdvancePaymentAggregateRootApi advancePaymentAggregateRootApi;
 
-    public Boolean execute(TerminationServiceCmd terminationServiceCmd, TokenInfo tokenInfo){
+    public Boolean execute(TerminationServiceCmd terminationServiceCmd, TokenInfo tokenInfo) {
 
         Result<ServeDTO> serveDtoResult = serveAggregateRootApi.getServeDtoByServeNo(terminationServiceCmd.getServeNo());
         ServeDTO serveDTO = ResultDataUtils.getInstance(serveDtoResult).getDataOrException();
@@ -77,7 +75,7 @@ public class TerminationServeExecute {
         if (Objects.isNull(customerBookDTO)) {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到锁定预付款账本");
         }
-        if (customerBookDTO.getBalance().compareTo(new BigDecimal(orderDTO.getDownPayment())) < 0) {
+        if (customerBookDTO.getBalance().compareTo(prepaymentServeMappingDTO.getPrepaymentAmount()) < 0) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "锁定预付款账本余额不足");
         }
 
