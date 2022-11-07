@@ -12,10 +12,10 @@ import java.util.List;
 public class RentInsureApplyResultVO {
 
     @ApiModelProperty(value = "交强险受理编号")
-    private String compulsoryBatchAcceptCode;
+    private String compulsoryBatchCode;
 
     @ApiModelProperty(value = "商业险受理编号")
-    private String commercialBatchAcceptCode;
+    private String commercialBatchCode;
 
     @ApiModelProperty(value = "商业险申请返回结果")
     private List<ApplyMobileCreateDTO> commercialApplyList;
