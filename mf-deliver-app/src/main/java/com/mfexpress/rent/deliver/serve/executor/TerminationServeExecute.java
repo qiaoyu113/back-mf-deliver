@@ -90,7 +90,7 @@ public class TerminationServeExecute {
                 .targetType(AccountBookTypeEnum.DEPOSIT_BALANCE.getCode())
                 .amount(serveDTO.getPaidInDeposit())
                 .advancePayment(true)
-                .operType(BusinessTypeEnum.TERMINATION_OF_SERVICE.getCode())
+                .operType(BusinessTypeEnum.TERMINATION_OF_SERVICE_DEPOSIT.getCode())
                 .sourceType(AccountBookTypeEnum.DEPOSIT.getCode()).build();
 
         Result<Boolean> lockDepositResult = bookAggregateRootApi.unLockDeposit(unLockDeposit);
