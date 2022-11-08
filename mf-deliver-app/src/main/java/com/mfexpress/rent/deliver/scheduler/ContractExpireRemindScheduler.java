@@ -123,7 +123,6 @@ public class ContractExpireRemindScheduler {
         Result<List<UserDTO>> employeeListResult = userAggregateRootApi.getEmployeeByOrgAndDuty(empQry);
         List<UserDTO> employeeList = ResultDataUtils.getInstance(employeeListResult).getDataOrNull();
         //将雇员按管理区分组
-        //todo  org的 多级结构是否有影响?
         Map<Integer, List<UserDTO>> orgGroupEmpMap = employeeList.stream().collect(Collectors.groupingBy(UserDTO::getOfficeId));
 
         //3,组装提醒信息
@@ -202,7 +201,7 @@ public class ContractExpireRemindScheduler {
         }
         WxCpSendMessageDTO wxCpSendMessageDTO = new WxCpSendMessageDTO();
         wxCpSendMessageDTO.setToAll(false);
-        //华行 agentId TODO 是否需要可配置
+        //企微 agentId
         DeliverProjectProperties.ContractExpireNotify contractExpireNotify = DeliverProjectProperties.CONTRACT_EXPIRE_NOTIFY;
         Integer wxAgentId = contractExpireNotify.getWxAgentId();
         wxCpSendMessageDTO.setAgentId(wxAgentId);
