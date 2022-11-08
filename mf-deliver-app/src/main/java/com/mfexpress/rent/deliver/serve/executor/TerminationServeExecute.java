@@ -14,7 +14,6 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
-import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.TerminationServiceCmd;
@@ -65,8 +64,8 @@ public class TerminationServeExecute {
 
         Map<Integer, CustomerBookDTO> customerBookDTOMap = bookListResult.getData().stream().collect(Collectors.toMap(CustomerBookDTO::getBookType, a -> a));
 
-        Result<OrderDTO> orderDTOResult = orderAggregateRootApi.getOrderDTOByOrderId(serveDTO.getOrderId().toString());
-        OrderDTO orderDTO = ResultDataUtils.getInstance(orderDTOResult).getDataOrException();
+//        Result<OrderDTO> orderDTOResult = orderAggregateRootApi.getOrderDTOByOrderId(serveDTO.getOrderId().toString());
+//        OrderDTO orderDTO = ResultDataUtils.getInstance(orderDTOResult).getDataOrException();
 
         Result<PrepaymentServeMappingDTO> prepaymentServeMappingDTOResult = advancePaymentAggregateRootApi.getPrepaymentServeMappingDTOByServeNo(terminationServiceCmd.getServeNo());
         PrepaymentServeMappingDTO prepaymentServeMappingDTO = ResultDataUtils.getInstance(prepaymentServeMappingDTOResult).getDataOrException();
@@ -90,6 +89,8 @@ public class TerminationServeExecute {
                 .userId(tokenInfo.getId())
                 .targetType(AccountBookTypeEnum.DEPOSIT_BALANCE.getCode())
                 .amount(serveDTO.getPaidInDeposit())
+                .advancePayment(true)
+                .operType(BusinessTypeEnum.TERMINATION_OF_SERVICE.getCode())
                 .sourceType(AccountBookTypeEnum.DEPOSIT.getCode()).build();
 
         Result<Boolean> lockDepositResult = bookAggregateRootApi.unLockDeposit(unLockDeposit);
