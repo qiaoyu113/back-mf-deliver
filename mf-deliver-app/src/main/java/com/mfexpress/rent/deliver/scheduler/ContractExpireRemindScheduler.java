@@ -195,10 +195,6 @@ public class ContractExpireRemindScheduler {
 
     /**
      * 发送企微通知
-     *
-     * @param notice
-     * @param wxIdList
-     * @return
      */
     private boolean sendNoticeToWxUser(String notice, List<String> wxIdList) {
         if (StringUtils.isEmpty(notice) || CollUtil.isEmpty(wxIdList)) {
@@ -206,8 +202,10 @@ public class ContractExpireRemindScheduler {
         }
         WxCpSendMessageDTO wxCpSendMessageDTO = new WxCpSendMessageDTO();
         wxCpSendMessageDTO.setToAll(false);
-        //华行 agentId
-        wxCpSendMessageDTO.setAgentId(1000005);
+        //华行 agentId TODO 是否需要可配置
+        DeliverProjectProperties.ContractExpireNotify contractExpireNotify = DeliverProjectProperties.CONTRACT_EXPIRE_NOTIFY;
+        Integer wxAgentId = contractExpireNotify.getWxAgentId();
+        wxCpSendMessageDTO.setAgentId(wxAgentId);
         wxCpSendMessageDTO.setMsgType(WxMessageTypeEnum.TEXT.getType());
         wxCpSendMessageDTO.setContent(notice);
         wxCpSendMessageDTO.setToUserList(wxIdList);
@@ -223,10 +221,6 @@ public class ContractExpireRemindScheduler {
 
     /**
      * 根据客户分组拼装通知消息
-     *
-     * @param msgInfoList
-     * @param customerMap
-     * @return
      */
     private String groupByCustomerBuildNotice(List<ContractWillExpireInfoDTO> msgInfoList, Map<Integer, Customer> customerMap) {
         if (CollUtil.isEmpty(msgInfoList)) {
@@ -250,15 +244,11 @@ public class ContractExpireRemindScheduler {
         //拼装
         ContractExpireNotifyDTO contractExpireNotifyDTO = ContractExpireNotifyDTO.builder().loopTemplate(loopNoticeTemplateInfoDTOList).build();
         //格式化模板
-        String notice = this.formatTemplate(contractExpireNotifyDTO);
-        return notice;
+        return this.formatTemplate(contractExpireNotifyDTO);
     }
 
     /**
      * 格式化总模板
-     *
-     * @param contractExpireNotifyDTO
-     * @return
      */
     public String formatTemplate(ContractExpireNotifyDTO contractExpireNotifyDTO) {
         //合同过期提醒配置
@@ -334,7 +324,6 @@ public class ContractExpireRemindScheduler {
      * @param classJsonObj  消息类的JSON 对象
      * @param templateMsg   模板消息
      * @param formatRuleMap 模板格式化规则map  key:fieldName value:FormatRule
-     * @return
      */
     public String formatAndReplaceTemplate(Field[] classFields, JSONObject classJsonObj, String templateMsg, Map<String, DeliverProjectProperties.FormatRule> formatRuleMap) {
 
@@ -352,7 +341,7 @@ public class ContractExpireRemindScheduler {
                 //属性值
                 Object fieldValue = classJsonObj.get(fieldName);
 
-                String fieldFormatResult = "";
+                String fieldFormatResult;
                 //list类型属性
                 if (list && fieldValue instanceof List) {
                     String itemFormat = formatRule.getItemFormat();

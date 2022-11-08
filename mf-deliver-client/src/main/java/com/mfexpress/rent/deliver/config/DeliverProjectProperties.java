@@ -95,6 +95,11 @@ public class DeliverProjectProperties implements InitializingBean {
          * 总部销售运营 企微id  通知提前天数
          */
         private List<Integer> saleLeaderNotifyAdvanceDays;
+
+        /**
+         * 企微代理认证id agentId
+         */
+        private Integer wxAgentId;
     }
 
     @Data
