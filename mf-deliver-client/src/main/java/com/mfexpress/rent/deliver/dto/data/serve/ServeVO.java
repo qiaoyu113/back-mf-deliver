@@ -104,6 +104,8 @@ public class ServeVO {
     @ApiModelProperty(value = "合同商品id")
     private Integer contractCommodityId;
 
+    private Integer serveStatus;
+
 }
 
 
