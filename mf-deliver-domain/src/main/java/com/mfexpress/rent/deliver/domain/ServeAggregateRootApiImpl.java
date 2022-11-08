@@ -11,9 +11,9 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
+import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
-import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.tools.mq.MqTools;
@@ -32,10 +32,15 @@ import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.*;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ContractWillExpireInfoDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ContractWillExpireQry;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
-import com.mfexpress.rent.deliver.entity.*;
+import com.mfexpress.rent.deliver.entity.DeliverEntity;
+import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
+import com.mfexpress.rent.deliver.entity.ServeChangeRecordPO;
+import com.mfexpress.rent.deliver.entity.ServeEntity;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.entity.api.ServeAdjustEntityApi;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
@@ -1241,6 +1246,13 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     public Result<List<ServeDTO>> getServeDTOByCustomerId(@RequestBody Integer customerId) {
         return Result.getInstance(serveEntityApi.getServeDTOByCustomerId(customerId)).success();
+    }
+
+    @Override
+    @PostMapping(value = "/getContractThatWillExpire")
+    @PrintParam
+    public Result<List<ContractWillExpireInfoDTO>> getContractThatWillExpire(@RequestBody ContractWillExpireQry contractWillExpireQry) {
+        return Result.getInstance(serveDomainServiceI.getContractThatWillExpire(contractWillExpireQry)).success();
     }
 
 

@@ -5,9 +5,9 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
+import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
-import com.mfexpress.base.starter.logback.log.PrintParam;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.response.ResultStatusEnum;
@@ -19,7 +19,6 @@ import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.*;
-import com.mfexpress.rent.deliver.dto.data.deliver.dto.DeliverInsureApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
@@ -484,8 +483,8 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PrintParam
     public Result<DeliverDTO> getLastDeliverByCarId(@RequestParam("carId") Integer carId) {
         List<DeliverEntity> deliverEntityList = deliverGateway.getDeliverByCarId(carId);
-        if (CollectionUtil.isEmpty(deliverEntityList)){
-            return Result.getInstance((DeliverDTO)null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+        if (CollectionUtil.isEmpty(deliverEntityList)) {
+            return Result.getInstance((DeliverDTO) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
         DeliverDTO deliverDTO = new DeliverDTO();
         BeanUtils.copyProperties(deliverEntityList.get(0), deliverDTO);
@@ -596,8 +595,8 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PrintParam
     public Result<List<DeliverDTO>> getDeliverListByQry(@RequestBody DeliverQry deliverQry) {
         List<DeliverEntity> deliverEntityList = deliverGateway.getDeliverListByQry(deliverQry);
-        if(deliverEntityList.isEmpty()){
-            return Result.getInstance((List<DeliverDTO>)null).success();
+        if (deliverEntityList.isEmpty()) {
+            return Result.getInstance((List<DeliverDTO>) null).success();
         }
         List<DeliverDTO> deliverDTOS = BeanUtil.copyToList(deliverEntityList, DeliverDTO.class, new CopyOptions().ignoreError());
         return Result.getInstance(deliverDTOS).success();
@@ -605,12 +604,12 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Override
     @PostMapping("/getMakeDeliverDTOSByCarIdList")
-    public Result<List<DeliverDTO>> getMakeDeliverDTOSByCarIdList(@RequestBody List<Integer> carIds,@RequestParam("status") Integer status) {
-        List<DeliverEntity> deliverDTOSByCarIdList = deliverGateway.getMakeDeliverDTOSByCarIdList(carIds,status);
-        if (CollectionUtil.isEmpty(deliverDTOSByCarIdList)){
-            return Result.getInstance((List<DeliverDTO>)null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+    public Result<List<DeliverDTO>> getMakeDeliverDTOSByCarIdList(@RequestBody List<Integer> carIds, @RequestParam("status") Integer status) {
+        List<DeliverEntity> deliverDTOSByCarIdList = deliverGateway.getMakeDeliverDTOSByCarIdList(carIds, status);
+        if (CollectionUtil.isEmpty(deliverDTOSByCarIdList)) {
+            return Result.getInstance((List<DeliverDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
         }
-        List<DeliverDTO> deliverDTOS = BeanUtil.copyToList(deliverDTOSByCarIdList, DeliverDTO.class,new CopyOptions().ignoreError());
+        List<DeliverDTO> deliverDTOS = BeanUtil.copyToList(deliverDTOSByCarIdList, DeliverDTO.class, new CopyOptions().ignoreError());
         return Result.getInstance(deliverDTOS).success();
     }
 

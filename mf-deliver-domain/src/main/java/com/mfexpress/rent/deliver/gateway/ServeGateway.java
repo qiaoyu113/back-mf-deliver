@@ -5,6 +5,7 @@ import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ContractWillExpireQry;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
 
 import java.util.List;
@@ -22,10 +23,13 @@ public interface ServeGateway {
     void addServeList(List<ServeEntity> serveList);
 
     List<ServePreselectedDTO> getServePreselectedByOrderId(List<Long> orderId);
+
     List<String> getServeNoListAll();
 
-    List<ServeEntity>getServeByStatus();
-    List<ServeEntity>getCycleServe(List<Integer> customerIdList);
+    List<ServeEntity> getServeByStatus();
+
+    List<ServeEntity> getCycleServe(List<Integer> customerIdList);
+
     List<ServeEntity> getServeByServeNoList(List<String> serveNoList);
 
     List<ServeEntity> getServeListByOrderIds(List<Long> orderIds);
@@ -35,16 +39,18 @@ public interface ServeGateway {
     PagePagination<ServeEntity> getPageServeByQry(ServeListQry qry);
 
     void batchUpdate(List<ServeEntity> serveToUpdateList);
-    List<ServeEntity>getServeByCustomerIdDeliver(List<Integer>customerIdList);
-    List<ServeEntity>getServeByCustomerIdRecover(List<Integer>customerIdList);
+
+    List<ServeEntity> getServeByCustomerIdDeliver(List<Integer> customerIdList);
+
+    List<ServeEntity> getServeByCustomerIdRecover(List<Integer> customerIdList);
 
     PagePagination<ServeEntity> getServeNoListByPage(ListQry listQry);
 
     ServeEntity getServeDepositByServeNo(CustomerDepositListDTO qry);
 
-    PagePagination<ServeEntity>pageServeDeposit(CustomerDepositListDTO qry);
+    PagePagination<ServeEntity> pageServeDeposit(CustomerDepositListDTO qry);
 
-    Map<Integer,Integer> getReplaceNumByCustomerIds(List<Integer> customerIds);
+    Map<Integer, Integer> getReplaceNumByCustomerIds(List<Integer> customerIds);
 
     Integer getRentingServeNumByCustomerId(Integer customerId);
 
@@ -53,4 +59,6 @@ public interface ServeGateway {
     int updateServe(ServeEntity serveEntity);
 
     List<ServeEntity> getServeByCustomerId(Integer customerId);
+
+    List<ServeEntity> getWillRecoverService(ContractWillExpireQry contractWillExpireQry);
 }

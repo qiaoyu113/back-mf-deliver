@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.serve;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import com.github.pagehelper.PageHelper;
 import com.mfexpress.component.response.PagePagination;
@@ -9,6 +10,7 @@ import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ContractWillExpireQry;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
 import com.mfexpress.rent.deliver.serve.repository.ServeMapper;
@@ -173,10 +175,10 @@ public class ServeGatewayImpl implements ServeGateway {
 
     @Override
     public PagePagination<ServeEntity> getServeNoListByPage(ListQry qry) {
-        if(qry.getPage() == 0){
+        if (qry.getPage() == 0) {
             qry.setPage(1);
         }
-        if(qry.getLimit() == 0){
+        if (qry.getLimit() == 0) {
             qry.setLimit(5);
         }
         PageHelper.clearPage();
@@ -239,9 +241,9 @@ public class ServeGatewayImpl implements ServeGateway {
     @Override
     public Map<Integer, Integer> getReplaceNumByCustomerIds(List<Integer> customerIds) {
         Example example = new Example(ServeEntity.class);
-        example.createCriteria().andEqualTo("replaceFlag",1).andEqualTo("status", DeliverEnum.DELIVER.getCode()).andIn("customerId",customerIds);
+        example.createCriteria().andEqualTo("replaceFlag", 1).andEqualTo("status", DeliverEnum.DELIVER.getCode()).andIn("customerId", customerIds);
         List<ServeEntity> serveEntities = serveMapper.selectByExample(example);
-        if (CollectionUtils.isEmpty(serveEntities)){
+        if (CollectionUtils.isEmpty(serveEntities)) {
             return new HashMap<>();
         }
 
@@ -250,8 +252,8 @@ public class ServeGatewayImpl implements ServeGateway {
 
         Map<Integer, Integer> mapAll = new HashMap<>();
 
-        for (Map.Entry<Integer, List<ServeEntity>> map : integerListMap.entrySet()){
-            mapAll.put(map.getKey(),map.getValue().size());
+        for (Map.Entry<Integer, List<ServeEntity>> map : integerListMap.entrySet()) {
+            mapAll.put(map.getKey(), map.getValue().size());
         }
 
         return mapAll;
@@ -278,6 +280,22 @@ public class ServeGatewayImpl implements ServeGateway {
         Example example = new Example(ServeEntity.class);
         example.createCriteria()
                 .andEqualTo("customerId", customerId);
+        return serveMapper.selectByExample(example);
+    }
+
+    @Override
+    public List<ServeEntity> getWillRecoverService(ContractWillExpireQry contractWillExpireQry) {
+        if (contractWillExpireQry == null) {
+            return new ArrayList<>();
+        }
+        Example example = new Example(ServeEntity.class);
+        Example.Criteria criteria = example.createCriteria();
+        if (CollUtil.isNotEmpty(contractWillExpireQry.getStatuses())) {
+            criteria.andIn("status", contractWillExpireQry.getStatuses());
+        }
+        if (CollUtil.isNotEmpty(contractWillExpireQry.getStatuses())) {
+            criteria.andIn("expectRecoverDate", contractWillExpireQry.getExpectRecoverDateList());
+        }
         return serveMapper.selectByExample(example);
     }
 

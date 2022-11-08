@@ -4,24 +4,11 @@ import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockConfirmDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockListDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.PassiveRenewalServeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.RenewalCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.RenewalReplaceServeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeAddDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeChangeRecordDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeCycleQryCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDailyDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
-import com.mfexpress.rent.deliver.dto.data.serve.ServePreselectedDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeReplaceVehicleAddDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.*;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ContractWillExpireInfoDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ContractWillExpireQry;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -157,11 +144,12 @@ public interface ServeAggregateRootApi {
 
     /**
      * 锁定押金
+     *
      * @param confirmDTOList 锁定押金列表
      * @return
      */
     @PostMapping("/lockDeposit")
-    Result <Boolean> lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList);
+    Result<Boolean> lockDeposit(@RequestBody List<CustomerDepositLockConfirmDTO> confirmDTOList);
 
     @PostMapping("/reactiveServe")
     Result<Integer> reactiveServe(@RequestBody ReactivateServeCmd cmd);
@@ -170,7 +158,7 @@ public interface ServeAggregateRootApi {
     Result<PagePagination<String>> getServeNoListByPage(@RequestBody ListQry listQry);
 
     @PostMapping("/getReplaceNumByCustomerIds")
-    Result<Map<Integer,Integer>> getReplaceNumByCustomerIds(@RequestBody List<Integer> customerIds);
+    Result<Map<Integer, Integer>> getReplaceNumByCustomerIds(@RequestBody List<Integer> customerIds);
 
     @PostMapping("/getRentingServeNumByCustomerId")
     Result<Integer> getRentingServeNumByCustomerId(@RequestParam("customerId") Integer customerId);
@@ -198,6 +186,7 @@ public interface ServeAggregateRootApi {
 
     /**
      * 替换车服务单调整
+     *
      * @param cmd
      */
     @PostMapping(value = "/serve/adjust")
@@ -222,4 +211,6 @@ public interface ServeAggregateRootApi {
     Result<List<ServeDTO>> getServeDTOByCustomerId(@RequestBody Integer customerId);
 
 
+    @PostMapping(value = "/getContractThatWillExpire")
+    Result<List<ContractWillExpireInfoDTO>> getContractThatWillExpire(@RequestBody ContractWillExpireQry contractWillExpireQry);
 }
