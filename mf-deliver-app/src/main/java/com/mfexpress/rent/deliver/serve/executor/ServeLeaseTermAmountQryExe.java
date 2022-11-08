@@ -259,9 +259,11 @@ public class ServeLeaseTermAmountQryExe {
             // 售后收车日期
             List<RecoverVehicleDTO> recoverVehicleDTOList = recoverVehicleMap.get(vo.getServeNo());
             if (CollectionUtil.isNotEmpty(recoverVehicleDTOList)) {
-                List<RecoverVehicleDTO> recoverVehicleDTOS1 = recoverVehicleDTOList.stream().sorted(Comparator.comparing(RecoverVehicleDTO::getRecoverVehicleTime)).collect(Collectors.toList());
-                vo.setRecentlyRecoverDate(recoverVehicleDTOS1.get(recoverVehicleDTOS1.size() - 1).getRecoverVehicleTime());
-                vo.setRecentlyRecoverDateChar(DateUtil.formatDate(recoverVehicleDTOS1.get(recoverVehicleDTOS1.size() - 1).getRecoverVehicleTime()));
+                List<RecoverVehicleDTO> recoverVehicleDTOS1 = recoverVehicleDTOList.stream().filter(r -> r.getRecoverVehicleTime() != null).sorted(Comparator.comparing(RecoverVehicleDTO::getRecoverVehicleTime)).collect(Collectors.toList());
+                if (recoverVehicleDTOS1.size() > 0) {
+                    vo.setRecentlyRecoverDate(recoverVehicleDTOS1.get(recoverVehicleDTOS1.size() - 1).getRecoverVehicleTime());
+                    vo.setRecentlyRecoverDateChar(DateUtil.formatDate(recoverVehicleDTOS1.get(recoverVehicleDTOS1.size() - 1).getRecoverVehicleTime()));
+                }
             }
 
 
