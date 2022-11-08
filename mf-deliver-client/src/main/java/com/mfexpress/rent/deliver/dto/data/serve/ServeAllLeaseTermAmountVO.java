@@ -99,12 +99,19 @@ public class ServeAllLeaseTermAmountVO {
     @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN, timezone = "GMT+8")
     private Date firstIssueDate;
 
+    private String firstIssueDateChar;
+
     @ApiModelProperty(value = "最近发车日期")
     @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN, timezone = "GMT+8")
     private Date recentlyIssueDate;
 
+    private String recentlyIssueDateChar;
+
     @ApiModelProperty(value = "最近收车日期")
     @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN, timezone = "GMT+8")
     private Date recentlyRecoverDate;
+
+    private String recentlyRecoverDateChar;
+
 
 }

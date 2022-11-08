@@ -251,7 +251,9 @@ public class ServeLeaseTermAmountQryExe {
             if (CollectionUtil.isNotEmpty(deliverVehicleDTOList)) {
                 List<DeliverVehicleDTO> deliverVehicleDTOList1 = deliverVehicleDTOList.stream().sorted(Comparator.comparing(DeliverVehicleDTO::getDeliverVehicleTime)).collect(Collectors.toList());
                 vo.setFirstIssueDate(deliverVehicleDTOList1.get(0).getDeliverVehicleTime());
+                vo.setFirstIssueDateChar(DateUtil.formatDate(deliverVehicleDTOList1.get(0).getDeliverVehicleTime()));
                 vo.setRecentlyIssueDate(deliverVehicleDTOList1.get(deliverVehicleDTOList1.size() - 1).getDeliverVehicleTime());
+                vo.setRecentlyIssueDateChar(DateUtil.formatDate(deliverVehicleDTOList1.get(deliverVehicleDTOList1.size() - 1).getDeliverVehicleTime()));
             }
 
             // 售后收车日期
@@ -259,6 +261,7 @@ public class ServeLeaseTermAmountQryExe {
             if (CollectionUtil.isNotEmpty(recoverVehicleDTOList)) {
                 List<RecoverVehicleDTO> recoverVehicleDTOS1 = recoverVehicleDTOList.stream().sorted(Comparator.comparing(RecoverVehicleDTO::getRecoverVehicleTime)).collect(Collectors.toList());
                 vo.setRecentlyRecoverDate(recoverVehicleDTOS1.get(recoverVehicleDTOS1.size() - 1).getRecoverVehicleTime());
+                vo.setRecentlyRecoverDateChar(DateUtil.formatDate(recoverVehicleDTOS1.get(recoverVehicleDTOS1.size() - 1).getRecoverVehicleTime()));
             }
 
 

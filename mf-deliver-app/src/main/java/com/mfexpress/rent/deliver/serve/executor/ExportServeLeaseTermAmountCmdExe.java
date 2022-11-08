@@ -50,9 +50,9 @@ public class ExportServeLeaseTermAmountCmdExe {
         headers.add("oaContractCode,OA合同编号");
         headers.add("orgName,所属管理区");
         headers.add("expectRecoverDateChar,预计收车日期");
-        headers.add("firstIssueDate,首次发车日期");
-        headers.add("recentlyIssueDate,最近发车日期");
-        headers.add("recentlyRecoverDate,最近收车日期");
+        headers.add("firstIssueDateChar,首次发车日期");
+        headers.add("recentlyIssueDateChar,最近发车日期");
+        headers.add("recentlyRecoverDateChar,最近收车日期");
 
         map.put("header", headers);
 
