@@ -15,7 +15,6 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverInsureByCustomerCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.CreateInsurancePolicyCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.util.ExternalRequestUtil;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -34,8 +33,11 @@ public class InsureByCustomerCmdExe {
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
 
+    /*@Resource
+    private ExternalRequestUtil externalRequestUtil;*/
+
     @Resource
-    private ExternalRequestUtil externalRequestUtil;
+    private BackMarketInsuranceCmdExe backMarketInsuranceCmdExe;
 
     public Integer execute(DeliverInsureByCustomerCmd cmd, TokenInfo tokenInfo) {
         Result<ServeDTO> serveDTOResult = serveAggregateRootApi.getServeDtoByServeNo(cmd.getServeNo());
@@ -80,7 +82,7 @@ public class InsureByCustomerCmdExe {
         createInsurancePolicyCmd.setRemarks("客户投保");
 
         // send request
-        Result<String> createResult = externalRequestUtil.createInsurancePolicy(createInsurancePolicyCmd);
+        Result<String> createResult = backMarketInsuranceCmdExe.createInsurancePolicy(createInsurancePolicyCmd);
         String policyId = ResultDataUtils.getInstance(createResult).getDataOrException();
         return policyId;
     }

@@ -8,6 +8,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
+import com.mfexpress.rent.deliver.deliver.executor.BackMarketInsuranceCmdExe;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.CreateSurrenderApplyCmd;
@@ -15,7 +16,6 @@ import com.mfexpress.rent.deliver.dto.data.deliver.dto.RecoverBatchSurrenderAppl
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.vo.SurrenderApplyInfoVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.vo.SurrenderApplyVO;
-import com.mfexpress.rent.deliver.util.ExternalRequestUtil;
 import com.mfexpress.rent.deliver.utils.CommonUtil;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
@@ -38,13 +38,16 @@ public class RecoverBackInsuranceByDeliverCmdExe {
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
 
-    @Resource
-    private ExternalRequestUtil externalRequestUtil;
+    /*@Resource
+    private ExternalRequestUtil externalRequestUtil;*/
 
     private Map<String, String> insuranceCompanyDictMap;
 
     @Resource
     private DictAggregateRootApi dictAggregateRootApi;
+
+    @Resource
+    private BackMarketInsuranceCmdExe backMarketInsuranceCmdExe;
 
     public SurrenderApplyVO execute(RecoverBackInsureByDeliverCmd cmd, TokenInfo tokenInfo) {
         initDictMap();
@@ -168,7 +171,7 @@ public class RecoverBackInsuranceByDeliverCmdExe {
         });
 
         // 发送请求
-        Result<List<RecoverBatchSurrenderApplyDTO>> result = externalRequestUtil.sendSurrenderApply(createSurrenderApplyCmd);
+        Result<List<RecoverBatchSurrenderApplyDTO>> result = backMarketInsuranceCmdExe.sendSurrenderApply(createSurrenderApplyCmd);
         List<RecoverBatchSurrenderApplyDTO> surrenderApplyDTOS = ResultDataUtils.getInstance(result).getDataOrException();
         if (null == surrenderApplyDTOS || surrenderApplyDTOS.isEmpty()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "退保失败");
