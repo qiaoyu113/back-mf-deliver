@@ -202,13 +202,17 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setRentRatio(BigDecimal.valueOf(serveVehicleDTO.getRentRatio()));
                 serveList.add(serve);
 
-                ServePrepaymentDTO servePrepaymentDTO = new ServePrepaymentDTO();
-                servePrepaymentDTO.setServeNo(serve.getServeNo());
-                servePrepaymentDTO.setPrepaymentAmount(serveVehicleDTO.getAdvancePaymentAmount());
-                servePrepaymentDTO.setCustomerId(serve.getCustomerId());
-                servePrepaymentDTO.setOrgId(serve.getOrgId());
-                servePrepaymentDTO.setCityId(serve.getCityId());
-                mqTools.send(redisTools.getEnv() + "_event", "prepayment_serve", null, JSON.toJSONString(servePrepaymentDTO));
+                //预付款
+                if (serve.getRent().compareTo(BigDecimal.ZERO) != 0) {
+                    ServePrepaymentDTO servePrepaymentDTO = new ServePrepaymentDTO();
+                    servePrepaymentDTO.setServeNo(serve.getServeNo());
+                    servePrepaymentDTO.setPrepaymentAmount(serveVehicleDTO.getAdvancePaymentAmount());
+                    servePrepaymentDTO.setCustomerId(serve.getCustomerId());
+                    servePrepaymentDTO.setOrgId(serve.getOrgId());
+                    servePrepaymentDTO.setCityId(serve.getCityId());
+                    mqTools.send(redisTools.getEnv() + "_event", "prepayment_serve", null, JSON.toJSONString(servePrepaymentDTO));
+                }
+
             }
         }
         try {
