@@ -24,7 +24,6 @@ import java.util.List;
 @Api(tags = "api--测试", value = "TestController")
 public class TestController {
 
-
     @Resource
     private ContractExpireRemindScheduler contractExpireRemindScheduler;
 
@@ -32,7 +31,7 @@ public class TestController {
     private String env;
 
     @PostMapping("/testNoticeBuild")
-    @ApiOperation("测试执行消息构建")
+    @ApiOperation("测试 合同到期提醒定时任务消息构建")
     public Result<String> testNoticeBuild(@RequestBody ContractExpireNotifyDTO contractExpireNotifyDTO) {
         checkEnv();
         String s = contractExpireRemindScheduler.formatTemplate(contractExpireNotifyDTO);
@@ -46,7 +45,6 @@ public class TestController {
         contractExpireRemindScheduler.process();
         return Result.getInstance(true).success();
     }
-
 
     private static final List<String> DEV_ENV_LIST = new ArrayList<String>() {
         {
@@ -63,6 +61,5 @@ public class TestController {
             throw new CommonException(ResultErrorEnum.FORBIDDEN.getCode(), ResultErrorEnum.FORBIDDEN.getName());
         }
     }
-
 
 }

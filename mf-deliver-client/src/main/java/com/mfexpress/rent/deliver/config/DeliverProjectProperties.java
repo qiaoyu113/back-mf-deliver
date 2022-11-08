@@ -87,6 +87,14 @@ public class DeliverProjectProperties implements InitializingBean {
          */
         private List<FormatRule> formatRules;
 
+        /**
+         * 总部销售运营 企微id
+         */
+        private String saleLeaderWxId;
+        /**
+         * 总部销售运营 企微id  通知提前天数
+         */
+        private List<Integer> saleLeaderNotifyAdvanceDays;
     }
 
     @Data

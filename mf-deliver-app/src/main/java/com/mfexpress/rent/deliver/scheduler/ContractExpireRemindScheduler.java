@@ -35,12 +35,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * "租赁中”、“维修中" 的服务单
+ * "租赁中”、“维修中",n天后过期的服务单
  * <p>
  * 根据车辆所在客户所属管理区对所属管理区下的不同职责进行提醒
  * 1. 车辆到期前30、10、5、3、2、1天，对租赁_销售经理 职责进行提醒
- * 2. 车辆到期前3、2、1天，对租赁_城市经理 职责进行提醒
- * 3. 车辆到期前1天，对租赁_总部销售运营 职责进行提醒
+ * 2. 车辆到期前2,1天，对销售领导 进行提醒
  *
  * @author yj
  * @date 2022/10/31 9:29
@@ -58,36 +57,37 @@ public class ContractExpireRemindScheduler {
     @Resource
     private MFWxWorkTools mfWxWorkTools;
 
-
-    @Scheduled(cron = "0 0 9 * * ? ")
+    @Scheduled(cron = "0 0 9 * * ?")
     public void process() {
 
         //获取配置项
         DeliverProjectProperties.ContractExpireNotify contractExpireNotify = DeliverProjectProperties.CONTRACT_EXPIRE_NOTIFY;
-        List<DeliverProjectProperties.ContractExpireNotifyItem> noticeItems = contractExpireNotify.getItems();
         //通知的人的 职责id::提前天数
+        List<DeliverProjectProperties.ContractExpireNotifyItem> noticeItems = contractExpireNotify.getItems();
         Map<Integer, List<Integer>> noticeItemMap = noticeItems.stream().collect(Collectors.toMap(
                 DeliverProjectProperties.ContractExpireNotifyItem::getDutyId, DeliverProjectProperties.ContractExpireNotifyItem::getAdvanceDays, (key1, key2) -> key1));
-
-        if (CollUtil.isEmpty(noticeItems)) {
+        //销售领导 企微id
+        String saleLeaderWxId = contractExpireNotify.getSaleLeaderWxId();
+        //销售领导停止提前天数
+        List<Integer> saleLeaderNotifyAdvanceDays = contractExpireNotify.getSaleLeaderNotifyAdvanceDays();
+        if (CollUtil.isEmpty(noticeItems) && StringUtils.isEmpty(saleLeaderWxId)) {
             return;
         }
-
+        //职责id列表,提前天数列表
         Set<Integer> dutyIdSet = noticeItemMap.keySet();
-        Set<Integer> dayOffsetSet = new HashSet<>();
+        Set<Integer> dayOffsetSet = new HashSet<>(saleLeaderNotifyAdvanceDays);
         for (DeliverProjectProperties.ContractExpireNotifyItem noticeItem : noticeItems) {
             dayOffsetSet.addAll(noticeItem.getAdvanceDays());
         }
-
+        //转为具体日期
         Date today = new Date();
-        //1,查询维修中,租赁中服务单 30/10/5/3/2/1天后预计收车的 服务单
-        //客户id 客户名称 车牌号 合同编号 预计收车日期
         Set<String> dates = new HashSet<>(dayOffsetSet.size());
         for (Integer day : dayOffsetSet) {
             Date date = DateUtils.addDays(today, -day);
             dates.add(DateUtil.format(date, DatePattern.NORM_DATE_PATTERN));
         }
-        //查询信息
+        //1,查询维修中,租赁中服务单 30/10/5/3/2/1天后预计收车的 服务单
+        //客户id 客户名称 车牌号 合同编号 预计收车日期
         List<Integer> statuses = Arrays.asList(ServeEnum.REPAIR.getCode(), ServeEnum.DELIVER.getCode());
         ContractWillExpireQry contractWillExpireQry = new ContractWillExpireQry();
         contractWillExpireQry.setStatuses(statuses);
@@ -110,12 +110,12 @@ public class ContractExpireRemindScheduler {
             return;
         }
         Set<Integer> orgIdSet = new HashSet<>();
-        HashMap<Integer, Customer> customerMap = new HashMap<>();
+        Map<Integer, Customer> customerMap = new HashMap<>();
         for (Customer customer : customerList) {
             customerMap.put(customer.getId(), customer);
             orgIdSet.add(customer.getOrgId());
         }
-        //查询雇员
+        //查询雇员  客户所属管理区下,需要通知的职责下的雇员
         EmployeeListByOrgAndDutyQry empQry = EmployeeListByOrgAndDutyQry.builder()
                 .orgIdList(new ArrayList<>(orgIdSet))
                 .dutyIdList(new ArrayList<>(dutyIdSet))
@@ -126,21 +126,18 @@ public class ContractExpireRemindScheduler {
         //todo  org的 多级结构是否有影响?
         Map<Integer, List<UserDTO>> orgGroupEmpMap = employeeList.stream().collect(Collectors.groupingBy(UserDTO::getOfficeId));
 
-
         //3,组装提醒信息
         //根据org分组处理
         for (Map.Entry<Integer, List<ContractWillExpireInfoDTO>> msgEntry : orgGroupMsgInfoMap.entrySet()) {
             Integer orgId = msgEntry.getKey();
             List<ContractWillExpireInfoDTO> msgInfoList = msgEntry.getValue();
-
             //要发给的用户
             List<UserDTO> userDTOList = orgGroupEmpMap.get(orgId);
             if (CollUtil.isEmpty(userDTOList)) {
                 continue;
             }
-            //职责分组的用户
+            //用户按职责分组,以发送不同的消息
             Map<Integer, List<UserDTO>> dutyGroupUserMap = userDTOList.stream().collect(Collectors.groupingBy(UserDTO::getDutyId));
-
             //根据职责分组处理
             for (Map.Entry<Integer, List<UserDTO>> dutyUserEntity : dutyGroupUserMap.entrySet()) {
                 Integer dutyId = dutyUserEntity.getKey();
@@ -149,67 +146,116 @@ public class ContractExpireRemindScheduler {
                 if (CollUtil.isEmpty(userList)) {
                     continue;
                 }
-                //雇员企微id
+                //雇员企微id,存在且不为销售领导的企微id,后续销售领导单独发
                 List<String> corpUserIdList = userList.stream()
-                        .filter(userDTO -> StringUtils.isNotEmpty(userDTO.getCorpUserId()))
+                        .filter(userDTO -> StringUtils.isNotEmpty(userDTO.getCorpUserId()) && !userDTO.getCorpUserId().equals(saleLeaderWxId))
                         .map(UserDTO::getCorpUserId)
                         .distinct()
                         .collect(Collectors.toList());
                 if (CollUtil.isEmpty(corpUserIdList)) {
                     continue;
                 }
-
-                //需要接收的天数
+                //当前职责需要接收的天数
                 List<Integer> dayOfficeList = noticeItemMap.get(dutyId);
                 Set<String> dutyDates = new HashSet<>(dayOfficeList.size());
                 for (Integer day : dayOfficeList) {
                     Date date = DateUtils.addDays(today, -day);
                     dutyDates.add(DateUtil.format(date, DatePattern.NORM_DATE_PATTERN));
                 }
-                //保留对应时间的 消息类
+                //获取对应时间的 消息类
                 msgInfoList = msgInfoList.stream().filter(
                         msgInfo -> dutyDates.contains(msgInfo.getExpectRecoverDate())
                 ).collect(Collectors.toList());
-
-                //根据客户分组  组装org内信息
-                Map<Integer, List<ContractWillExpireInfoDTO>> customerContractMap = msgInfoList.stream().collect(Collectors.groupingBy(ContractWillExpireInfoDTO::getCustomerId));
-                //组装通知类
-                List<NoticeTemplateInfoDTO> loopNoticeTemplateInfoDTOList = new ArrayList<>();
-                customerContractMap.forEach((customerId, customerContractInfoList) -> {
-                    NoticeTemplateInfoDTO noticeTemplateInfoDTO = new NoticeTemplateInfoDTO();
-                    Customer customer = customerMap.get(customerId);
-                    if (customer != null) {
-                        noticeTemplateInfoDTO.setCustomerName(customer.getName());
-                        List<String> licensePlateList = customerContractInfoList.stream().map(ContractWillExpireInfoDTO::getCarNum).collect(Collectors.toList());
-                        noticeTemplateInfoDTO.setLicensePlateList(licensePlateList);
-                        noticeTemplateInfoDTO.setCarNumber(licensePlateList.size());
-                        loopNoticeTemplateInfoDTOList.add(noticeTemplateInfoDTO);
-                    }
-                });
-                //拼装
-                ContractExpireNotifyDTO contractExpireNotifyDTO = ContractExpireNotifyDTO.builder().loopTemplate(loopNoticeTemplateInfoDTOList).build();
-                String msg = formatTemplate(contractExpireNotifyDTO);
-
-
-                //4,发送提醒  todo
-                //api.send(corpUserIdList,msg);
-                WxCpSendMessageDTO wxCpSendMessageDTO = new WxCpSendMessageDTO();
-                wxCpSendMessageDTO.setToAll(false);
-                wxCpSendMessageDTO.setAgentId(1000005);
-                wxCpSendMessageDTO.setMsgType(WxMessageTypeEnum.TEXT.getType());
-                wxCpSendMessageDTO.setContent(msg);
-                wxCpSendMessageDTO.setToUserList(corpUserIdList);
-                Boolean result = mfWxWorkTools.sendMessage(wxCpSendMessageDTO);
-                log.debug("sendMsg:{}   targetUser:{}   result:{}", msg, corpUserIdList, result);
+                //根据客户分组  组装管理区内信息
+                String msg = this.groupByCustomerBuildNotice(msgInfoList, customerMap);
+                //4,发送提醒
+                sendNoticeToWxUser(msg, corpUserIdList);
             }
-
         }
 
-
+        //5 总部销售单独发送特殊处理
+        if (StringUtils.isNotEmpty(saleLeaderWxId)) {
+            //需要接收的天数
+            Set<String> dutyDates = new HashSet<>();
+            for (Integer day : saleLeaderNotifyAdvanceDays) {
+                Date date = DateUtils.addDays(today, -day);
+                dutyDates.add(DateUtil.format(date, DatePattern.NORM_DATE_PATTERN));
+            }
+            //总部销售运营需要发送的对应时间的 消息类
+            List<ContractWillExpireInfoDTO> msgInfoList = contractInfoList.stream().filter(
+                    msgInfo -> dutyDates.contains(msgInfo.getExpectRecoverDate())
+            ).collect(Collectors.toList());
+            //构建通知消息
+            String msg = this.groupByCustomerBuildNotice(msgInfoList, customerMap);
+            //发送
+            boolean result = this.sendNoticeToWxUser(msg, Collections.singletonList(saleLeaderWxId));
+            log.debug("向销售leader 发送通知 notice:{}   targetUser:{}   result:{}", msg, saleLeaderWxId, result);
+        }
     }
 
     /**
-     * 格式化模板
+     * 发送企微通知
+     *
+     * @param notice
+     * @param wxIdList
+     * @return
+     */
+    private boolean sendNoticeToWxUser(String notice, List<String> wxIdList) {
+        if (StringUtils.isEmpty(notice) || CollUtil.isEmpty(wxIdList)) {
+            return true;
+        }
+        WxCpSendMessageDTO wxCpSendMessageDTO = new WxCpSendMessageDTO();
+        wxCpSendMessageDTO.setToAll(false);
+        //华行 agentId
+        wxCpSendMessageDTO.setAgentId(1000005);
+        wxCpSendMessageDTO.setMsgType(WxMessageTypeEnum.TEXT.getType());
+        wxCpSendMessageDTO.setContent(notice);
+        wxCpSendMessageDTO.setToUserList(wxIdList);
+        Boolean result = false;
+        try {
+            result = mfWxWorkTools.sendMessage(wxCpSendMessageDTO);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        log.debug("sendMsg:{}   targetUser:{}   result:{}", notice, wxIdList, result);
+        return result;
+    }
+
+    /**
+     * 根据客户分组拼装通知消息
+     *
+     * @param msgInfoList
+     * @param customerMap
+     * @return
+     */
+    private String groupByCustomerBuildNotice(List<ContractWillExpireInfoDTO> msgInfoList, Map<Integer, Customer> customerMap) {
+        if (CollUtil.isEmpty(msgInfoList)) {
+            return "";
+        }
+        //根据客户分组  组装org内信息
+        Map<Integer, List<ContractWillExpireInfoDTO>> customerContractMap = msgInfoList.stream().collect(Collectors.groupingBy(ContractWillExpireInfoDTO::getCustomerId));
+        //转为消息类
+        List<NoticeTemplateInfoDTO> loopNoticeTemplateInfoDTOList = new ArrayList<>();
+        customerContractMap.forEach((customerId, customerContractInfoList) -> {
+            NoticeTemplateInfoDTO noticeTemplateInfoDTO = new NoticeTemplateInfoDTO();
+            if (CollUtil.isNotEmpty(customerMap) && customerMap.get(customerId) != null) {
+                Customer customer = customerMap.get(customerId);
+                noticeTemplateInfoDTO.setCustomerName(customer.getName());
+                List<String> licensePlateList = customerContractInfoList.stream().map(ContractWillExpireInfoDTO::getCarNum).collect(Collectors.toList());
+                noticeTemplateInfoDTO.setLicensePlateList(licensePlateList);
+                noticeTemplateInfoDTO.setCarNumber(licensePlateList.size());
+                loopNoticeTemplateInfoDTOList.add(noticeTemplateInfoDTO);
+            }
+        });
+        //拼装
+        ContractExpireNotifyDTO contractExpireNotifyDTO = ContractExpireNotifyDTO.builder().loopTemplate(loopNoticeTemplateInfoDTOList).build();
+        //格式化模板
+        String notice = this.formatTemplate(contractExpireNotifyDTO);
+        return notice;
+    }
+
+    /**
+     * 格式化总模板
      *
      * @param contractExpireNotifyDTO
      * @return
@@ -235,10 +281,7 @@ public class ContractExpireRemindScheduler {
         //循环模板替换的目标
         String loopTemplateFormat = commonNoticeTemplate.getLoopTemplateFormat();
 
-        //属性 按替换顺序排序
-//        ContractExpireFormatEnum[] fieldList = ContractExpireFormatEnum.values();
-//        Arrays.sort(fieldList, (o1, o2) -> o2.getReplaceSort() - o1.getReplaceSort());
-        //降序排列
+        //属性 按替换顺序 降序排列
         CollUtil.sort(formatRules, (o1, o2) -> o2.getReplaceSort() - o1.getReplaceSort());
 
         //模板建立
@@ -250,13 +293,12 @@ public class ContractExpireRemindScheduler {
             String format = field.getFormat();
             loopTemplate = loopTemplate.replaceAll(targetString, format);
         }
-
-        Class<? extends ContractExpireNotifyDTO> notifyDTOClass = contractExpireNotifyDTO.getClass();
-
+        //获取反射类
+        Class<? extends ContractExpireNotifyDTO> notifyDtoClass = contractExpireNotifyDTO.getClass();
+        //获取循环模板数据
         List<NoticeTemplateInfoDTO> loopNoticeTemplateInfoDTOList = contractExpireNotifyDTO.getLoopTemplate();
 
-
-        String msg = "";
+        String notice = "";
         //替换循环模板
         if (hasLoopTemplate && CollUtil.isNotEmpty(loopNoticeTemplateInfoDTOList)) {
             Class<? extends NoticeTemplateInfoDTO> noticeClass = loopNoticeTemplateInfoDTOList.get(0).getClass();
@@ -267,24 +309,22 @@ public class ContractExpireRemindScheduler {
                 String loopMsg = loopTemplate;
                 JSONObject jsonObject = JSONObject.parseObject(JSON.toJSONString(noticeTemplateInfoDTO));
                 //比对属性,并替换
-                loopMsg = formatAndReplaceTemplate(classFields, jsonObject, loopMsg, formatRuleMap);
+                loopMsg = this.formatAndReplaceTemplate(classFields, jsonObject, loopMsg, formatRuleMap);
                 loopTemplateList.add(loopMsg);
 
             }
             String loopTempateResult = String.join(loopTemplateSeparator, loopTemplateList).concat(loopTemplateSeparator);
 
-            msg = noticeTemplate.replaceAll(loopTemplateFormat, loopTempateResult);
+            notice = noticeTemplate.replaceAll(loopTemplateFormat, loopTempateResult);
         }
 
         //其他属性
-        Field[] notifyFields = notifyDTOClass.getDeclaredFields();
+        Field[] notifyFields = notifyDtoClass.getDeclaredFields();
         JSONObject jsonObject = JSONObject.parseObject(JSON.toJSONString(contractExpireNotifyDTO));
-        msg = this.formatAndReplaceTemplate(notifyFields, jsonObject, msg, formatRuleMap);
+        notice = this.formatAndReplaceTemplate(notifyFields, jsonObject, notice, formatRuleMap);
 
-
-        return msg;
+        return notice;
     }
-
 
     /**
      * 格式化循环模板
@@ -301,7 +341,6 @@ public class ContractExpireRemindScheduler {
 
         for (Field classField : classFields) {
             String fieldName = classField.getName();
-//            ContractExpireFormatEnum contractExpireFormatEnum = ContractExpireFormatEnum.getByFieldName(fieldName);
             DeliverProjectProperties.FormatRule formatRule = formatRuleMap.get(fieldName);
 
             //属性存在于模板,且属性不为null,替换
@@ -325,6 +364,7 @@ public class ContractExpireRemindScheduler {
                     }
                     List<String> result = new ArrayList<>();
                     for (Object value : valueList) {
+                        //车牌号为null
                         if (value == null) {
                             continue;
                         }
