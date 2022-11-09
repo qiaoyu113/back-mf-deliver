@@ -82,6 +82,7 @@ public class BackMarketInsuranceCmdExe {
 
     public Result<List<RecoverBatchSurrenderApplyDTO>> sendSurrenderApply(CreateSurrenderApplyCmd createSurrenderApplyCmd) {
         CreateBatchH5SurrenderApplyCmd cmd = JSONUtil.toBean(JSONUtil.toJsonStr(createSurrenderApplyCmd), CreateBatchH5SurrenderApplyCmd.class);
+        cmd.setOperatorUserId(createSurrenderApplyCmd.getApplyUserId());
         log.info("H5创建退保申请 参数:{}", cmd);
         List<Integer> vehicleIds = cmd.getCreateH5SurrenderApplyCmdList().stream().map(CreateH5SurrenderApplyCmd::getVehicleId).distinct().collect(Collectors.toList());
         Result<List<VehicleInfoDto>> vehicleInfoSResult = vehicleAggregateRootApi.getVehicleInfoListByIdList(vehicleIds);

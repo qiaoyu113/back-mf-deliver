@@ -67,7 +67,7 @@ public class RecoverBackInsuranceByDeliverCmdExe {
             }
 
             // 发起退保申请
-            Result<List<RecoverBatchSurrenderApplyDTO>> batchSurrenderApplyDTOResult = createSurrenderApply(cmd, deliverDTOList);
+            Result<List<RecoverBatchSurrenderApplyDTO>> batchSurrenderApplyDTOResult = createSurrenderApply(cmd, deliverDTOList, tokenInfo);
             List<RecoverBatchSurrenderApplyDTO> batchSurrenderApplyDTOS = batchSurrenderApplyDTOResult.getData();
 
             // 执行退保操作，改变交付单状态及保存申请编号
@@ -152,7 +152,7 @@ public class RecoverBackInsuranceByDeliverCmdExe {
         ResultDataUtils.getInstance(editResult).getDataOrException();
     }
 
-    private Result<List<RecoverBatchSurrenderApplyDTO>> createSurrenderApply(RecoverBackInsureByDeliverCmd cmd, List<DeliverDTO> deliverDTOList) {
+    private Result<List<RecoverBatchSurrenderApplyDTO>> createSurrenderApply(RecoverBackInsureByDeliverCmd cmd, List<DeliverDTO> deliverDTOList, TokenInfo tokenInfo) {
         CreateSurrenderApplyCmd createSurrenderApplyCmd = new CreateSurrenderApplyCmd();
         createSurrenderApplyCmd.setSurrenderDate(cmd.getInsuranceTime());
         createSurrenderApplyCmd.setApplyUserId(cmd.getOperatorId());
@@ -171,6 +171,9 @@ public class RecoverBackInsuranceByDeliverCmdExe {
         });
 
         // 发送请求
+        createSurrenderApplyCmd.setBuType(tokenInfo.getBuType());
+        createSurrenderApplyCmd.setOrgId(tokenInfo.getOfficeId());
+        createSurrenderApplyCmd.setCityId(tokenInfo.getCityId());
         Result<List<RecoverBatchSurrenderApplyDTO>> result = backMarketInsuranceCmdExe.sendSurrenderApply(createSurrenderApplyCmd);
         List<RecoverBatchSurrenderApplyDTO> surrenderApplyDTOS = ResultDataUtils.getInstance(result).getDataOrException();
         if (null == surrenderApplyDTOS || surrenderApplyDTOS.isEmpty()) {
