@@ -105,6 +105,7 @@ public class TerminationServeExecute {
         //更改服务单状态
         ServeDTO newServeDto = new ServeDTO();
         newServeDto.setServeNo(terminationServiceCmd.getServeNo());
+        newServeDto.setUpdateId(tokenInfo.getId());
         Result<Boolean> terminationServeResult = serveAggregateRootApi.terminationServe(newServeDto);
         ResultDataUtils.getInstance(terminationServeResult).getDataOrException();
 
