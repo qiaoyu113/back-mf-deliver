@@ -5,6 +5,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.mfexpress.billing.pay.api.app.AdvancePaymentAggregateRootApi;
+import com.mfexpress.billing.pay.constant.PrepaymentServeMappingStatusEnum;
 import com.mfexpress.billing.pay.dto.data.PrepaymentServeMappingDTO;
 import com.mfexpress.billing.pay.dto.qry.PrepaymentServeMappingQry;
 import com.mfexpress.component.constants.ResultErrorEnum;
@@ -116,7 +117,7 @@ public class DeliverVehicleProcessCmdExe {
         prepaymentServeMappingQry.setServeNos(serveNoList);
         Result<List<PrepaymentServeMappingDTO>> prepaymentServeMappingDTOSResult = advancePaymentAggregateRootApi.getPrepaymentServeMappingDTOS(prepaymentServeMappingQry);
         List<PrepaymentServeMappingDTO> prepaymentServeMappingDTOS = Optional.ofNullable(ResultDataUtils.getInstance(prepaymentServeMappingDTOSResult).getDataOrNull()).orElse(new ArrayList<>());
-        Map<String, PrepaymentServeMappingDTO> prepaymentServeMappingDTOMap = prepaymentServeMappingDTOS.stream().collect(Collectors.toMap(PrepaymentServeMappingDTO::getServeNo, a -> a));
+        Map<String, PrepaymentServeMappingDTO> prepaymentServeMappingDTOMap = prepaymentServeMappingDTOS.stream().filter(p -> p.getStatus().equals(PrepaymentServeMappingStatusEnum.INIT.getCode())).collect(Collectors.toMap(PrepaymentServeMappingDTO::getServeNo, a -> a));
         Map<String, ServeDTO> serveDTOMap = serveDTOList.stream().collect(Collectors.toMap(ServeDTO::getServeNo, Function.identity(), (v1, v2) -> v1));
         Map<String, DeliverDTO> deliverDTOMap = deliverDTOList.stream().collect(Collectors.toMap(DeliverDTO::getDeliverNo, Function.identity(), (v1, v2) -> v1));
         //每个服务单对应的预计收车日期
