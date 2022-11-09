@@ -7,7 +7,7 @@ public enum ServeChangeRecordEnum {
     DEPOSIT_LOCK(3, "押金锁定"),
     DEPOSIT_UNLOCK(4, "押金解锁"),
 
-    REPLACE_ADJUST(5, "替换车调整"),
+    REPLACE_ADJUST(5, "服务单变更"),
 
     CANCEL(6, "服务单取消"),
     TERMINATION(7,"终止服务"),
