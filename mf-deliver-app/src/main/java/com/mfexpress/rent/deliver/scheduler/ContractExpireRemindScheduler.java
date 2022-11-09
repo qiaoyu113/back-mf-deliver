@@ -214,7 +214,7 @@ public class ContractExpireRemindScheduler {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        log.debug("sendMsg:{}   targetUser:{}   result:{}", notice, wxIdList, result);
+        log.debug("企微 合同提醒 sendMsg:{}   targetUser:{}   result:{}", notice, wxIdList, result);
         return result;
     }
 
