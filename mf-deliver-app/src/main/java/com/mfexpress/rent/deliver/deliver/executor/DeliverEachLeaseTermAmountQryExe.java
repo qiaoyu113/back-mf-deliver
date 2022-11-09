@@ -133,7 +133,10 @@ public class DeliverEachLeaseTermAmountQryExe {
         }
 
         Result<List<ServeChangeRecordDTO>> serveChangeRecordListResult = serveAggregateRootApi.getServeChangeRecordListByServeNo(qry.getServeNo());
-        List<ServeChangeRecordDTO> serveChangeRecordDTOS = ResultDataUtils.getInstance(serveChangeRecordListResult).getDataOrNull().stream().filter(s -> s.getType().equals(ServeChangeRecordEnum.TERMINATION.getCode())).collect(Collectors.toList());
+        List<ServeChangeRecordDTO> serveChangeRecordDTOS = ResultDataUtils.getInstance(serveChangeRecordListResult).getDataOrNull().stream().filter(s ->
+                s.getType().equals(ServeChangeRecordEnum.TERMINATION.getCode())
+                        || s.getType().equals(ServeChangeRecordEnum.REACTIVE.getCode())
+                        || s.getType().equals(ServeChangeRecordEnum.REPLACE_ADJUST.getCode())).collect(Collectors.toList());));
 
         Map<Integer, VehicleDto> finalVehicleDtoMap = vehicleDtoMap;
         Map<Long, List<SubBillItemDTO.SubBillItemRecordDTO>> finalSubBillItemRecordDTOMap = subBillItemRecordDTOMap;
