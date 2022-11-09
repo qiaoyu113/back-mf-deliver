@@ -2,6 +2,8 @@ package com.mfexpress.rent.deliver.dto.data.serve;
 
 import cn.hutool.core.date.DatePattern;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -93,6 +95,7 @@ public class ServeAllLeaseTermAmountVO {
     private Integer contractCommodityId;
 
     @ApiModelProperty(value = "实缴押金")
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal actualDeposit;
 
     @ApiModelProperty(value = "首次发车日期")
