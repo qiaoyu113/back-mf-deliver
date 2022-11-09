@@ -222,9 +222,10 @@ public class DeliverEachLeaseTermAmountQryExe {
             for (Integer saleId : employeeIds) {
                 saleIdStr.append(saleId).append(",");
             }
+            userListByEmployeeIdsQry.setEmployeeIds(saleIdStr.toString());
             Result<List<EmployeeDTO>> employeeListByEmployees = userAggregateRootApi.getEmployeeListByEmployees(userListByEmployeeIdsQry);
             if (CollectionUtil.isNotEmpty(employeeListByEmployees.getData())) {
-                employeeDTOMap = employeeListByEmployees.getData().stream().collect(Collectors.toMap(EmployeeDTO::getId, a -> a));
+                employeeDTOMap = employeeListByEmployees.getData().stream().collect(Collectors.toMap(EmployeeDTO::getId, a -> a, (a, b) -> a));
             }
         }
         List<ServeOperationRecordVO> serveOperationRecordVOS = new ArrayList<>();
