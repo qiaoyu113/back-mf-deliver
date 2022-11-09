@@ -1259,6 +1259,14 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         return Result.getInstance(serveEntityApi.getServeDTOByCustomerId(customerId)).success();
     }
 
+    @Override
+    @PostMapping(value = "/getServeChangeRecordListByServeNo")
+    @PrintParam
+    public Result<List<ServeChangeRecordDTO>> getServeChangeRecordListByServeNo(@RequestParam("serveNo") String serveNo) {
+        List<ServeChangeRecordPO> recordList = serveChangeRecordGateway.getList(serveNo);
+        return Result.getInstance(BeanUtil.copyToList(recordList, ServeChangeRecordDTO.class, CopyOptions.create().ignoreError()));
+    }
+
 
     /*@Override
     @PostMapping(value = "/serve/update/payableDeposit")
