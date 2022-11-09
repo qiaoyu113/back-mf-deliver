@@ -54,20 +54,78 @@ public class DeliverProjectProperties implements InitializingBean {
     }
 
     /*
-     * contractExpireNotify
-     *  commonNoticeTemplate:
-     *   noticeTemplate: {LOOP}\n以上车辆合同即将到期，请与客户沟通进行合同续签并及时在系统中操作合同续签。
-     *   hasLoopTemplate: true
-     *   loopTemplate: #客户名称#租赁的车辆#车牌号列表#共#车数量#台
-     *   loopTemplateSeparator: ;
-     *  items:
-     *   - dutyId: 3
-     *     advanceDays:
-     *      - 30
-     *        10
-     *        5
-     *        5
-     *        2
+     *      properties:
+     *         recoverTimeRange:
+     *           pre: 6
+     *           suf: 6
+     *         deliverTimeRange:
+     *           pre: 6
+     *           suf: 6
+     *         #合同通知配置
+     *         contractExpireNotify:
+     *           #企微agentId
+     *           wxAgentId: 1000005
+     *           #公共通知模板
+     *           commonNoticeTemplate:
+     *             #通知模板
+     *             noticeTemplate: "#LOOP#以上车辆合同即将到期，请与客户沟通进行合同续签并及时在系统中操作合同续签。"
+     *             #时候包含循环模板
+     *             hasLoopTemplate: true
+     *             #循环模板格式化部分
+     *             loopTemplateFormat:  "#LOOP#"
+     *             #循环模板
+     *             loopTemplate: "#客户名称#租赁的车辆#车牌号列表#共#车数量#台"
+     *             #循环模板分隔符
+     *             loopTemplateSeparator: ";\n"
+     *           #格式化规则  将模板中的所有targetString 替换为 format,再讲format中的属性名称sourceFieldName,替换为类内属性
+     *           formatRules:
+     *               #属性名称
+     *             - sourceFieldName: loopTemplate
+     *               #替换目标
+     *               targetString: "#LOOP#"
+     *               #将sourceFieldName格式化为format
+     *               format: loopTemplate
+     *               #是否为列表
+     *               isList: true
+     *               #列表项格式化为
+     *               itemFormat: "#客户名称#租赁的车辆#车牌号列表#共#车数量#台"
+     *               #列表项名称
+     *               itemName: "loopItem"
+     *               #列表项分隔符
+     *               separator: ";\n"
+     *               #替换顺序,降序,循环模板优先级设为最高
+     *               replaceSort: 2147483647
+     *             - sourceFieldName: customerName
+     *               targetString: "#客户名称#"
+     *               format: "\"customerName\""
+     *               isList: false
+     *             - sourceFieldName: licensePlateList
+     *               targetString: "#车牌号列表#"
+     *               format: "\"licensePlateList\""
+     *               isList: true
+     *               itemFormat: "\"item\""
+     *               itemName: "item"
+     *               separator: "、"
+     *             - sourceFieldName: carNumber
+     *               targetString: "#车数量#"
+     *               format: carNumber
+     *           #销售领导企微id
+     *           saleLeaderWxId: 13001801335
+     *           #销售领导提醒提前的天数 T-N
+     *           saleLeaderNotifyAdvanceDays:
+     *             - 2
+     *             - 1
+     *           items:
+     *               #职责
+     *             - dutyId: 6
+     *               #职责提醒提前的天数  T-N
+     *               advanceDays:
+     *                 - 30
+     *                 - 10
+     *                 - 5
+     *                 - 3
+     *                 - 2
+     *                 - 1
      */
     @Data
     @AllArgsConstructor
@@ -75,18 +133,21 @@ public class DeliverProjectProperties implements InitializingBean {
     public static class ContractExpireNotify {
 
         /**
+         * 企微代理认证id agentId
+         */
+        private Integer wxAgentId;
+        /**
          * 需要格式化的公共通知模板
          */
         private NotifyTemplate commonNoticeTemplate;
         /**
-         * 合同通知那些人配置
-         */
-        private List<ContractExpireNotifyItem> items;
-        /**
          * 格式化规则
          */
         private List<FormatRule> formatRules;
-
+        /**
+         * 合同通知那些人配置
+         */
+        private List<ContractExpireNotifyItem> items;
         /**
          * 总部销售运营 企微id
          */
@@ -96,10 +157,6 @@ public class DeliverProjectProperties implements InitializingBean {
          */
         private List<Integer> saleLeaderNotifyAdvanceDays;
 
-        /**
-         * 企微代理认证id agentId
-         */
-        private Integer wxAgentId;
     }
 
     @Data
@@ -136,7 +193,7 @@ public class DeliverProjectProperties implements InitializingBean {
         private String noticeTemplate;
 
         /**
-         * 包含循环模板部分
+         * 是否包含循环模板部分
          */
         private Boolean hasLoopTemplate = false;
 

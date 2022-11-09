@@ -168,7 +168,7 @@ public class ContractExpireRemindScheduler {
                 //根据客户分组  组装管理区内信息
                 String msg = this.groupByCustomerBuildNotice(msgInfoList, customerMap);
                 //4,发送提醒
-                sendNoticeToWxUser(msg, corpUserIdList);
+                this.sendNoticeToWxUser(msg, corpUserIdList);
             }
         }
 
@@ -269,10 +269,8 @@ public class ContractExpireRemindScheduler {
         String loopTemplateSeparator = commonNoticeTemplate.getLoopTemplateSeparator();
         //循环模板替换的目标
         String loopTemplateFormat = commonNoticeTemplate.getLoopTemplateFormat();
-
         //属性 按替换顺序 降序排列
         CollUtil.sort(formatRules, (o1, o2) -> o2.getReplaceSort() - o1.getReplaceSort());
-
         //模板建立
         for (DeliverProjectProperties.FormatRule field : formatRules) {
             if (!field.getAutoReplace()) {
@@ -302,9 +300,9 @@ public class ContractExpireRemindScheduler {
                 loopTemplateList.add(loopMsg);
 
             }
-            String loopTempateResult = String.join(loopTemplateSeparator, loopTemplateList).concat(loopTemplateSeparator);
+            String loopTemplateResult = String.join(loopTemplateSeparator, loopTemplateList).concat(loopTemplateSeparator);
 
-            notice = noticeTemplate.replaceAll(loopTemplateFormat, loopTempateResult);
+            notice = noticeTemplate.replaceAll(loopTemplateFormat, loopTemplateResult);
         }
 
         //其他属性
