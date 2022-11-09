@@ -113,5 +113,8 @@ public class ServeAllLeaseTermAmountVO {
 
     private String recentlyRecoverDateChar;
 
+    @ApiModelProperty(value = "替换车标识 1是替换车,0不是")
+    private Integer replaceFlag;
+
 
 }

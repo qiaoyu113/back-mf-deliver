@@ -132,7 +132,7 @@ public class DeliverEachLeaseTermAmountQryExe {
             vehicleDtoMap = vehicleDtoList.stream().collect(Collectors.toMap(VehicleDto::getId, Function.identity(), (v1, v2) -> v1));
         }
 
-        Result<List<ServeChangeRecordDTO>> serveChangeRecordListResult = serveAggregateRootApi.getServeChangeRecordList(qry.getServeNo());
+        Result<List<ServeChangeRecordDTO>> serveChangeRecordListResult = serveAggregateRootApi.getServeChangeRecordListByServeNo(qry.getServeNo());
         List<ServeChangeRecordDTO> serveChangeRecordDTOS = ResultDataUtils.getInstance(serveChangeRecordListResult).getDataOrNull();
 
         Map<Integer, VehicleDto> finalVehicleDtoMap = vehicleDtoMap;
