@@ -12,6 +12,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -234,5 +235,9 @@ public class ServeES {
 
     @ApiModelProperty(value = "车辆运营模式")
     private Integer vehicleBusinessMode;
+
+    @ApiModelProperty(value = "实缴押金")
+    private BigDecimal paidInDeposit;
+
 
 }

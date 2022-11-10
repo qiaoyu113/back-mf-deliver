@@ -58,5 +58,13 @@ public class DeliverVehicleGatewayImpl implements DeliverVehicleGateway {
 
     }
 
+    @Override
+    public List<DeliverVehicleEntity> getDeliverVehicleByServeNoList(List<String> serveNoList) {
+        Example example = new Example(DeliverVehicleEntity.class);
+        example.createCriteria()
+                .andIn("serveNo", serveNoList);
+        return deliverVehicleMapper.selectByExample(example);
+    }
+
 
 }

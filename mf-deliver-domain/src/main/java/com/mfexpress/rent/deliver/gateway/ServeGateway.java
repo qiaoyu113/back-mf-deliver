@@ -49,4 +49,8 @@ public interface ServeGateway {
     Integer getRentingServeNumByCustomerId(Integer customerId);
 
     // Integer updateServePayableDepositByContractCommodityId(ServeEntity serveEntity);
+
+    int updateServe(ServeEntity serveEntity);
+
+    List<ServeEntity> getServeByCustomerId(Integer customerId);
 }

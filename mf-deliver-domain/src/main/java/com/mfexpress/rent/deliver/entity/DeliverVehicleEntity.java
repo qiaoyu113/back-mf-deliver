@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -66,5 +67,14 @@ public class DeliverVehicleEntity implements DeliverVehicleEntityApi {
             return null;
         }
         return BeanUtil.copyProperties(deliverVehicle, DeliverVehicleDTO.class);
+    }
+
+    @Override
+    public List<DeliverVehicleDTO> getDeliverVehicleByServeNoList(List<String> serveNoList) {
+        List<DeliverVehicleEntity> deliverVehicle = deliverVehicleGateway.getDeliverVehicleByServeNoList(serveNoList);
+        if (CollectionUtil.isEmpty(deliverVehicle)) {
+            return new ArrayList<>();
+        }
+        return BeanUtil.copyToList(deliverVehicle, DeliverVehicleDTO.class, CopyOptions.create().ignoreError());
     }
 }
