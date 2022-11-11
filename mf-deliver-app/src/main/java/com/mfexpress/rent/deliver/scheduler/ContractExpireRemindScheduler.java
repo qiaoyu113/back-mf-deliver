@@ -25,12 +25,15 @@ import com.mfexpress.transportation.customer.dto.entity.Customer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.integration.redis.util.RedisLockRegistry;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -57,139 +60,157 @@ public class ContractExpireRemindScheduler {
     @Resource
     private MFWxWorkTools mfWxWorkTools;
 
+
+    @Resource
+    private RedisLockRegistry redisLockRegistry;
+    private static final String REDIS_LOCK_KEY_CONTRACT_EXPRISE = "mf-deliver:contract:exprise:";
+
+    @Value("${spring.profiles}")
+    private String envVariable;
+
     @Scheduled(cron = "0 0 9 * * ?")
     public void process() {
-
-        //获取配置项
-        DeliverProjectProperties.ContractExpireNotify contractExpireNotify = DeliverProjectProperties.CONTRACT_EXPIRE_NOTIFY;
-        //通知的人的 职责id::提前天数
-        List<DeliverProjectProperties.ContractExpireNotifyItem> noticeItems = contractExpireNotify.getItems();
-        Map<Integer, List<Integer>> noticeItemMap = noticeItems.stream().collect(Collectors.toMap(
-                DeliverProjectProperties.ContractExpireNotifyItem::getDutyId, DeliverProjectProperties.ContractExpireNotifyItem::getAdvanceDays, (key1, key2) -> key1));
-        //销售领导 企微id
-        String saleLeaderWxId = contractExpireNotify.getSaleLeaderWxId();
-        //销售领导停止提前天数
-        List<Integer> saleLeaderNotifyAdvanceDays = contractExpireNotify.getSaleLeaderNotifyAdvanceDays();
-        if (CollUtil.isEmpty(noticeItems) && StringUtils.isEmpty(saleLeaderWxId)) {
+        String key = envVariable + REDIS_LOCK_KEY_CONTRACT_EXPRISE + DateUtil.format(new Date(), DatePattern.NORM_DATE_FORMAT);
+        Lock lock = redisLockRegistry.obtain(key);
+        if (!lock.tryLock()) {
+            log.info("定时已经执行");
             return;
         }
-        //职责id列表,提前天数列表
-        Set<Integer> dutyIdSet = noticeItemMap.keySet();
-        Set<Integer> dayOffsetSet = new HashSet<>(saleLeaderNotifyAdvanceDays);
-        for (DeliverProjectProperties.ContractExpireNotifyItem noticeItem : noticeItems) {
-            dayOffsetSet.addAll(noticeItem.getAdvanceDays());
-        }
-        //转为具体日期
-        Date today = new Date();
-        Set<String> dates = new HashSet<>(dayOffsetSet.size());
-        for (Integer day : dayOffsetSet) {
-            Date date = DateUtils.addDays(today, -day);
-            dates.add(DateUtil.format(date, DatePattern.NORM_DATE_PATTERN));
-        }
-        //1,查询维修中,租赁中服务单 30/10/5/3/2/1天后预计收车的 服务单
-        //客户id 客户名称 车牌号 合同编号 预计收车日期
-        List<Integer> statuses = Arrays.asList(ServeEnum.REPAIR.getCode(), ServeEnum.DELIVER.getCode());
-        ContractWillExpireQry contractWillExpireQry = new ContractWillExpireQry();
-        contractWillExpireQry.setStatuses(statuses);
-        contractWillExpireQry.setExpectRecoverDateList(new ArrayList<>(dates));
-        //查询信息
-        Result<List<ContractWillExpireInfoDTO>> contractThatWillExpireResult = serveAggregateRootApi.getContractThatWillExpire(contractWillExpireQry);
-        List<ContractWillExpireInfoDTO> contractInfoList = ResultDataUtils.getInstance(contractThatWillExpireResult).getDataOrNull();
-        if (CollUtil.isEmpty(contractInfoList)) {
-            return;
-        }
-        Map<Integer, List<ContractWillExpireInfoDTO>> orgGroupMsgInfoMap = contractInfoList.stream().collect(Collectors.groupingBy(ContractWillExpireInfoDTO::getOrgId));
-        //2,查询客户管理区下 对应职责dutyIds 的雇员
-        HashSet<Integer> customerIdSet = new HashSet<>();
-        for (ContractWillExpireInfoDTO contractInfo : contractInfoList) {
-            customerIdSet.add(contractInfo.getCustomerId());
-        }
-        Result<List<Customer>> customerListResult = customerAggregateRootApi.getCustomerByIdList(new ArrayList<>(customerIdSet));
-        List<Customer> customerList = ResultDataUtils.getInstance(customerListResult).getDataOrNull();
-        if (CollUtil.isEmpty(customerList)) {
-            return;
-        }
-        Set<Integer> orgIdSet = new HashSet<>();
-        Map<Integer, Customer> customerMap = new HashMap<>();
-        for (Customer customer : customerList) {
-            customerMap.put(customer.getId(), customer);
-            orgIdSet.add(customer.getOrgId());
-        }
-        //查询雇员  客户所属管理区下,需要通知的职责下的雇员
-        EmployeeListByOrgAndDutyQry empQry = EmployeeListByOrgAndDutyQry.builder()
-                .orgIdList(new ArrayList<>(orgIdSet))
-                .dutyIdList(new ArrayList<>(dutyIdSet))
-                .build();
-        Result<List<UserDTO>> employeeListResult = userAggregateRootApi.getEmployeeByOrgAndDuty(empQry);
-        List<UserDTO> employeeList = ResultDataUtils.getInstance(employeeListResult).getDataOrNull();
-        //将雇员按管理区分组
-        Map<Integer, List<UserDTO>> orgGroupEmpMap = employeeList.stream().collect(Collectors.groupingBy(UserDTO::getOfficeId));
-
-        //3,组装提醒信息
-        //根据org分组处理
-        for (Map.Entry<Integer, List<ContractWillExpireInfoDTO>> msgEntry : orgGroupMsgInfoMap.entrySet()) {
-            Integer orgId = msgEntry.getKey();
-            List<ContractWillExpireInfoDTO> msgInfoList = msgEntry.getValue();
-            //要发给的用户
-            List<UserDTO> userDTOList = orgGroupEmpMap.get(orgId);
-            if (CollUtil.isEmpty(userDTOList)) {
-                continue;
+        try {
+            //获取配置项
+            DeliverProjectProperties.ContractExpireNotify contractExpireNotify = DeliverProjectProperties.CONTRACT_EXPIRE_NOTIFY;
+            //通知的人的 职责id::提前天数
+            List<DeliverProjectProperties.ContractExpireNotifyItem> noticeItems = contractExpireNotify.getItems();
+            Map<Integer, List<Integer>> noticeItemMap = noticeItems.stream().collect(Collectors.toMap(
+                    DeliverProjectProperties.ContractExpireNotifyItem::getDutyId, DeliverProjectProperties.ContractExpireNotifyItem::getAdvanceDays, (key1, key2) -> key1));
+            //销售领导 企微id
+            String saleLeaderWxId = contractExpireNotify.getSaleLeaderWxId();
+            //销售领导停止提前天数
+            List<Integer> saleLeaderNotifyAdvanceDays = contractExpireNotify.getSaleLeaderNotifyAdvanceDays();
+            if (CollUtil.isEmpty(noticeItems) && StringUtils.isEmpty(saleLeaderWxId)) {
+                return;
             }
-            //用户按职责分组,以发送不同的消息
-            Map<Integer, List<UserDTO>> dutyGroupUserMap = userDTOList.stream().collect(Collectors.groupingBy(UserDTO::getDutyId));
-            //根据职责分组处理
-            for (Map.Entry<Integer, List<UserDTO>> dutyUserEntity : dutyGroupUserMap.entrySet()) {
-                Integer dutyId = dutyUserEntity.getKey();
-                //需要接收消息的雇员
-                List<UserDTO> userList = dutyUserEntity.getValue();
-                if (CollUtil.isEmpty(userList)) {
+            //职责id列表,提前天数列表
+            Set<Integer> dutyIdSet = noticeItemMap.keySet();
+            Set<Integer> dayOffsetSet = new HashSet<>(saleLeaderNotifyAdvanceDays);
+            for (DeliverProjectProperties.ContractExpireNotifyItem noticeItem : noticeItems) {
+                dayOffsetSet.addAll(noticeItem.getAdvanceDays());
+            }
+            //转为具体日期
+            Date today = new Date();
+            Set<String> dates = new HashSet<>(dayOffsetSet.size());
+            for (Integer day : dayOffsetSet) {
+                Date date = DateUtils.addDays(today, -day);
+                dates.add(DateUtil.format(date, DatePattern.NORM_DATE_PATTERN));
+            }
+            //1,查询维修中,租赁中服务单 30/10/5/3/2/1天后预计收车的 服务单
+            //客户id 客户名称 车牌号 合同编号 预计收车日期
+            List<Integer> statuses = Arrays.asList(ServeEnum.REPAIR.getCode(), ServeEnum.DELIVER.getCode());
+            ContractWillExpireQry contractWillExpireQry = new ContractWillExpireQry();
+            contractWillExpireQry.setStatuses(statuses);
+            contractWillExpireQry.setExpectRecoverDateList(new ArrayList<>(dates));
+            //查询信息
+            Result<List<ContractWillExpireInfoDTO>> contractThatWillExpireResult = serveAggregateRootApi.getContractThatWillExpire(contractWillExpireQry);
+            List<ContractWillExpireInfoDTO> contractInfoList = ResultDataUtils.getInstance(contractThatWillExpireResult).getDataOrNull();
+            if (CollUtil.isEmpty(contractInfoList)) {
+                return;
+            }
+            Map<Integer, List<ContractWillExpireInfoDTO>> orgGroupMsgInfoMap = contractInfoList.stream().collect(Collectors.groupingBy(ContractWillExpireInfoDTO::getOrgId));
+            //2,查询客户管理区下 对应职责dutyIds 的雇员
+            HashSet<Integer> customerIdSet = new HashSet<>();
+            for (ContractWillExpireInfoDTO contractInfo : contractInfoList) {
+                customerIdSet.add(contractInfo.getCustomerId());
+            }
+            Result<List<Customer>> customerListResult = customerAggregateRootApi.getCustomerByIdList(new ArrayList<>(customerIdSet));
+            List<Customer> customerList = ResultDataUtils.getInstance(customerListResult).getDataOrNull();
+            if (CollUtil.isEmpty(customerList)) {
+                return;
+            }
+            Set<Integer> orgIdSet = new HashSet<>();
+            Map<Integer, Customer> customerMap = new HashMap<>();
+            for (Customer customer : customerList) {
+                customerMap.put(customer.getId(), customer);
+                orgIdSet.add(customer.getOrgId());
+            }
+            //查询雇员  客户所属管理区下,需要通知的职责下的雇员
+            EmployeeListByOrgAndDutyQry empQry = EmployeeListByOrgAndDutyQry.builder()
+                    .orgIdList(new ArrayList<>(orgIdSet))
+                    .dutyIdList(new ArrayList<>(dutyIdSet))
+                    .build();
+            Result<List<UserDTO>> employeeListResult = userAggregateRootApi.getEmployeeByOrgAndDuty(empQry);
+            List<UserDTO> employeeList = ResultDataUtils.getInstance(employeeListResult).getDataOrNull();
+            //将雇员按管理区分组
+            Map<Integer, List<UserDTO>> orgGroupEmpMap = employeeList.stream().collect(Collectors.groupingBy(UserDTO::getOfficeId));
+
+            //3,组装提醒信息
+            //根据org分组处理
+            for (Map.Entry<Integer, List<ContractWillExpireInfoDTO>> msgEntry : orgGroupMsgInfoMap.entrySet()) {
+                Integer orgId = msgEntry.getKey();
+                List<ContractWillExpireInfoDTO> msgInfoList = msgEntry.getValue();
+                //要发给的用户
+                List<UserDTO> userDTOList = orgGroupEmpMap.get(orgId);
+                if (CollUtil.isEmpty(userDTOList)) {
                     continue;
                 }
-                //雇员企微id,存在且不为销售领导的企微id,后续销售领导单独发
-                List<String> corpUserIdList = userList.stream()
-                        .filter(userDTO -> StringUtils.isNotEmpty(userDTO.getCorpUserId()) && !userDTO.getCorpUserId().equals(saleLeaderWxId))
-                        .map(UserDTO::getCorpUserId)
-                        .distinct()
-                        .collect(Collectors.toList());
-                if (CollUtil.isEmpty(corpUserIdList)) {
-                    continue;
+                //用户按职责分组,以发送不同的消息
+                Map<Integer, List<UserDTO>> dutyGroupUserMap = userDTOList.stream().collect(Collectors.groupingBy(UserDTO::getDutyId));
+                //根据职责分组处理
+                for (Map.Entry<Integer, List<UserDTO>> dutyUserEntity : dutyGroupUserMap.entrySet()) {
+                    Integer dutyId = dutyUserEntity.getKey();
+                    //需要接收消息的雇员
+                    List<UserDTO> userList = dutyUserEntity.getValue();
+                    if (CollUtil.isEmpty(userList)) {
+                        continue;
+                    }
+                    //雇员企微id,存在且不为销售领导的企微id,后续销售领导单独发
+                    List<String> corpUserIdList = userList.stream()
+                            .filter(userDTO -> StringUtils.isNotEmpty(userDTO.getCorpUserId()) && !userDTO.getCorpUserId().equals(saleLeaderWxId))
+                            .map(UserDTO::getCorpUserId)
+                            .distinct()
+                            .collect(Collectors.toList());
+                    if (CollUtil.isEmpty(corpUserIdList)) {
+                        continue;
+                    }
+                    //当前职责需要接收的天数
+                    List<Integer> dayOfficeList = noticeItemMap.get(dutyId);
+                    Set<String> dutyDates = new HashSet<>(dayOfficeList.size());
+                    for (Integer day : dayOfficeList) {
+                        Date date = DateUtils.addDays(today, -day);
+                        dutyDates.add(DateUtil.format(date, DatePattern.NORM_DATE_PATTERN));
+                    }
+                    //获取对应时间的 消息类
+                    msgInfoList = msgInfoList.stream().filter(
+                            msgInfo -> dutyDates.contains(msgInfo.getExpectRecoverDate())
+                    ).collect(Collectors.toList());
+                    //根据客户分组  组装管理区内信息
+                    String msg = this.groupByCustomerBuildNotice(msgInfoList, customerMap);
+                    //4,发送提醒
+                    this.sendNoticeToWxUser(msg, corpUserIdList);
                 }
-                //当前职责需要接收的天数
-                List<Integer> dayOfficeList = noticeItemMap.get(dutyId);
-                Set<String> dutyDates = new HashSet<>(dayOfficeList.size());
-                for (Integer day : dayOfficeList) {
+            }
+
+            //5 总部销售单独发送特殊处理
+            if (StringUtils.isNotEmpty(saleLeaderWxId)) {
+                //需要接收的天数
+                Set<String> dutyDates = new HashSet<>();
+                for (Integer day : saleLeaderNotifyAdvanceDays) {
                     Date date = DateUtils.addDays(today, -day);
                     dutyDates.add(DateUtil.format(date, DatePattern.NORM_DATE_PATTERN));
                 }
-                //获取对应时间的 消息类
-                msgInfoList = msgInfoList.stream().filter(
+                //总部销售运营需要发送的对应时间的 消息类
+                List<ContractWillExpireInfoDTO> msgInfoList = contractInfoList.stream().filter(
                         msgInfo -> dutyDates.contains(msgInfo.getExpectRecoverDate())
                 ).collect(Collectors.toList());
-                //根据客户分组  组装管理区内信息
+                //构建通知消息
                 String msg = this.groupByCustomerBuildNotice(msgInfoList, customerMap);
-                //4,发送提醒
-                this.sendNoticeToWxUser(msg, corpUserIdList);
+                //发送
+                boolean result = this.sendNoticeToWxUser(msg, Collections.singletonList(saleLeaderWxId));
+                log.debug("向销售leader 发送通知 notice:{}   targetUser:{}   result:{}", msg, saleLeaderWxId, result);
             }
+        } finally {
+            lock.unlock();
         }
 
-        //5 总部销售单独发送特殊处理
-        if (StringUtils.isNotEmpty(saleLeaderWxId)) {
-            //需要接收的天数
-            Set<String> dutyDates = new HashSet<>();
-            for (Integer day : saleLeaderNotifyAdvanceDays) {
-                Date date = DateUtils.addDays(today, -day);
-                dutyDates.add(DateUtil.format(date, DatePattern.NORM_DATE_PATTERN));
-            }
-            //总部销售运营需要发送的对应时间的 消息类
-            List<ContractWillExpireInfoDTO> msgInfoList = contractInfoList.stream().filter(
-                    msgInfo -> dutyDates.contains(msgInfo.getExpectRecoverDate())
-            ).collect(Collectors.toList());
-            //构建通知消息
-            String msg = this.groupByCustomerBuildNotice(msgInfoList, customerMap);
-            //发送
-            boolean result = this.sendNoticeToWxUser(msg, Collections.singletonList(saleLeaderWxId));
-            log.debug("向销售leader 发送通知 notice:{}   targetUser:{}   result:{}", msg, saleLeaderWxId, result);
-        }
     }
 
     /**
