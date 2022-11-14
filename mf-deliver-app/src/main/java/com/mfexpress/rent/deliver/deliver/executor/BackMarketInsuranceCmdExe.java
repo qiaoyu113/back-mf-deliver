@@ -221,7 +221,7 @@ public class BackMarketInsuranceCmdExe {
     }
 
     public Result<PolicyVO> getCompulsoryPolicy(String policyId) {
-        if (null == insuranceCompanyMap) {
+        if (CollectionUtil.isEmpty(insuranceCompanyMap)) {
             insuranceCompanyMap = CommonUtil.getDictDataDTOMapByDictType(dictAggregateRootApi, "insurance_company");
         }
         PolicyDetailQryCmd qryCmd = new PolicyDetailQryCmd();
