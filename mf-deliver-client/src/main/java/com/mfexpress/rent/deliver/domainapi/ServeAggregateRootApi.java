@@ -210,6 +210,9 @@ public interface ServeAggregateRootApi {
     @PostMapping(value = "/getServeDTOByCustomerId")
     Result<List<ServeDTO>> getServeDTOByCustomerId(@RequestBody Integer customerId);
 
+    @PostMapping("/getServeChangeRecordListByServeNo")
+    Result<List<ServeChangeRecordDTO>> getServeChangeRecordListByServeNo(@RequestParam("serveNo") String serveNo);
+
 
     @PostMapping(value = "/getContractThatWillExpire")
     Result<List<ContractWillExpireInfoDTO>> getContractThatWillExpire(@RequestBody ContractWillExpireQry contractWillExpireQry);

@@ -132,8 +132,11 @@ public class DeliverEachLeaseTermAmountQryExe {
             vehicleDtoMap = vehicleDtoList.stream().collect(Collectors.toMap(VehicleDto::getId, Function.identity(), (v1, v2) -> v1));
         }
 
-        Result<List<ServeChangeRecordDTO>> serveChangeRecordListResult = serveAggregateRootApi.getServeChangeRecordList(qry.getServeNo());
-        List<ServeChangeRecordDTO> serveChangeRecordDTOS = ResultDataUtils.getInstance(serveChangeRecordListResult).getDataOrNull();
+        Result<List<ServeChangeRecordDTO>> serveChangeRecordListResult = serveAggregateRootApi.getServeChangeRecordListByServeNo(qry.getServeNo());
+        List<ServeChangeRecordDTO> serveChangeRecordDTOS = ResultDataUtils.getInstance(serveChangeRecordListResult).getDataOrNull().stream().filter(s ->
+                s.getType().equals(ServeChangeRecordEnum.TERMINATION.getCode())
+                        || s.getType().equals(ServeChangeRecordEnum.REACTIVE.getCode())
+                        || s.getType().equals(ServeChangeRecordEnum.REPLACE_ADJUST.getCode())).collect(Collectors.toList());
 
         Map<Integer, VehicleDto> finalVehicleDtoMap = vehicleDtoMap;
         Map<Long, List<SubBillItemDTO.SubBillItemRecordDTO>> finalSubBillItemRecordDTOMap = subBillItemRecordDTOMap;
@@ -219,9 +222,10 @@ public class DeliverEachLeaseTermAmountQryExe {
             for (Integer saleId : employeeIds) {
                 saleIdStr.append(saleId).append(",");
             }
+            userListByEmployeeIdsQry.setEmployeeIds(saleIdStr.toString());
             Result<List<EmployeeDTO>> employeeListByEmployees = userAggregateRootApi.getEmployeeListByEmployees(userListByEmployeeIdsQry);
             if (CollectionUtil.isNotEmpty(employeeListByEmployees.getData())) {
-                employeeDTOMap = employeeListByEmployees.getData().stream().collect(Collectors.toMap(EmployeeDTO::getId, a -> a));
+                employeeDTOMap = employeeListByEmployees.getData().stream().collect(Collectors.toMap(EmployeeDTO::getId, a -> a, (a, b) -> a));
             }
         }
         List<ServeOperationRecordVO> serveOperationRecordVOS = new ArrayList<>();

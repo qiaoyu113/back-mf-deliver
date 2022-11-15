@@ -2,6 +2,8 @@ package com.mfexpress.rent.deliver.dto.data.serve;
 
 import cn.hutool.core.date.DatePattern;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -93,18 +95,29 @@ public class ServeAllLeaseTermAmountVO {
     private Integer contractCommodityId;
 
     @ApiModelProperty(value = "实缴押金")
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal actualDeposit;
 
     @ApiModelProperty(value = "首次发车日期")
-    @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN)
+    @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN, timezone = "GMT+8")
     private Date firstIssueDate;
 
+    private String firstIssueDateChar;
+
     @ApiModelProperty(value = "最近发车日期")
-    @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN)
+    @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN, timezone = "GMT+8")
     private Date recentlyIssueDate;
 
+    private String recentlyIssueDateChar;
+
     @ApiModelProperty(value = "最近收车日期")
-    @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN)
+    @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN, timezone = "GMT+8")
     private Date recentlyRecoverDate;
+
+    private String recentlyRecoverDateChar;
+
+    @ApiModelProperty(value = "替换车标识 1是替换车,0不是")
+    private Integer replaceFlag;
+
 
 }

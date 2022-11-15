@@ -337,7 +337,7 @@ public class ServeEntity implements ServeEntityApi {
         ServeChangeRecordPO serveChangeRecordPO = new ServeChangeRecordPO();
         serveChangeRecordPO.setServeNo(serveDTO.getServeNo());
         serveChangeRecordPO.setType(ServeChangeRecordEnum.TERMINATION.getCode());
-        serveChangeRecordPO.setCreatorId(serveDTO.getCreateId());
+        serveChangeRecordPO.setCreatorId(serveDTO.getUpdateId());
         serveChangeRecordPO.setRenewalType(0);
         serveChangeRecordGateway.insert(serveChangeRecordPO);
 

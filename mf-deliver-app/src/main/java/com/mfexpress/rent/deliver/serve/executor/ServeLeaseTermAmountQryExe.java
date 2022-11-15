@@ -163,6 +163,7 @@ public class ServeLeaseTermAmountQryExe {
             if (null != serveAllLeaseTermAmountVO.getVehicleBusinessMode()) {
                 serveAllLeaseTermAmountVO.setVehicleBusinessModeDisplay(ServeDictDataUtil.vehicleBusinessModeMap.get(serveAllLeaseTermAmountVO.getVehicleBusinessMode().toString()));
             }
+            serveAllLeaseTermAmountVO.setActualDeposit(serveES.getPaidInDeposit());
             return serveAllLeaseTermAmountVO;
         }).collect(Collectors.toList());
 
@@ -246,18 +247,23 @@ public class ServeLeaseTermAmountQryExe {
         for (ServeAllLeaseTermAmountVO vo : voList) {
 
             //发车日期 最近发车日期
-            List<DeliverVehicleDTO> deliverVehicleDTOList = deliverVehicleMap.getOrDefault(vo.getServeNo(), new ArrayList<>());
+            List<DeliverVehicleDTO> deliverVehicleDTOList = deliverVehicleMap.get(vo.getServeNo());
             if (CollectionUtil.isNotEmpty(deliverVehicleDTOList)) {
                 List<DeliverVehicleDTO> deliverVehicleDTOList1 = deliverVehicleDTOList.stream().sorted(Comparator.comparing(DeliverVehicleDTO::getDeliverVehicleTime)).collect(Collectors.toList());
                 vo.setFirstIssueDate(deliverVehicleDTOList1.get(0).getDeliverVehicleTime());
+                vo.setFirstIssueDateChar(DateUtil.formatDate(deliverVehicleDTOList1.get(0).getDeliverVehicleTime()));
                 vo.setRecentlyIssueDate(deliverVehicleDTOList1.get(deliverVehicleDTOList1.size() - 1).getDeliverVehicleTime());
+                vo.setRecentlyIssueDateChar(DateUtil.formatDate(deliverVehicleDTOList1.get(deliverVehicleDTOList1.size() - 1).getDeliverVehicleTime()));
             }
 
             // 售后收车日期
-            List<RecoverVehicleDTO> recoverVehicleDTOList = recoverVehicleMap.getOrDefault(vo.getServeNo(), new ArrayList<>());
+            List<RecoverVehicleDTO> recoverVehicleDTOList = recoverVehicleMap.get(vo.getServeNo());
             if (CollectionUtil.isNotEmpty(recoverVehicleDTOList)) {
-                List<RecoverVehicleDTO> recoverVehicleDTOS1 = recoverVehicleDTOList.stream().sorted(Comparator.comparing(RecoverVehicleDTO::getRecoverVehicleTime)).collect(Collectors.toList());
-                vo.setRecentlyRecoverDate(recoverVehicleDTOS1.get(recoverVehicleDTOS1.size() - 1).getRecoverVehicleTime());
+                List<RecoverVehicleDTO> recoverVehicleDTOS1 = recoverVehicleDTOList.stream().filter(r -> r.getRecoverVehicleTime() != null).sorted(Comparator.comparing(RecoverVehicleDTO::getRecoverVehicleTime)).collect(Collectors.toList());
+                if (recoverVehicleDTOS1.size() > 0) {
+                    vo.setRecentlyRecoverDate(recoverVehicleDTOS1.get(recoverVehicleDTOS1.size() - 1).getRecoverVehicleTime());
+                    vo.setRecentlyRecoverDateChar(DateUtil.formatDate(recoverVehicleDTOS1.get(recoverVehicleDTOS1.size() - 1).getRecoverVehicleTime()));
+                }
             }
 
 
