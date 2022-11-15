@@ -18,6 +18,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ContractWillExpireQry;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
 import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
 import com.mfexpress.rent.deliver.gateway.ServeGateway;
@@ -261,7 +262,7 @@ public class ServeEntity implements ServeEntityApi {
             if (!isTermination) {
                 serveChangeRecord.setType(updateDeposit.getStatus().equals(ServeEnum.COMPLETED.getCode()) ?
                         ServeChangeRecordEnum.DEPOSIT_UNLOCK.getCode() : ServeChangeRecordEnum.DEPOSIT_LOCK.getCode());
-            }else {
+            } else {
                 serveChangeRecord.setType(ServeChangeRecordEnum.DEPOSIT_UNLOCK.getCode());
             }
 
@@ -346,7 +347,19 @@ public class ServeEntity implements ServeEntityApi {
     @Override
     public List<ServeDTO> getServeDTOByCustomerId(Integer customerId) {
         List<ServeEntity> serve = serveGateway.getServeByCustomerId(customerId);
-        if (CollectionUtil.isEmpty(serve)){
+        if (CollectionUtil.isEmpty(serve)) {
+            return new ArrayList<>();
+        }
+        return BeanUtil.copyToList(serve, ServeDTO.class, CopyOptions.create().ignoreError());
+    }
+
+    @Override
+    public List<ServeDTO> getWillRecoverService(ContractWillExpireQry contractWillExpireQry) {
+        if (contractWillExpireQry == null) {
+            return new ArrayList<>();
+        }
+        List<ServeEntity> serve = serveGateway.getWillRecoverService(contractWillExpireQry);
+        if (CollectionUtil.isEmpty(serve)) {
             return new ArrayList<>();
         }
         return BeanUtil.copyToList(serve, ServeDTO.class, CopyOptions.create().ignoreError());

@@ -161,7 +161,7 @@ public class DeliverVehicleProcessCmdExe {
             PrepaymentServeMappingDTO prepaymentServeMappingDTO = prepaymentServeMappingDTOMap.get(serve.getServeNo());
             if (Objects.isNull(prepaymentServeMappingDTO)) {
                 rentChargeCmd.setAdvancePaymentAmount(BigDecimal.ZERO);
-            }else {
+            } else {
                 rentChargeCmd.setAdvancePaymentAmount(prepaymentServeMappingDTO.getPrepaymentAmount());
             }
 
