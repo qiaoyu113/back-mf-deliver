@@ -15,6 +15,8 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverInsureByCustomerCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.CreateInsurancePolicyCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
+import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInsuranceSaveCmd;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -32,6 +34,9 @@ public class InsureByCustomerCmdExe {
 
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
+
+    @Resource
+    private VehicleAggregateRootApi vehicleAggregateRootApi;
 
     /*@Resource
     private ExternalRequestUtil externalRequestUtil;*/
@@ -64,6 +69,18 @@ public class InsureByCustomerCmdExe {
 
         Result<Integer> operateResult = deliverAggregateRootApi.insureByCustomer(cmd);
         ResultDataUtils.getInstance(operateResult).getDataOrException();
+
+        //2022-11-15 调用车辆域保存保单
+        VehicleInsuranceSaveCmd vehicleInsuranceSaveCmd = new VehicleInsuranceSaveCmd();
+        vehicleInsuranceSaveCmd.setVehicleId(deliverDTO.getCarId());
+        //商业险
+        vehicleInsuranceSaveCmd.setCommercialInsuranceId(Long.parseLong(policyId));
+        vehicleInsuranceSaveCmd.setCommercialInsuranceNo(cmd.getPolicyNo());
+        vehicleInsuranceSaveCmd.setCommercialInsuranceEndDate(cmd.getEndInsureDate());
+        vehicleInsuranceSaveCmd.setCommercialInsuranceStartDate(cmd.getStartInsureDate());
+        //默认都是1
+        vehicleInsuranceSaveCmd.setCommercialInsuranceStatus(1);
+        vehicleAggregateRootApi.saveInsurance(vehicleInsuranceSaveCmd);
 
         return 0;
     }
