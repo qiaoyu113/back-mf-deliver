@@ -9,4 +9,6 @@ public interface DeliverVehicleEntityApi {
     List<DeliverVehicleDTO> getDeliverVehicleListByDeliverNoList(List<String> deliverNoList);
 
     DeliverVehicleDTO getDeliverVehicleByDeliverNo(String deliverNo);
+
+    List<DeliverVehicleDTO> getDeliverVehicleByServeNoList(List<String> serveNoList);
 }

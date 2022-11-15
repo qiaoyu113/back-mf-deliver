@@ -14,7 +14,7 @@ import tk.mybatis.spring.annotation.MapperScan;
         "com.mfexpress.rent.deliver.api", "com.mfexpress.rent.deliver.externalApi", "com.mfexpress.rent.vehicle.api",
         "com.mfexpress.order.api.app", "com.mfexpress.common.domain.api", "com.mfexpress.transportation.customer.api", "com.mfexpress.billing.rentcharge.api",
         "com.mfexpress.component.starter.feign.contract", "com.mfexpress.component.starter.feign.excel", "com.mfexpress.rent.maintain.api.app",
-        "com.mfexpress.billing.customer.api.aggregate", "com.hx.backmarket.insurance.domainapi"})
+        "com.mfexpress.billing.customer.api.aggregate","com.mfexpress.billing.pay.api", "com.hx.backmarket.insurance.domainapi"})
 @EnableDiscoveryClient
 @MapperScan(basePackages = {"com.mfexpress.rent.deliver.*.repository"})
 @EnableScheduling

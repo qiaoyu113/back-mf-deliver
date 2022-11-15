@@ -144,7 +144,7 @@ public interface ServeAggregateRootApi {
      * @param serveNoList 服务单编号
      */
     @PostMapping("/unLockDeposit")
-    Result<Boolean> unLockDeposit(@RequestParam("serveNoList") List<String> serveNoList, @RequestParam("creatorId") Integer creatorId);
+    Result<Boolean> unLockDeposit(@RequestParam("serveNoList") List<String> serveNoList, @RequestParam("creatorId") Integer creatorId, @RequestParam("isTermination") Boolean isTermination);
 
     /**
      * 获取批量锁定数据页面
@@ -214,5 +214,15 @@ public interface ServeAggregateRootApi {
 
     /*@PostMapping(value = "/serve/update/payableDeposit")
     Result<Integer> updateServePayableDeposit(@RequestBody ServeUpdatePayableDepositCmd cmd);*/
+
+    @PostMapping(value = "/terminationServe")
+    Result<Boolean> terminationServe(@RequestBody ServeDTO serveDTO);
+
+    @PostMapping(value = "/getServeDTOByCustomerId")
+    Result<List<ServeDTO>> getServeDTOByCustomerId(@RequestBody Integer customerId);
+
+    @PostMapping("/getServeChangeRecordListByServeNo")
+    Result<List<ServeChangeRecordDTO>> getServeChangeRecordListByServeNo(@RequestParam("serveNo") String serveNo);
+
 
 }

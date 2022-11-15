@@ -1,10 +1,19 @@
 package com.mfexpress.rent.deliver.deliver;
 
 import com.mfexpress.component.dto.TokenInfo;
-import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.api.DeliverServiceI;
 import com.mfexpress.rent.deliver.deliver.executor.*;
-import com.mfexpress.rent.deliver.dto.data.deliver.*;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverCheckCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverInsureCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverPreselectedCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverReplaceCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.CancelPreSelectedCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverInsureByCustomerCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverReplaceVehicleCheckCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.InsureApplyQry;
+import com.mfexpress.rent.deliver.deliver.executor.InsureByCompanyCmdExe;
+import com.mfexpress.rent.deliver.dto.data.deliver.vo.InsureApplyVO;
+import com.mfexpress.rent.deliver.dto.data.deliver.vo.TipVO;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.CancelPreSelectedCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverInsureByCustomerCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverReplaceVehicleCheckCmd;
@@ -13,6 +22,7 @@ import com.mfexpress.rent.deliver.deliver.executor.InsureByCompanyCmdExe;
 import com.mfexpress.rent.deliver.dto.data.deliver.vo.InsureApplyVO;
 import com.mfexpress.rent.deliver.dto.data.deliver.vo.TipVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeQryCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.vo.ServeInfoVO;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -83,7 +93,7 @@ public class DeliverServiceImpl implements DeliverServiceI {
     }
 
     @Override
-    public PagePagination<DeliverEachLeaseTermAmountVO> getDeliverLeaseTermAmountVOList(ServeQryCmd qry) {
+    public ServeInfoVO getDeliverLeaseTermAmountVOList(ServeQryCmd qry) {
         return deliverEachLeaseTermAmountQryExe.execute(qry);
     }
 
