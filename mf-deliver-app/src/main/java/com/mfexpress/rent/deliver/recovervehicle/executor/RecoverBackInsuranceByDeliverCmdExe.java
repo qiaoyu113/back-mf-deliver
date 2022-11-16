@@ -223,7 +223,7 @@ public class RecoverBackInsuranceByDeliverCmdExe {
                 surrenderApplyVO.setTipFlag(JudgeEnum.YES.getCode());
                 surrenderApplyVO.setTipMsg("您选择的车辆".concat(vehicleDTO.getPlateNumber()).concat("的商业险已在失效状态，不能发起退保申请"));
             }
-            if (cmd.getInsuranceTime().before(vehicleInsuranceDTO.getCommercialInsuranceStartDate()) || cmd.getInsuranceTime().after(vehicleInsuranceDTO.getCommercialInsuranceEndDate())) {
+            if (cmd.getInsuranceTime().after(vehicleInsuranceDTO.getCommercialInsuranceEndDate())) {
                 surrenderApplyVO.setTipFlag(JudgeEnum.YES.getCode());
                 surrenderApplyVO.setTipMsg("你选择的车辆".concat(vehicleDTO.getPlateNumber()).concat("的退保时间不在车辆保险有限期内，请重新选择"));
             }
