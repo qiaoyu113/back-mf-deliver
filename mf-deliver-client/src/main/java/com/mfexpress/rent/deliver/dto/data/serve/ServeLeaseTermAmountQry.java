@@ -45,4 +45,7 @@ public class ServeLeaseTermAmountQry extends ListQry {
     @ApiModelProperty(value = "预计收车日期结束")
     private Date expectRecoverDateEnd;
 
+    @ApiModelProperty(value = "服务单号")
+    private String serveNo;
+
 }

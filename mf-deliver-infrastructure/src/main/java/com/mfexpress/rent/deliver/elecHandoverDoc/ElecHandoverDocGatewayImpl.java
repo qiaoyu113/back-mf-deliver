@@ -64,4 +64,12 @@ public class ElecHandoverDocGatewayImpl implements ElecHandoverDocGateway {
         return docMapper.selectOneByExample(example);
     }
 
+    @Override
+    public List<ElectronicHandoverDocPO> getDocByDeliverNos(List<String> deliverNos) {
+        Example example = new Example(ElectronicHandoverDocPO.class);
+        example.createCriteria().andIn("deliverNo", deliverNos)
+                .andEqualTo("validStatus", JudgeEnum.YES.getCode());
+        return docMapper.selectByExample(example);
+    }
+
 }

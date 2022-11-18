@@ -16,4 +16,6 @@ public interface ElecHandoverDocGateway {
     ElectronicHandoverDocPO getDocByDeliverNoAndDeliverType(String deliverNo, Integer deliverType);
 
     ElectronicHandoverDocPO getDocByContractId(Long contractId);
+
+    List<ElectronicHandoverDocPO> getDocByDeliverNos(List<String> deliverNos);
 }

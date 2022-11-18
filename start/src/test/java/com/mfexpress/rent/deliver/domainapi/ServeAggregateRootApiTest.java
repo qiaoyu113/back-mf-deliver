@@ -17,11 +17,6 @@ import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.utils.MainServeUtil;
-import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
-import com.mfexpress.rent.maintain.constant.MaintenanceStatusEnum;
-import com.mfexpress.rent.maintain.constant.MaintenanceTypeEnum;
-import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
-import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -38,8 +33,6 @@ class ServeAggregateRootApiTest {
 
     @Resource
     ServeAggregateRootApi serveAggregateRootApi;
-    @Resource
-    MaintenanceAggregateRootApi maintenanceAggregateRootApi;
 
     String jwt = "eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySW5mbyI6ImV5SmhZMk52ZFc1MFRtOXVSWGh3YVhKbFpDSTZkSEoxWlN3aVlXTmpiM1Z1ZEU1dmJreHZZMnRsWkNJNmRISjFaU3dpWVhWMGFHVnVkR2xqWVhSbFpDSTZkSEoxWlN3aVluVlVlWEJsSWpvd0xDSmphWFI1U1dRaU9qTXNJbU52Y25CVmMyVnlTV1FpT2lJaUxDSmpjbVZoZEdWRVlYUmxJam94TmpNeE9UTXpOakF4TURBd0xDSmpjbVZoZEdWSlpDSTZNQ3dpWTNKbFpHVnVkR2xoYkhOT2IyNUZlSEJwY21Wa0lqcDBjblZsTENKa1pXeEdiR0ZuSWpvd0xDSmtkWFI1U1dRaU9qWXNJbVZ1WVdKc1pXUWlPblJ5ZFdVc0ltbGtJam95TkN3aWJXOWlhV3hsSWpvaU1UTTRNREF4TXpnd01EQWlMQ0p1YVdOclRtRnRaU0k2SXVtVWdPV1VydWU3aitlUWhsL25wNS9vdFlFbzVZeVg1THFzNzd5Sklpd2liMlptYVdObFNXUWlPakU1TENKd1lYTnpkMjl5WkNJNklpSXNJbkp2YkdWSlpDSTZNalU0TENKelpYUjBhVzVuUm14aFp5STZNU3dpYzNSaGRIVnpJam94TENKMGIydGxia1Y0Y0dseVpXUWlPakUyTmpJeU5UWTNOalkzTURnc0luUjVjR1VpT2pBc0luVndaR0YwWlVSaGRHVWlPakUyTlRJME1qUXpPVFV3TURBc0luVndaR0YwWlVsa0lqb3hMQ0oxYzJWeWJtRnRaU0k2SWpFek9EQXdNVE00TURBd0luMD0iLCJzdWIiOiIxMzgwMDEzODAwMCIsImV4cCI6MTY2MjI1Njc2Nn0.G0O0FeEKvjm9as6zQse9twxPgIViTJg1ro6ceqbaj9tQ00-HKxmCekK_cLr-js8hoQ_ypQjWTheUtear1J2ksg";
 

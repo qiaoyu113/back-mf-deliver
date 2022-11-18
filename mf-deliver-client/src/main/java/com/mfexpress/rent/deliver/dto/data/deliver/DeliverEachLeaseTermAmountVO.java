@@ -70,4 +70,10 @@ public class DeliverEachLeaseTermAmountVO {
     @ApiModelProperty(value = "累计调账金额")
     private String totalAdjustAmount;
 
+    @ApiModelProperty(value = "发车电子交接单")
+    private String deliverVehicleElecFileUrl;
+
+    @ApiModelProperty(value = "收车电子交接单")
+    private String recoverVehicleElecFileUrl;
+
 }

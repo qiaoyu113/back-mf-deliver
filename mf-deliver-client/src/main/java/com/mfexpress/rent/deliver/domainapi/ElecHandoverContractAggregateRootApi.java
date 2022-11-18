@@ -76,4 +76,8 @@ public interface ElecHandoverContractAggregateRootApi {
 
     @PostMapping(value = "/completed/auto")
     Result<Integer> autoCompleted(@RequestBody @Validated ContractStatusChangeCmd cmd);
+
+    @PostMapping("/getDocDTOSByDeliverNos")
+    Result<List<ElecDocDTO>> getDocDTOSByDeliverNos(@RequestBody List<String> deliverNos);
+
 }

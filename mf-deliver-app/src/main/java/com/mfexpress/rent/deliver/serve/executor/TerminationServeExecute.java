@@ -13,10 +13,16 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.component.utils.util.ResultValidUtils;
-import com.mfexpress.order.api.app.OrderAggregateRootApi;
+import com.mfexpress.order.api.app.ContractAggregateRootApi;
+import com.mfexpress.order.dto.cmd.contract.IncrCommodityOptionalNumCmd;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
+import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.dto.data.serve.ServeChangeRecordDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.TerminationServiceCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.UndoReactiveServeCmd;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -41,7 +47,7 @@ public class TerminationServeExecute {
     private ServeAggregateRootApi serveAggregateRootApi;
 
     @Resource
-    private OrderAggregateRootApi orderAggregateRootApi;
+    private ContractAggregateRootApi contractAggregateRootApi;
 
     @Resource
     private BookAggregateRootApi bookAggregateRootApi;
@@ -53,6 +59,27 @@ public class TerminationServeExecute {
 
         Result<ServeDTO> serveDtoResult = serveAggregateRootApi.getServeDtoByServeNo(terminationServiceCmd.getServeNo());
         ServeDTO serveDTO = ResultDataUtils.getInstance(serveDtoResult).getDataOrException();
+        if (!ServeEnum.NOT_PRESELECTED.getCode().equals(serveDTO.getStatus())) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单状态异常");
+        }
+        if (JudgeEnum.YES.getCode().equals(serveDTO.getReactiveFlag())) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "替换车服务单不能终止服务");
+        }
+
+        Result<List<ServeChangeRecordDTO>> serveChangeRecordSResult = serveAggregateRootApi.getServeChangeRecordListByServeNo(serveDTO.getServeNo());
+        List<ServeChangeRecordDTO> serveChangeRecordDTOS = ResultDataUtils.getInstance(serveChangeRecordSResult).getDataOrException();
+        if (null != serveChangeRecordDTOS && !serveChangeRecordDTOS.isEmpty()) {
+            ServeChangeRecordDTO recordDTO = serveChangeRecordDTOS.get(serveChangeRecordDTOS.size() - 1);
+            if (ServeChangeRecordEnum.REACTIVE.getCode() == recordDTO.getType()) {
+                // 服务单回退到已收车并且恢复交付单的历史所属
+                UndoReactiveServeCmd undoReactiveServeCmd = new UndoReactiveServeCmd();
+                undoReactiveServeCmd.setServeNo(serveDTO.getServeNo());
+                undoReactiveServeCmd.setOperatorId(tokenInfo.getId());
+                Result<Integer> undoResult = serveAggregateRootApi.undoReactiveServe(undoReactiveServeCmd);
+                ResultDataUtils.getInstance(undoResult).getDataOrException();
+                return true;
+            }
+        }
 
         Result<List<CustomerBookDTO>> bookListResult = bookAggregateRootApi.getBookListByCustomerId(serveDTO.getCustomerId());
         ResultValidUtils.checkResultException(bookListResult);
@@ -79,7 +106,6 @@ public class TerminationServeExecute {
                 throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "锁定预付款账本余额不足");
             }
         }
-
 
 
         //解锁服务单押金
@@ -128,6 +154,17 @@ public class TerminationServeExecute {
 
             Result<PrepaymentServeMappingDTO> serveMappingDTOResult = advancePaymentAggregateRootApi.terminationServe(terminationServiceCmd.getServeNo(), tokenInfo.getId());
             ResultDataUtils.getInstance(serveMappingDTOResult).getDataOrException();
+        }
+
+        // 被主动续约过的服务单如果操作了终止服务，那么它一定是重新激活过的
+        // 合同商品+1
+        Integer contractCommodityId = serveDTO.getContractCommodityId();
+        IncrCommodityOptionalNumCmd incrCommodityOptionalNumCmd = new IncrCommodityOptionalNumCmd();
+        incrCommodityOptionalNumCmd.setId(contractCommodityId);
+        incrCommodityOptionalNumCmd.setOperatorId(tokenInfo.getId());
+        Result<Integer> incrResult = contractAggregateRootApi.incrCommodityOptionalNum(incrCommodityOptionalNumCmd);
+        if (!ResultErrorEnum.SUCCESSED.getCode().equals(incrResult.getCode())) {
+            log.error("服务单终止服务操作，释放合同中的商品操作失败，错误信息：{}", incrResult.getMsg());
         }
 
         return Boolean.TRUE;
