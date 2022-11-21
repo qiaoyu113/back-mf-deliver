@@ -60,6 +60,6 @@ public interface ServeServiceI {
      */
     void serveDepositPay(ServeDepositPayCmd cmd);
 
-    //作废
+    //作废服
     Boolean terminationService(TerminationServiceCmd terminationServiceCmd, TokenInfo tokenInfo);
 }

@@ -163,7 +163,7 @@ public class ServeLeaseTermAmountQryExe {
             if (null != serveAllLeaseTermAmountVO.getVehicleBusinessMode()) {
                 serveAllLeaseTermAmountVO.setVehicleBusinessModeDisplay(ServeDictDataUtil.vehicleBusinessModeMap.get(serveAllLeaseTermAmountVO.getVehicleBusinessMode().toString()));
             }
-            serveAllLeaseTermAmountVO.setActualDeposit(serveES.getPaidInDeposit());
+            serveAllLeaseTermAmountVO.setActualDeposit(serveES.getPaidInDeposit().setScale(2, RoundingMode.HALF_UP));
             return serveAllLeaseTermAmountVO;
         }).collect(Collectors.toList());
 
