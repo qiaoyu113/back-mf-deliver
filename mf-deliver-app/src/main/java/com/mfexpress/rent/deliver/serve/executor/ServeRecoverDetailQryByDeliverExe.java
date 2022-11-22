@@ -11,6 +11,7 @@ import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
 import com.mfexpress.rent.deliver.constant.*;
+import com.mfexpress.rent.deliver.deliver.executor.BackMarketInsuranceCmdExe;
 import com.mfexpress.rent.deliver.domainapi.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.ApplyByIdsQryCmd;
@@ -23,7 +24,6 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.ElecHandoverD
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
-import com.mfexpress.rent.deliver.util.ExternalRequestUtil;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
@@ -75,8 +75,11 @@ public class ServeRecoverDetailQryByDeliverExe {
     @Resource
     private ElecHandoverContractAggregateRootApi contractAggregateRootApi;
 
+    /*@Resource
+    private ExternalRequestUtil externalRequestUtil;*/
+
     @Resource
-    private ExternalRequestUtil externalRequestUtil;
+    private BackMarketInsuranceCmdExe backMarketInsuranceCmdExe;
 
     public ServeRecoverDetailVO execute(ServeQryByDeliverCmd cmd) {
         String deliverNo = cmd.getDeliverNo();
@@ -251,7 +254,7 @@ public class ServeRecoverDetailQryByDeliverExe {
             if (null != insuranceApplyDTO && !StringUtils.isEmpty(insuranceApplyDTO.getCommercialApplyId())) {
                 ApplyByIdsQryCmd applyByIdsQryCmd = new ApplyByIdsQryCmd();
                 applyByIdsQryCmd.setApplyIds(Collections.singletonList(insuranceApplyDTO.getCommercialApplyId()));
-                Result<List<InsuranceApplyRentVO>> insuranceApplyRentVOResult = externalRequestUtil.getInsuranceApplyInfo(applyByIdsQryCmd);
+                Result<List<InsuranceApplyRentVO>> insuranceApplyRentVOResult = backMarketInsuranceCmdExe.getInsuranceApplyInfo(applyByIdsQryCmd);
                 List<InsuranceApplyRentVO> insuranceApplyRentVOS = ResultDataUtils.getInstance(insuranceApplyRentVOResult).getDataOrNull();
                 if (null != insuranceApplyRentVOS && !insuranceApplyRentVOS.isEmpty() && null != insuranceApplyRentVOS.get(0)) {
                     InsuranceApplyRentVO insuranceApplyRentVO = insuranceApplyRentVOS.get(0);

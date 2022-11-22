@@ -14,7 +14,6 @@ import com.mfexpress.rent.deliver.dto.data.deliver.cmd.InsureApplyQry;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.vo.InsuranceApplyRentVO;
 import com.mfexpress.rent.deliver.dto.data.deliver.vo.TipVO;
-import com.mfexpress.rent.deliver.util.ExternalRequestUtil;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -31,8 +30,11 @@ public class ReplaceVehicleCheckCmdExe {
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
 
+    /*@Resource
+    private ExternalRequestUtil externalRequestUtil;*/
+
     @Resource
-    private ExternalRequestUtil externalRequestUtil;
+    private BackMarketInsuranceCmdExe backMarketInsuranceCmdExe;
 
     String tipMsg = "针对当前车辆已经发起了%s投保申请，目前处于投保中，无法终止，请与保险专员联系协商后继处理办法。\n是否继续换车操作？";
 
@@ -67,7 +69,7 @@ public class ReplaceVehicleCheckCmdExe {
                     // 根据申请id查询申请状态
                     ApplyByIdsQryCmd applyByIdsQryCmd = new ApplyByIdsQryCmd();
                     applyByIdsQryCmd.setApplyIds(applyIdList);
-                    Result<List<InsuranceApplyRentVO>> insuranceApplyInfoSResult = externalRequestUtil.getInsuranceApplyInfo(applyByIdsQryCmd);
+                    Result<List<InsuranceApplyRentVO>> insuranceApplyInfoSResult = backMarketInsuranceCmdExe.getInsuranceApplyInfo(applyByIdsQryCmd);
                     List<InsuranceApplyRentVO> applyRentVOS = ResultDataUtils.getInstance(insuranceApplyInfoSResult).getDataOrNull();
                     if (null != applyRentVOS && !applyRentVOS.isEmpty()) {
                         // 如果申请存在，并且申请状态为受理中，弹框提示
