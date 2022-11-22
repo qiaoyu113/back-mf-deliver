@@ -100,7 +100,7 @@ public class ContractExpireRemindScheduler {
             Date today = new Date();
             Set<String> dates = new HashSet<>(dayOffsetSet.size());
             for (Integer day : dayOffsetSet) {
-                Date date = DateUtils.addDays(today, -day);
+                Date date = DateUtils.addDays(today, day);
                 dates.add(DateUtil.format(date, DatePattern.NORM_DATE_PATTERN));
             }
             //1,查询维修中,租赁中服务单 30/10/5/3/2/1天后预计收车的 服务单
@@ -175,7 +175,7 @@ public class ContractExpireRemindScheduler {
                     List<Integer> dayOfficeList = noticeItemMap.get(dutyId);
                     Set<String> dutyDates = new HashSet<>(dayOfficeList.size());
                     for (Integer day : dayOfficeList) {
-                        Date date = DateUtils.addDays(today, -day);
+                        Date date = DateUtils.addDays(today, day);
                         dutyDates.add(DateUtil.format(date, DatePattern.NORM_DATE_PATTERN));
                     }
                     //获取对应时间的 消息类
@@ -194,7 +194,7 @@ public class ContractExpireRemindScheduler {
                 //需要接收的天数
                 Set<String> dutyDates = new HashSet<>();
                 for (Integer day : saleLeaderNotifyAdvanceDays) {
-                    Date date = DateUtils.addDays(today, -day);
+                    Date date = DateUtils.addDays(today, day);
                     dutyDates.add(DateUtil.format(date, DatePattern.NORM_DATE_PATTERN));
                 }
                 //总部销售运营需要发送的对应时间的 消息类
