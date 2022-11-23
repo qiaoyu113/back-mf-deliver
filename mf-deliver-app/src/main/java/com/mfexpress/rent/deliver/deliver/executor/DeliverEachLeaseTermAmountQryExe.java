@@ -14,11 +14,15 @@ import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
-import com.mfexpress.rent.deliver.constant.ServeChangeRecordEnum;
-import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
+import com.mfexpress.rent.deliver.constant.*;
+import com.mfexpress.rent.deliver.domainapi.*;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverEachLeaseTermAmountVO;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverElecDocDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverQry;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecDocDTO;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeChangeRecordDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeQryCmd;
@@ -33,10 +37,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -64,6 +65,18 @@ public class DeliverEachLeaseTermAmountQryExe {
 
     @Resource
     private UserAggregateRootApi userAggregateRootApi;
+
+    @Resource
+    private DeliverAggregateRootApi deliverAggregateRootApi;
+
+    @Resource
+    private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
+
+    @Resource
+    private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
+
+    @Resource
+    private ElecHandoverContractAggregateRootApi elecHandoverContractAggregateRootApi;
 
     public ServeInfoVO execute(ServeQryCmd qry) {
         initDictData();
@@ -138,6 +151,62 @@ public class DeliverEachLeaseTermAmountQryExe {
                         || s.getType().equals(ServeChangeRecordEnum.REACTIVE.getCode())
                         || s.getType().equals(ServeChangeRecordEnum.REPLACE_ADJUST.getCode())).collect(Collectors.toList());
 
+        // 交付单查询
+        DeliverQry deliverQry = new DeliverQry();
+        deliverQry.setServeNo(qry.getServeNo());
+        deliverQry.setStatus(Arrays.asList(DeliverStatusEnum.VALID.getCode(), DeliverStatusEnum.HISTORICAL.getCode()));
+        Result<List<DeliverDTO>> deliverSResult = deliverAggregateRootApi.getDeliverListByQry(deliverQry);
+        List<DeliverDTO> deliverDTOS = ResultDataUtils.getInstance(deliverSResult).getDataOrException();
+        List<DeliverElecDocDTO> deliverElecDocDTOS = new ArrayList<>();
+        if (null != deliverDTOS && !deliverDTOS.isEmpty()) {
+            List<String> deliverNos = deliverDTOS.stream().map(DeliverDTO::getDeliverNo).collect(Collectors.toList());
+            Result<List<DeliverVehicleDTO>> deliverVehiclesResult = deliverVehicleAggregateRootApi.getDeliverVehicleByDeliverNoList(deliverNos);
+            List<DeliverVehicleDTO> deliverVehicleDTOS = ResultDataUtils.getInstance(deliverVehiclesResult).getDataOrNull();
+            Map<String, DeliverVehicleDTO> deliverVehicleDTOMap = null;
+            if (null != deliverVehicleDTOS) {
+                deliverVehicleDTOMap = deliverVehicleDTOS.stream().collect(Collectors.toMap(DeliverVehicleDTO::getDeliverNo, Function.identity(), (v1, v2) -> v1));
+            }
+            Result<List<RecoverVehicleDTO>> recoverVehiclesResult = recoverVehicleAggregateRootApi.getRecoverVehicleDTOByDeliverNos(deliverNos);
+            List<RecoverVehicleDTO> recoverVehicleDTOS = ResultDataUtils.getInstance(recoverVehiclesResult).getDataOrNull();
+            Map<String, RecoverVehicleDTO> recoverVehicleDTOMap = null;
+            if (null != recoverVehicleDTOS) {
+                recoverVehicleDTOMap = recoverVehicleDTOS.stream().collect(Collectors.toMap(RecoverVehicleDTO::getDeliverNo, Function.identity(), (v1, v2) -> v1));
+            }
+            Result<List<ElecDocDTO>> docDTOSResult = elecHandoverContractAggregateRootApi.getDocDTOSByDeliverNos(deliverNos);
+            List<ElecDocDTO> elecDocDTOS = ResultDataUtils.getInstance(docDTOSResult).getDataOrNull();
+            Map<String, ElecDocDTO> elecDocDTOMap = null;
+            if (null != elecDocDTOS) {
+                elecDocDTOMap = elecDocDTOS.stream().collect(Collectors.toMap(elecDocDTO -> elecDocDTO.getDeliverNo().concat(",").concat(elecDocDTO.getDeliverType().toString()), Function.identity(), (v1, v2) -> v1));
+            }
+            for (String deliverNo : deliverNos) {
+                DeliverElecDocDTO deliverElecDocDTO = new DeliverElecDocDTO();
+                deliverElecDocDTO.setDeliverNo(deliverNo);
+                if (null != deliverVehicleDTOMap) {
+                    DeliverVehicleDTO deliverVehicleDTO = deliverVehicleDTOMap.get(deliverNo);
+                    if (null != deliverVehicleDTO) {
+                        deliverElecDocDTO.setDeliverVehicleTime(DateUtil.formatDate(DateUtil.offsetDay(deliverVehicleDTO.getDeliverVehicleTime(), 1)));
+                    }
+                }
+                if (null != recoverVehicleDTOMap) {
+                    RecoverVehicleDTO recoverVehicleDTO = recoverVehicleDTOMap.get(deliverNo);
+                    if (null != recoverVehicleDTO) {
+                        deliverElecDocDTO.setRecoverVehicleTime(DateUtil.formatDate(recoverVehicleDTO.getRecoverVehicleTime()));
+                    }
+                }
+                if (null != elecDocDTOMap) {
+                    ElecDocDTO deliverDocDTO = elecDocDTOMap.get(deliverNo.concat(",").concat(String.valueOf(DeliverTypeEnum.DELIVER.getCode())));
+                    ElecDocDTO recoverDocDTO = elecDocDTOMap.get(deliverNo.concat(",").concat(String.valueOf(DeliverTypeEnum.RECOVER.getCode())));
+                    if (null != deliverDocDTO) {
+                        deliverElecDocDTO.setDeliverVehicleElecFileUrl(deliverDocDTO.getFileUrl());
+                    }
+                    if (null != recoverDocDTO) {
+                        deliverElecDocDTO.setRecoverVehicleElecFileUrl(recoverDocDTO.getFileUrl());
+                    }
+                }
+                deliverElecDocDTOS.add(deliverElecDocDTO);
+            }
+        }
+
         Map<Integer, VehicleDto> finalVehicleDtoMap = vehicleDtoMap;
         Map<Long, List<SubBillItemDTO.SubBillItemRecordDTO>> finalSubBillItemRecordDTOMap = subBillItemRecordDTOMap;
         Map<Long, SubBillItemDTO> finalDetailIdWithSubBillItemDTOMap = detailIdWithSubBillItemDTOMap;
@@ -209,6 +278,17 @@ public class DeliverEachLeaseTermAmountQryExe {
                 deliverEachLeaseTermAmountVO.setRepaymentStatus(CyclicBillPaymentStatusEnum.INIT.getCode());
                 deliverEachLeaseTermAmountVO.setRepaymentStatusDisplay("待回款");
                 deliverEachLeaseTermAmountVO.setTotalAdjustAmount(amount.toString());
+            }
+
+            String startDate = serveLeaseTermInfoDTO.getStartDate();
+            String endDate = serveLeaseTermInfoDTO.getEndDate();
+            for (DeliverElecDocDTO deliverElecDocDTO : deliverElecDocDTOS) {
+                if (startDate.equals(deliverElecDocDTO.getDeliverVehicleTime())) {
+                    deliverEachLeaseTermAmountVO.setDeliverVehicleElecFileUrl(deliverElecDocDTO.getDeliverVehicleElecFileUrl());
+                }
+                if (endDate.equals(deliverElecDocDTO.getRecoverVehicleTime())) {
+                    deliverEachLeaseTermAmountVO.setRecoverVehicleElecFileUrl(deliverElecDocDTO.getRecoverVehicleElecFileUrl());
+                }
             }
 
             return deliverEachLeaseTermAmountVO;

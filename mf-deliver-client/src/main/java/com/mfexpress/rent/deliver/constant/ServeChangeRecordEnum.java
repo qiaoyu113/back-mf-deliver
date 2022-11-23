@@ -6,12 +6,10 @@ public enum ServeChangeRecordEnum {
     REACTIVE(2, "重新激活"),
     DEPOSIT_LOCK(3, "押金锁定"),
     DEPOSIT_UNLOCK(4, "押金解锁"),
-
     REPLACE_ADJUST(5, "服务单变更"),
-
     CANCEL(6, "服务单取消"),
     TERMINATION(7,"终止服务"),
-
+    UNDO_REACTIVE(8, "取消重新激活"),
     ;
 
 

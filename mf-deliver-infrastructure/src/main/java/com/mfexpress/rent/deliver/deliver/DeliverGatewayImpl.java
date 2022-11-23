@@ -169,7 +169,7 @@ public class DeliverGatewayImpl implements DeliverGateway {
     public List<DeliverEntity> getMakeDeliverDTOSByCarIdList(List<Integer> carIds, Integer type) {
 
         Example example = new Example(DeliverEntity.class);
-        example.createCriteria().andEqualTo("status",type)
+        example.createCriteria().andEqualTo("status", type)
                 .andIn("carId", carIds);
         return deliverMapper.selectByExample(example);
     }
@@ -193,10 +193,10 @@ public class DeliverGatewayImpl implements DeliverGateway {
 
     @Override
     public PagePagination<DeliverEntity> getDeliverNoListByPage(DeliverQry qry) {
-        if(qry.getPage() == 0){
+        if (qry.getPage() == 0) {
             qry.setPage(1);
         }
-        if(qry.getLimit() == 0){
+        if (qry.getLimit() == 0) {
             qry.setLimit(5);
         }
         PageHelper.clearPage();
@@ -204,13 +204,13 @@ public class DeliverGatewayImpl implements DeliverGateway {
 
         Example example = new Example(DeliverEntity.class);
         Example.Criteria criteria = example.createCriteria();
-        if(null != qry.getStatus() && !qry.getStatus().isEmpty()){
+        if (null != qry.getStatus() && !qry.getStatus().isEmpty()) {
             criteria.andIn("status", qry.getStatus());
-        }else{
+        } else {
             criteria.andNotEqualTo("status", DeliverStatusEnum.INVALID.getCode());
         }
-                // .andEqualTo("carServiceId", 36);
-        if(null != qry.getDeliverStatus() && !qry.getDeliverStatus().isEmpty()){
+        // .andEqualTo("carServiceId", 36);
+        if (null != qry.getDeliverStatus() && !qry.getDeliverStatus().isEmpty()) {
             criteria.andIn("deliverStatus", qry.getDeliverStatus());
         }
         example.selectProperties("deliverNo");
@@ -223,13 +223,16 @@ public class DeliverGatewayImpl implements DeliverGateway {
     public List<DeliverEntity> getDeliverListByQry(DeliverQry deliverQry) {
         Example example = new Example(DeliverEntity.class);
         Example.Criteria criteria = example.createCriteria();
-        if(StringUtils.isEmpty(deliverQry.getServeNo())){
+        if (!StringUtils.isEmpty(deliverQry.getServeNo())) {
             criteria.andEqualTo("serveNo", deliverQry.getServeNo());
         }
-        if(null != deliverQry.getDeliverStatus() && !deliverQry.getDeliverStatus().isEmpty()){
+        if (null != deliverQry.getDeliverStatus() && !deliverQry.getDeliverStatus().isEmpty()) {
             criteria.andIn("deliverStatus", deliverQry.getDeliverStatus());
         }
-        return deliverMapper.selectByExample(deliverQry);
+        if (null != deliverQry.getStatus() && !deliverQry.getStatus().isEmpty()) {
+            criteria.andIn("status", deliverQry.getStatus());
+        }
+        return deliverMapper.selectByExample(example);
     }
 
 }
