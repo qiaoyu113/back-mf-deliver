@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.scheduler;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
@@ -183,9 +184,9 @@ public class ContractExpireRemindScheduler {
                             msgInfo -> dutyDates.contains(msgInfo.getExpectRecoverDate())
                     ).collect(Collectors.toList());
                     //根据客户分组  组装管理区内信息
-                    String msg = this.groupByCustomerBuildNotice(msgInfoList, customerMap);
+                    List<String> msgs = this.groupByCustomerBuildNotice(msgInfoList, customerMap);
                     //4,发送提醒
-                    this.sendNoticeToWxUser(msg, corpUserIdList);
+                    this.sendNoticeToWxUser(msgs, corpUserIdList);
                 }
             }
 
@@ -202,10 +203,9 @@ public class ContractExpireRemindScheduler {
                         msgInfo -> dutyDates.contains(msgInfo.getExpectRecoverDate())
                 ).collect(Collectors.toList());
                 //构建通知消息
-                String msg = this.groupByCustomerBuildNotice(msgInfoList, customerMap);
+                List<String> msgs = this.groupByCustomerBuildNotice(msgInfoList, customerMap);
                 //发送
-                boolean result = this.sendNoticeToWxUser(msg, Collections.singletonList(saleLeaderWxId));
-                log.debug("向销售leader 发送通知 notice:{}   targetUser:{}   result:{}", msg, saleLeaderWxId, result);
+                this.sendNoticeToWxUser(msgs, Collections.singletonList(saleLeaderWxId));
             }
         } finally {
             lock.unlock();
@@ -239,12 +239,18 @@ public class ContractExpireRemindScheduler {
         return result;
     }
 
+    private void sendNoticeToWxUser(List<String> notices, List<String> wxIdList) {
+        notices.forEach(notice -> {
+            this.sendNoticeToWxUser(notice, wxIdList);
+        });
+    }
+
     /**
      * 根据客户分组拼装通知消息
      */
-    private String groupByCustomerBuildNotice(List<ContractWillExpireInfoDTO> msgInfoList, Map<Integer, Customer> customerMap) {
+    private List<String> groupByCustomerBuildNotice(List<ContractWillExpireInfoDTO> msgInfoList, Map<Integer, Customer> customerMap) {
         if (CollUtil.isEmpty(msgInfoList)) {
-            return "";
+            return new ArrayList<>();
         }
         //根据客户分组  组装org内信息
         Map<Integer, List<ContractWillExpireInfoDTO>> customerContractMap = msgInfoList.stream().collect(Collectors.groupingBy(ContractWillExpireInfoDTO::getCustomerId));
@@ -270,7 +276,7 @@ public class ContractExpireRemindScheduler {
     /**
      * 格式化总模板
      */
-    public String formatTemplate(ContractExpireNotifyDTO contractExpireNotifyDTO) {
+    public List<String> formatTemplate(ContractExpireNotifyDTO contractExpireNotifyDTO) {
         //合同过期提醒配置
         DeliverProjectProperties.ContractExpireNotify contractExpireNotify = DeliverProjectProperties.CONTRACT_EXPIRE_NOTIFY;
         //模板格式化规则
@@ -306,32 +312,39 @@ public class ContractExpireRemindScheduler {
         //获取循环模板数据
         List<NoticeTemplateInfoDTO> loopNoticeTemplateInfoDTOList = contractExpireNotifyDTO.getLoopTemplate();
 
-        String notice = "";
-        //替换循环模板
-        if (hasLoopTemplate && CollUtil.isNotEmpty(loopNoticeTemplateInfoDTOList)) {
-            Class<? extends NoticeTemplateInfoDTO> noticeClass = loopNoticeTemplateInfoDTOList.get(0).getClass();
-            Field[] classFields = noticeClass.getDeclaredFields();
-            //替换属性
-            List<String> loopTemplateList = new ArrayList<>();
-            for (NoticeTemplateInfoDTO noticeTemplateInfoDTO : loopNoticeTemplateInfoDTOList) {
-                String loopMsg = loopTemplate;
-                JSONObject jsonObject = JSONObject.parseObject(JSON.toJSONString(noticeTemplateInfoDTO));
-                //比对属性,并替换
-                loopMsg = this.formatAndReplaceTemplate(classFields, jsonObject, loopMsg, formatRuleMap);
-                loopTemplateList.add(loopMsg);
+        //防止消息通知超长 做份批处理
+        List<List<NoticeTemplateInfoDTO>> templatesList = ListUtil.split(loopNoticeTemplateInfoDTOList, 10);
+        List<String> notices = new ArrayList<>();
+        for (List<NoticeTemplateInfoDTO> noticeTemplateInfoDTOList : templatesList) {
+            String notice = "";
+            //替换循环模板
+            if (hasLoopTemplate && CollUtil.isNotEmpty(noticeTemplateInfoDTOList)) {
+                Class<? extends NoticeTemplateInfoDTO> noticeClass = noticeTemplateInfoDTOList.get(0).getClass();
+                Field[] classFields = noticeClass.getDeclaredFields();
+                //替换属性
+                List<String> loopTemplateList = new ArrayList<>();
+                for (NoticeTemplateInfoDTO noticeTemplateInfoDTO : noticeTemplateInfoDTOList) {
+                    String loopMsg = loopTemplate;
+                    JSONObject jsonObject = JSONObject.parseObject(JSON.toJSONString(noticeTemplateInfoDTO));
+                    //比对属性,并替换
+                    loopMsg = this.formatAndReplaceTemplate(classFields, jsonObject, loopMsg, formatRuleMap);
+                    loopTemplateList.add(loopMsg);
 
+                }
+                String loopTemplateResult = String.join(loopTemplateSeparator, loopTemplateList).concat(loopTemplateSeparator);
+
+                notice = noticeTemplate.replaceAll(loopTemplateFormat, loopTemplateResult);
             }
-            String loopTemplateResult = String.join(loopTemplateSeparator, loopTemplateList).concat(loopTemplateSeparator);
 
-            notice = noticeTemplate.replaceAll(loopTemplateFormat, loopTemplateResult);
+            //其他属性
+            Field[] notifyFields = notifyDtoClass.getDeclaredFields();
+            JSONObject jsonObject = JSONObject.parseObject(JSON.toJSONString(contractExpireNotifyDTO));
+            notice = this.formatAndReplaceTemplate(notifyFields, jsonObject, notice, formatRuleMap);
+
+            notices.add(notice);
         }
 
-        //其他属性
-        Field[] notifyFields = notifyDtoClass.getDeclaredFields();
-        JSONObject jsonObject = JSONObject.parseObject(JSON.toJSONString(contractExpireNotifyDTO));
-        notice = this.formatAndReplaceTemplate(notifyFields, jsonObject, notice, formatRuleMap);
-
-        return notice;
+        return notices;
     }
 
     /**
