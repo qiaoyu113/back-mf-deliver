@@ -32,10 +32,10 @@ public class TestController {
 
     @PostMapping("/testNoticeBuild")
     @ApiOperation("测试 合同到期提醒定时任务消息构建")
-    public Result<String> testNoticeBuild(@RequestBody ContractExpireNotifyDTO contractExpireNotifyDTO) {
+    public Result<List<String>> testNoticeBuild(@RequestBody ContractExpireNotifyDTO contractExpireNotifyDTO) {
         checkEnv();
-        String s = contractExpireRemindScheduler.formatTemplate(contractExpireNotifyDTO);
-        return Result.getInstance(s).success();
+        List<String> msgs = contractExpireRemindScheduler.formatTemplate(contractExpireNotifyDTO);
+        return Result.getInstance(msgs).success();
     }
 
     @PostMapping("/testContractExpireScheduler")
