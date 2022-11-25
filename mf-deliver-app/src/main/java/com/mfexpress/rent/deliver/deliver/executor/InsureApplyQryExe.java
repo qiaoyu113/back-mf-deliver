@@ -12,7 +12,6 @@ import com.mfexpress.rent.deliver.dto.data.deliver.cmd.InsureApplyQry;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.vo.InsuranceApplyRentVO;
 import com.mfexpress.rent.deliver.dto.data.deliver.vo.InsureApplyVO;
-import com.mfexpress.rent.deliver.util.ExternalRequestUtil;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -29,8 +28,11 @@ public class InsureApplyQryExe {
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
 
+    /*@Resource
+    private ExternalRequestUtil externalRequestUtil;*/
+
     @Resource
-    private ExternalRequestUtil externalRequestUtil;
+    private BackMarketInsuranceCmdExe backMarketInsuranceCmdExe;
 
     public InsureApplyVO execute(InsureApplyQry qry) {
         qry.setType(InsuranceApplyTypeEnum.INSURE.getCode());
@@ -54,7 +56,7 @@ public class InsureApplyQryExe {
             applyIds.add(insuranceApplyDTO.getCommercialApplyId());
         }
         applyByIdsQryCmd.setApplyIds(applyIds);
-        Result<List<InsuranceApplyRentVO>> insuranceApplyInfoResult = externalRequestUtil.getInsuranceApplyInfo(applyByIdsQryCmd);
+        Result<List<InsuranceApplyRentVO>> insuranceApplyInfoResult = backMarketInsuranceCmdExe.getInsuranceApplyInfo(applyByIdsQryCmd);
         List<InsuranceApplyRentVO> insureApplyRentVOS = ResultDataUtils.getInstance(insuranceApplyInfoResult).getDataOrException();
         if (null == insureApplyRentVOS || insureApplyRentVOS.isEmpty() || insureApplyRentVOS.size() != applyIds.size()) {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "投保申请查询失败");
