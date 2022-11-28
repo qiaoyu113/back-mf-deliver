@@ -60,7 +60,7 @@ public class ContractOperationRecordQryExe {
             ElecContractOperationRecordVO failRecord = ElecContractOperationRecordVO.builder().operationType(ElecContractOperationTypeEnum.FAIL.getCode())
                     .operationTypeDisplay(ElecContractOperationTypeEnum.FAIL.getName())
                     .operationTime(elecContractDTO.getUpdateTime()).build();
-            if(!StringUtils.isEmpty(elecContractDTO.getFailureMsg())){
+            if (!StringUtils.isEmpty(elecContractDTO.getFailureMsg())) {
                 failRecord.setOperationTypeDisplay(failRecord.getOperationTypeDisplay().concat("（").concat(elecContractDTO.getFailureMsg()).concat("）"));
             }
             recordVOS.add(failRecord);
@@ -99,28 +99,28 @@ public class ContractOperationRecordQryExe {
             smsInfoVO.setSendSmsFlag(JudgeEnum.YES.getCode());
         } else {
             String nowYmd = FormatUtil.ymdFormatDateToString(new Date());
-            if(nowYmd.equals(sendSmsDate.substring(0, 10))){
+            if (nowYmd.equals(sendSmsDate.substring(0, 10))) {
                 // 如果是今天，判断次数达到了限制没有
-                if(elecContractDTO.getSendSmsCount() < Constants.EVERY_DAY_ENABLE_SEND_SMS_COUNT){
+                if (elecContractDTO.getSendSmsCount() < Constants.EVERY_DAY_ENABLE_SEND_SMS_COUNT) {
                     smsInfoVO.setSendSmsFlag(JudgeEnum.YES.getCode());
-                }else{
+                } else {
                     smsInfoVO.setSendSmsFlag(JudgeEnum.NO.getCode());
                 }
-            }else{
+            } else {
                 // 如果不是今天，可发送
                 smsInfoVO.setSendSmsFlag(JudgeEnum.YES.getCode());
             }
         }
 
         // 如果短信可发送，查redis，获取短信发送倒计时
-        if(JudgeEnum.YES.getCode().equals(smsInfoVO.getSendSmsFlag())){
+        if (JudgeEnum.YES.getCode().equals(smsInfoVO.getSendSmsFlag())) {
             String key = DeliverUtils.concatCacheKey(Constants.ELEC_CONTRACT_LAST_TIME_SEND_SMS_KEY, elecContractDTO.getContractId().toString());
             // 取出来的是毫秒值
             Long lastTime = redisTools.get(key);
-            if(null != lastTime){
+            if (null != lastTime) {
                 long now = System.currentTimeMillis();
-                int i = (int) (60 - ((now - lastTime)/1000));
-                if(i >= 0){
+                int i = (int) (60 - ((now - lastTime) / 1000));
+                if (i >= 0) {
                     smsInfoVO.setSmsCountDown(i);
                 }
             }
@@ -132,15 +132,19 @@ public class ContractOperationRecordQryExe {
     private void signedProcess(List<ElecContractOperationRecordVO> recordVOS, Map<Integer, ContractRecordDTO> recordMap, ElecContractDTO elecContractDTO) {
         // 合同生成成功记录
         ElecContractOperationRecordVO createdRecord = ElecContractOperationRecordVO.builder().operationType(ElecContractOperationTypeEnum.CREATED.getCode())
-                .operationTypeDisplay(ElecContractOperationTypeEnum.CREATED.getName())
-                .operationTime(recordMap.get(ContractRecordEnum.CREATE_SUCCESS.getCode()).getCreateDate()).build();
+                .operationTypeDisplay(ElecContractOperationTypeEnum.CREATED.getName()).build();
         recordVOS.add(createdRecord);
 
         // 短信发送成功记录
         ElecContractOperationRecordVO sendSmsRecord = ElecContractOperationRecordVO.builder().operationType(ElecContractOperationTypeEnum.SEND_SMS.getCode())
-                .operationTypeDisplay(ElecContractOperationTypeEnum.SEND_SMS.getName())
-                .operationTime(recordMap.get(ContractRecordEnum.CREATE_SUCCESS.getCode()).getCreateDate()).build();
+                .operationTypeDisplay(ElecContractOperationTypeEnum.SEND_SMS.getName()).build();
         recordVOS.add(sendSmsRecord);
+
+        ContractRecordDTO createSuccessRecord = recordMap.get(ContractRecordEnum.CREATE_SUCCESS.getCode());
+        if (null != createSuccessRecord) {
+            createdRecord.setOperationTime(createSuccessRecord.getCreateDate());
+            sendSmsRecord.setOperationTime(createSuccessRecord.getCreateDate());
+        }
 
         // 短信重新发送成功记录
         Date sendSmsDate = FormatUtil.ymdHmsFormatStringToDate(elecContractDTO.getSendSmsDate());
@@ -158,21 +162,29 @@ public class ContractOperationRecordQryExe {
 
         // 交接单签署成功记录
         ElecContractOperationRecordVO signRecord = ElecContractOperationRecordVO.builder().operationType(ElecContractOperationTypeEnum.SIGNED.getCode())
-                .operationTypeDisplay(ElecContractOperationTypeEnum.SIGNED.getName())
-                .operationTime(recordMap.get(ContractRecordEnum.SIGN_SUCCESS.getCode()).getCreateDate()).build();
+                .operationTypeDisplay(ElecContractOperationTypeEnum.SIGNED.getName()).build();
         recordVOS.add(signRecord);
+
+        ContractRecordDTO signSuccessRecord = recordMap.get(ContractRecordEnum.SIGN_SUCCESS.getCode());
+        if (null != signSuccessRecord) {
+            signRecord.setOperationTime(signSuccessRecord.getCreateDate());
+        }
 
         // 发车成功/收车成功记录
         if (DeliverTypeEnum.DELIVER.getCode() == elecContractDTO.getDeliverType()) {
             ElecContractOperationRecordVO deliverRecord = ElecContractOperationRecordVO.builder().operationType(ElecContractOperationTypeEnum.DELIVERED.getCode())
-                    .operationTypeDisplay(ElecContractOperationTypeEnum.DELIVERED.getName())
-                    .operationTime(recordMap.get(ContractRecordEnum.SIGN_SUCCESS.getCode()).getCreateDate()).build();
+                    .operationTypeDisplay(ElecContractOperationTypeEnum.DELIVERED.getName()).build();
             recordVOS.add(deliverRecord);
+            if (null != signSuccessRecord) {
+                deliverRecord.setOperationTime(signSuccessRecord.getCreateDate());
+            }
         } else {
             ElecContractOperationRecordVO recoverRecord = ElecContractOperationRecordVO.builder().operationType(ElecContractOperationTypeEnum.RECOVERED.getCode())
-                    .operationTypeDisplay(ElecContractOperationTypeEnum.RECOVERED.getName())
-                    .operationTime(recordMap.get(ContractRecordEnum.SIGN_SUCCESS.getCode()).getCreateDate()).build();
+                    .operationTypeDisplay(ElecContractOperationTypeEnum.RECOVERED.getName()).build();
             recordVOS.add(recoverRecord);
+            if (null != signSuccessRecord) {
+                recoverRecord.setOperationTime(signSuccessRecord.getCreateDate());
+            }
         }
     }
 
@@ -211,7 +223,7 @@ public class ContractOperationRecordQryExe {
         }
 
         // 交接单已过期记录
-        if(ElecHandoverContractStatus.FAIL.getCode() == elecContractDTO.getStatus() && ContractFailureReasonEnum.OVERDUE.getCode() == elecContractDTO.getFailureReason()){
+        if (ElecHandoverContractStatus.FAIL.getCode() == elecContractDTO.getStatus() && ContractFailureReasonEnum.OVERDUE.getCode() == elecContractDTO.getFailureReason()) {
             ElecContractOperationRecordVO overdueRecord = ElecContractOperationRecordVO.builder().operationType(ElecContractOperationTypeEnum.OVERDUE.getCode())
                     .operationTypeDisplay(ElecContractOperationTypeEnum.OVERDUE.getName())
                     .operationTime(elecContractDTO.getUpdateTime()).build();

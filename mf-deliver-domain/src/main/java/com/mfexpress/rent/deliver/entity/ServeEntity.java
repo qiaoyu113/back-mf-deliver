@@ -361,7 +361,7 @@ public class ServeEntity implements ServeEntityApi {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单状态异常");
         }
         ServeEntity newServe = new ServeEntity();
-        newServe.setStatus(ServeEnum.COMPLETED.getCode());
+        newServe.setStatus(ServeEnum.RECOVER.getCode());
         newServe.setUpdateId(cmd.getOperatorId());
         serveGateway.updateServeByServeNo(cmd.getServeNo(), newServe);
         saveChangeRecord(rawServe, newServe, ServeChangeRecordEnum.UNDO_REACTIVE.getCode(), null, null, null, cmd.getOperatorId());
