@@ -86,7 +86,7 @@ public class ReactiveServeCheckScheduler {
                         for (ServeChangeRecordDTO serveChangeRecordDTO : serveChangeRecordDTOS) {
                             if (ServeChangeRecordEnum.REACTIVE.getCode() == serveChangeRecordDTO.getType()) {
                                 // 如果服务单进行过重新激活操作，判断预计收车日期，如果当天是预计收车日期，回退服务单到已收车状态，删除交付单
-                                if (DateUtil.formatDate(nowDate).equals(serve.getExpectRecoverDate())) {
+                                if (!DateUtil.parseDate(DateUtil.formatDate(nowDate)).before(DateUtil.parseDate(serve.getExpectRecoverDate()))) {
                                     Result<DeliverDTO> deliverResult = deliverAggregateRootApi.getDeliverByServeNo(serve.getServeNo());
                                     DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverResult).getDataOrNull();
                                     if (null != deliverDTO) {
