@@ -13,6 +13,9 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeChangeRecordDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeListQry;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.UndoReactiveServeCmd;
+import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
+import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleSaveCmd;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -37,6 +41,9 @@ public class ReactiveServeCheckScheduler {
 
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
+
+    @Resource
+    private VehicleAggregateRootApi vehicleAggregateRootApi;
 
     @Resource
     private RedisTools redisTools;
@@ -98,6 +105,15 @@ public class ReactiveServeCheckScheduler {
                                             undoReactiveServeCmd.setServeNo(serve.getServeNo());
                                             undoReactiveServeCmd.setOperatorId(-999);
                                             serveAggregateRootApi.undoReactiveServe(undoReactiveServeCmd);
+                                            // 释放车辆
+                                            VehicleSaveCmd vehicleStatusSaveCmd = new VehicleSaveCmd();
+                                            vehicleStatusSaveCmd.setId(Collections.singletonList(deliverDTO.getCarId()));
+                                            vehicleStatusSaveCmd.setSelectStatus(ValidSelectStatusEnum.UNCHECKED.getCode());
+                                            deliverDTO.setCustomerId(deliverDTO.getCustomerId());
+                                            Result<String> vehicleEditResult = vehicleAggregateRootApi.saveVehicleStatusById(vehicleStatusSaveCmd);
+                                            if (vehicleEditResult.getCode() != 0) {
+                                                log.error("检查重新激活服务单--修改车辆状态失败，车辆id：{}，msg：{}", deliverDTO.getCarId(), vehicleEditResult.getMsg());
+                                            }
                                         }
                                     } else {
                                         UndoReactiveServeCmd undoReactiveServeCmd = new UndoReactiveServeCmd();
