@@ -179,6 +179,15 @@ public class InsureByCompanyCmdExe {
                         insureInfo.setSeatInsuredAmount(value.replace("（万）", ""));
                     }
                 }
+            } else {
+                List<String> seatInsuredAmountValues = seatInsuredAmountDictMap.values().stream().map(seatInsuredAmount -> seatInsuredAmount.replace("（万）", "")).collect(Collectors.toList());
+                int min = Integer.parseInt(seatInsuredAmountValues.get(0));
+                for (int i = 1; i < seatInsuredAmountValues.size(); i++) {
+                    if (Integer.parseInt(seatInsuredAmountValues.get(i)) < min) {
+                        min = Integer.parseInt(seatInsuredAmountValues.get(i));
+                    }
+                }
+                insureInfo.setSeatInsuredAmount(String.valueOf(min));
             }
             if (null != insuranceInfo.getThirdPartyLiabilityCoverage() && 0 != insuranceInfo.getThirdPartyLiabilityCoverage()) {
                 String value = thirdInsuranceAmountDictMap.get(insuranceInfo.getThirdPartyLiabilityCoverage().toString());
@@ -189,6 +198,15 @@ public class InsureByCompanyCmdExe {
                         insureInfo.setThirdInsuredAmount(value.replace("（万）", ""));
                     }
                 }
+            } else {
+                List<String> thirdInsuranceAmountValues = thirdInsuranceAmountDictMap.values().stream().map(thirdInsuranceAmount -> thirdInsuranceAmount.replace("（万）", "")).collect(Collectors.toList());
+                int min = Integer.parseInt(thirdInsuranceAmountValues.get(0));
+                for (int i = 1; i < thirdInsuranceAmountValues.size(); i++) {
+                    if (Integer.parseInt(thirdInsuranceAmountValues.get(i)) < min) {
+                        min = Integer.parseInt(thirdInsuranceAmountValues.get(i));
+                    }
+                }
+                insureInfo.setThirdInsuredAmount(String.valueOf(min));
             }
             insureInfo.setDamageFlag(JudgeEnum.YES.getCode());
             return insureInfo;
