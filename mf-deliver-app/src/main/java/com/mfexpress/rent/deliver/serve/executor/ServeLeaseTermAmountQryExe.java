@@ -284,7 +284,7 @@ public class ServeLeaseTermAmountQryExe {
                 if (null != vo.getRecoverVehicleTime() && null != vo.getExpectRecoverDate() && vo.getExpectRecoverDate().after(vo.getRecoverVehicleTime())) {
                     String nowDateChar = FormatUtil.ymdFormatDateToString(new Date());
                     Date nowDate = FormatUtil.ymdFormatStringToDate(nowDateChar);
-                    if (!nowDate.before(vo.getExpectRecoverDate())) {
+                    if (!nowDate.after(vo.getExpectRecoverDate())) {
                         if (!nowDateChar.equals(DateUtil.formatDate(vo.getExpectRecoverDate()))) {
                             vo.setEnableReactivate(JudgeEnum.YES.getCode());
                         }
