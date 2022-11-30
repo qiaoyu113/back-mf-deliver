@@ -184,7 +184,7 @@ public class DeliverEachLeaseTermAmountQryExe {
                 if (null != deliverVehicleDTOMap) {
                     DeliverVehicleDTO deliverVehicleDTO = deliverVehicleDTOMap.get(deliverNo);
                     if (null != deliverVehicleDTO) {
-                        deliverElecDocDTO.setDeliverVehicleTime(DateUtil.formatDate(DateUtil.offsetDay(deliverVehicleDTO.getDeliverVehicleTime(), 1)));
+                        deliverElecDocDTO.setDeliverVehicleTime(DateUtil.formatDate(deliverVehicleDTO.getDeliverVehicleTime()));
                     }
                 }
                 if (null != recoverVehicleDTOMap) {
@@ -283,7 +283,7 @@ public class DeliverEachLeaseTermAmountQryExe {
             String startDate = serveLeaseTermInfoDTO.getStartDate();
             String endDate = serveLeaseTermInfoDTO.getEndDate();
             for (DeliverElecDocDTO deliverElecDocDTO : deliverElecDocDTOS) {
-                if (startDate.equals(deliverElecDocDTO.getDeliverVehicleTime())) {
+                if (startDate.equals(deliverElecDocDTO.getDeliverVehicleTime()) || startDate.equals(DateUtil.formatDate(DateUtil.offsetDay(DateUtil.parseDate(deliverElecDocDTO.getDeliverVehicleTime()), 1)))) {
                     deliverEachLeaseTermAmountVO.setDeliverVehicleElecFileUrl(deliverElecDocDTO.getDeliverVehicleElecFileUrl());
                 }
                 if (endDate.equals(deliverElecDocDTO.getRecoverVehicleTime())) {
