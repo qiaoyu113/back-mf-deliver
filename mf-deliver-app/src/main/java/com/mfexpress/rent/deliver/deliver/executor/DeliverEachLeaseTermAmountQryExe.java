@@ -34,6 +34,7 @@ import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.entity.Customer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -283,8 +284,10 @@ public class DeliverEachLeaseTermAmountQryExe {
             String startDate = serveLeaseTermInfoDTO.getStartDate();
             String endDate = serveLeaseTermInfoDTO.getEndDate();
             for (DeliverElecDocDTO deliverElecDocDTO : deliverElecDocDTOS) {
-                if (startDate.equals(deliverElecDocDTO.getDeliverVehicleTime()) || startDate.equals(DateUtil.formatDate(DateUtil.offsetDay(DateUtil.parseDate(deliverElecDocDTO.getDeliverVehicleTime()), 1)))) {
-                    deliverEachLeaseTermAmountVO.setDeliverVehicleElecFileUrl(deliverElecDocDTO.getDeliverVehicleElecFileUrl());
+                if (!StringUtils.isEmpty(deliverElecDocDTO.getDeliverVehicleTime())) {
+                    if (startDate.equals(deliverElecDocDTO.getDeliverVehicleTime()) || startDate.equals(DateUtil.formatDate(DateUtil.offsetDay(DateUtil.parseDate(deliverElecDocDTO.getDeliverVehicleTime()), 1)))) {
+                        deliverEachLeaseTermAmountVO.setDeliverVehicleElecFileUrl(deliverElecDocDTO.getDeliverVehicleElecFileUrl());
+                    }
                 }
                 if (endDate.equals(deliverElecDocDTO.getRecoverVehicleTime())) {
                     deliverEachLeaseTermAmountVO.setRecoverVehicleElecFileUrl(deliverElecDocDTO.getRecoverVehicleElecFileUrl());
