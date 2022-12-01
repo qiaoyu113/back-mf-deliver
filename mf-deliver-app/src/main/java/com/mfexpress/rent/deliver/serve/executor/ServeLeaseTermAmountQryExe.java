@@ -285,7 +285,7 @@ public class ServeLeaseTermAmountQryExe {
                     String nowDateChar = FormatUtil.ymdFormatDateToString(new Date());
                     Date nowDate = FormatUtil.ymdFormatStringToDate(nowDateChar);
                     if (!nowDate.after(vo.getExpectRecoverDate())) {
-                        if (!nowDateChar.equals(DateUtil.formatDate(vo.getExpectRecoverDate()))) {
+                        if (2 <= DateUtil.between(nowDate, vo.getExpectRecoverDate(), DateUnit.DAY)) {
                             vo.setEnableReactivate(JudgeEnum.YES.getCode());
                         }
                         /*long betweenDays = DateUtil.between(vo.getRecoverVehicleTime(), vo.getExpectRecoverDate(), DateUnit.DAY);
