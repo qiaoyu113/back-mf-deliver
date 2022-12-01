@@ -1096,9 +1096,13 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         if (betweenDays < 15) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "收车日期与预计收车日期过近，服务单不允许激活");
         }*/
-        String expectRecoverDate = serveEntity.getExpectRecoverDate();
-        String nowDate = DateUtil.formatDate(new Date());
-        if (nowDate.equals(expectRecoverDate)) {
+        String expectRecoverDateChar = serveEntity.getExpectRecoverDate();
+        DateTime expectRecoverDate = DateUtil.parseDate(expectRecoverDateChar);
+        Date nowDate = new Date();
+        if (nowDate.after(expectRecoverDate)) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "已过预计收车日期，服务单不允许激活");
+        }
+        if (2 > DateUtil.between(nowDate, expectRecoverDate, DateUnit.DAY)) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "收车日期与预计收车日期过近，服务单不允许激活");
         }
 
