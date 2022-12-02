@@ -32,6 +32,12 @@ public class CreateSurrenderApplyCmd {
     @ApiModelProperty(value = "车辆及保险信息")
     private List<SurrenderInfoDTO> createH5SurrenderApplyCmdList;
 
+    private Integer buType;
+
+    private Integer orgId;
+
+    private Integer cityId;
+
     @ApiModel(value = "退保信息")
     @Data
     public static class SurrenderInfoDTO {

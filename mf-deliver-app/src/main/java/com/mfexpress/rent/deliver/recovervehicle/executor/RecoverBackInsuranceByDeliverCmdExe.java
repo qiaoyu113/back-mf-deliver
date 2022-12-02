@@ -8,6 +8,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
+import com.mfexpress.rent.deliver.deliver.executor.BackMarketInsuranceCmdExe;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.CreateSurrenderApplyCmd;
@@ -15,7 +16,6 @@ import com.mfexpress.rent.deliver.dto.data.deliver.dto.RecoverBatchSurrenderAppl
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.vo.SurrenderApplyInfoVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.vo.SurrenderApplyVO;
-import com.mfexpress.rent.deliver.util.ExternalRequestUtil;
 import com.mfexpress.rent.deliver.utils.CommonUtil;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.ValidSelectStatusEnum;
@@ -38,13 +38,16 @@ public class RecoverBackInsuranceByDeliverCmdExe {
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
 
-    @Resource
-    private ExternalRequestUtil externalRequestUtil;
+    /*@Resource
+    private ExternalRequestUtil externalRequestUtil;*/
 
     private Map<String, String> insuranceCompanyDictMap;
 
     @Resource
     private DictAggregateRootApi dictAggregateRootApi;
+
+    @Resource
+    private BackMarketInsuranceCmdExe backMarketInsuranceCmdExe;
 
     public SurrenderApplyVO execute(RecoverBackInsureByDeliverCmd cmd, TokenInfo tokenInfo) {
         initDictMap();
@@ -64,7 +67,7 @@ public class RecoverBackInsuranceByDeliverCmdExe {
             }
 
             // 发起退保申请
-            Result<List<RecoverBatchSurrenderApplyDTO>> batchSurrenderApplyDTOResult = createSurrenderApply(cmd, deliverDTOList);
+            Result<List<RecoverBatchSurrenderApplyDTO>> batchSurrenderApplyDTOResult = createSurrenderApply(cmd, deliverDTOList, tokenInfo);
             List<RecoverBatchSurrenderApplyDTO> batchSurrenderApplyDTOS = batchSurrenderApplyDTOResult.getData();
 
             // 执行退保操作，改变交付单状态及保存申请编号
@@ -149,7 +152,7 @@ public class RecoverBackInsuranceByDeliverCmdExe {
         ResultDataUtils.getInstance(editResult).getDataOrException();
     }
 
-    private Result<List<RecoverBatchSurrenderApplyDTO>> createSurrenderApply(RecoverBackInsureByDeliverCmd cmd, List<DeliverDTO> deliverDTOList) {
+    private Result<List<RecoverBatchSurrenderApplyDTO>> createSurrenderApply(RecoverBackInsureByDeliverCmd cmd, List<DeliverDTO> deliverDTOList, TokenInfo tokenInfo) {
         CreateSurrenderApplyCmd createSurrenderApplyCmd = new CreateSurrenderApplyCmd();
         createSurrenderApplyCmd.setSurrenderDate(cmd.getInsuranceTime());
         createSurrenderApplyCmd.setApplyUserId(cmd.getOperatorId());
@@ -168,7 +171,10 @@ public class RecoverBackInsuranceByDeliverCmdExe {
         });
 
         // 发送请求
-        Result<List<RecoverBatchSurrenderApplyDTO>> result = externalRequestUtil.sendSurrenderApply(createSurrenderApplyCmd);
+        createSurrenderApplyCmd.setBuType(tokenInfo.getBuType());
+        createSurrenderApplyCmd.setOrgId(tokenInfo.getOfficeId());
+        createSurrenderApplyCmd.setCityId(tokenInfo.getCityId());
+        Result<List<RecoverBatchSurrenderApplyDTO>> result = backMarketInsuranceCmdExe.sendSurrenderApply(createSurrenderApplyCmd);
         List<RecoverBatchSurrenderApplyDTO> surrenderApplyDTOS = ResultDataUtils.getInstance(result).getDataOrException();
         if (null == surrenderApplyDTOS || surrenderApplyDTOS.isEmpty()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "退保失败");
@@ -217,7 +223,7 @@ public class RecoverBackInsuranceByDeliverCmdExe {
                 surrenderApplyVO.setTipFlag(JudgeEnum.YES.getCode());
                 surrenderApplyVO.setTipMsg("您选择的车辆".concat(vehicleDTO.getPlateNumber()).concat("的商业险已在失效状态，不能发起退保申请"));
             }
-            if (cmd.getInsuranceTime().before(vehicleInsuranceDTO.getCommercialInsuranceStartDate()) || cmd.getInsuranceTime().after(vehicleInsuranceDTO.getCommercialInsuranceEndDate())) {
+            if (cmd.getInsuranceTime().after(vehicleInsuranceDTO.getCommercialInsuranceEndDate())) {
                 surrenderApplyVO.setTipFlag(JudgeEnum.YES.getCode());
                 surrenderApplyVO.setTipMsg("你选择的车辆".concat(vehicleDTO.getPlateNumber()).concat("的退保时间不在车辆保险有限期内，请重新选择"));
             }

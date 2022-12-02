@@ -111,28 +111,30 @@ public class RecoverEsDataQryExe {
 
         if (!vehicleIdList.isEmpty()) {
             Result<List<VehicleInsuranceDTO>> vehicleInsuranceDTOSResult = vehicleAggregateRootApi.getVehicleInsuranceByVehicleIds(vehicleIdList);
-            List<VehicleInsuranceDTO> vehicleInsuranceDTOS = ResultDataUtils.getInstance(vehicleInsuranceDTOSResult).getDataOrException();
-            Map<Integer, VehicleInsuranceDTO> vehicleInsuranceDTOMap = vehicleInsuranceDTOS.stream().collect(Collectors.toMap(VehicleInsuranceDTO::getVehicleId, Function.identity(), (v1, v2) -> v1));
-            for (RecoverVehicleVO recoverVehicleVO : recoverVehicleVOList) {
-                VehicleInsuranceDTO vehicleInsuranceDTO = vehicleInsuranceDTOMap.get(recoverVehicleVO.getCarId());
-                if (null != vehicleInsuranceDTO) {
-                    Integer compulsoryInsuranceStatus = vehicleInsuranceDTO.getCompulsoryInsuranceStatus();
-                    if (null != compulsoryInsuranceStatus) {
-                        String compulsoryInsuranceStatusName = getInsuranceStatusName(vehicleInsuranceDTO.getCompulsoryInsuranceStatus(), vehicleInsuranceDTO.getCompulsoryInsuranceEndDate());
-                        recoverVehicleVO.setVehicleCompulsoryInsuranceStatusDisplay(compulsoryInsuranceStatusName);
-                        recoverVehicleVO.setVehicleCompulsoryInsuranceStatus(compulsoryInsuranceStatusName.startsWith("即将过期") ? PolicyStatusEnum.ABOUT_EXPIRED.getCode() : compulsoryInsuranceStatus);
-                        if (PolicyStatusEnum.EXPIRED.getCode() != recoverVehicleVO.getVehicleCompulsoryInsuranceStatus()) {
-                            recoverVehicleVO.setVehicleCompulsoryInsuranceEndDate(vehicleInsuranceDTO.getCompulsoryInsuranceEndDate());
+            List<VehicleInsuranceDTO> vehicleInsuranceDTOS = ResultDataUtils.getInstance(vehicleInsuranceDTOSResult).getDataOrNull();
+            if (null != vehicleInsuranceDTOS && !vehicleInsuranceDTOS.isEmpty()) {
+                Map<Integer, VehicleInsuranceDTO> vehicleInsuranceDTOMap = vehicleInsuranceDTOS.stream().collect(Collectors.toMap(VehicleInsuranceDTO::getVehicleId, Function.identity(), (v1, v2) -> v1));
+                for (RecoverVehicleVO recoverVehicleVO : recoverVehicleVOList) {
+                    VehicleInsuranceDTO vehicleInsuranceDTO = vehicleInsuranceDTOMap.get(recoverVehicleVO.getCarId());
+                    if (null != vehicleInsuranceDTO) {
+                        Integer compulsoryInsuranceStatus = vehicleInsuranceDTO.getCompulsoryInsuranceStatus();
+                        if (null != compulsoryInsuranceStatus) {
+                            String compulsoryInsuranceStatusName = getInsuranceStatusName(vehicleInsuranceDTO.getCompulsoryInsuranceStatus(), vehicleInsuranceDTO.getCompulsoryInsuranceEndDate());
+                            recoverVehicleVO.setVehicleCompulsoryInsuranceStatusDisplay(compulsoryInsuranceStatusName);
+                            recoverVehicleVO.setVehicleCompulsoryInsuranceStatus(compulsoryInsuranceStatusName.startsWith("即将过期") ? PolicyStatusEnum.ABOUT_EXPIRED.getCode() : compulsoryInsuranceStatus);
+                            if (PolicyStatusEnum.EXPIRED.getCode() != recoverVehicleVO.getVehicleCompulsoryInsuranceStatus()) {
+                                recoverVehicleVO.setVehicleCompulsoryInsuranceEndDate(vehicleInsuranceDTO.getCompulsoryInsuranceEndDate());
+                            }
                         }
-                    }
 
-                    Integer commercialInsuranceStatus = vehicleInsuranceDTO.getCommercialInsuranceStatus();
-                    if (null != commercialInsuranceStatus) {
-                        String commercialInsuranceStatusName = getInsuranceStatusName(vehicleInsuranceDTO.getCommercialInsuranceStatus(), vehicleInsuranceDTO.getCommercialInsuranceEndDate());
-                        recoverVehicleVO.setVehicleCommercialInsuranceStatusDisplay(commercialInsuranceStatusName);
-                        recoverVehicleVO.setVehicleCommercialInsuranceStatus(commercialInsuranceStatusName.startsWith("即将过期") ? PolicyStatusEnum.ABOUT_EXPIRED.getCode() : commercialInsuranceStatus);
-                        if (PolicyStatusEnum.EXPIRED.getCode() != recoverVehicleVO.getVehicleCommercialInsuranceStatus()) {
-                            recoverVehicleVO.setVehicleCommercialInsuranceEndDate(vehicleInsuranceDTO.getCommercialInsuranceEndDate());
+                        Integer commercialInsuranceStatus = vehicleInsuranceDTO.getCommercialInsuranceStatus();
+                        if (null != commercialInsuranceStatus) {
+                            String commercialInsuranceStatusName = getInsuranceStatusName(vehicleInsuranceDTO.getCommercialInsuranceStatus(), vehicleInsuranceDTO.getCommercialInsuranceEndDate());
+                            recoverVehicleVO.setVehicleCommercialInsuranceStatusDisplay(commercialInsuranceStatusName);
+                            recoverVehicleVO.setVehicleCommercialInsuranceStatus(commercialInsuranceStatusName.startsWith("即将过期") ? PolicyStatusEnum.ABOUT_EXPIRED.getCode() : commercialInsuranceStatus);
+                            if (PolicyStatusEnum.EXPIRED.getCode() != recoverVehicleVO.getVehicleCommercialInsuranceStatus()) {
+                                recoverVehicleVO.setVehicleCommercialInsuranceEndDate(vehicleInsuranceDTO.getCommercialInsuranceEndDate());
+                            }
                         }
                     }
                 }

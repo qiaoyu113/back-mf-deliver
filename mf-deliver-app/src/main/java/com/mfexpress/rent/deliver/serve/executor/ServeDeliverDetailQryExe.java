@@ -12,6 +12,7 @@ import com.mfexpress.order.api.app.OrderAggregateRootApi;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
 import com.mfexpress.rent.deliver.constant.*;
+import com.mfexpress.rent.deliver.deliver.executor.BackMarketInsuranceCmdExe;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ElecHandoverContractAggregateRootApi;
@@ -27,13 +28,11 @@ import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.dto.ElecDocDTO;
 import com.mfexpress.rent.deliver.dto.data.elecHandoverContract.vo.ElecHandoverDocVO;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
-import com.mfexpress.rent.deliver.util.ExternalRequestUtil;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -71,11 +70,11 @@ public class ServeDeliverDetailQryExe {
     @Resource
     private ElecHandoverContractAggregateRootApi contractAggregateRootApi;
 
-    @Resource
-    private ExternalRequestUtil externalRequestUtil;
+    /*@Resource
+    private ExternalRequestUtil externalRequestUtil;*/
 
     @Resource
-    private BeanFactory beanFactory;
+    private BackMarketInsuranceCmdExe backMarketInsuranceCmdExe;
 
     public ServeDeliverDetailVO execute(ServeQryCmd cmd) {
         String serveNo = cmd.getServeNo();
@@ -190,7 +189,7 @@ public class ServeDeliverDetailQryExe {
         vehicleInsuranceVO.setDeliverInsuranceInfoTemplate(2);
         String compulsoryPolicyId = insuranceApplyDTO.getCompulsoryPolicyId();
         if (!StringUtils.isEmpty(compulsoryPolicyId)) {
-            Result<PolicyVO> policyResult = externalRequestUtil.getCompulsoryPolicy(compulsoryPolicyId);
+            Result<PolicyVO> policyResult = backMarketInsuranceCmdExe.getCompulsoryPolicy(compulsoryPolicyId);
             PolicyVO policyVO = ResultDataUtils.getInstance(policyResult).getDataOrException();
             if (null != policyVO) {
                 vehicleInsuranceVO.setCompulsoryInsuranceAcceptParty(policyVO.getInsuranceCompanyName());
@@ -202,7 +201,7 @@ public class ServeDeliverDetailQryExe {
         }
         String commercialPolicyId = insuranceApplyDTO.getCommercialPolicyId();
         if (!StringUtils.isEmpty(commercialPolicyId)) {
-            Result<PolicyVO> policyResult = externalRequestUtil.getCommercialPolicy(commercialPolicyId);
+            Result<PolicyVO> policyResult = backMarketInsuranceCmdExe.getCommercialPolicy(commercialPolicyId);
             PolicyVO policyVO = ResultDataUtils.getInstance(policyResult).getDataOrException();
             if (null != policyVO) {
                 vehicleInsuranceVO.setCommercialInsuranceAcceptParty(policyVO.getInsuranceCompanyName());

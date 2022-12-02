@@ -3,7 +3,6 @@ package com.mfexpress.rent.deliver.deliver.executor;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
-import com.mfexpress.component.exception.BusinessException;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
@@ -22,7 +21,6 @@ import com.mfexpress.rent.deliver.dto.data.deliver.dto.DeliverInsureApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.vo.InsureApplyVO;
 import com.mfexpress.rent.deliver.dto.data.deliver.vo.RentInsureApplyResultVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.util.ExternalRequestUtil;
 import com.mfexpress.rent.deliver.utils.CommonUtil;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -51,8 +49,11 @@ public class InsureByCompanyCmdExe {
     @Resource
     private DictAggregateRootApi dictAggregateRootApi;
 
+    /*@Resource
+    private ExternalRequestUtil externalRequestUtil;*/
+
     @Resource
-    private ExternalRequestUtil externalRequestUtil;
+    private BackMarketInsuranceCmdExe backMarketInsuranceCmdExe;
 
     public InsureApplyVO execute(DeliverInsureCmd cmd, TokenInfo tokenInfo) {
         initDictMap();
@@ -195,7 +196,7 @@ public class InsureByCompanyCmdExe {
         createInsureApplyCmd.setInsuranceApplyList(insuranceInfoDTOS);
 
         // 发送请求
-        Result<RentInsureApplyResultVO> result = externalRequestUtil.createInsureApply(createInsureApplyCmd);
+        Result<RentInsureApplyResultVO> result = backMarketInsuranceCmdExe.createInsureApply(createInsureApplyCmd);
         RentInsureApplyResultVO rentInsureApplyResultVO = ResultDataUtils.getInstance(result).getDataOrException();
         if (null == rentInsureApplyResultVO || (null == rentInsureApplyResultVO.getCommercialApplyList() && null == rentInsureApplyResultVO.getCompulsoryApplyList()) ||
                 (rentInsureApplyResultVO.getCommercialApplyList().isEmpty() && rentInsureApplyResultVO.getCompulsoryApplyList().isEmpty())) {
