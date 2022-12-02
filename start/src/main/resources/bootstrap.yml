@@ -9,16 +9,14 @@ spring:
   cloud:
     nacos:
       config:
-        server-addr: 139.198.27.3:8848
+        server-addr: 127.0.0.1:8848
         group: mfexpress2
-        namespace: dev2local
         file-extension: yaml
         enabled: true
         prefix: ${spring.application.name}
       discovery:
         server-addr: ${spring.cloud.nacos.config.server-addr}
         group: ${spring.cloud.nacos.config.group}
-        namespace: ${spring.cloud.nacos.config.namespace}
 ---
 spring:
   profiles: dev2m1

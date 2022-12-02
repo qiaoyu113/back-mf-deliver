@@ -1,5 +1,8 @@
 package com.mfexpress.rent.deliver.domainservice;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUtil;
 import com.github.pagehelper.PageInfo;
@@ -12,6 +15,8 @@ import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ContractWillExpireInfoDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ContractWillExpireQry;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.entity.api.DeliverVehicleEntityApi;
 import com.mfexpress.rent.deliver.entity.api.RecoverVehicleEntityApi;
@@ -87,6 +92,36 @@ public class ServeDomainServiceImpl implements ServeDomainServiceI {
         }
         return depositLockListDTOS;
 
+    }
+
+    @Override
+    public List<ContractWillExpireInfoDTO> getContractThatWillExpire(ContractWillExpireQry contractWillExpireQry) {
+        //查询指定状态状态,下指定时间收车的服务单
+        List<ServeDTO> serveDTOList = serveEntityApi.getWillRecoverService(contractWillExpireQry);
+        if (CollUtil.isEmpty(serveDTOList)) {
+            return new ArrayList<>();
+        }
+        Map<String, ServeDTO> serveMap = serveDTOList.stream().collect(Collectors.toMap(ServeDTO::getServeNo, Function.identity(), (k1, k2) -> k1));
+        //状态有效的交付单
+        List<DeliverDTO> deliverDTOList = deliverEntityApi.getDeliverDTOListByServeNoList(new ArrayList<>(serveMap.keySet()));
+        Map<String, DeliverDTO> deliverMap = deliverDTOList.stream().collect(Collectors.toMap(DeliverDTO::getServeNo, Function.identity(), (k1, k2) -> k1));
+
+        return serveDTOList.stream().map(serveDto -> {
+            String serveNo = serveDto.getServeNo();
+            ContractWillExpireInfoDTO contractWillExpireInfoDTO = new ContractWillExpireInfoDTO();
+            //orderId;serveId; serveNo;customerId;status; oaContractCode;expectRecoverDate;orgId;
+            BeanUtil.copyProperties(serveDto, contractWillExpireInfoDTO, CopyOptions.create().ignoreError());
+            //;deliverNo;;carId;;carNum;
+
+            if (CollUtil.isNotEmpty(deliverMap) && deliverMap.get(serveNo) != null) {
+                DeliverDTO deliverDTO = deliverMap.get(serveNo);
+                contractWillExpireInfoDTO.setCarId(deliverDTO.getCarId());
+                contractWillExpireInfoDTO.setCarNum(deliverDTO.getCarNum());
+                contractWillExpireInfoDTO.setDeliverNo(deliverDTO.getDeliverNo());
+            }
+
+            return contractWillExpireInfoDTO;
+        }).collect(Collectors.toList());
     }
 
 

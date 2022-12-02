@@ -41,4 +41,6 @@ public class Constants {
 
     public static final String VEHICLE_INSURANCE_TAKE_EFFECT_EVENT_TAG = "insurance_effect";
 
+    public static final String PROPERTIES_PREFIX = "project.properties";
+
 }
