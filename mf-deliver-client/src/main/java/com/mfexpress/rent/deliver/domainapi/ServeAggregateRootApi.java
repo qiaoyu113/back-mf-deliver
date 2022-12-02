@@ -213,7 +213,14 @@ public interface ServeAggregateRootApi {
     @PostMapping("/getServeChangeRecordListByServeNo")
     Result<List<ServeChangeRecordDTO>> getServeChangeRecordListByServeNo(@RequestParam("serveNo") String serveNo);
 
+    @PostMapping(value = "/undoReactiveServe")
+    Result<Integer> undoReactiveServe(@RequestBody @Validated UndoReactiveServeCmd cmd);
 
     @PostMapping(value = "/getContractThatWillExpire")
     Result<List<ContractWillExpireInfoDTO>> getContractThatWillExpire(@RequestBody ContractWillExpireQry contractWillExpireQry);
+    @PostMapping("/getServePageByQry")
+    Result<PagePagination<ServeDTO>> getServePageByQry(@RequestBody ServeListQry qry);
+
+    @PostMapping("/extendExpectRecoverDate")
+    Result<Integer> extendExpectRecoverDate(@RequestParam("serveNo") String serveNo);
 }

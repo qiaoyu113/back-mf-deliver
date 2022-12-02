@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.json.JSONUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.base.starter.logback.log.PrintParam;
@@ -277,6 +279,15 @@ public class ElecHandoverContractAggregateRootApiImpl implements ElecHandoverCon
     @PrintParam
     public Result<Integer> autoCompleted(@RequestBody @Validated ContractStatusChangeCmd cmd) {
         return Result.getInstance(elecHandoverContractEntityApi.autoCompleted(cmd)).success();
+    }
+
+    @Override
+    @PostMapping(value = "/getDocDTOSByDeliverNos")
+    @PrintParam
+    public Result<List<ElecDocDTO>> getDocDTOSByDeliverNos(@RequestBody List<String> deliverNos) {
+        List<ElectronicHandoverDocPO> pos = docGateway.getDocByDeliverNos(deliverNos);
+        List<ElecDocDTO> elecDocDTOS = BeanUtil.copyToList(pos, ElecDocDTO.class, CopyOptions.create().ignoreError());
+        return Result.getInstance(elecDocDTOS).success();
     }
 
 }

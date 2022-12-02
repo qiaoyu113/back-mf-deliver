@@ -3,9 +3,6 @@ package com.mfexpress.rent.deliver.utils;
 import javax.annotation.Resource;
 
 import com.mfexpress.rent.deliver.MfDeliveryApplication;
-import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
-import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
-import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -19,10 +16,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(classes = MfDeliveryApplication.class)
 class MainServeUtilTest {
 
-    @Resource
-    MaintenanceAggregateRootApi maintenanceAggregateRootApi;
 
-    @Test
+    /*@Test
     void getReplaceVehicleDTOBySourceServNo() {
 
         ReplaceVehicleDTO replaceVehicleDTO = MainServeUtil.getReplaceVehicleDTOBySourceServNo(maintenanceAggregateRootApi, "FWD2022042800017");
@@ -44,5 +39,5 @@ class MainServeUtilTest {
         MaintenanceDTO maintenanceDTO = MainServeUtil.getMaintenanceByServeNo(maintenanceAggregateRootApi, "FWD2022061700008");
 
         log.info("{}", maintenanceDTO);
-    }
+    }*/
 }

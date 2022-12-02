@@ -3,12 +3,12 @@ package com.mfexpress.rent.deliver.entity.api;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.CancelPreSelectedCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ContractWillExpireQry;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.UndoReactiveServeCmd;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
 
 import java.math.BigDecimal;
@@ -59,6 +59,10 @@ public interface ServeEntityApi {
     Boolean terminationServe(ServeDTO serveDTO);
 
     List<ServeDTO> getServeDTOByCustomerId(Integer customerId);
+
+    Integer undoReactiveServe(UndoReactiveServeCmd cmd);
+
+    Integer extendExpectRecoverDate(String serveNo, String expectRecoverDate);
 
     List<ServeDTO> getWillRecoverService(ContractWillExpireQry contractWillExpireQry);
 }

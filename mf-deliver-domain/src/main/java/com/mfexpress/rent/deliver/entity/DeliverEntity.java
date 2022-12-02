@@ -9,12 +9,14 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverInsureCmd;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverQry;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.DeliverBatchInsureApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.DeliverInsureApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.UndoReactiveServeCmd;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.gateway.InsuranceApplyGateway;
@@ -31,10 +33,7 @@ import javax.annotation.Resource;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Data
@@ -399,6 +398,38 @@ public class DeliverEntity implements DeliverEntityApi {
             }
         });
         insuranceApplyGateway.batchCreate(applyPOS);
+        return 0;
+    }
+
+    @Override
+    public Integer undoHistory(UndoReactiveServeCmd cmd) {
+        DeliverQry deliverQry = new DeliverQry();
+        deliverQry.setServeNo(cmd.getServeNo());
+        deliverQry.setStatus(Arrays.asList(DeliverStatusEnum.VALID.getCode(), DeliverStatusEnum.HISTORICAL.getCode()));
+        List<DeliverEntity> delivers = deliverGateway.getDeliverListByQry(deliverQry);
+        if (null == delivers || delivers.isEmpty()) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单查询失败");
+        }
+        DeliverEntity rawDeliverEntity = delivers.get(delivers.size() - 1);
+        if (DeliverStatusEnum.HISTORICAL.getCode() == rawDeliverEntity.getStatus()) {
+            DeliverEntity newDeliverEntity = new DeliverEntity();
+            newDeliverEntity.setStatus(DeliverStatusEnum.VALID.getCode());
+            newDeliverEntity.setUpdateId(cmd.getOperatorId());
+            deliverGateway.updateDeliverByDeliverNo(rawDeliverEntity.getDeliverNo(), newDeliverEntity);
+        } else {
+            if (DeliverEnum.IS_DELIVER.getCode().equals(rawDeliverEntity.getDeliverStatus()) && DeliverContractStatusEnum.NOSIGN.getCode() == rawDeliverEntity.getDeliverContractStatus()) {
+                if (delivers.size() < 2) {
+                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "历史交付单缺失");
+                }
+                DeliverEntity newDeliverEntity = new DeliverEntity();
+                newDeliverEntity.setStatus(DeliverStatusEnum.INVALID.getCode());
+                newDeliverEntity.setUpdateId(cmd.getOperatorId());
+                deliverGateway.updateDeliverByDeliverNo(rawDeliverEntity.getDeliverNo(), newDeliverEntity);
+                newDeliverEntity.setStatus(DeliverStatusEnum.VALID.getCode());
+                deliverGateway.updateDeliverByDeliverNo(delivers.get(delivers.size() - 2).getDeliverNo(), newDeliverEntity);
+            }
+        }
+
         return 0;
     }
 

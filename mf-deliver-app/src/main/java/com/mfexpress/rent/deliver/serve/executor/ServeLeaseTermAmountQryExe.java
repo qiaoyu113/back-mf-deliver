@@ -285,10 +285,13 @@ public class ServeLeaseTermAmountQryExe {
                     String nowDateChar = FormatUtil.ymdFormatDateToString(new Date());
                     Date nowDate = FormatUtil.ymdFormatStringToDate(nowDateChar);
                     if (!nowDate.after(vo.getExpectRecoverDate())) {
-                        long betweenDays = DateUtil.between(vo.getRecoverVehicleTime(), vo.getExpectRecoverDate(), DateUnit.DAY);
-                        if (betweenDays >= 15) {
+                        if (2 <= DateUtil.between(nowDate, vo.getExpectRecoverDate(), DateUnit.DAY)) {
                             vo.setEnableReactivate(JudgeEnum.YES.getCode());
                         }
+                        /*long betweenDays = DateUtil.between(vo.getRecoverVehicleTime(), vo.getExpectRecoverDate(), DateUnit.DAY);
+                        if (betweenDays >= 15) {
+                            vo.setEnableReactivate(JudgeEnum.YES.getCode());
+                        }*/
                     }
                 }
             }
@@ -386,6 +389,10 @@ public class ServeLeaseTermAmountQryExe {
         }
         if (null != qry.getExpectRecoverDateStart() && null != qry.getExpectRecoverDateEnd()) {
             boolQueryBuilder.must(QueryBuilders.rangeQuery("expectRecoverDate").from(qry.getExpectRecoverDateStart().getTime()).to(qry.getExpectRecoverDateEnd().getTime()));
+        }
+
+        if (!StringUtils.isEmpty(qry.getServeNo())) {
+            boolQueryBuilder.must(QueryBuilders.matchQuery("serveNo", qry.getServeNo()));
         }
         return boolQueryBuilder;
     }

@@ -18,6 +18,7 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.cmd.UndoReactiveServeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ContractWillExpireQry;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
 import com.mfexpress.rent.deliver.gateway.ServeChangeRecordGateway;
@@ -146,6 +147,7 @@ public class ServeEntity implements ServeEntityApi {
 
         ServeEntity newServe = new ServeEntity();
         newServe.setStatus(ServeEnum.NOT_PRESELECTED.getCode());
+        newServe.setUpdateId(cmd.getOperatorId());
         serveGateway.updateServeByServeNo(cmd.getServeNo(), newServe);
         saveChangeRecordWithReactive(cmd, rawServe, newServe);
     }
@@ -363,6 +365,28 @@ public class ServeEntity implements ServeEntityApi {
             return new ArrayList<>();
         }
         return BeanUtil.copyToList(serve, ServeDTO.class, CopyOptions.create().ignoreError());
+    }
+
+    @Override
+    public Integer undoReactiveServe(UndoReactiveServeCmd cmd) {
+        ServeEntity rawServe = serveGateway.getServeByServeNo(cmd.getServeNo());
+        if (!ServeEnum.NOT_PRESELECTED.getCode().equals(rawServe.getStatus()) && !(ServeEnum.PRESELECTED.getCode().equals(rawServe.getStatus()))) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单状态异常");
+        }
+        ServeEntity newServe = new ServeEntity();
+        newServe.setStatus(ServeEnum.RECOVER.getCode());
+        newServe.setUpdateId(cmd.getOperatorId());
+        serveGateway.updateServeByServeNo(cmd.getServeNo(), newServe);
+        saveChangeRecord(rawServe, newServe, ServeChangeRecordEnum.UNDO_REACTIVE.getCode(), null, null, null, cmd.getOperatorId());
+        return 0;
+    }
+
+    @Override
+    public Integer extendExpectRecoverDate(String serveNo, String expectRecoverDate) {
+        ServeEntity newServe = new ServeEntity();
+        newServe.setExpectRecoverDate(expectRecoverDate);
+        serveGateway.updateServeByServeNo(serveNo, newServe);
+        return 0;
     }
 
     /*@Override

@@ -969,6 +969,31 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     }
 
     @Override
+    @PostMapping("/getServePageByQry")
+    @PrintParam
+    public Result<PagePagination<ServeDTO>> getServePageByQry(@RequestBody ServeListQry qry) {
+        PagePagination<ServeEntity> pagePagination = serveGateway.getPageServeByQry(qry);
+        PagePagination<ServeDTO> servePagePagination = new PagePagination<>();
+        BeanUtil.copyProperties(pagePagination, servePagePagination, new CopyOptions().ignoreError());
+        List<ServeEntity> serveEntityList = pagePagination.getList();
+        List<ServeDTO> serveList = BeanUtil.copyToList(serveEntityList, ServeDTO.class, new CopyOptions().ignoreError());
+        servePagePagination.setList(serveList);
+        return Result.getInstance(servePagePagination).success();
+    }
+
+    @Override
+    @PostMapping("/extendExpectRecoverDate")
+    @PrintParam
+    public Result<Integer> extendExpectRecoverDate(@RequestParam("serveNo") String serveNo) {
+        ServeEntity serveEntity = serveGateway.getServeByServeNo(serveNo);
+        if (null == serveEntity) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单查询失败");
+        }
+        String expectRecoverDate = getExpectRecoverDate(DateUtil.parseDate(serveEntity.getExpectRecoverDate()), 1);
+        return Result.getInstance(serveEntityApi.extendExpectRecoverDate(serveNo, expectRecoverDate)).success();
+    }
+
+    @Override
     @PostMapping("/getPageServeDepositList")
     @PrintParam
     public Result<PagePagination<ServeDepositDTO>> getPageServeDepositList(@RequestBody CustomerDepositListDTO customerDepositLisDTO) {
@@ -1064,7 +1089,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         if (null == deliverEntity || (!DeliverEnum.RECOVER.getCode().equals(deliverEntity.getDeliverStatus()) && !DeliverEnum.COMPLETED.getCode().equals(deliverEntity.getDeliverStatus()))) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
         }
-        RecoverVehicleEntity recoverVehicleEntity = recoverVehicleGateway.getRecoverVehicleByDeliverNo(deliverEntity.getDeliverNo());
+        /*RecoverVehicleEntity recoverVehicleEntity = recoverVehicleGateway.getRecoverVehicleByDeliverNo(deliverEntity.getDeliverNo());
         if (null == recoverVehicleEntity) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "收车单查询失败");
         }
@@ -1072,6 +1097,15 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         long betweenDays = DateUtil.between(recoverVehicleEntity.getRecoverVehicleTime(), DateUtil.parse(serveEntity.getExpectRecoverDate()), DateUnit.DAY);
         if (betweenDays < 15) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "收车日期与预计收车日期过近，服务单不允许激活");
+        }*/
+        String expectRecoverDateChar = serveEntity.getExpectRecoverDate();
+        DateTime expectRecoverDate = DateUtil.parseDate(expectRecoverDateChar);
+        Date nowDate = DateUtil.parseDate(DateUtil.formatDate(new Date()));
+        if (nowDate.after(expectRecoverDate)) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "已过预计收车日期，服务单不允许激活");
+        }
+        if (2 > DateUtil.between(nowDate, expectRecoverDate, DateUnit.DAY)) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "收车日期与当前日期过近，服务单不允许激活");
         }
 
         // 重新激活服务单，置服务单状态为待预选
@@ -1274,6 +1308,16 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     public Result<List<ServeChangeRecordDTO>> getServeChangeRecordListByServeNo(@RequestParam("serveNo") String serveNo) {
         List<ServeChangeRecordPO> recordList = serveChangeRecordGateway.getList(serveNo);
         return Result.getInstance(BeanUtil.copyToList(recordList, ServeChangeRecordDTO.class, CopyOptions.create().ignoreError()));
+    }
+
+    @Override
+    @PostMapping(value = "/undoReactiveServe")
+    @PrintParam
+    @Transactional(rollbackFor = Exception.class)
+    public Result<Integer> undoReactiveServe(@RequestBody @Validated UndoReactiveServeCmd cmd) {
+        serveEntityApi.undoReactiveServe(cmd);
+        deliverEntityApi.undoHistory(cmd);
+        return Result.getInstance(0).success();
     }
 
 
