@@ -1,14 +1,13 @@
 package com.mfexpress.rent.deliver.entity.api;
 
-import com.mfexpress.rent.deliver.dto.data.deliver.cmd.CancelPreSelectedCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
-
 import com.mfexpress.component.response.PagePagination;
+import com.mfexpress.rent.deliver.dto.data.deliver.cmd.CancelPreSelectedCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServeCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.ServePaidInDepositUpdateCmd;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ContractWillExpireQry;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.UndoReactiveServeCmd;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
 
@@ -36,7 +35,7 @@ public interface ServeEntityApi {
      */
     PagePagination<ServeDepositDTO> getServeDepositByQry(CustomerDepositListDTO customerDepositLisDTO);
 
-    List<ServeDTO>getServeListByServeNoList(List<String>serveNoList);
+    List<ServeDTO> getServeListByServeNoList(List<String> serveNoList);
 
     ServeDTO getServeByServeNo(String serveNo);
 
@@ -44,6 +43,7 @@ public interface ServeEntityApi {
 
     /**
      * 服务单取消(作废)
+     *
      * @param cmd
      */
     void cancelServe(ServeCancelCmd cmd);
@@ -63,4 +63,6 @@ public interface ServeEntityApi {
     Integer undoReactiveServe(UndoReactiveServeCmd cmd);
 
     Integer extendExpectRecoverDate(String serveNo, String expectRecoverDate);
+
+    List<ServeDTO> getWillRecoverService(ContractWillExpireQry contractWillExpireQry);
 }

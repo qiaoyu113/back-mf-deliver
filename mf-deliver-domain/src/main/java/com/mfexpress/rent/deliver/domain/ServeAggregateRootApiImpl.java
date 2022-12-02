@@ -32,7 +32,9 @@ import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.*;
+import com.mfexpress.rent.deliver.dto.data.serve.dto.ContractWillExpireInfoDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ContractWillExpireQry;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServePrepaymentDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
@@ -1291,6 +1293,13 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @PrintParam
     public Result<List<ServeDTO>> getServeDTOByCustomerId(@RequestBody Integer customerId) {
         return Result.getInstance(serveEntityApi.getServeDTOByCustomerId(customerId)).success();
+    }
+
+    @Override
+    @PostMapping(value = "/getContractThatWillExpire")
+    @PrintParam
+    public Result<List<ContractWillExpireInfoDTO>> getContractThatWillExpire(@RequestBody ContractWillExpireQry contractWillExpireQry) {
+        return Result.getInstance(serveDomainServiceI.getContractThatWillExpire(contractWillExpireQry)).success();
     }
 
     @Override
