@@ -98,15 +98,18 @@ public class TerminationServeExecute {
 
         Result<PrepaymentServeMappingDTO> prepaymentServeMappingDTOResult = advancePaymentAggregateRootApi.getPrepaymentServeMappingDTOByServeNo(terminationServiceCmd.getServeNo());
         PrepaymentServeMappingDTO prepaymentServeMappingDTO = ResultDataUtils.getInstance(prepaymentServeMappingDTOResult).getDataOrException();
-        if (PrepaymentServeMappingStatusEnum.INIT.getCode() == prepaymentServeMappingDTO.getStatus()) {
-            CustomerBookDTO customerBookDTO = customerBookDTOMap.get(AccountBookTypeEnum.LOCK_ADVANCE.getCode());
-            if (Objects.isNull(customerBookDTO)) {
-                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到锁定预付款账本");
-            }
-            if (customerBookDTO.getBalance().compareTo(prepaymentServeMappingDTO.getPrepaymentAmount()) < 0) {
-                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "锁定预付款账本余额不足");
+        if (Objects.nonNull(prepaymentServeMappingDTO)) {
+            if (PrepaymentServeMappingStatusEnum.INIT.getCode() == prepaymentServeMappingDTO.getStatus()) {
+                CustomerBookDTO customerBookDTO = customerBookDTOMap.get(AccountBookTypeEnum.LOCK_ADVANCE.getCode());
+                if (Objects.isNull(customerBookDTO)) {
+                    throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到锁定预付款账本");
+                }
+                if (customerBookDTO.getBalance().compareTo(prepaymentServeMappingDTO.getPrepaymentAmount()) < 0) {
+                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "锁定预付款账本余额不足");
+                }
             }
         }
+
 
 
         if (serveDTO.getPaidInDeposit().compareTo(BigDecimal.ZERO) != 0) {
@@ -139,22 +142,24 @@ public class TerminationServeExecute {
         Result<Boolean> terminationServeResult = serveAggregateRootApi.terminationServe(newServeDto);
         ResultDataUtils.getInstance(terminationServeResult).getDataOrException();
 
-        if (PrepaymentServeMappingStatusEnum.INIT.getCode() == prepaymentServeMappingDTO.getStatus()) {
-            BookMoveBalanceDTO bookMoveBalanceDTO = BookMoveBalanceDTO.builder()
-                    .accountId(bookListResult.getData().get(0).getAccountId())
-                    .amount(prepaymentServeMappingDTO.getPrepaymentAmount())
-                    .oaNo("")
-                    .sourceType(AccountBookTypeEnum.LOCK_ADVANCE.getCode())
-                    .targetAccountId(bookListResult.getData().get(0).getAccountId())
-                    .targetType(AccountBookTypeEnum.RENT_BALANCE.getCode())
-                    .advancePayment(true)
-                    .operType(BusinessTypeEnum.TERMINATION_OF_SERVICE.getCode())
-                    .userId(tokenInfo.getId()).build();
-            Result<Long> moveBalanceResult = bookAggregateRootApi.moveBalance(bookMoveBalanceDTO);
-            ResultDataUtils.getInstance(moveBalanceResult).getDataOrException();
+        if (Objects.nonNull(prepaymentServeMappingDTO)) {
+            if (PrepaymentServeMappingStatusEnum.INIT.getCode() == prepaymentServeMappingDTO.getStatus()) {
+                BookMoveBalanceDTO bookMoveBalanceDTO = BookMoveBalanceDTO.builder()
+                        .accountId(bookListResult.getData().get(0).getAccountId())
+                        .amount(prepaymentServeMappingDTO.getPrepaymentAmount())
+                        .oaNo("")
+                        .sourceType(AccountBookTypeEnum.LOCK_ADVANCE.getCode())
+                        .targetAccountId(bookListResult.getData().get(0).getAccountId())
+                        .targetType(AccountBookTypeEnum.RENT_BALANCE.getCode())
+                        .advancePayment(true)
+                        .operType(BusinessTypeEnum.TERMINATION_OF_SERVICE.getCode())
+                        .userId(tokenInfo.getId()).build();
+                Result<Long> moveBalanceResult = bookAggregateRootApi.moveBalance(bookMoveBalanceDTO);
+                ResultDataUtils.getInstance(moveBalanceResult).getDataOrException();
 
-            Result<PrepaymentServeMappingDTO> serveMappingDTOResult = advancePaymentAggregateRootApi.terminationServe(terminationServiceCmd.getServeNo(), tokenInfo.getId());
-            ResultDataUtils.getInstance(serveMappingDTOResult).getDataOrException();
+                Result<PrepaymentServeMappingDTO> serveMappingDTOResult = advancePaymentAggregateRootApi.terminationServe(terminationServiceCmd.getServeNo(), tokenInfo.getId());
+                ResultDataUtils.getInstance(serveMappingDTOResult).getDataOrException();
+            }
         }
 
         // 被主动续约过的服务单如果操作了终止服务，那么它一定是重新激活过的
