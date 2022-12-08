@@ -34,12 +34,11 @@ import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.*;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ContractWillExpireInfoDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.qry.ContractWillExpireQry;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ServePrepaymentDTO;
+import com.mfexpress.rent.deliver.dto.data.serve.qry.ContractWillExpireQry;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
 import com.mfexpress.rent.deliver.dto.entity.Serve;
 import com.mfexpress.rent.deliver.entity.DeliverEntity;
-import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
 import com.mfexpress.rent.deliver.entity.ServeChangeRecordPO;
 import com.mfexpress.rent.deliver.entity.ServeEntity;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
@@ -205,15 +204,18 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serveList.add(serve);
 
                 //预付款
-                if (serve.getRent().compareTo(BigDecimal.ZERO) != 0) {
-                    ServePrepaymentDTO servePrepaymentDTO = new ServePrepaymentDTO();
-                    servePrepaymentDTO.setServeNo(serve.getServeNo());
-                    servePrepaymentDTO.setPrepaymentAmount(serveVehicleDTO.getAdvancePaymentAmount());
-                    servePrepaymentDTO.setCustomerId(serve.getCustomerId());
-                    servePrepaymentDTO.setOrgId(serve.getOrgId());
-                    servePrepaymentDTO.setCityId(serve.getCityId());
-                    mqTools.send(redisTools.getEnv() + "_event", "prepayment_serve", null, JSON.toJSONString(servePrepaymentDTO));
+                if (serveVehicleDTO.getAdvancePaymentAmount().compareTo(BigDecimal.ZERO) != 0) {
+                    if (serve.getRent().compareTo(BigDecimal.ZERO) != 0) {
+                        ServePrepaymentDTO servePrepaymentDTO = new ServePrepaymentDTO();
+                        servePrepaymentDTO.setServeNo(serve.getServeNo());
+                        servePrepaymentDTO.setPrepaymentAmount(serveVehicleDTO.getAdvancePaymentAmount());
+                        servePrepaymentDTO.setCustomerId(serve.getCustomerId());
+                        servePrepaymentDTO.setOrgId(serve.getOrgId());
+                        servePrepaymentDTO.setCityId(serve.getCityId());
+                        mqTools.send(redisTools.getEnv() + "_event", "prepayment_serve", null, JSON.toJSONString(servePrepaymentDTO));
+                    }
                 }
+
 
             }
         }
