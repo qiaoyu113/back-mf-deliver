@@ -6,6 +6,7 @@ import com.mfexpress.billing.customer.constant.BusinessTypeEnum;
 import com.mfexpress.billing.customer.data.dto.book.BookMoveBalanceDTO;
 import com.mfexpress.billing.customer.data.dto.book.CustomerBookDTO;
 import com.mfexpress.billing.pay.api.app.AdvancePaymentAggregateRootApi;
+import com.mfexpress.billing.pay.constant.PrepaymentServeMappingStatusEnum;
 import com.mfexpress.billing.pay.dto.data.PrepaymentServeMappingDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -96,8 +98,7 @@ public class TerminationServeExecute {
 
         Result<PrepaymentServeMappingDTO> prepaymentServeMappingDTOResult = advancePaymentAggregateRootApi.getPrepaymentServeMappingDTOByServeNo(terminationServiceCmd.getServeNo());
         PrepaymentServeMappingDTO prepaymentServeMappingDTO = ResultDataUtils.getInstance(prepaymentServeMappingDTOResult).getDataOrException();
-
-        if (Objects.nonNull(prepaymentServeMappingDTO)) {
+        if (PrepaymentServeMappingStatusEnum.INIT.getCode() == prepaymentServeMappingDTO.getStatus()) {
             CustomerBookDTO customerBookDTO = customerBookDTOMap.get(AccountBookTypeEnum.LOCK_ADVANCE.getCode());
             if (Objects.isNull(customerBookDTO)) {
                 throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到锁定预付款账本");
@@ -108,25 +109,28 @@ public class TerminationServeExecute {
         }
 
 
-        //解锁服务单押金
-        Result<Boolean> unLockDepositResult = serveAggregateRootApi.unLockDeposit(Arrays.asList(terminationServiceCmd.getServeNo()), tokenInfo.getId(), true);
-        ResultDataUtils.getInstance(unLockDepositResult).getDataOrException();
+        if (serveDTO.getPaidInDeposit().compareTo(BigDecimal.ZERO) != 0) {
+            //解锁服务单押金
+            Result<Boolean> unLockDepositResult = serveAggregateRootApi.unLockDeposit(Arrays.asList(terminationServiceCmd.getServeNo()), tokenInfo.getId(), true);
+            ResultDataUtils.getInstance(unLockDepositResult).getDataOrException();
 
-        // 原车押金转移记录
-        BookMoveBalanceDTO unLockDeposit = BookMoveBalanceDTO.builder()
-                .accountId(bookListResult.getData().get(0).getAccountId())
-                .userId(tokenInfo.getId())
-                .targetType(AccountBookTypeEnum.DEPOSIT_BALANCE.getCode())
-                .amount(serveDTO.getPaidInDeposit())
-                .advancePayment(true)
-                .operType(BusinessTypeEnum.TERMINATION_OF_SERVICE_DEPOSIT.getCode())
-                .sourceType(AccountBookTypeEnum.DEPOSIT.getCode()).build();
+            // 原车押金转移记录
+            BookMoveBalanceDTO unLockDeposit = BookMoveBalanceDTO.builder()
+                    .accountId(bookListResult.getData().get(0).getAccountId())
+                    .userId(tokenInfo.getId())
+                    .targetType(AccountBookTypeEnum.DEPOSIT_BALANCE.getCode())
+                    .amount(serveDTO.getPaidInDeposit())
+                    .advancePayment(true)
+                    .operType(BusinessTypeEnum.TERMINATION_OF_SERVICE_DEPOSIT.getCode())
+                    .sourceType(AccountBookTypeEnum.DEPOSIT.getCode()).build();
 
-        Result<Boolean> lockDepositResult = bookAggregateRootApi.unLockDeposit(unLockDeposit);
-        ResultValidUtils.checkResultException(lockDepositResult);
-        if (!lockDepositResult.getData()) {
-            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "解除押金操作异常");
+            Result<Boolean> lockDepositResult = bookAggregateRootApi.unLockDeposit(unLockDeposit);
+            ResultValidUtils.checkResultException(lockDepositResult);
+            if (!lockDepositResult.getData()) {
+                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "解除押金操作异常");
+            }
         }
+
 
         //更改服务单状态
         ServeDTO newServeDto = new ServeDTO();
@@ -135,10 +139,7 @@ public class TerminationServeExecute {
         Result<Boolean> terminationServeResult = serveAggregateRootApi.terminationServe(newServeDto);
         ResultDataUtils.getInstance(terminationServeResult).getDataOrException();
 
-
-        //转移预付款金额
-        //预付款->租金
-        if (Objects.nonNull(prepaymentServeMappingDTO)) {
+        if (PrepaymentServeMappingStatusEnum.INIT.getCode() == prepaymentServeMappingDTO.getStatus()) {
             BookMoveBalanceDTO bookMoveBalanceDTO = BookMoveBalanceDTO.builder()
                     .accountId(bookListResult.getData().get(0).getAccountId())
                     .amount(prepaymentServeMappingDTO.getPrepaymentAmount())
