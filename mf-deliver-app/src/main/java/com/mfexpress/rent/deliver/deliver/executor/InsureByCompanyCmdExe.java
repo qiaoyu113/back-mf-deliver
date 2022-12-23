@@ -179,6 +179,15 @@ public class InsureByCompanyCmdExe {
                         insureInfo.setSeatInsuredAmount(value.replace("（万）", ""));
                     }
                 }
+            } else {
+                List<String> seatInsuredAmountValues = seatInsuredAmountDictMap.values().stream().map(seatInsuredAmount -> seatInsuredAmount.replace("（万）", "")).collect(Collectors.toList());
+                int min = Integer.parseInt(seatInsuredAmountValues.get(0));
+                for (int i = 1; i < seatInsuredAmountValues.size(); i++) {
+                    if (Integer.parseInt(seatInsuredAmountValues.get(i)) < min) {
+                        min = Integer.parseInt(seatInsuredAmountValues.get(i));
+                    }
+                }
+                insureInfo.setSeatInsuredAmount(String.valueOf(min));
             }
             if (null != insuranceInfo.getThirdPartyLiabilityCoverage() && 0 != insuranceInfo.getThirdPartyLiabilityCoverage()) {
                 String value = thirdInsuranceAmountDictMap.get(insuranceInfo.getThirdPartyLiabilityCoverage().toString());
@@ -189,6 +198,15 @@ public class InsureByCompanyCmdExe {
                         insureInfo.setThirdInsuredAmount(value.replace("（万）", ""));
                     }
                 }
+            } else {
+                List<String> thirdInsuranceAmountValues = thirdInsuranceAmountDictMap.values().stream().map(thirdInsuranceAmount -> thirdInsuranceAmount.replace("（万）", "")).collect(Collectors.toList());
+                int min = Integer.parseInt(thirdInsuranceAmountValues.get(0));
+                for (int i = 1; i < thirdInsuranceAmountValues.size(); i++) {
+                    if (Integer.parseInt(thirdInsuranceAmountValues.get(i)) < min) {
+                        min = Integer.parseInt(thirdInsuranceAmountValues.get(i));
+                    }
+                }
+                insureInfo.setThirdInsuredAmount(String.valueOf(min));
             }
             insureInfo.setDamageFlag(JudgeEnum.YES.getCode());
             return insureInfo;
@@ -255,16 +273,18 @@ public class InsureByCompanyCmdExe {
         List<CommodityDTO> commodityDTOList = ResultDataUtils.getInstance(commodityListResult).getDataOrException();
         Map<Integer, CommodityDTO> commodityDTOMap = commodityDTOList.stream().collect(Collectors.toMap(CommodityDTO::getId, Function.identity(), (v1, v2) -> v1));
         for (ServeDTO serveDTO : serveDTOList) {
-            CommodityDTO commodityDTO = commodityDTOMap.get(serveDTO.getContractCommodityId());
-            if (null == commodityDTO) {
-                throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "服务单".concat(serveDTO.getServeNo()).concat("的商品信息查询失败"));
-            }
-            InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
-            if (null == insuranceInfo) {
-                throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "服务单".concat(serveDTO.getServeNo()).concat("的商品保险信息查询失败"));
-            }
-            if (null == insuranceInfo.getThirdPartyLiabilityCoverage() && null == insuranceInfo.getInCarPersonnelLiabilityCoverage()) {
-                throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "服务单".concat(serveDTO.getServeNo()).concat("对应的商品在合同中约定不包含商业险，不能进行投保申请操作"));
+            if (!JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {
+                CommodityDTO commodityDTO = commodityDTOMap.get(serveDTO.getContractCommodityId());
+                if (null == commodityDTO) {
+                    throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "服务单".concat(serveDTO.getServeNo()).concat("的商品信息查询失败"));
+                }
+                InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
+                if (null == insuranceInfo) {
+                    throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "服务单".concat(serveDTO.getServeNo()).concat("的商品保险信息查询失败"));
+                }
+                if (null == insuranceInfo.getThirdPartyLiabilityCoverage() && null == insuranceInfo.getInCarPersonnelLiabilityCoverage()) {
+                    throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "服务单".concat(serveDTO.getServeNo()).concat("对应的商品在合同中约定不包含商业险，不能进行投保申请操作"));
+                }
             }
         }
 

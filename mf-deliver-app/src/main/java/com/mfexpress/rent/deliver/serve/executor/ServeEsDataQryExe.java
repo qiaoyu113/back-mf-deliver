@@ -13,6 +13,7 @@ import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.data.ProductDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
 import com.mfexpress.rent.deliver.constant.Constants;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.dto.data.OrderCarModelVO;
 import com.mfexpress.rent.deliver.dto.data.Page;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeListVO;
@@ -150,15 +151,19 @@ public class ServeEsDataQryExe {
         if (null != commodityList) {
             Map<Integer, CommodityDTO> commodityDTOMap = commodityList.stream().collect(Collectors.toMap(CommodityDTO::getId, Function.identity(), (v1, v2) -> v1));
             for (ServeVO serveVO : serveVOList) {
-                CommodityDTO commodityDTO = commodityDTOMap.get(serveVO.getContractCommodityId());
-                if (null != commodityDTO) {
-                    InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
-                    if (null != insuranceInfo.getInCarPersonnelLiabilityCoverage() || null != insuranceInfo.getThirdPartyLiabilityCoverage()) {
-                        // 对车辆保险状态不做要求
-                        serveVO.setVehicleInsureRequirement(1);
-                    } else {
-                        // 只能选择交强险在保，而商业险不在保的车辆
-                        serveVO.setVehicleInsureRequirement(2);
+                if (JudgeEnum.YES.getCode().equals(serveVO.getReplaceFlag())) {
+                    serveVO.setVehicleInsureRequirement(1);
+                } else {
+                    CommodityDTO commodityDTO = commodityDTOMap.get(serveVO.getContractCommodityId());
+                    if (null != commodityDTO) {
+                        InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
+                        if (null != insuranceInfo.getInCarPersonnelLiabilityCoverage() || null != insuranceInfo.getThirdPartyLiabilityCoverage()) {
+                            // 对车辆保险状态不做要求
+                            serveVO.setVehicleInsureRequirement(1);
+                        } else {
+                            // 只能选择交强险在保，而商业险不在保的车辆
+                            serveVO.setVehicleInsureRequirement(2);
+                        }
                     }
                 }
             }

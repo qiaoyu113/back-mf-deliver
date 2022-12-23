@@ -67,20 +67,24 @@ public class ServeInsureQryExe {
             List<CommodityDTO> commodityDTOList = ResultDataUtils.getInstance(commodityListResult).getDataOrException();
             Map<Integer, CommodityDTO> commodityDTOMap = commodityDTOList.stream().collect(Collectors.toMap(CommodityDTO::getId, Function.identity(), (v1, v2) -> v1));
             for (ServeVO serveVO : serveVOList) {
-                CommodityDTO commodityDTO = commodityDTOMap.get(serveVO.getContractCommodityId());
-                if (null == commodityDTO) {
-                    // 1：显示投保申请按钮，2：显示录入保单信息按钮，假如商品信息未查到，默认赋0
-                    serveVO.setOperationButton(0);
+                if (JudgeEnum.YES.getCode().equals(serveVO.getReplaceFlag())) {
+                    serveVO.setOperationButton(1);
                 } else {
-                    InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
-                    if (null == insuranceInfo) {
+                    CommodityDTO commodityDTO = commodityDTOMap.get(serveVO.getContractCommodityId());
+                    if (null == commodityDTO) {
+                        // 1：显示投保申请按钮，2：显示录入保单信息按钮，假如商品信息未查到，默认赋0
                         serveVO.setOperationButton(0);
                     } else {
-                        if (null != insuranceInfo.getThirdPartyLiabilityCoverage() || null != insuranceInfo.getInCarPersonnelLiabilityCoverage()) {
-                            serveVO.setOperationButton(1);
+                        InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
+                        if (null == insuranceInfo) {
+                            serveVO.setOperationButton(0);
                         } else {
-                            serveVO.setOperationButton(2);
-                            batchInsureButtonSwitch = 0;
+                            if (null != insuranceInfo.getThirdPartyLiabilityCoverage() || null != insuranceInfo.getInCarPersonnelLiabilityCoverage()) {
+                                serveVO.setOperationButton(1);
+                            } else {
+                                serveVO.setOperationButton(2);
+                                batchInsureButtonSwitch = 0;
+                            }
                         }
                     }
                 }

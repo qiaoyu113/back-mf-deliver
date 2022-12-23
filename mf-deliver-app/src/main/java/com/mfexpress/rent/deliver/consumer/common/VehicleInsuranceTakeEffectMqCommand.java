@@ -91,12 +91,15 @@ public class VehicleInsuranceTakeEffectMqCommand {
         }
         InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
 
-        // 比较商品的保险信息和车辆的保险信息
         Integer leaseModelId = serveDTO.getLeaseModelId();
-        if (null == insuranceInfo.getThirdPartyLiabilityCoverage() && null == insuranceInfo.getInCarPersonnelLiabilityCoverage() && leaseModelId != 3) {
-            // 未选择商业险，应由客户投保
-            log.error("收到车辆保险生效消息，对应的商品未投保商业险，不做处理，商品id：{}", serveDTO.getContractCommodityId());
-            return;
+        // 替换车由公司投保
+        if (!JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {
+            // 比较商品的保险信息和车辆的保险信息
+            if (null == insuranceInfo.getThirdPartyLiabilityCoverage() && null == insuranceInfo.getInCarPersonnelLiabilityCoverage() && leaseModelId != 3) {
+                // 未选择商业险，应由客户投保
+                log.error("收到车辆保险生效消息，对应的商品未投保商业险，不做处理，商品id：{}", serveDTO.getContractCommodityId());
+                return;
+            }
         }
 
         if (leaseModelId == 3) {
