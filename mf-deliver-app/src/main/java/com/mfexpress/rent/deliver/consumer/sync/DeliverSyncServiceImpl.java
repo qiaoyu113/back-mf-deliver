@@ -8,6 +8,7 @@ import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.elasticsearch.mapping.mapper.builder.ESMappingBuilder;
 import com.mfexpress.component.starter.elasticsearch.setting.ESIndexSettingEnum;
+import com.mfexpress.component.starter.mq.relation.binlog.EsBatchSyncHandlerI;
 import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogRelation;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogTableFullName;
@@ -50,7 +51,7 @@ import java.util.stream.Collectors;
 @Service("deliverSyncServiceImpl")
 @Slf4j
 @MFMqBinlogRelation
-public class DeliverSyncServiceImpl implements EsSyncHandlerI {
+public class DeliverSyncServiceImpl implements EsBatchSyncHandlerI {
 
     @Resource
     private ElasticsearchTools elasticsearchTools;
@@ -129,6 +130,11 @@ public class DeliverSyncServiceImpl implements EsSyncHandlerI {
         }
 
         return indexVersionName;
+    }
+
+    @Override
+    public boolean execAll() {
+        return false;
     }
 
     @Override
