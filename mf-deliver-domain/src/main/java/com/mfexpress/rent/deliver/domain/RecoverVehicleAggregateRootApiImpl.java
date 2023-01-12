@@ -109,9 +109,15 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @PrintParam
     public Result<String> cancelRecover(@RequestBody RecoverVehicleDTO recoverVehicleDTO) {
         RecoverVehicleEntity recoverVehicle = new RecoverVehicleEntity();
+        DeliverEntity deliver = deliverGateway.getDeliverByServeNo(recoverVehicle.getServeNo());
+        if (null == deliver) {
+            throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "交付单查询失败");
+        }
         BeanUtils.copyProperties(recoverVehicleDTO, recoverVehicle);
         recoverVehicle.setStatus(ValidStatusEnum.INVALID.getCode());
-        recoverVehicleGateway.updateRecoverVehicle(recoverVehicle);
+        recoverVehicle.setServeNo(null);
+        recoverVehicle.setDeliverNo(deliver.getDeliverNo());
+        recoverVehicleGateway.updateRecoverVehicleByDeliverNo(recoverVehicle);
         return Result.getInstance("").success();
     }
 
@@ -161,11 +167,15 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @Override
     @PostMapping("/updateDeductionFee")
     public Result<Integer> updateDeductionFee(@RequestBody RecoverDeductionCmd cmd) {
+        DeliverEntity deliver = deliverGateway.getDeliverByServeNo(cmd.getServeNo());
+        if (null == deliver) {
+            throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "交付单查询失败");
+        }
         RecoverVehicleEntity recoverVehicle = new RecoverVehicleEntity();
-        recoverVehicle.setServeNo(cmd.getServeNo());
+        recoverVehicle.setDeliverNo(deliver.getDeliverNo());
         recoverVehicle.setParkFee(cmd.getParkFee());
         recoverVehicle.setDamageFee(cmd.getDamageFee());
-        int i = recoverVehicleGateway.updateRecoverVehicle(recoverVehicle);
+        int i = recoverVehicleGateway.updateRecoverVehicleByDeliverNo(recoverVehicle);
         if (i <= 0) {
             return Result.getInstance((Integer) null).fail(-1, "修改失败");
 
@@ -250,7 +260,8 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         // 取出合同信息修改收车单
         ElecContractDTO elecContractDTO = cmd.getElecContractDTO();
         RecoverVehicleEntity recoverVehicle = new RecoverVehicleEntity();
-        recoverVehicle.setServeNo(cmd.getServeNo());
+        // recoverVehicle.setServeNo(cmd.getServeNo());
+        recoverVehicle.setDeliverNo(deliver.getDeliverNo());
         recoverVehicle.setContactsName(elecContractDTO.getContactsName());
         recoverVehicle.setContactsCard(elecContractDTO.getContactsCard());
         recoverVehicle.setContactsPhone(elecContractDTO.getContactsPhone());
@@ -260,7 +271,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         recoverVehicle.setWareHouseId(elecContractDTO.getRecoverWareHouseId());
         List<GroupPhotoVO> groupPhotoVOS = JSONUtil.toList(elecContractDTO.getPlateNumberWithImgs(), GroupPhotoVO.class);
         recoverVehicle.setImgUrl(groupPhotoVOS.get(0).getImgUrl());
-        recoverVehicleGateway.updateRecoverVehicle(recoverVehicle);
+        recoverVehicleGateway.updateRecoverVehicleByDeliverNo(recoverVehicle);
 
         return Result.getInstance(0).success();
     }
@@ -296,7 +307,8 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "合同编号所属的合同查询失败，" + foreignNo);
         }
         RecoverVehicleEntity recoverVehicle = new RecoverVehicleEntity();
-        recoverVehicle.setServeNo(deliver.getServeNo());
+        // recoverVehicle.setServeNo(deliver.getServeNo());
+        recoverVehicle.setDeliverNo(deliverNo);
         recoverVehicle.setContactsName(contractPO.getContactsName());
         recoverVehicle.setContactsCard(contractPO.getContactsCard());
         recoverVehicle.setContactsPhone(contractPO.getContactsPhone());
@@ -306,7 +318,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         recoverVehicle.setWareHouseId(contractPO.getRecoverWareHouseId());
         List<GroupPhotoVO> groupPhotoVOS = JSONUtil.toList(contractPO.getPlateNumberWithImgs(), GroupPhotoVO.class);
         recoverVehicle.setImgUrl(groupPhotoVOS.get(0).getImgUrl());
-        recoverVehicleGateway.updateRecoverVehicle(recoverVehicle);
+        recoverVehicleGateway.updateRecoverVehicleByDeliverNo(recoverVehicle);
         log.info("recovered---->recoverVehicle---->{} 结束修改", deliver.getCarNum());
         return Result.getInstance(0).success();
     }
