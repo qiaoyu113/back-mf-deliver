@@ -719,7 +719,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             return Result.getInstance(0).success();
         }
 
-        List<Integer> commodityIds = serveList.stream().map(ServeEntity::getContractCommodityId).distinct().collect(Collectors.toList());
+        List<Integer> commodityIds = replaceServeList.stream().map(ServeEntity::getContractCommodityId).distinct().collect(Collectors.toList());
         Result<List<CommodityDTO>> commodityListResult = contractAggregateRootApi.getCommodityListByIdList(commodityIds);
         if (CollectionUtil.isEmpty(commodityListResult.getData())) {
             throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "未查询到商品信息");
