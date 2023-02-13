@@ -201,6 +201,10 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setPayableDeposit(BigDecimal.valueOf(serveVehicleDTO.getDeposit()));
                 serve.setPaidInDeposit(BigDecimal.valueOf(serveVehicleDTO.getDeposit()));
                 serve.setRentRatio(BigDecimal.valueOf(serveVehicleDTO.getRentRatio()));
+                //增加具体业务类型
+                ServeContractTemplateEnum serveContractTemplate = ServeContractTemplateEnum.getServeContractTemplate(serveVehicleDTO.getTemplateName());
+                serve.setBusinessType(Objects.isNull(serveContractTemplate) ? ServeContractTemplateEnum.RENT.getBusinessType() : serveContractTemplate.getBusinessType());
+
                 serveList.add(serve);
 
                 //预付款
@@ -658,6 +662,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             renewalChargeCmd.setCustomerId(rawDataServe.getCustomerId());
             renewalChargeCmd.setDeliverNo(deliver.getDeliverNo());
             renewalChargeCmd.setVehicleId(deliver.getCarId());
+            renewalChargeCmd.setBusinessType(serve.getBusinessType());
             // 根据计费调整日期是否有值来决定计费价格是否发生变化
             if (StringUtils.isEmpty(renewalServeCmd.getBillingAdjustmentDate())) {
                 renewalChargeCmd.setEffectFlag(false);
@@ -789,6 +794,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                     renewalChargeCmd.setRenewalDate(replaceServe.getExpectRecoverDate());
                     renewalChargeCmd.setRentRatio(commodityDTOMap.get(replaceServe.getContractCommodityId()).getRentRatio());
                     renewalChargeCmd.setVehicleBusinessMode(deliver.getVehicleBusinessMode());
+                    renewalChargeCmd.setBusinessType(replaceServe.getBusinessType());
                     mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
                 }
             });
@@ -880,6 +886,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             renewalChargeCmd.setVehicleId(deliver.getCarId());
             renewalChargeCmd.setEffectFlag(false);
             renewalChargeCmd.setRenewalDate(updatedExpectRecoverDate);
+            renewalChargeCmd.setBusinessType(serve.getBusinessType());
             if (Objects.nonNull(commodityDTOMap.get(serve.getContractCommodityId()))) {
                 renewalChargeCmd.setRentRatio(commodityDTOMap.get(serve.getContractCommodityId()).getRentRatio());
             } else {

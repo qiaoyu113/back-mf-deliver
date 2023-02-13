@@ -81,4 +81,6 @@ public class Serve {
 
     private Integer contractCommodityId;
 
+    private Integer businessType;
+
 }

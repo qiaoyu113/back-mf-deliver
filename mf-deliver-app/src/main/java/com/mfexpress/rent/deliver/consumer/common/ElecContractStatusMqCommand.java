@@ -60,7 +60,6 @@ import org.springframework.integration.redis.util.RedisLockRegistry;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Function;
@@ -144,7 +143,10 @@ public class ElecContractStatusMqCommand {
             // 合同状态改为完成
             // 加锁避免重复回调
             Lock obtain = this.redisLockRegistry.obtain(StringUtils.join(contractSignedRedisKey, ":", contractStatusInfo.getThirdPartContractId()));
-            obtain.lock();
+            if (!obtain.tryLock()) {
+                log.info("契约锁回调逻辑已执行，电子合同thirdPartId：{}", contractStatusInfo.getThirdPartContractId());
+                return;
+            }
             try {
                 contractCompleted(contractStatusInfo);
 
@@ -291,6 +293,7 @@ public class ElecContractStatusMqCommand {
             recoverVehicleCmd.setCreateId(contractDTO.getCreatorId());
             recoverVehicleCmd.setRecoverDate(DateUtil.formatDate(contractDTO.getRecoverVehicleTime()));
             recoverVehicleCmd.setRentRatio(commodityResult.getData().getRentRatio());
+            recoverVehicleCmd.setBusinessType(serveDTO.getBusinessType());
             log.info("正常收车时，交付域向计费域发送的收车单信息：{}", recoverVehicleCmd);
             mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(recoverVehicleCmd));
 
@@ -348,6 +351,7 @@ public class ElecContractStatusMqCommand {
                             renewalCmd.setCreateId(contractDTO.getCreatorId());
                             renewalCmd.setRentEffectDate(FormatUtil.ymdFormatDateToString(new Date()));
                             renewalCmd.setEffectFlag(true);
+                            renewalCmd.setBusinessType(replaceServe.getBusinessType());
                             renewalCmd.setVehicleBusinessMode(replaceDeliver.getVehicleBusinessMode());
                             mqTools.send(event, "price_change", null, JSON.toJSONString(renewalCmd));
                         }
@@ -366,6 +370,7 @@ public class ElecContractStatusMqCommand {
             renewalChargeCmd.setRentRatio(commodityResult.getData().getRentRatio());
             // 续约目标日期为实际收车日期
             renewalChargeCmd.setRenewalDate(DateUtil.formatDate(recoverVehicleTime));
+            renewalChargeCmd.setBusinessType(serveDTO.getBusinessType());
             mqTools.send(event, "renewal_fee", null, JSON.toJSONString(renewalChargeCmd));
         }
 

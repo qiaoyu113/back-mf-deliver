@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -29,6 +30,21 @@ public class CommonUtil {
         }
         List<DictDataDTO> dictDataDTOS = dictDataResult.getData().get(dictType);
         return dictDataDTOS.stream().collect(Collectors.toMap(DictDataDTO::getDictValue, DictDataDTO::getDictLabel, (key1, key2) -> key1));
+    }
+
+    public static Map<String, DictDataDTO> getDictDataMapByDictType(DictAggregateRootApi api, String dictType) {
+        if(StringUtils.isEmpty(dictType)){
+            return null;
+        }
+        DictTypeDTO dictTypeDTO = new DictTypeDTO();
+        dictTypeDTO.setDictType(dictType);
+
+        Result<Map<String, List<DictDataDTO>>> dictDataResult = api.getAllTypeAsDictionary(Collections.singletonList(dictType));
+        if (null == dictDataResult || null == dictDataResult.getData() || null == dictDataResult.getData().get(dictType) || dictDataResult.getData().get(dictType).isEmpty()){
+            return null;
+        }
+        List<DictDataDTO> dictDataDTOS = dictDataResult.getData().get(dictType);
+        return dictDataDTOS.stream().collect(Collectors.toMap(DictDataDTO::getDictValue, Function.identity(), (key1, key2) -> key1));
     }
 
 }

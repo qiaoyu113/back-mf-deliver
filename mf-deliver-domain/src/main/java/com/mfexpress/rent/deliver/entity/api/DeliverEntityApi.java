@@ -18,6 +18,8 @@ public interface DeliverEntityApi {
 
     DeliverDTO getDeliverDTOByCarId(Integer carId);
 
+    List<DeliverDTO> getValidDeliverByCarIdList(List<Integer> vehicleId);
+
     /**
      * 根据服务单编号查询未完成（存在费用未处理）得交付单
      *
@@ -56,5 +58,7 @@ public interface DeliverEntityApi {
     Integer preSelectedSupplyInsurance(List<DeliverDTO> list);
 
     Integer undoHistory(UndoReactiveServeCmd cmd);
+
+    List<DeliverDTO> getLeaseDeliverByCarId(List<Integer> carIdList);
 
 }

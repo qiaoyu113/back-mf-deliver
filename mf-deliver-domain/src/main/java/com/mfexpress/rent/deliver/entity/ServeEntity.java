@@ -123,6 +123,9 @@ public class ServeEntity implements ServeEntityApi {
 
     private BigDecimal paidInDeposit;
 
+    //2022-11-29 增加具体业务类型
+    private Integer businessType;
+
     @Resource
     private ServeGateway serveGateway;
 
