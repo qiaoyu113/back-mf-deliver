@@ -39,5 +39,9 @@ public class DeliverInsureCmd extends BaseCmd {
     @ApiModelProperty(value = "发车批量投保申请DTO")
     private DeliverBatchInsureApplyDTO deliverBatchInsureApplyDTO;
 
+    @ApiModelProperty(value = "保费承担方", required = true)
+    @NotNull(message = "保费承担方不能为空")
+    private Integer premiumUndertaker;
+
 }
 

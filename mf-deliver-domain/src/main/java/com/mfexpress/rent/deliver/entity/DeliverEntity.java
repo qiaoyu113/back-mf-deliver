@@ -230,6 +230,7 @@ public class DeliverEntity implements DeliverEntityApi {
 
             insuranceApplyPO.setCreatorId(cmd.getOperatorId());
             insuranceApplyPO.setApplyTime(DateUtil.formatDateTime(deliverInsureApplyDTO.getApplyTime()));
+            insuranceApplyPO.setPremiumUndertaker(cmd.getPremiumUndertaker());
             return insuranceApplyPO;
         }).collect(Collectors.toList());
         insuranceApplyGateway.batchCreate(insuranceApplyPOS);

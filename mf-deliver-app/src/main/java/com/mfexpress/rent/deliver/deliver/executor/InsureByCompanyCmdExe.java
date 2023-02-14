@@ -209,6 +209,7 @@ public class InsureByCompanyCmdExe {
                 insureInfo.setThirdInsuredAmount(String.valueOf(min));
             }
             insureInfo.setDamageFlag(JudgeEnum.YES.getCode());
+            insureInfo.setPremiumUndertaker(cmd.getPremiumUndertaker());
             return insureInfo;
         }).collect(Collectors.toList());
         createInsureApplyCmd.setInsuranceApplyList(insuranceInfoDTOS);
