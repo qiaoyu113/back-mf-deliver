@@ -2,6 +2,8 @@ package com.mfexpress.rent.deliver.serve.executor;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
+import com.mfexpress.common.domain.dto.SysOfficeDto;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
@@ -57,6 +59,9 @@ public class ServeEsDataQryExe {
     @Resource
     private BeanFactory beanFactory;
 
+    @Resource
+    private OfficeAggregateRootApi officeAggregateRootApi;
+
     public ServeListVO execute(String orderId, QueryBuilder boolQueryBuilder, int nowPage, int limit, List<FieldSortBuilder> fieldSortBuilderList) {
         ServeDictDataUtil.initDictData(beanFactory);
 
@@ -87,6 +92,12 @@ public class ServeEsDataQryExe {
             OrderDTO order = (OrderDTO) orderResult.getData();
             // 合同编号以订单中的信息为准
             serveListVO.setContractNo(order.getOaContractCode());
+            serveListVO.setOrgId(order.getOrgId());
+            Result<SysOfficeDto> officeDataResult = officeAggregateRootApi.getOfficeDataById(order.getOrgId());
+            SysOfficeDto sysOfficeDto = ResultDataUtils.getInstance(officeDataResult).getDataOrNull();
+            if (null != sysOfficeDto) {
+                serveListVO.setOrgName(sysOfficeDto.getName());
+            }
         }
         if (data.size() > 0) {
             Map<String, Object> mapExample = data.get(0);

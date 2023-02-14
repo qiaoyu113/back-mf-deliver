@@ -61,6 +61,8 @@ public class ServePreselectedQryExe {
             }
             servePreselectedListVO.setServePreselectedVOList(servePreselectedVoList);
             servePreselectedListVO.setOrderId(serveListVO.getOrderId());
+            servePreselectedListVO.setOrgId(serveListVO.getOrgId());
+            servePreselectedListVO.setOrgName(serveListVO.getOrgName());
             servePreselectedListVO.setContractNo(serveListVO.getContractNo());
             servePreselectedListVO.setOrderCarModelVOList(serveListVO.getCarModelVOList());
             servePreselectedListVO.setExtractVehicleTime(serveListVO.getExtractVehicleTime());
