@@ -57,7 +57,7 @@ public class ServeVO {
     private Integer isCheck;
     @ApiModelProperty(value = "验车状态描述")
     private String isCheckDisplay;
-    @ApiModelProperty(value = "保险状态")
+    @ApiModelProperty(value = "保险状态(是否代投保  0代投保)")
     private Integer isInsurance;
     @ApiModelProperty(value = "保险状态描述")
     private String isInsuranceDisplay;
@@ -92,7 +92,7 @@ public class ServeVO {
 
     @ApiModelProperty(value = "车辆运营模式描述")
     private String vehicleBusinessModeDisplay;
-    @ApiModelProperty(value = "操作按钮显示，目前只会出现在发车待投保列表中，1：显示投保申请按钮，2：显示录入保单信息按钮")
+    @ApiModelProperty(value = "操作按钮显示，目前只会出现在发车待投保列表中，1：显示投保申请按钮(合同中有商业险)，2：显示录入保单信息按钮(合同中无商业险)")
     private Integer operationButton;
 
     @ApiModelProperty(value = "是否发起了投保标志位，1：真，0：假")

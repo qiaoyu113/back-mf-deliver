@@ -49,11 +49,10 @@ public class CreateInsureApplyCmd {
         private String applyReason;
 
         @ApiModelProperty(value = "座位险保额")
-        // 以万元为单位
-        private String seatInsuredAmount;
+        private Integer seatInsurance;
 
         @ApiModelProperty(value = "三者险保额")
-        private String thirdInsuredAmount;
+        private Integer thirdInsurance;
 
         @ApiModelProperty(value = "车损险标识")
         private Integer damageFlag;
@@ -61,6 +60,20 @@ public class CreateInsureApplyCmd {
         @ApiModelProperty(value = "保费承担方")
         private Integer premiumUndertaker;
 
+        @ApiModelProperty(value = "车辆orgId")
+        private Integer orgId;
+
+        /**
+         * 乘客座位数
+         */
+        @ApiModelProperty(value = "乘客座位数 prd1.13新增")
+        private Integer passengerSeatNum;
+
+        /**
+         * 乘客座位险
+         */
+        @ApiModelProperty(value = "乘客座位险 prd1.13新增")
+        private Integer passengerSeatInsurance;
     }
 
 }

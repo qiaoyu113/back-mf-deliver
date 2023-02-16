@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.deliver.executor;
 
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
+import com.mfexpress.common.domain.dto.DictDataDTO;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.exception.CommonException;
@@ -22,6 +23,8 @@ import com.mfexpress.rent.deliver.dto.data.deliver.vo.InsureApplyVO;
 import com.mfexpress.rent.deliver.dto.data.deliver.vo.RentInsureApplyResultVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.utils.CommonUtil;
+import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInfoDto;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -42,9 +45,9 @@ public class InsureByCompanyCmdExe {
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
 
-    private Map<String, String> thirdInsuranceAmountDictMap;
+    private Map<String, DictDataDTO> thirdInsuranceAmountDictMap;
 
-    private Map<String, String> seatInsuredAmountDictMap;
+    private Map<String, DictDataDTO> seatInsuredAmountDictMap;
 
     @Resource
     private DictAggregateRootApi dictAggregateRootApi;
@@ -54,6 +57,9 @@ public class InsureByCompanyCmdExe {
 
     @Resource
     private BackMarketInsuranceCmdExe backMarketInsuranceCmdExe;
+
+    @Resource
+    private VehicleAggregateRootApi vehicleAggregateRootApi;
 
     public InsureApplyVO execute(DeliverInsureCmd cmd, TokenInfo tokenInfo) {
         initDictMap();
@@ -84,10 +90,10 @@ public class InsureByCompanyCmdExe {
 
     private void initDictMap() {
         if (null == thirdInsuranceAmountDictMap) {
-            thirdInsuranceAmountDictMap = CommonUtil.getDictDataDTOMapByDictType(dictAggregateRootApi, "third_liability_insurance");
+            thirdInsuranceAmountDictMap = CommonUtil.getDictDataMapByDictType(dictAggregateRootApi, "third_liability_insurance");
         }
         if (null == seatInsuredAmountDictMap) {
-            seatInsuredAmountDictMap = CommonUtil.getDictDataDTOMapByDictType(dictAggregateRootApi, "seat_insurance");
+            seatInsuredAmountDictMap = CommonUtil.getDictDataMapByDictType(dictAggregateRootApi, "seat_insurance");
         }
     }
 
@@ -161,6 +167,14 @@ public class InsureByCompanyCmdExe {
         createInsureApplyCmd.setRemarks(serveDTOList.get(0).getOaContractCode());
         createInsureApplyCmd.setOperatorTime(applyTime);
 
+        // 查询车辆信息
+        Result<List<VehicleInfoDto>> vehicleInfoListResult = vehicleAggregateRootApi.getVehicleInfoListByIdList(cmd.getCarIdList());
+        List<VehicleInfoDto> vehicleInfoDtos = ResultDataUtils.getInstance(vehicleInfoListResult).getDataOrException();
+        if (null == vehicleInfoDtos || vehicleInfoDtos.isEmpty()) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆信息查询失败");
+        }
+        Map<Integer, VehicleInfoDto> vehicleInfoDtoMap = vehicleInfoDtos.stream().collect(Collectors.toMap(VehicleInfoDto::getId, Function.identity(), (v1, v2) -> v1));
+
         Map<String, DeliverDTO> deliverDTOMap = deliverDTOList.stream().collect(Collectors.toMap(DeliverDTO::getServeNo, Function.identity(), (v1, v2) -> v1));
         List<CreateInsureApplyCmd.InsureInfoDTO> insuranceInfoDTOS = serveDTOList.stream().map(serveDTO -> {
             CreateInsureApplyCmd.InsureInfoDTO insureInfo = new CreateInsureApplyCmd.InsureInfoDTO();
@@ -171,45 +185,47 @@ public class InsureByCompanyCmdExe {
             CommodityDTO commodityDTO = commodityDTOMap.get(serveDTO.getContractCommodityId());
             InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
             if (null != insuranceInfo.getInCarPersonnelLiabilityCoverage() && 0 != insuranceInfo.getInCarPersonnelLiabilityCoverage()) {
-                String value = seatInsuredAmountDictMap.get(insuranceInfo.getInCarPersonnelLiabilityCoverage().toString());
+                /*String value = seatInsuredAmountDictMap.get(insuranceInfo.getInCarPersonnelLiabilityCoverage().toString());
                 if (!StringUtils.isEmpty(value)) {
                     if (value.equals("无")) {
                         insureInfo.setSeatInsuredAmount("0");
                     } else {
                         insureInfo.setSeatInsuredAmount(value.replace("（万）", ""));
                     }
-                }
+                }*/
+                insureInfo.setSeatInsurance(insuranceInfo.getInCarPersonnelLiabilityCoverage());
             } else {
-                List<String> seatInsuredAmountValues = seatInsuredAmountDictMap.values().stream().map(seatInsuredAmount -> seatInsuredAmount.replace("（万）", "")).collect(Collectors.toList());
-                int min = Integer.parseInt(seatInsuredAmountValues.get(0));
-                for (int i = 1; i < seatInsuredAmountValues.size(); i++) {
-                    if (Integer.parseInt(seatInsuredAmountValues.get(i)) < min) {
-                        min = Integer.parseInt(seatInsuredAmountValues.get(i));
-                    }
-                }
-                insureInfo.setSeatInsuredAmount(String.valueOf(min));
+                Collection<DictDataDTO> values = seatInsuredAmountDictMap.values();
+                List<DictDataDTO> dictDataDTOS = values.stream().sorted(Comparator.comparing(DictDataDTO::getSort)).collect(Collectors.toList());
+                insureInfo.setSeatInsurance(Integer.valueOf(dictDataDTOS.get(0).getDictValue()));
             }
             if (null != insuranceInfo.getThirdPartyLiabilityCoverage() && 0 != insuranceInfo.getThirdPartyLiabilityCoverage()) {
-                String value = thirdInsuranceAmountDictMap.get(insuranceInfo.getThirdPartyLiabilityCoverage().toString());
+                /*String value = thirdInsuranceAmountDictMap.get(insuranceInfo.getThirdPartyLiabilityCoverage().toString());
                 if (!StringUtils.isEmpty(value)) {
                     if (value.equals("无")) {
                         insureInfo.setThirdInsuredAmount("0");
                     } else {
                         insureInfo.setThirdInsuredAmount(value.replace("（万）", ""));
                     }
-                }
+                }*/
+                insureInfo.setThirdInsurance(insuranceInfo.getThirdPartyLiabilityCoverage());
             } else {
-                List<String> thirdInsuranceAmountValues = thirdInsuranceAmountDictMap.values().stream().map(thirdInsuranceAmount -> thirdInsuranceAmount.replace("（万）", "")).collect(Collectors.toList());
-                int min = Integer.parseInt(thirdInsuranceAmountValues.get(0));
-                for (int i = 1; i < thirdInsuranceAmountValues.size(); i++) {
-                    if (Integer.parseInt(thirdInsuranceAmountValues.get(i)) < min) {
-                        min = Integer.parseInt(thirdInsuranceAmountValues.get(i));
-                    }
-                }
-                insureInfo.setThirdInsuredAmount(String.valueOf(min));
+                Collection<DictDataDTO> values = thirdInsuranceAmountDictMap.values();
+                List<DictDataDTO> dictDataDTOS = values.stream().sorted(Comparator.comparing(DictDataDTO::getSort)).collect(Collectors.toList());
+                insureInfo.setThirdInsurance(Integer.valueOf(dictDataDTOS.get(0).getDictValue()));
+            }
+            if (insuranceInfo.getPassengerSeatInsurance() != null) {
+                insureInfo.setPassengerSeatInsurance(insuranceInfo.getPassengerSeatInsurance());
+            }
+            if (insuranceInfo.getPassengerSeatNumber() != null) {
+                insureInfo.setPassengerSeatNum(insuranceInfo.getPassengerSeatNumber());
             }
             insureInfo.setDamageFlag(JudgeEnum.YES.getCode());
             insureInfo.setPremiumUndertaker(cmd.getPremiumUndertaker());
+            VehicleInfoDto vehicleInfoDto = vehicleInfoDtoMap.get(insureInfo.getVehicleId());
+            if (null != vehicleInfoDto) {
+                insureInfo.setOrgId(vehicleInfoDto.getOrgId());
+            }
             return insureInfo;
         }).collect(Collectors.toList());
         createInsureApplyCmd.setInsuranceApplyList(insuranceInfoDTOS);
@@ -217,8 +233,10 @@ public class InsureByCompanyCmdExe {
         // 发送请求
         Result<RentInsureApplyResultVO> result = backMarketInsuranceCmdExe.createInsureApply(createInsureApplyCmd);
         RentInsureApplyResultVO rentInsureApplyResultVO = ResultDataUtils.getInstance(result).getDataOrException();
-        if (null == rentInsureApplyResultVO || (null == rentInsureApplyResultVO.getCommercialApplyList() && null == rentInsureApplyResultVO.getCompulsoryApplyList()) ||
-                (rentInsureApplyResultVO.getCommercialApplyList().isEmpty() && rentInsureApplyResultVO.getCompulsoryApplyList().isEmpty())) {
+        if (null == rentInsureApplyResultVO ||
+                (null == rentInsureApplyResultVO.getCommercialApplyList() && null == rentInsureApplyResultVO.getCompulsoryApplyList()) ||
+                (rentInsureApplyResultVO.getCommercialApplyList().isEmpty() && rentInsureApplyResultVO.getCompulsoryApplyList().isEmpty())
+        ) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), result.getMsg());
         }
 
@@ -283,9 +301,9 @@ public class InsureByCompanyCmdExe {
                 if (null == insuranceInfo) {
                     throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "服务单".concat(serveDTO.getServeNo()).concat("的商品保险信息查询失败"));
                 }
-                if (null == insuranceInfo.getThirdPartyLiabilityCoverage() && null == insuranceInfo.getInCarPersonnelLiabilityCoverage()) {
-                    throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "服务单".concat(serveDTO.getServeNo()).concat("对应的商品在合同中约定不包含商业险，不能进行投保申请操作"));
-                }
+//                if (null == insuranceInfo.getThirdPartyLiabilityCoverage() && null == insuranceInfo.getInCarPersonnelLiabilityCoverage()) {
+//                    throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "服务单".concat(serveDTO.getServeNo()).concat("对应的商品在合同中约定不包含商业险，不能进行投保申请操作"));
+//                }
             }
         }
 
