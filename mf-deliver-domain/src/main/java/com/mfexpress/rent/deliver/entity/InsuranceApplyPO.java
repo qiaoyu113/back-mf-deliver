@@ -51,6 +51,8 @@ public class InsuranceApplyPO {
 
     private Integer commercialPolicySource;
 
+    private Integer premiumUndertaker;
+
     private Integer delFlag;
 
     private Date createTime;

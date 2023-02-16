@@ -58,6 +58,9 @@ public class CreateInsureApplyCmd {
         @ApiModelProperty(value = "车损险标识")
         private Integer damageFlag;
 
+        @ApiModelProperty(value = "保费承担方")
+        private Integer premiumUndertaker;
+
     }
 
 }
