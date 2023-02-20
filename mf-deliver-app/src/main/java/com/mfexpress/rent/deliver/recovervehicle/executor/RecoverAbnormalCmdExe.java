@@ -143,6 +143,7 @@ public class RecoverAbnormalCmdExe {
         vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.UNCHECKED.getCode());
         vehicleSaveCmd.setStockStatus(ValidStockStatusEnum.IN.getCode());
         vehicleSaveCmd.setWarehouseId(contractDTO.getRecoverWareHouseId());
+        vehicleSaveCmd.setRecoverDeliverFlag(2);
         vehicleSaveCmd.setCustomerId(0);
         Result<WarehouseDto> wareHouseResult = warehouseAggregateRootApi.getWarehouseById(vehicleSaveCmd.getWarehouseId());
 
@@ -189,6 +190,7 @@ public class RecoverAbnormalCmdExe {
         recoverVehicleCmd.setCreateId(contractDTO.getCreatorId());
         recoverVehicleCmd.setRecoverDate(DateUtil.formatDate(cmd.getRecoverTime()));
         recoverVehicleCmd.setVehicleBusinessMode(deliverDTO.getVehicleBusinessMode());
+		recoverVehicleCmd.setBusinessType(serveDTO.getBusinessType());
         log.info("异常收车时，交付域向计费域发送的收车单信息：{}", recoverVehicleCmd);
         mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(recoverVehicleCmd));
 

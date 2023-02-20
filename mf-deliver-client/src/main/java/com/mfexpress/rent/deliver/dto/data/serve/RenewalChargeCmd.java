@@ -46,4 +46,6 @@ public class RenewalChargeCmd {
     @ApiModelProperty(value = "车辆运营模式")
     private Integer vehicleBusinessMode;
 
+    @ApiModelProperty("具体业务类型")
+    private Integer businessType;
 }

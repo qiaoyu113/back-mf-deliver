@@ -6,6 +6,7 @@ import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.deliver.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.dto.VehicleContractDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
@@ -91,6 +92,9 @@ public interface DeliverAggregateRootApi {
     @PostMapping("/getDeliveredDeliverDTOByCarId")
     Result<DeliverDTO> getDeliveredDeliverDTOByCarId(@RequestParam("carId") Integer carId);
 
+    @PostMapping("getVehicleContract")
+    Result<List<VehicleContractDTO>> getVehicleContract(@RequestBody List<Long> vehicleId);
+
     @PostMapping("/contractSigning")
     Result<Integer> contractSigning(@RequestBody @Validated DeliverContractSigningCmd cmd);
 
@@ -163,4 +167,8 @@ public interface DeliverAggregateRootApi {
 
     @PostMapping(value = "/getDeliverDTOListByDeliverNoList")
     Result<List<DeliverDTO>> getDeliverDTOListByDeliverNoList(@RequestBody List<String> deliverNoList);
+
+    @PostMapping("getLeaseDeliverByCarIdList")
+    Result<List<DeliverDTO>> getLeaseDeliverByCarIdList(@RequestBody List<Integer> carIdList);
+
 }

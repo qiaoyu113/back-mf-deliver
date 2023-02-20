@@ -2,10 +2,7 @@ package com.mfexpress.rent.deliver.deliver;
 
 import com.github.pagehelper.PageHelper;
 import com.mfexpress.component.response.PagePagination;
-import com.mfexpress.rent.deliver.constant.DeliverEnum;
-import com.mfexpress.rent.deliver.constant.DeliverStatusEnum;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
+import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.deliver.repository.DeliverMapper;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverQry;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
@@ -16,6 +13,7 @@ import org.springframework.util.StringUtils;
 import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -147,6 +145,16 @@ public class DeliverGatewayImpl implements DeliverGateway {
     }
 
     @Override
+    public List<DeliverEntity> getValidDeliverByCarIdList(List<Integer> carIdList) {
+
+        Example example = new Example(DeliverEntity.class);
+        example.createCriteria()
+                .andIn("carId", carIdList).andEqualTo("status", DeliverStatusEnum.VALID.getCode());
+        example.orderBy("createTime").desc();
+        return deliverMapper.selectByExample(example);
+    }
+
+    @Override
     public List<DeliverEntity> getDeliverDTOSByCarIdList(List<Integer> carIds) {
         Example example = new Example(DeliverEntity.class);
         example.createCriteria()
@@ -170,6 +178,15 @@ public class DeliverGatewayImpl implements DeliverGateway {
 
         Example example = new Example(DeliverEntity.class);
         example.createCriteria().andEqualTo("status", type)
+                .andIn("carId", carIds);
+        return deliverMapper.selectByExample(example);
+    }
+
+    @Override
+    public List<DeliverEntity> getLeaseDeliverByCarIdList(List<Integer> carIds) {
+
+        Example example = new Example(DeliverEntity.class);
+        example.createCriteria().andIn("deliverStatus", Arrays.asList(DeliverEnum.DELIVER.getCode(), DeliverEnum.IS_RECOVER.getCode()))
                 .andIn("carId", carIds);
         return deliverMapper.selectByExample(example);
     }

@@ -20,6 +20,7 @@ import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.deliver.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.dto.VehicleContractDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
@@ -45,6 +46,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RestController
@@ -386,6 +388,33 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     }
 
     @Override
+    @PostMapping("getVehicleContract")
+    public Result<List<VehicleContractDTO>> getVehicleContract(@RequestBody List<Long> vehicleId) {
+        List<Integer> vehicleIdList = vehicleId.stream().map(Long::intValue).collect(Collectors.toList());
+        List<DeliverDTO> deliverDTOList = deliverEntityApi.getValidDeliverByCarIdList(vehicleIdList);
+        List<VehicleContractDTO> vehicleContractDTOList = new ArrayList<>();
+        if (CollectionUtil.isEmpty(deliverDTOList)) {
+            return Result.getInstance(vehicleContractDTOList).success();
+        }
+        List<String> serveNoList = deliverDTOList.stream().map(DeliverDTO::getServeNo).collect(Collectors.toList());
+        List<ServeDTO> serveDTOList = serveEntityApi.getServeListByServeNoList(serveNoList);
+        Map<String, ServeDTO> serveDTOMap = serveDTOList.stream().collect(Collectors.toMap(ServeDTO::getServeNo, Function.identity()));
+        for (DeliverDTO deliverDTO : deliverDTOList) {
+            ServeDTO serveDTO = serveDTOMap.get(deliverDTO.getServeNo());
+            VehicleContractDTO vehicleContractDTO = new VehicleContractDTO();
+            vehicleContractDTO.setContractId(serveDTO.getContractId());
+            vehicleContractDTO.setCustomerId(serveDTO.getCustomerId());
+            vehicleContractDTO.setVehicleId(Long.valueOf(deliverDTO.getCarId()));
+            vehicleContractDTO.setServeNo(serveDTO.getServeNo());
+            vehicleContractDTO.setContractCommodityId(serveDTO.getContractCommodityId());
+            vehicleContractDTOList.add(vehicleContractDTO);
+        }
+        return Result.getInstance(vehicleContractDTOList).success();
+
+    }
+
+
+    @Override
     @PostMapping("/contractGenerating")
     @PrintParam
     public Result<Integer> contractGenerating(@RequestBody DeliverContractGeneratingCmd cmd) {
@@ -690,6 +719,14 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @PostMapping(value = "/getDeliverDTOListByDeliverNoList")
     public Result<List<DeliverDTO>> getDeliverDTOListByDeliverNoList(List<String> deliverNoList) {
         return Result.getInstance(deliverEntityApi.getDeliverDTOListByDeliverNoList(deliverNoList)).success();
+    }
+
+    @Override
+    @PostMapping("getLeaseDeliverByCarIdList")
+    @PrintParam
+    public Result<List<DeliverDTO>> getLeaseDeliverByCarIdList(@RequestBody List<Integer> carIdList) {
+
+        return Result.getInstance(deliverEntityApi.getLeaseDeliverByCarId(carIdList)).success();
     }
 
 }

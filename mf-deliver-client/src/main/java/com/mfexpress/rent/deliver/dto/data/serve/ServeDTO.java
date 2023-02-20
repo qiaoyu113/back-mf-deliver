@@ -15,6 +15,8 @@ public class ServeDTO {
 
     private Long serveId;
 
+    private Long contractId;
+
     private Integer customerId;
 
     private Integer carModelId;
@@ -76,4 +78,6 @@ public class ServeDTO {
     private BigDecimal payableDeposit;
 
     private BigDecimal paidInDeposit;
+
+    private Integer businessType;
 }

@@ -58,4 +58,9 @@ public class ServeVehicleDTO {
     @ApiModelProperty(value = "预付款")
     private BigDecimal advancePaymentAmount;
 
+    @ApiModelProperty("模板名称")
+    private String templateName;
+
+
+
 }
