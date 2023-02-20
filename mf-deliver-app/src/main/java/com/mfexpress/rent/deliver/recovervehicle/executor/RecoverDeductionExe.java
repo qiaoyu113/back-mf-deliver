@@ -76,6 +76,7 @@ public class RecoverDeductionExe {
         deductFeeCmd.setVehicleId(deliverDTO.getCarId());
         deductFeeCmd.setDeliverNo(deliverDTO.getDeliverNo());
         deductFeeCmd.setCustomerId(serveDTO.getCustomerId());
+        deductFeeCmd.setBusinessType(serveDTO.getBusinessType());
         if (recoverDeductionCmd.getDeductionHandel().equals(3)) {
             deductFeeCmd.setAgency(recoverDeductionCmd.getAgencyAmount());
             deductFeeCmd.setEliminate(recoverDeductionCmd.getDeductionAmount());

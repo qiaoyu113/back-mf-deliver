@@ -37,6 +37,8 @@ public interface DeliverGateway {
 
     List<DeliverEntity> getDeliverByCarId(Integer carId);
 
+    List<DeliverEntity> getValidDeliverByCarIdList(List<Integer> carIdList);
+
     List<DeliverEntity> getDeliverDTOSByCarIdList(List<Integer> carIds);
 
     int updateDeliverByDeliverNo(String deliverNo, DeliverEntity deliverEntity);
@@ -50,6 +52,7 @@ public interface DeliverGateway {
 
     List<DeliverEntity> getMakeDeliverDTOSByCarIdList(List<Integer> carIds, Integer type);
 
+    List<DeliverEntity> getLeaseDeliverByCarIdList(List<Integer> carIds);
 
 
 }
