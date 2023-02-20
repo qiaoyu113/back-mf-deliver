@@ -91,20 +91,22 @@ public class VehicleInsuranceTakeEffectMqCommand {
         }
         InsuranceInfoDTO insuranceInfo = commodityDTO.getInsuranceInfo();
 
+        // 比较商品的保险信息和车辆的保险信息
         Integer leaseModelId = serveDTO.getLeaseModelId();
-        // 替换车由公司投保
-        if (!JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {
-            // 比较商品的保险信息和车辆的保险信息
-            if (null == insuranceInfo.getThirdPartyLiabilityCoverage() && null == insuranceInfo.getInCarPersonnelLiabilityCoverage() && leaseModelId != 3) {
-                // 未选择商业险，应由客户投保
-                log.error("收到车辆保险生效消息，对应的商品未投保商业险，不做处理，商品id：{}", serveDTO.getContractCommodityId());
-                return;
-            }
-        }
+//        // 替换车由公司投保
+//        if (!JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {
+//            // 比较商品的保险信息和车辆的保险信息
+//            if (null == insuranceInfo.getThirdPartyLiabilityCoverage() && null == insuranceInfo.getInCarPersonnelLiabilityCoverage() && leaseModelId != 3) {
+//                // 未选择商业险，应由客户投保
+//                log.error("收到车辆保险生效消息，对应的商品未投保商业险，不做处理，商品id：{}", serveDTO.getContractCommodityId());
+//                return;
+//            }
+//        }
 
         if (leaseModelId == 3) {
             // 如果租赁方式是展示，无需要求商业险有效，但交强险必有效
-            if (vehicleInsuranceDTO.getCompulsoryInsuranceStatus() == PolicyStatusEnum.EFFECT.getCode() || vehicleInsuranceDTO.getCompulsoryInsuranceStatus() == PolicyStatusEnum.ABOUT_EXPIRED.getCode()) {
+            if (vehicleInsuranceDTO.getCompulsoryInsuranceStatus() == PolicyStatusEnum.EFFECT.getCode()
+                    || vehicleInsuranceDTO.getCompulsoryInsuranceStatus() == PolicyStatusEnum.ABOUT_EXPIRED.getCode()) {
                 String compulsoryInsurancePolicyNo = vehicleInsuranceDTO.getCompulsoryInsuranceNo();
                 InsureCompleteCmd insureCompleteCmd = new InsureCompleteCmd();
                 insureCompleteCmd.setDeliverNo(deliverDTO.getDeliverNo());
@@ -120,8 +122,10 @@ public class VehicleInsuranceTakeEffectMqCommand {
         }
 
         // 商品选择了商业险的情况，要求车辆的交强险和商业险都需有效
-        if ((vehicleInsuranceDTO.getCompulsoryInsuranceStatus() == PolicyStatusEnum.EFFECT.getCode() || vehicleInsuranceDTO.getCompulsoryInsuranceStatus() == PolicyStatusEnum.ABOUT_EXPIRED.getCode())
-                && (vehicleInsuranceDTO.getCommercialInsuranceStatus() == PolicyStatusEnum.EFFECT.getCode() || vehicleInsuranceDTO.getCommercialInsuranceStatus() == PolicyStatusEnum.ABOUT_EXPIRED.getCode())) {
+        if ((vehicleInsuranceDTO.getCompulsoryInsuranceStatus() == PolicyStatusEnum.EFFECT.getCode()
+                || vehicleInsuranceDTO.getCompulsoryInsuranceStatus() == PolicyStatusEnum.ABOUT_EXPIRED.getCode())
+                && (vehicleInsuranceDTO.getCommercialInsuranceStatus() == PolicyStatusEnum.EFFECT.getCode()
+                || vehicleInsuranceDTO.getCommercialInsuranceStatus() == PolicyStatusEnum.ABOUT_EXPIRED.getCode())) {
             InsureCompleteCmd insureCompleteCmd = new InsureCompleteCmd();
             insureCompleteCmd.setDeliverNo(deliverDTO.getDeliverNo());
             if (null != vehicleInsuranceDTO.getCompulsoryInsuranceId()) {
