@@ -434,4 +434,32 @@ public class DeliverEntity implements DeliverEntityApi {
         return 0;
     }
 
+    @Override
+    public List<DeliverDTO> getLeaseDeliverByCarId(List<Integer> carIdList) {
+        List<DeliverEntity> deliverEntityList = deliverGateway.getLeaseDeliverByCarIdList(carIdList);
+        return BeanUtil.copyToList(deliverEntityList, DeliverDTO.class, new CopyOptions().ignoreError());
+    }
+
+    @Override
+    public List<DeliverDTO> getValidDeliverByCarIdList(List<Integer> vehicleIds) {
+        List<DeliverEntity> deliverList = deliverGateway.getValidDeliverByCarIdList(vehicleIds);
+        if (CollectionUtil.isEmpty(deliverList)) {
+            return CollectionUtil.newArrayList();
+        }
+        //车辆对应多个有效的交付单，过滤最新的一条
+        Map<Integer, List<DeliverEntity>> deliverMap = deliverList.stream().collect(Collectors.groupingBy(DeliverEntity::getCarId));
+        List<DeliverEntity> deliverEntities = new ArrayList<>();
+        for (Integer vehicleId : vehicleIds) {
+            List<DeliverEntity> deliverEntityList = deliverMap.get(vehicleId);
+            if (CollectionUtil.isEmpty(deliverEntityList)) {
+                continue;
+            }
+            DeliverEntity deliverEntity = deliverEntityList.get(0);
+            deliverEntities.add(deliverEntity);
+
+        }
+        return BeanUtil.copyToList(deliverEntities, DeliverDTO.class, new CopyOptions().ignoreError());
+    }
+
+
 }
