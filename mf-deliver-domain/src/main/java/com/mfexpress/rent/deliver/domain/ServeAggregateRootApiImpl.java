@@ -662,7 +662,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             renewalChargeCmd.setCustomerId(rawDataServe.getCustomerId());
             renewalChargeCmd.setDeliverNo(deliver.getDeliverNo());
             renewalChargeCmd.setVehicleId(deliver.getCarId());
-            renewalChargeCmd.setBusinessType(serve.getBusinessType());
+            renewalChargeCmd.setBusinessType(rawDataServe.getBusinessType());
             // 根据计费调整日期是否有值来决定计费价格是否发生变化
             if (StringUtils.isEmpty(renewalServeCmd.getBillingAdjustmentDate())) {
                 renewalChargeCmd.setEffectFlag(false);
