@@ -6,24 +6,30 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.json.JSONUtil;
 import com.hx.backmarket.insurance.constant.policy.PolicyStatusEnum;
-import com.hx.backmarket.insurance.domainapi.apply.InsuranceApplyAggregateRootApi;
-import com.hx.backmarket.insurance.domainapi.apply.SurrenderInsuranceApplyAggregateRootApi;
-import com.hx.backmarket.insurance.domainapi.policy.CommercialInsurancePolicyAggregateRootApi;
-import com.hx.backmarket.insurance.domainapi.policy.CompulsoryInsurancePolicyAggregateRootApi;
+import com.hx.backmarket.insurance.domainapi.apply.base.InsuranceApplyBaseAggregateRootApi;
+import com.hx.backmarket.insurance.domainapi.apply.insure.InsuranceApplyInsureAggregateRootApi;
+import com.hx.backmarket.insurance.domainapi.apply.surrender.InsuranceApplySurrenderAggregateRootApi;
+import com.hx.backmarket.insurance.domainapi.policy.insurance.InsurancePolicyBaseAggregateRootApi;
+import com.hx.backmarket.insurance.domainapi.policy.insurance.InsurancePolicyCommercialAggregateRootApi;
+import com.hx.backmarket.insurance.domainapi.policy.insurance.InsurancePolicyCompulsoryAggregateRootApi;
 import com.hx.backmarket.insurance.dto.apply.data.base.cmd.InsureApplyVehicleCmd;
 import com.hx.backmarket.insurance.dto.apply.data.base.cmd.RentInsureApplyCmd;
-import com.hx.backmarket.insurance.dto.apply.data.base.dto.InsuranceApplyDTO;
 import com.hx.backmarket.insurance.dto.apply.data.base.dto.InsureApplyResultDTO;
 import com.hx.backmarket.insurance.dto.apply.data.surrender.cmd.CreateBatchH5SurrenderApplyCmd;
 import com.hx.backmarket.insurance.dto.apply.data.surrender.cmd.CreateH5SurrenderApplyCmd;
-import com.hx.backmarket.insurance.dto.apply.data.surrender.dto.SurrenderInsuranceApplyDTO;
 import com.hx.backmarket.insurance.dto.apply.data.surrender.vo.H5SurrenderApplyVO;
-import com.hx.backmarket.insurance.dto.policy.data.base.qry.PolicyDetailQryCmd;
-import com.hx.backmarket.insurance.dto.policy.data.commercial.cmd.CommercialPolicyCreateCmd;
-import com.hx.backmarket.insurance.dto.policy.data.commercial.dto.CommercialInsurancePolicyDTO;
+import com.hx.backmarket.insurance.dto.insurance.apply.data.dto.InsuranceApplyBaeDTO;
+import com.hx.backmarket.insurance.dto.insurance.apply.data.qry.InsuranceApplyIdsQry;
+import com.hx.backmarket.insurance.dto.insurance.policy.data.cmd.InsurancePolicyCommercialCreateCmd;
+import com.hx.backmarket.insurance.dto.insurance.policy.data.dto.CommercialPolicyDTO;
+import com.hx.backmarket.insurance.dto.insurance.policy.data.dto.CompulsoryPolicyDTO;
+import com.hx.backmarket.insurance.dto.insurance.policy.data.dto.InsurancePolicyDTO;
+import com.hx.backmarket.insurance.dto.insurance.policy.data.qry.InsurancePolicyIdQry;
+import com.hx.backmarket.insurance.dto.insurance.surrender.data.dto.InsuranceApplySurrenderDTO;
 import com.hx.backmarket.insurance.dto.policy.data.commercial.vo.CommercialPolicyRentVO;
 import com.hx.backmarket.insurance.dto.policy.data.compulsory.dto.CompulsoryInsurancePolicyDTO;
 import com.hx.backmarket.insurance.dto.policy.data.compulsory.vo.CompulsoryPolicyRentVO;
+import com.hx.backmarket.insurance.dto.vehicle.qry.VehicleIdsAndUndertakerQry;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
 import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
 import com.mfexpress.common.domain.dto.SysCompanyDTO;
@@ -61,22 +67,27 @@ public class BackMarketInsuranceCmdExe {
     private VehicleAggregateRootApi vehicleAggregateRootApi;
 
     @Resource
-    private SurrenderInsuranceApplyAggregateRootApi surrenderInsuranceApplyAggregateRootApi;
-
-    @Resource
     private OfficeAggregateRootApi officeAggregateRootApi;
 
     @Resource
-    private InsuranceApplyAggregateRootApi insuranceApplyAggregateRootApi;
-
-    @Resource
-    private CommercialInsurancePolicyAggregateRootApi commercialInsurancePolicyAggregateRootApi;
-
-    @Resource
-    private CompulsoryInsurancePolicyAggregateRootApi compulsoryInsurancePolicyAggregateRootApi;
-
-    @Resource
     private DictAggregateRootApi dictAggregateRootApi;
+
+    @Resource
+    private InsuranceApplyInsureAggregateRootApi insuranceApplyInsureAggregateRootApi;
+
+    @Resource
+    private InsurancePolicyCompulsoryAggregateRootApi insurancePolicyCompulsoryAggregateRootApi;
+
+    @Resource
+    private InsurancePolicyCommercialAggregateRootApi insurancePolicyCommercialAggregateRootApi;
+
+    @Resource
+    private InsuranceApplyBaseAggregateRootApi insuranceApplyBaseAggregateRootApi;
+    @Resource
+    private InsurancePolicyBaseAggregateRootApi insurancePolicyBaseAggregateRootApi;
+
+    @Resource
+    private InsuranceApplySurrenderAggregateRootApi insuranceApplySurrenderAggregateRootApi;
 
     public static Map<String, String> insuranceCompanyMap = new HashMap<>();
 
@@ -106,22 +117,33 @@ public class BackMarketInsuranceCmdExe {
             }
         });
         log.info("H5创建退保申请 参数:{}", cmd);
-        Result<List<SurrenderInsuranceApplyDTO>> h5SurrenderApply = surrenderInsuranceApplyAggregateRootApi.createH5SurrenderApply(cmd);
-        List<SurrenderInsuranceApplyDTO> surrenderInsuranceApplyDTOS = ResultDataUtils.getInstance(h5SurrenderApply).getDataOrException();
+        Result<List<InsuranceApplySurrenderDTO>> h5SurrenderApply = insuranceApplySurrenderAggregateRootApi.createH5(cmd);
+        List<InsuranceApplySurrenderDTO> surrenderInsuranceApplyDTOS = ResultDataUtils.getInstance(h5SurrenderApply).getDataOrException();
 
         surrenderInsuranceApplyDTOS.forEach(i -> {
             VehicleInsuranceSaveCmd vehicleInsuranceSaveCmd = new VehicleInsuranceSaveCmd();
             vehicleInsuranceSaveCmd.setVehicleId(i.getVehicleId().intValue());
             vehicleInsuranceSaveCmd.setCommercialInsuranceId(i.getPolicyId());
             vehicleInsuranceSaveCmd.setCommercialInsuranceNo(i.getPolicyNo());
-            vehicleInsuranceSaveCmd.setCommercialInsuranceEndDate(i.getEndInsureDate());
-            vehicleInsuranceSaveCmd.setCommercialInsuranceStartDate(i.getStartInsureDate());
-            vehicleInsuranceSaveCmd.setCommercialInsuranceStatus(PolicyStatusEnum.IN_EFFECT.getIndex());
+            // vehicleInsuranceSaveCmd.setCommercialInsuranceEndDate(i.getEndInsureDate());
+            // vehicleInsuranceSaveCmd.setCommercialInsuranceStartDate(i.getStartInsureDate());
+            vehicleInsuranceSaveCmd.setCommercialInsuranceStatus(PolicyStatusEnum.SURRENDERING.getIndex());
             vehicleInsuranceSaveCmd.setCommercialSurrenderStatus(2);
             log.info("H5创建退保 同步车辆 同步参数:{}", vehicleInsuranceSaveCmd);
-//            ResultDataUtils.getInstance(vehicleAggregateRootApi.saveInsurance(vehicleInsuranceSaveCmd)).getDataOrException();
+            vehicleAggregateRootApi.saveInsuranceDirect(vehicleInsuranceSaveCmd);
         });
 
+        surrenderInsuranceApplyDTOS.stream().forEach(surrenderInsuranceApplyDTO -> {
+            RecoverBatchSurrenderApplyDTO applyDTO = new RecoverBatchSurrenderApplyDTO();
+            applyDTO.setBatchId(surrenderInsuranceApplyDTO.getBatchId() == null ? "" : surrenderInsuranceApplyDTO.getBatchId().toString());
+            // applyDTO.setBatchCode(surrenderInsuranceApplyDTO.get);
+            applyDTO.setVehicleId(surrenderInsuranceApplyDTO.getVehicleId().intValue());
+            applyDTO.setApplyId(surrenderInsuranceApplyDTO.getApplyId().toString());
+            applyDTO.setApplyCode(surrenderInsuranceApplyDTO.getApplyCode());
+            applyDTO.setInsuranceCompanyId(surrenderInsuranceApplyDTO.getInsuranceCompanyId().intValue());
+            // applyDTO.setInsuranceCompany(surrenderInsuranceApplyDTO.getins);
+            applyDTO.setApplyTime(surrenderInsuranceApplyDTO.getApplyTime());
+        });
 
         List<H5SurrenderApplyVO> h5SurrenderApplyVOS = BeanUtil.copyToList(surrenderInsuranceApplyDTOS, H5SurrenderApplyVO.class, CopyOptions.create().ignoreError());
 
@@ -157,7 +179,7 @@ public class BackMarketInsuranceCmdExe {
         });
 
         log.info("公司投保，创建投保申请，参数：{}", JSONUtil.toJsonStr(cmd));
-        Result<InsureApplyResultDTO> resultDTOResult = insuranceApplyAggregateRootApi.insureApply(cmd);
+        Result<InsureApplyResultDTO> resultDTOResult = insuranceApplyInsureAggregateRootApi.insureApply(cmd);
         InsureApplyResultDTO dto = ResultDataUtils.getInstance(resultDTOResult).getDataOrException();
 
         RentInsureApplyResultVO vo = new RentInsureApplyResultVO();
@@ -168,7 +190,7 @@ public class BackMarketInsuranceCmdExe {
     }
 
     public Result<String> createInsurancePolicy(CreateInsurancePolicyCmd createInsurancePolicyCmd) {
-        CommercialPolicyCreateCmd cmd = JSONUtil.toBean(JSONUtil.toJsonStr(createInsurancePolicyCmd), CommercialPolicyCreateCmd.class);
+        InsurancePolicyCommercialCreateCmd cmd = JSONUtil.toBean(JSONUtil.toJsonStr(createInsurancePolicyCmd), InsurancePolicyCommercialCreateCmd.class);
         Result<VehicleInfoDto> vehicleInfoDTOResult = vehicleAggregateRootApi.getVehicleInfoVOById(cmd.getVehicleId().intValue());
         VehicleInfoDto vehicleInfoDTO = ResultDataUtils.getInstance(vehicleInfoDTOResult).getDataOrException();
         if (null == vehicleInfoDTO) {
@@ -177,21 +199,22 @@ public class BackMarketInsuranceCmdExe {
         cmd.setOrgId(vehicleInfoDTO.getOrgId());
         cmd.setCityId(vehicleInfoDTO.getCityId());
         cmd.setBuType(vehicleInfoDTO.getBuType());
+        cmd.setPolicyFile(createInsurancePolicyCmd.getPolicyVouchers().get(0));
         log.info("客户投保，创建保单，参数：{}", JSONUtil.toJsonStr(cmd));
-        Result<CommercialInsurancePolicyDTO> result = commercialInsurancePolicyAggregateRootApi.create(cmd);
+        Result<CommercialPolicyDTO> result = insurancePolicyCommercialAggregateRootApi.create(cmd);
 
-        CommercialInsurancePolicyDTO dto = ResultDataUtils.getInstance(result).getDataOrException();
+        CommercialPolicyDTO dto = ResultDataUtils.getInstance(result).getDataOrException();
 
         Optional.ofNullable(dto).filter(policy -> policy.getPolicyId() != null).ifPresent(policy -> {
             notice(policy.getVehicleId(), policy, null);
         });
 
-        Long countResult = Optional.ofNullable(dto).filter(policy -> policy.getPolicyId() != null).map(CommercialInsurancePolicyDTO::getPolicyId).orElse(-1L);
+        Long countResult = Optional.ofNullable(dto).filter(policy -> policy.getPolicyId() != null).map(CommercialPolicyDTO::getPolicyId).orElse(-1L);
         return Result.getInstance(countResult.toString()).success();
     }
 
     public Result<List<InsuranceApplyRentVO>> getInsuranceApplyInfo(ApplyByIdsQryCmd applyByIdsQryCmd) {
-        com.hx.backmarket.insurance.dto.apply.data.base.qry.ApplyByIdsQryCmd qryCmd = new com.hx.backmarket.insurance.dto.apply.data.base.qry.ApplyByIdsQryCmd();
+        InsuranceApplyIdsQry qryCmd = new InsuranceApplyIdsQry();
         ArrayList<Long> applyIds = new ArrayList<>();
         qryCmd.setApplyIds(applyIds);
         applyByIdsQryCmd.getApplyIds().forEach(applyId -> {
@@ -199,9 +222,9 @@ public class BackMarketInsuranceCmdExe {
         });
 
         log.info("查询保险申请，参数：{}", JSONUtil.toJsonStr(applyByIdsQryCmd));
-        Result<List<InsuranceApplyDTO>> result = insuranceApplyAggregateRootApi.getByApplyIds(qryCmd);
+        Result<List<InsuranceApplyBaeDTO>> result = insuranceApplyBaseAggregateRootApi.list(qryCmd);
         log.info("查询保险申请，结果：{}", JSONUtil.toJsonStr(result));
-        List<InsuranceApplyDTO> dtoList = ResultDataUtils.getInstance(result).getDataOrException();
+        List<InsuranceApplyBaeDTO> dtoList = ResultDataUtils.getInstance(result).getDataOrException();
 
         List<com.hx.backmarket.insurance.dto.apply.data.base.vo.InsuranceApplyRentVO> collect = dtoList.stream().map(dto -> {
             com.hx.backmarket.insurance.dto.apply.data.base.vo.InsuranceApplyRentVO vo = new com.hx.backmarket.insurance.dto.apply.data.base.vo.InsuranceApplyRentVO();
@@ -229,12 +252,12 @@ public class BackMarketInsuranceCmdExe {
         if (CollectionUtil.isEmpty(insuranceCompanyMap)) {
             insuranceCompanyMap = CommonUtil.getDictDataDTOMapByDictType(dictAggregateRootApi, "insurance_company");
         }
-        PolicyDetailQryCmd qryCmd = new PolicyDetailQryCmd();
+        InsurancePolicyIdQry qryCmd = new InsurancePolicyIdQry();
         qryCmd.setPolicyId(Long.valueOf(policyId));
         CompulsoryPolicyRentVO vo = new CompulsoryPolicyRentVO();
 
         log.info("查询交强险，参数：{}", JSONUtil.toJsonStr(policyId));
-        CompulsoryInsurancePolicyDTO dto = ResultDataUtils.getInstance(compulsoryInsurancePolicyAggregateRootApi.getPolicyInfo(qryCmd)).getDataOrNull();
+        CompulsoryPolicyDTO dto = ResultDataUtils.getInstance(insurancePolicyCompulsoryAggregateRootApi.detail(qryCmd)).getDataOrNull();
         log.info("查询交强险，结果：{}", JSONUtil.toJsonStr(dto));
 
         Optional.ofNullable(dto).ifPresent(policy -> {
@@ -248,14 +271,14 @@ public class BackMarketInsuranceCmdExe {
     }
 
     public Result<PolicyVO> getCommercialPolicy(String policyId) {
-        PolicyDetailQryCmd qryCmd = new PolicyDetailQryCmd();
+        InsurancePolicyIdQry qryCmd = new InsurancePolicyIdQry();
         qryCmd.setPolicyId(Long.valueOf(policyId));
 
         CommercialPolicyRentVO vo = new CommercialPolicyRentVO();
         log.info("查询商业险，参数：{}", JSONUtil.toJsonStr(policyId));
-        Result<CommercialInsurancePolicyDTO> result = commercialInsurancePolicyAggregateRootApi.getPolicyInfo(qryCmd);
+        Result<CommercialPolicyDTO> result = insurancePolicyCommercialAggregateRootApi.detail(qryCmd);
         log.info("查询交强险，结果：{}", JSONUtil.toJsonStr(result));
-        CommercialInsurancePolicyDTO dto = ResultDataUtils.getInstance(result).getDataOrNull();
+        CommercialPolicyDTO dto = ResultDataUtils.getInstance(result).getDataOrNull();
 
         Optional.ofNullable(dto).ifPresent(policy -> {
             BeanUtil.copyProperties(policy, vo, true);
@@ -269,7 +292,7 @@ public class BackMarketInsuranceCmdExe {
     }
 
 
-    public void notice(Long vehicleId, CommercialInsurancePolicyDTO commercialPolicy, CompulsoryInsurancePolicyDTO compulsoryPolicy) {
+    public void notice(Long vehicleId, CommercialPolicyDTO commercialPolicy, CompulsoryInsurancePolicyDTO compulsoryPolicy) {
         VehicleInsuranceSaveCmd vehicleInsuranceSaveCmd = new VehicleInsuranceSaveCmd();
         vehicleInsuranceSaveCmd.setVehicleId(vehicleId.intValue());
         // 商业险
@@ -294,6 +317,12 @@ public class BackMarketInsuranceCmdExe {
         VehicleAggregateRootApi vehicleAggregateRootApi = SpringUtil.getBean(VehicleAggregateRootApi.class);
         // todo re
 //        vehicleAggregateRootApi.saveInsurance(vehicleInsuranceSaveCmd);
+    }
+
+    public List<InsurancePolicyDTO> getCustomerUndertakerPolicy(VehicleIdsAndUndertakerQry qry) {
+        Result<List<InsurancePolicyDTO>> policyResult = insurancePolicyBaseAggregateRootApi.listByVehicleIdListAndUndertakerType(qry);
+        return ResultDataUtils.getInstance(policyResult).getDataOrException();
+
     }
 
 }
