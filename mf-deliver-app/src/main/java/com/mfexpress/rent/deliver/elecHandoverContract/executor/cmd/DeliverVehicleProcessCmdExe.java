@@ -157,6 +157,7 @@ public class DeliverVehicleProcessCmdExe {
             rentChargeCmd.setVehicleId(deliverImgInfo.getCarId());
             rentChargeCmd.setDeliverDate(DateUtil.formatDate(contractDTO.getDeliverVehicleTime()));
             rentChargeCmd.setRentRatio(serve.getRentRatio().doubleValue());
+            rentChargeCmd.setBusinessType(serve.getBusinessType());
 
             PrepaymentServeMappingDTO prepaymentServeMappingDTO = prepaymentServeMappingDTOMap.get(serve.getServeNo());
             if (Objects.isNull(prepaymentServeMappingDTO)) {
