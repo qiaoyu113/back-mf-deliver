@@ -18,7 +18,7 @@ import com.hx.backmarket.insurance.dto.apply.data.base.dto.InsureApplyResultDTO;
 import com.hx.backmarket.insurance.dto.apply.data.surrender.cmd.CreateBatchH5SurrenderApplyCmd;
 import com.hx.backmarket.insurance.dto.apply.data.surrender.cmd.CreateH5SurrenderApplyCmd;
 import com.hx.backmarket.insurance.dto.apply.data.surrender.vo.H5SurrenderApplyVO;
-import com.hx.backmarket.insurance.dto.insurance.apply.data.dto.InsuranceApplyBaeDTO;
+import com.hx.backmarket.insurance.dto.insurance.apply.data.dto.InsuranceApplyBaseDTO;
 import com.hx.backmarket.insurance.dto.insurance.apply.data.qry.InsuranceApplyIdsQry;
 import com.hx.backmarket.insurance.dto.insurance.policy.data.cmd.InsurancePolicyCommercialCreateCmd;
 import com.hx.backmarket.insurance.dto.insurance.policy.data.dto.CommercialPolicyDTO;
@@ -222,9 +222,9 @@ public class BackMarketInsuranceCmdExe {
         });
 
         log.info("查询保险申请，参数：{}", JSONUtil.toJsonStr(applyByIdsQryCmd));
-        Result<List<InsuranceApplyBaeDTO>> result = insuranceApplyBaseAggregateRootApi.list(qryCmd);
+        Result<List<InsuranceApplyBaseDTO>> result = insuranceApplyBaseAggregateRootApi.list(qryCmd);
         log.info("查询保险申请，结果：{}", JSONUtil.toJsonStr(result));
-        List<InsuranceApplyBaeDTO> dtoList = ResultDataUtils.getInstance(result).getDataOrException();
+        List<InsuranceApplyBaseDTO> dtoList = ResultDataUtils.getInstance(result).getDataOrException();
 
         List<com.hx.backmarket.insurance.dto.apply.data.base.vo.InsuranceApplyRentVO> collect = dtoList.stream().map(dto -> {
             com.hx.backmarket.insurance.dto.apply.data.base.vo.InsuranceApplyRentVO vo = new com.hx.backmarket.insurance.dto.apply.data.base.vo.InsuranceApplyRentVO();
