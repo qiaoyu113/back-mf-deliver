@@ -1,6 +1,7 @@
 package com.mfexpress.rent.deliver.deliver.executor;
 
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
@@ -77,7 +78,8 @@ public class DeliverToPreselectedExe {
         // 重新激活的服务单在进行预选操作时需要的校验
         ReactivateServeCheckCmd reactivateServeCheckCmd = ReactivateServeCheckCmd.builder().serveNoList(deliverPreselectedCmd.getServeList()).build();
         reactiveServeCheck.execute(reactivateServeCheckCmd);
-
+        List<String> preSelectedServeNoList = new ArrayList<>();
+        List<Integer> preVehicleIdList = new ArrayList<>();
         for (int i = 0; i < serveNoList.size(); i++) {
             DeliverDTO deliverDTO = new DeliverDTO();
             //已经生成交付单 不能重复预选
@@ -130,19 +132,28 @@ public class DeliverToPreselectedExe {
             deliverDTO.setCompulsoryPolicyId(deliverVehicleSelectCmd.getCompulsoryPolicyId());
             deliverDTO.setCommercialPolicyId(deliverVehicleSelectCmd.getCommercialPolicyId());
             deliverList.add(deliverDTO);
+            //成功预选的服务单与车辆编号
+            preSelectedServeNoList.add(serveNoList.get(i));
+            preVehicleIdList.add(deliverVehicleSelectCmd.getId());
+        }
+        if (CollectionUtil.isNotEmpty(preVehicleIdList)) {
+            VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
+            vehicleSaveCmd.setId(carIdList);
+            vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.CHECKED.getCode());
+            Result<String> vehicleResult = vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
+            if (vehicleResult.getCode() != 0) {
+                throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), vehicleResult.getMsg());
+            }
         }
 
-        VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
-        vehicleSaveCmd.setId(carIdList);
-        vehicleSaveCmd.setSelectStatus(ValidSelectStatusEnum.CHECKED.getCode());
-        Result<String> vehicleResult = vehicleAggregateRootApi.saveVehicleStatusById(vehicleSaveCmd);
-        if (vehicleResult.getCode() != 0) {
-            throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), vehicleResult.getMsg());
+        if (CollectionUtil.isNotEmpty(preSelectedServeNoList)) {
+            Result<String> serveResult = serveAggregateRootApi.toPreselected(serveNoList);
+            if (serveResult.getCode() != 0) {
+                throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), serveResult.getMsg());
+            }
         }
-
-        Result<String> serveResult = serveAggregateRootApi.toPreselected(serveNoList);
-        if (serveResult.getCode() != 0) {
-            throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), serveResult.getMsg());
+        if (CollectionUtil.isEmpty(deliverList)) {
+            throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "所选服务单已经被他人预选请刷新页面");
         }
         Result<String> deliverResult = deliverAggregateRootApi.addDeliver(deliverList);
         if (deliverResult.getCode() != 0) {
