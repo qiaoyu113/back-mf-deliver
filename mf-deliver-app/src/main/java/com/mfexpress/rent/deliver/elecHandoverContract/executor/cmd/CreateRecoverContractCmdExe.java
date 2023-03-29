@@ -286,7 +286,7 @@ public class CreateRecoverContractCmdExe {
         VehicleInfoDto vehicleInfoDto = vehicleInfoDtoResult.getData();
         docInfo.setCarModel(vehicleTypeMap.get(vehicleInfoDto.getTypeId()));
 
-        docInfo.setColor(vehicleColorMap.get(vehicleInfoDto.getColor().toString()));
+        docInfo.setColor(vehicleInfoDto.getColor());
         docInfo.setDeliverVehicleTime(FormatUtil.ymdFormatDateToString(cmd.getRecoverInfo().getRecoverVehicleTime()));
         docInfo.setPlateNumber(vehicleInfoDto.getPlateNumber());
         docInfo.setVin(vehicleInfoDto.getVin());

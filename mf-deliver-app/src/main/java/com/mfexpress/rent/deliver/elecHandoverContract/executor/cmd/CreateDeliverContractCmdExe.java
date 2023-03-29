@@ -305,7 +305,7 @@ public class CreateDeliverContractCmdExe {
             }
             VehicleInfoDto vehicleInfoDto = vehicleInfoDtoResult.getData();
             docInfo.setCarModel(vehicleTypeMap.get(vehicleInfoDto.getTypeId()));
-            docInfo.setColor(vehicleColorMap.get(vehicleInfoDto.getColor().toString()));
+            docInfo.setColor(vehicleInfoDto.getColor());
             docInfo.setDeliverVehicleTime(FormatUtil.ymdFormatDateToString(cmd.getDeliverInfo().getDeliverVehicleTime()));
             docInfo.setPlateNumber(vehicleInfoDto.getPlateNumber());
             docInfo.setVin(vehicleInfoDto.getVin());
