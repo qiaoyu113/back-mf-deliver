@@ -43,5 +43,11 @@ public class DeliverInsureCmd extends BaseCmd {
     @NotNull(message = "保费承担方不能为空")
     private Integer premiumUndertaker;
 
+    @ApiModelProperty("投保公司")
+    private Integer insureCompanyId;
+
+    @ApiModelProperty("被保公司")
+    private Integer insuredCompanyId;
+
 }
 

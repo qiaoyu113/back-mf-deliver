@@ -166,6 +166,8 @@ public class InsureByCompanyCmdExe {
         createInsureApplyCmd.setOperatorUserId(tokenInfo.getId());
         createInsureApplyCmd.setRemarks(serveDTOList.get(0).getOaContractCode());
         createInsureApplyCmd.setOperatorTime(applyTime);
+        createInsureApplyCmd.setInsureCompanyId(cmd.getInsureCompanyId());
+        createInsureApplyCmd.setInsuredCompanyId(cmd.getInsuredCompanyId());
 
         // 查询车辆信息
         Result<List<VehicleInfoDto>> vehicleInfoListResult = vehicleAggregateRootApi.getVehicleInfoListByIdList(cmd.getCarIdList());
