@@ -5,6 +5,7 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollectionUtil;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.entity.api.DeliverVehicleEntityApi;
+import com.mfexpress.rent.deliver.gateway.DeliverMethodGateway;
 import com.mfexpress.rent.deliver.gateway.DeliverVehicleGateway;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,8 +27,6 @@ import java.util.Objects;
 @Component
 public class DeliverVehicleEntity implements DeliverVehicleEntityApi {
 
-    @Resource
-    private DeliverVehicleGateway deliverVehicleGateway;
     @Id
     private Integer id;
 
@@ -50,6 +49,12 @@ public class DeliverVehicleEntity implements DeliverVehicleEntityApi {
     private Date createTime;
 
     private Date updateTime;
+
+    @Resource
+    private DeliverVehicleGateway deliverVehicleGateway;
+
+    @Resource
+    private DeliverMethodGateway deliverMethodGateway;
 
     @Override
     public List<DeliverVehicleDTO> getDeliverVehicleListByDeliverNoList(List<String> deliverNoList) {
@@ -77,4 +82,15 @@ public class DeliverVehicleEntity implements DeliverVehicleEntityApi {
         }
         return BeanUtil.copyToList(deliverVehicle, DeliverVehicleDTO.class, CopyOptions.create().ignoreError());
     }
+
+    @Override
+    public Integer addDeliverVehicle(List<DeliverVehicleEntity> deliverVehicleList) {
+        return deliverVehicleGateway.addDeliverVehicle(deliverVehicleList);
+    }
+
+    @Override
+    public Integer saveDeliverMethods(List<DeliverMethodPO> deliverMethodPOS) {
+        return deliverMethodGateway.saveDeliverMethods(deliverMethodPOS);
+    }
+
 }

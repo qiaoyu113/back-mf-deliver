@@ -419,6 +419,12 @@
                 <artifactId>okhttp</artifactId>
                 <version>4.9.0</version>
             </dependency>
+
+            <dependency>
+                <groupId>com.mfexpress.business.starter</groupId>
+                <artifactId>business-datascope-spring-boot-starter</artifactId>
+                <version>${project.dependents.version}</version>
+            </dependency>
         </dependencies>
 
     </dependencyManagement>

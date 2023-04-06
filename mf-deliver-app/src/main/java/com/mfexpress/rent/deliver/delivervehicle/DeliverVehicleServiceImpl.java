@@ -7,10 +7,12 @@ import java.util.stream.Collectors;
 import javax.annotation.Resource;
 
 import cn.hutool.core.collection.CollUtil;
+import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.api.DeliverVehicleServiceI;
+import com.mfexpress.rent.deliver.constant.DeliverMethodEnum;
 import com.mfexpress.rent.deliver.delivervehicle.executor.DeliverVehicleExe;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleCmd;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
@@ -30,9 +32,8 @@ public class DeliverVehicleServiceImpl implements DeliverVehicleServiceI {
 
 
     @Override
-    public String toDeliver(DeliverVehicleCmd deliverVehicleCmd) {
-
-        return deliverVehicleExe.execute(deliverVehicleCmd);
+    public Integer toDeliver(DeliverVehicleCmd deliverVehicleCmd, TokenInfo tokenInfo) {
+        return deliverVehicleExe.execute(deliverVehicleCmd, tokenInfo);
     }
 
     @Override
@@ -77,4 +78,11 @@ public class DeliverVehicleServiceImpl implements DeliverVehicleServiceI {
 
         return artificialVoList.get(0);
     }
+
+    @Override
+    public Integer offlineDeliver(DeliverVehicleCmd cmd, TokenInfo tokenInfo) {
+        cmd.setDeliverMethod(DeliverMethodEnum.OFFLINE_NORMAL.getCode());
+        return deliverVehicleExe.execute(cmd, tokenInfo);
+    }
+
 }

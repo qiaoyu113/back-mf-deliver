@@ -5,18 +5,17 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateUtil;
-import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
 import com.mfexpress.common.domain.dto.SysOfficeDto;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.utils.ElasticsearchTools;
+import com.mfexpress.component.starter.tools.es.ElasticsearchTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
-import com.mfexpress.rent.deliver.constant.Constants;
 import com.mfexpress.rent.deliver.dto.data.Page;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
+import com.mfexpress.rent.deliver.utils.AuthorityUtil;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.constant.PolicyStatusEnum;
@@ -42,11 +41,12 @@ import java.util.stream.Collectors;
 public class RecoverEsDataQryExe {
     @Resource
     private ElasticsearchTools elasticsearchTools;
-    @Resource
-    private OfficeAggregateRootApi officeAggregateRootApi;
 
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
+
+    @Resource
+    private AuthorityUtil authorityUtil;
 
     @Resource
     private BeanFactory beanFactory;
@@ -57,17 +57,24 @@ public class RecoverEsDataQryExe {
 
         RecoverTaskListVO recoverTaskListVO = new RecoverTaskListVO();
 
+        boolean userHasAuthorityFlag = authorityUtil.supplyAuthorityEsQuery(boolQueryBuilder);
+        if (!userHasAuthorityFlag) {
+            recoverTaskListVO.setRecoverVehicleVOList(new ArrayList<>());
+            recoverTaskListVO.setPage(Page.builder().nowPage(recoverQryListCmd.getPage()).build());
+            return recoverTaskListVO;
+        }
+
         List<FieldSortBuilder> sortBuilderList = new LinkedList<>();
         FieldSortBuilder scoreSortBuilder = SortBuilders.fieldSort("_score").order(SortOrder.DESC);
         sortBuilderList.add(scoreSortBuilder);
         sortBuilderList.addAll(fieldSortBuilderList);
 
-        Result<List<SysOfficeDto>> sysOfficeResult = officeAggregateRootApi.getOfficeCityListByRegionId(tokenInfo.getOfficeId());
+        /*Result<List<SysOfficeDto>> sysOfficeResult = officeAggregateRootApi.getOfficeCityListByRegionId(tokenInfo.getOfficeId());
         if (sysOfficeResult.getCode() == 0 && sysOfficeResult.getData() != null) {
             List<SysOfficeDto> sysOfficeDtoList = sysOfficeResult.getData();
             Object[] orgIdList = sysOfficeDtoList.stream().map(SysOfficeDto::getId).toArray();
             boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIdList));
-        }
+        }*/
 
         if (StringUtils.isNotBlank(recoverQryListCmd.getKeyword())) {
             boolQueryBuilder.must(QueryBuilders.multiMatchQuery(recoverQryListCmd.getKeyword(), "customerName", "customerPhone"));

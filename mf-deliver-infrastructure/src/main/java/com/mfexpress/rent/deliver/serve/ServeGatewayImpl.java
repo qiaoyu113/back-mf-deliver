@@ -202,6 +202,9 @@ public class ServeGatewayImpl implements ServeGateway {
         if (Objects.nonNull(qry.getCustomerId()) && qry.getCustomerId() != 0) {
             criteria.andEqualTo("customerId", qry.getCustomerId());
         }
+        if (CollUtil.isNotEmpty(qry.getCustomerIdList())) {
+            criteria.andIn("customerId", qry.getCustomerIdList());
+        }
         if (Objects.nonNull(qry.getHasPaidDeposit()) && !qry.getHasPaidDeposit()) {
             criteria.andEqualTo("paidInDeposit", 0);
         } else if (Objects.nonNull(qry.getHasPaidDeposit()) && qry.getHasPaidDeposit()) {
@@ -224,6 +227,9 @@ public class ServeGatewayImpl implements ServeGateway {
         }
         if (Objects.nonNull(qry.getCustomerId()) && qry.getCustomerId() != 0) {
             criteria.andEqualTo("customerId", qry.getCustomerId());
+        }
+        if (CollUtil.isNotEmpty(qry.getCustomerIdList())) {
+            criteria.andIn("customerId", qry.getCustomerIdList());
         }
         if (Objects.nonNull(qry.getHasPaidDeposit()) && !qry.getHasPaidDeposit()) {
             criteria.andEqualTo("paidInDeposit", 0);

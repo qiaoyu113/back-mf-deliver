@@ -66,4 +66,7 @@ public interface ServeEntityApi {
     Integer extendExpectRecoverDate(String serveNo, String expectRecoverDate);
 
     List<ServeDTO> getWillRecoverService(ContractWillExpireQry contractWillExpireQry);
+
+    Integer updateServeByServeNo(String serveNo, ServeEntity serve);
+
 }

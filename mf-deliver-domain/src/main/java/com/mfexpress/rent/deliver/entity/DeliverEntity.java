@@ -461,5 +461,9 @@ public class DeliverEntity implements DeliverEntityApi {
         return BeanUtil.copyToList(deliverEntities, DeliverDTO.class, new CopyOptions().ignoreError());
     }
 
+    @Override
+    public Integer updateDeliverByServeNoList(List<String> serveNoList, DeliverEntity deliver) {
+        return deliverGateway.updateDeliverByServeNoList(serveNoList, deliver);
+    }
 
 }

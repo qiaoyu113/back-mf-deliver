@@ -7,6 +7,7 @@ import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.UndoReactiveServeCmd;
+import com.mfexpress.rent.deliver.entity.DeliverEntity;
 
 import java.util.List;
 
@@ -60,5 +61,7 @@ public interface DeliverEntityApi {
     Integer undoHistory(UndoReactiveServeCmd cmd);
 
     List<DeliverDTO> getLeaseDeliverByCarId(List<Integer> carIdList);
+
+    Integer updateDeliverByServeNoList(List<String> serveNoList, DeliverEntity deliver);
 
 }

@@ -18,7 +18,6 @@ import java.util.List;
 @ApiModel(value = "客户押金列表 DTO")
 public class CustomerDepositListDTO extends ListQry {
 
-
     @Nullable
     @ApiModelProperty("所属管理区")
     private List<Integer> orgIdList;
@@ -30,14 +29,16 @@ public class CustomerDepositListDTO extends ListQry {
     @ApiModelProperty("租赁服务单状态")
     private List<Integer> statusList;
 
-
     @ApiModelProperty("是否有实缴押金")
     private Boolean hasPaidDeposit;
-
 
     @ApiModelProperty("车辆Id")
     private Integer carId;
 
     @ApiModelProperty("服务单号")
     private String serveNo;
+
+    @ApiModelProperty("数据权限 客户名称")
+    private List<Integer> customerIdList;
+
 }

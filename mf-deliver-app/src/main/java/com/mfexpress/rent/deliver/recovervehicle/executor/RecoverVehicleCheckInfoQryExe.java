@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
@@ -23,10 +23,10 @@ public class RecoverVehicleCheckInfoQryExe {
     @Resource
     private WarehouseAggregateRootApi warehouseAggregateRootApi;
 
-    public RecoverVehicleVO execute(RecoverVechicleCmd cmd) {
+    public RecoverVehicleVO execute(RecoverVehicleCmd cmd) {
 
         String serveNo = cmd.getServeNo();
-        Integer operatorId = cmd.getCarServiceId();
+        Integer operatorId = cmd.getOperatorId();
         String key = DeliverUtils.concatCacheKey(Constants.RECOVER_VEHICLE_CHECK_INFO_CACHE_KEY, serveNo, String.valueOf(operatorId));
         String result = redisTools.get(key);
 

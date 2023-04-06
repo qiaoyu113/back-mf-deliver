@@ -1,28 +1,13 @@
 package com.mfexpress.rent.deliver.mobile;
 
-import java.util.Optional;
-
-import com.mfexpress.component.constants.ResultErrorEnum;
-import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.MfDeliveryApplication;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
-import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.dto.ServeAdjustDTO;
-import com.mfexpress.rent.deliver.dto.data.serve.qry.ServeAdjustQry;
-import com.mfexpress.rent.deliver.utils.MainServeUtil;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleCmd;
 import com.mfexpress.rent.maintain.api.app.MaintenanceAggregateRootApi;
-import com.mfexpress.rent.maintain.constant.MaintenanceStatusEnum;
-import com.mfexpress.rent.maintain.constant.MaintenanceTypeEnum;
-import com.mfexpress.rent.maintain.dto.data.MaintenanceDTO;
-import com.mfexpress.rent.maintain.dto.data.ReplaceVehicleDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -145,7 +130,7 @@ class RecoverVehicleControllerTest {
 
     @Test
     void whetherToCheck() {
-        RecoverVechicleCmd cmd = new RecoverVechicleCmd();
+        RecoverVehicleCmd cmd = new RecoverVehicleCmd();
         cmd.setServeNo("FWD2022062200029");
 
 

@@ -5,7 +5,7 @@ import com.mfexpress.component.constants.CommonConstants;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.starter.utils.TokenTools;
+import com.mfexpress.component.starter.tools.token.TokenTools;
 import com.mfexpress.rent.deliver.api.DeliverVehicleServiceI;
 import com.mfexpress.rent.deliver.config.DeliverProjectProperties;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleCmd;
@@ -32,15 +32,15 @@ public class DeliverVehicleController {
     @ApiOperation("发车,在契约锁迭代因发车流程被改变，此接口被废弃")
     @PrintParam
     @Deprecated
-    public Result<String> toDeliver(@RequestBody DeliverVehicleCmd deliverVehicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+    public Result<Integer> toDeliver(@RequestBody DeliverVehicleCmd deliverVehicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         //生成发车单 交付单状态更新已发车 初始化操作状态  服务单状态更新为已发车  调用车辆服务为租赁状态
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果oaContractCode
-            return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+            return Result.getInstance((Integer) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
-        deliverVehicleCmd.setCarServiceId(tokenInfo.getId());
-        return Result.getInstance(deliverVehicleServiceI.toDeliver(deliverVehicleCmd)).success();
+        // deliverVehicleCmd.setCarServiceId(tokenInfo.getId());
+        return Result.getInstance(deliverVehicleServiceI.toDeliver(deliverVehicleCmd, tokenInfo)).success();
     }
 
     @PostMapping("/selectContactsByDeliverNo")
@@ -55,6 +55,17 @@ public class DeliverVehicleController {
     @PrintParam
     public Result<DeliverProjectProperties.TimeRange> getDeliverVehicleTimeRange() {
         return Result.getInstance(DeliverProjectProperties.DELIVER_TIME_RANGE).success();
+    }
+
+    @PostMapping("/offlineDeliver")
+    @ApiOperation("线下发车")
+    @PrintParam
+    public Result<Integer> offlineDeliver(@RequestBody @Validated DeliverVehicleCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        TokenInfo tokenInfo = com.mfexpress.component.starter.tools.token.TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            return Result.getInstance((Integer) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+        }
+        return Result.getInstance(deliverVehicleServiceI.offlineDeliver(cmd, tokenInfo)).success();
     }
 
 }

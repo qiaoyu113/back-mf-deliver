@@ -10,15 +10,13 @@ import com.mfexpress.billing.customer.api.aggregate.SubBillItemAggregateRootApi;
 import com.mfexpress.billing.customer.data.dto.billitem.SubBillItemDTO;
 import com.mfexpress.billing.rentcharge.api.DetailAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.detail.DetailedByServeNoByLtLeaseTermDTO;
+import com.mfexpress.business.starter.common.dto.DataScopeInfoDTO;
+import com.mfexpress.business.starter.datascope.util.DataScopeThreadLocalUtil;
 import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
 import com.mfexpress.common.domain.dto.SysOfficeDto;
-import com.mfexpress.common.domain.enums.OfficeCodeMsgEnum;
-import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
-import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
-import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.starter.tools.es.ElasticsearchTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
@@ -36,6 +34,7 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeAllLeaseTermAmountVO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
+import com.mfexpress.rent.deliver.utils.AuthorityUtil;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.ServeDictDataUtil;
@@ -83,15 +82,28 @@ public class ServeLeaseTermAmountQryExe {
     @Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
 
+    @Resource
+    private AuthorityUtil authorityUtil;
 
     @Resource
     private BeanFactory beanFactory;
 
     public PagePagination<ServeAllLeaseTermAmountVO> execute(ServeLeaseTermAmountQry qry, TokenInfo tokenInfo) {
         ServeDictDataUtil.initDictData(beanFactory);
-        if (null != tokenInfo) {
+        PageInfo<ServeAllLeaseTermAmountVO> pageInfo = new PageInfo<>();
+        pageInfo.setPageNum(qry.getPage());
+        /*if (null != tokenInfo) {
             qry.setUserOfficeId(tokenInfo.getOfficeId());
+        }*/
+        DataScopeInfoDTO dataScopeInfoDTO = DataScopeThreadLocalUtil.get();
+        if (null != dataScopeInfoDTO) {
+            boolean userHasAuthorityFlag = authorityUtil.supplyAuthority(qry);
+            if (!userHasAuthorityFlag) {
+                pageInfo.setList(new ArrayList<>());
+                return new PagePagination<>(pageInfo);
+            }
         }
+
         BoolQueryBuilder boolQueryBuilder = assembleEsQryCondition(qry);
         List<FieldSortBuilder> fieldSortList = getSortConditions();
 
@@ -113,10 +125,8 @@ public class ServeLeaseTermAmountQryExe {
         BigDecimal bigDecimalLimit = new BigDecimal(qry.getLimit());
         BigDecimal pages = bigDecimalTotal.divide(bigDecimalLimit, RoundingMode.UP);
 
-        PageInfo<ServeAllLeaseTermAmountVO> pageInfo = new PageInfo<>();
         pageInfo.setPages(pages.intValue());
         pageInfo.setTotal(total);
-        pageInfo.setPageNum(qry.getPage());
         pageInfo.setList(voList);
 
         return new PagePagination<>(pageInfo);
@@ -335,7 +345,7 @@ public class ServeLeaseTermAmountQryExe {
 
     private BoolQueryBuilder assembleEsQryCondition(ServeLeaseTermAmountQry qry) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        if (null == qry.getOrgId() || 0 == qry.getOrgId()) {
+        /*if (null == qry.getOrgId() || 0 == qry.getOrgId()) {
             Result<List<SysOfficeDto>> officeCityListResult = officeAggregateRootApi.getOfficeCityListByRegionId(qry.getUserOfficeId());
             if (ResultStatusEnum.UNKNOWS.getCode() == officeCityListResult.getCode() || HttpStatus.INTERNAL_SERVER_ERROR.value() == officeCityListResult.getCode()) {
                 throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), ResultErrorEnum.SERRVER_ERROR.getName());
@@ -353,6 +363,16 @@ public class ServeLeaseTermAmountQryExe {
                 boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", orgIds));
             }
         } else {
+            boolQueryBuilder.must(QueryBuilders.termQuery("orgId", qry.getOrgId()));
+        }*/
+
+        if (null != qry.getOrgIds() && !qry.getOrgIds().isEmpty()) {
+            boolQueryBuilder.must(QueryBuilders.termsQuery("orgId", qry.getOrgIds()));
+        } else if (null != qry.getCustomerIds() && !qry.getCustomerIds().isEmpty()) {
+            boolQueryBuilder.must(QueryBuilders.termsQuery("customerId", qry.getCustomerIds()));
+        }
+
+        if (null != qry.getOrgId() && 0 != qry.getOrgId()) {
             boolQueryBuilder.must(QueryBuilders.termQuery("orgId", qry.getOrgId()));
         }
 

@@ -6,6 +6,7 @@ import com.mfexpress.component.enums.business.BusinessTypeEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.starter.tools.excel.MFExcelTools;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
+import com.mfexpress.rent.deliver.utils.AuthorityUtil;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -21,16 +22,23 @@ public class ExportServeLeaseTermAmountCmdExe {
     @Resource
     private MFExcelTools mfExcelTools;
 
+    @Resource
+    private AuthorityUtil authorityUtil;
+
     public Integer execute(ServeLeaseTermAmountQry qry, TokenInfo tokenInfo) {
+        boolean userHasAuthorityFlag = authorityUtil.supplyAuthority(qry);
+        if (!userHasAuthorityFlag) {
+            throw new CommonException(ResultErrorEnum.AUTH_ERROR.getCode(), "当前用户暂无权限");
+        }
         Map<String, Object> map = new HashMap<>();
         map.put("businessType", BusinessTypeEnum.SERVICE.getName());
         map.put("userId", tokenInfo.getId());
         map.put("instanceName", "mf-deliver");
         map.put("uri", "/api/deliver/v3/serve/web/exportServeLeaseTermAmountData");
         map.put("fileName", "租赁服务单列表");
-        if (null == qry.getOrgId() || 0 == qry.getOrgId()) {
+        /*if (null == qry.getOrgId() || 0 == qry.getOrgId()) {
             qry.setUserOfficeId(tokenInfo.getOfficeId());
-        }
+        }*/
         map.put("qry", qry);
 
         List<String> headers = new ArrayList<>();
@@ -62,4 +70,5 @@ public class ExportServeLeaseTermAmountCmdExe {
         }
         return 0;
     }
+
 }

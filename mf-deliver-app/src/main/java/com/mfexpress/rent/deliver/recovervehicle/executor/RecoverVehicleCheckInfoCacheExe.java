@@ -5,7 +5,7 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.starter.utils.RedisTools;
 import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import org.springframework.beans.BeanUtils;
@@ -19,12 +19,12 @@ public class RecoverVehicleCheckInfoCacheExe {
     @Resource
     private RedisTools redisTools;
 
-    public String execute(RecoverVechicleCmd cmd) {
+    public String execute(RecoverVehicleCmd cmd) {
         RecoverVehicleVO recoverVehicleVO = new RecoverVehicleVO();
         BeanUtils.copyProperties(cmd, recoverVehicleVO);
 
         String serveNo = cmd.getServeNo();
-        Integer operatorId = cmd.getCarServiceId();
+        Integer operatorId = cmd.getOperatorId();
         String key = DeliverUtils.concatCacheKey(Constants.RECOVER_VEHICLE_CHECK_INFO_CACHE_KEY, serveNo, String.valueOf(operatorId));
         boolean result = redisTools.set(key, JSONObject.toJSONString(recoverVehicleVO));
         if(!result){

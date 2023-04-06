@@ -80,6 +80,11 @@
             <groupId>com.hx.backmarket</groupId>
             <artifactId>backmarket-insurance-client</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.mfexpress.business.starter</groupId>
+            <artifactId>business-datascope-spring-boot-starter</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

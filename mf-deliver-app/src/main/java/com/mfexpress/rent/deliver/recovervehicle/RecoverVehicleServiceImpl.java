@@ -8,6 +8,7 @@ import javax.annotation.Resource;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.api.RecoverVehicleServiceI;
+import com.mfexpress.rent.deliver.constant.DeliverMethodEnum;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalQry;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverAbnormalVO;
@@ -24,7 +25,7 @@ import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDetailQryCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverDetailVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleVO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.vo.SurrenderApplyVO;
 import com.mfexpress.rent.deliver.recovervehicle.executor.*;
@@ -82,6 +83,9 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     @Resource
     private RecoverBackInsuranceByDeliverCmdExe recoverBackInsuranceByDeliverCmdExe;
 
+    @Resource
+    private RecoverVehicleCmdExe recoverVehicleCmdExe;
+
     @Override
     public List<RecoverApplyVO> getRecoverVehicleListVO(RecoverApplyQryCmd recoverApplyQryCmd, TokenInfo tokenInfo) {
         return recoverVehicleQryExe.execute(recoverApplyQryCmd, tokenInfo);
@@ -98,8 +102,8 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     }
 
     @Override
-    public String whetherToCheck(RecoverVechicleCmd recoverVechicleCmd) {
-        return recoverToCheckExe.execute(recoverVechicleCmd);
+    public String whetherToCheck(RecoverVehicleCmd recoverVehicleCmd) {
+        return recoverToCheckExe.execute(recoverVehicleCmd);
     }
 
     @Override
@@ -121,12 +125,12 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     }
 
     @Override
-    public String cacheCheckInfo(RecoverVechicleCmd cmd) {
+    public String cacheCheckInfo(RecoverVehicleCmd cmd) {
         return checkInfoCacheExe.execute(cmd);
     }
 
     @Override
-    public RecoverVehicleVO getCachedCheckInfo(RecoverVechicleCmd cmd) {
+    public RecoverVehicleVO getCachedCheckInfo(RecoverVehicleCmd cmd) {
         return checkInfoQryExe.execute(cmd);
     }
 
@@ -180,6 +184,12 @@ public class RecoverVehicleServiceImpl implements RecoverVehicleServiceI {
     @Override
     public SurrenderApplyVO backInsureByDeliver(RecoverBackInsureByDeliverCmd cmd, TokenInfo tokenInfo) {
         return recoverBackInsuranceByDeliverCmdExe.execute(cmd, tokenInfo);
+    }
+
+    @Override
+    public Integer offlineRecover(RecoverVehicleCmd cmd, TokenInfo tokenInfo) {
+        cmd.setDeliverMethod(DeliverMethodEnum.OFFLINE_NORMAL.getCode());
+        return recoverVehicleCmdExe.execute(cmd, tokenInfo);
     }
 
 }
