@@ -1,4 +1,4 @@
-package com.mfexpress.rent.deliver.utils;
+package com.mfexpress.rent.deliver.util;
 
 import com.mfexpress.business.starter.common.constant.DataScopeEnum;
 import com.mfexpress.business.starter.common.dto.DataScopeInfoDTO;
