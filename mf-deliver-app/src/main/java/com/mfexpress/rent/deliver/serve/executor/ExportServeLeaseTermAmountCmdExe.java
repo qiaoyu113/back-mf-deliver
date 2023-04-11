@@ -6,7 +6,7 @@ import com.mfexpress.component.enums.business.BusinessTypeEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.starter.tools.excel.MFExcelTools;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeLeaseTermAmountQry;
-import com.mfexpress.rent.deliver.utils.AuthorityUtil;
+import com.mfexpress.rent.deliver.util.AuthorityUtil;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
