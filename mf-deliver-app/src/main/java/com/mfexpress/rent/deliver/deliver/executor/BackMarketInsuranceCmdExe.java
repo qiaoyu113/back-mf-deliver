@@ -167,14 +167,16 @@ public class BackMarketInsuranceCmdExe {
                 insuranceApply.setOrgId(vehicleDTO.getOrgId());
                 insuranceApply.setCityId(vehicleDTO.getCityId());
                 insuranceApply.setBuType(vehicleDTO.getBuType());
-                SysCompanyDTO companyDTO = new SysCompanyDTO();
-                companyDTO.setCompanyType(vehicleDTO.getTenantId());
-                companyDTO.setOfficeId(vehicleDTO.getOrgId());
-                List<SysCompanyDTO> companyDTOList = ResultDataUtils.getInstance(officeAggregateRootApi.getCompanyList(companyDTO)).getDataOrNull();
-                Optional.ofNullable(companyDTOList).filter(companyList -> CollectionUtil.isNotEmpty(companyList)).ifPresent(companyList -> {
-                    insuranceApply.setInsureCompanyId(companyList.get(0).getId());
-                    insuranceApply.setInsuredCompanyId(companyList.get(0).getId());
-                });
+//                SysCompanyDTO companyDTO = new SysCompanyDTO();
+//                companyDTO.setCompanyType(vehicleDTO.getTenantId());
+//                companyDTO.setOfficeId(vehicleDTO.getOrgId());
+//                List<SysCompanyDTO> companyDTOList = ResultDataUtils.getInstance(officeAggregateRootApi.getCompanyList(companyDTO)).getDataOrNull();
+//                Optional.ofNullable(companyDTOList).filter(companyList -> CollectionUtil.isNotEmpty(companyList)).ifPresent(companyList -> {
+//                    insuranceApply.setInsureCompanyId(companyList.get(0).getId());
+//                    insuranceApply.setInsuredCompanyId(companyList.get(0).getId());
+//                });
+                insuranceApply.setInsureCompanyId(createInsureApplyCmd.getInsureCompanyId());
+                insuranceApply.setInsuredCompanyId(Objects.isNull(createInsureApplyCmd.getInsuredCompanyId()) ? 0 : createInsureApplyCmd.getInsuredCompanyId());
             });
         });
 
