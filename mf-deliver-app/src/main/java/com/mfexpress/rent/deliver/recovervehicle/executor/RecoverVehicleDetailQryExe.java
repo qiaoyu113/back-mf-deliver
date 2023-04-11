@@ -1,8 +1,16 @@
 package com.mfexpress.rent.deliver.recovervehicle.executor;
 
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import com.mfexpress.common.app.userCentre.dto.EmployeeDTO;
+import com.mfexpress.common.app.userCentre.dto.qry.UserListByEmployeeIdsQry;
+import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
+import com.mfexpress.common.domain.api.UserAggregateRootApi;
+import com.mfexpress.common.domain.dto.SysOfficeDto;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
@@ -17,10 +25,13 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.api.RentalCustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.dto.data.customer.CustomerEnterpriseNcInfoDTO;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @Component
 public class RecoverVehicleDetailQryExe {
@@ -42,6 +53,12 @@ public class RecoverVehicleDetailQryExe {
 
     @Resource
     private DeliverVehicleAggregateRootApi deliverVehicleAggregateRootApi;
+
+    @Resource
+    private OfficeAggregateRootApi officeAggregateRootApi;
+
+    @Resource
+    private UserAggregateRootApi userAggregateRootApi;
 
     public RecoverDetailVO execute(RecoverDetailQryCmd cmd) {
         String deliverNo = cmd.getDeliverNo();
@@ -98,6 +115,35 @@ public class RecoverVehicleDetailQryExe {
         recoverVehicleVO.setExpectRecoverTime(recoverVehicleDTO.getExpectRecoverTime());
         recoverVehicleVO.setRecoverVehicleTime(recoverVehicleDTO.getRecoverVehicleTime());
         recoverDetailVO.setRecoverVehicleVO(recoverVehicleVO);
+
+        String customerIDCardOrgSaleName = recoverDetailVO.getCustomerName();
+
+        CustomerEnterpriseNcInfoDTO customerEnterpriseNcInfoDTO = ResultDataUtils.getInstance(customerAggregateRootApi.getCustomerEnterpriseNcInfoDTOByCustomerId(serveDTO.getCustomerId())).getDataOrNull();
+        if (customerEnterpriseNcInfoDTO != null) {
+            String creditCode = customerEnterpriseNcInfoDTO.getCreditCode();
+            if (StrUtil.isNotEmpty(creditCode) && creditCode.length() >= 6) {
+                customerIDCardOrgSaleName += "(**" + creditCode.substring(creditCode.length() - 6, creditCode.length()) + ")";
+            }
+        }
+
+        SysOfficeDto sysOfficeDto = ResultDataUtils.getInstance(officeAggregateRootApi.getOfficeDataById(customerVO.getOrgId())).getDataOrNull();
+        if (ObjectUtil.isNotEmpty(sysOfficeDto)) {
+            customerIDCardOrgSaleName += "-" + sysOfficeDto.getName();
+        }
+
+
+        String saleName = "";
+        UserListByEmployeeIdsQry userListByEmployeeIdsQry = new UserListByEmployeeIdsQry();
+        userListByEmployeeIdsQry.setEmployeeIds(customerVO.getSaleId().toString());
+
+        List<EmployeeDTO> employeeDTOList = ResultDataUtils.getInstance(userAggregateRootApi.getEmployeeListByEmployees(userListByEmployeeIdsQry)).getDataOrNull();
+        if (employeeDTOList != null) {
+            saleName = employeeDTOList.get(0).getNickName();
+            customerIDCardOrgSaleName += "-" + saleName;
+        }
+
+        recoverDetailVO.setCustomerIDCardOrgSaleName(customerIDCardOrgSaleName);
+        recoverDetailVO.setCustomerName(customerIDCardOrgSaleName);
 
         return recoverDetailVO;
     }

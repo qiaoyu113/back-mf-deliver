@@ -2,21 +2,31 @@ package com.mfexpress.rent.deliver.serve.executor;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.PageInfo;
 import com.mfexpress.billing.customer.api.aggregate.SubBillItemAggregateRootApi;
 import com.mfexpress.billing.customer.data.dto.billitem.SubBillItemDTO;
 import com.mfexpress.billing.rentcharge.api.DetailAggregateRootApi;
 import com.mfexpress.billing.rentcharge.dto.data.detail.DetailedByServeNoByLtLeaseTermDTO;
+import com.mfexpress.common.app.userCentre.dto.EmployeeDTO;
+import com.mfexpress.common.app.userCentre.dto.qry.UserListByEmployeeIdsQry;
 import com.mfexpress.business.starter.common.dto.DataScopeInfoDTO;
 import com.mfexpress.business.starter.datascope.util.DataScopeThreadLocalUtil;
 import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
+import com.mfexpress.common.domain.api.UserAggregateRootApi;
 import com.mfexpress.common.domain.dto.SysOfficeDto;
+import com.mfexpress.common.domain.enums.OfficeCodeMsgEnum;
+import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.response.ResultStatusEnum;
 import com.mfexpress.component.starter.tools.es.ElasticsearchTools;
 import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
@@ -38,6 +48,10 @@ import com.mfexpress.rent.deliver.utils.AuthorityUtil;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.ServeDictDataUtil;
+import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.api.RentalCustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.dto.data.customer.CustomerEnterpriseNcInfoDTO;
+import com.mfexpress.transportation.customer.dto.rent.RentalCustomerDTO;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -81,6 +95,16 @@ public class ServeLeaseTermAmountQryExe {
 
     @Resource
     private RecoverVehicleAggregateRootApi recoverVehicleAggregateRootApi;
+
+    @Resource
+    private RentalCustomerAggregateRootApi rentalCustomerAggregateRootApi;
+
+    @Resource
+    private CustomerAggregateRootApi customerAggregateRootApi;
+
+    @Resource
+    private UserAggregateRootApi userAggregateRootApi;
+
 
     @Resource
     private AuthorityUtil authorityUtil;
@@ -140,6 +164,7 @@ public class ServeLeaseTermAmountQryExe {
         Set<Integer> orgIdSet = new HashSet<>();
         List<String> serveNoList = new ArrayList<>();
         List<Integer> contractCommodityIdList = new ArrayList<>();
+        List<Integer> customerIdList = new ArrayList<>();
         voList = data.stream().map(map -> {
             ServeAllLeaseTermAmountVO serveAllLeaseTermAmountVO = new ServeAllLeaseTermAmountVO();
             ServeES serveES = BeanUtil.mapToBean(map, ServeES.class, false, new CopyOptions());
@@ -161,6 +186,7 @@ public class ServeLeaseTermAmountQryExe {
             orgIdSet.add(serveAllLeaseTermAmountVO.getOrgId());
             serveNoList.add(serveAllLeaseTermAmountVO.getServeNo());
             contractCommodityIdList.add(serveES.getContractCommodityId());
+            customerIdList.add(serveAllLeaseTermAmountVO.getCustomerId());
 
             String rentStr = String.valueOf(!Objects.isNull(map.get("rent")) ? map.get("rent") : "0.00");
             String rentRatioStr = String.valueOf(!Objects.isNull(map.get("rentRatio")) ? map.get("rentRatio") : "0.00");
@@ -184,6 +210,21 @@ public class ServeLeaseTermAmountQryExe {
         if (null != sysOfficeDtoList && !sysOfficeDtoList.isEmpty()) {
             sysOfficeDtoMap = sysOfficeDtoList.stream().collect(Collectors.toMap(SysOfficeDto::getId, Function.identity(), (v1, v2) -> v1));
         }
+
+        List<RentalCustomerDTO> rentalCustomerDTOList = ResultDataUtils.getInstance(rentalCustomerAggregateRootApi.getRentalCustomerByCustomerIdList(customerIdList)).getDataOrNull();
+        Map<Integer, RentalCustomerDTO> rentalCustomerDTOMap = CollUtil.isNotEmpty(rentalCustomerDTOList)
+                ? rentalCustomerDTOList.stream().collect(Collectors.toMap(RentalCustomerDTO::getId, v -> v, (v1, v2) -> v1)): new HashMap<>();
+
+        List<CustomerEnterpriseNcInfoDTO> customerEnterpriseNcInfoDTOList = ResultDataUtils.getInstance(customerAggregateRootApi.getCustomerEnterpriseNcInfoDTOListByCustomerIdList(customerIdList)).getDataOrNull();
+        Map<Integer, CustomerEnterpriseNcInfoDTO> customerEnterpriseNcInfoDTOMap = CollUtil.isNotEmpty(customerEnterpriseNcInfoDTOList)
+                ? customerEnterpriseNcInfoDTOList.stream().collect(Collectors.toMap(CustomerEnterpriseNcInfoDTO::getCustomerId, v -> v, (v1, v2) -> v1)): new HashMap<>();
+
+        String saleIdString = rentalCustomerDTOList.stream().map(RentalCustomerDTO::getSaleId).map(String::valueOf).collect(Collectors.joining(","));
+        UserListByEmployeeIdsQry userListByEmployeeIdsQry = new UserListByEmployeeIdsQry();
+        userListByEmployeeIdsQry.setEmployeeIds(saleIdString);
+        List<EmployeeDTO> employeeDTOList = ResultDataUtils.getInstance(userAggregateRootApi.getEmployeeListByEmployees(userListByEmployeeIdsQry)).getDataOrNull();
+        Map<Integer, EmployeeDTO> employeeDTOMap = CollUtil.isNotEmpty(employeeDTOList)
+                ? employeeDTOList.stream().collect(Collectors.toMap(EmployeeDTO::getId, v -> v, (v1, v2) -> v1)) : new HashMap<>();
 
         // 服务单 1 -----------> n 费项 1 -----------> 1 详单 1 -----------> 1 子账单项
         // 根据服务单号查询其下的多个详单id
@@ -328,6 +369,31 @@ public class ServeLeaseTermAmountQryExe {
                 }
             }
             vo.setTotalArrears(supplementAccuracy(unpaidAmount.toString()));
+
+            String customerIDCardOrgSaleName = vo.getCustomerName();
+            CustomerEnterpriseNcInfoDTO customerEnterpriseNcInfoDTO = customerEnterpriseNcInfoDTOMap.getOrDefault(vo.getCustomerId(), null);
+            if (customerEnterpriseNcInfoDTO != null) {
+                String creditCode = customerEnterpriseNcInfoDTO.getCreditCode();
+                if (StrUtil.isNotEmpty(creditCode) && creditCode.length() >= 6) {
+                    customerIDCardOrgSaleName += "(**" + creditCode.substring(creditCode.length() - 6, creditCode.length()) + ")";
+                }
+            }
+
+            SysOfficeDto sysOfficeDto = sysOfficeDtoMap.getOrDefault(vo.getOrgId(), null);
+            if ( sysOfficeDto != null) {
+                customerIDCardOrgSaleName += "-" + sysOfficeDto.getName();
+            }
+
+            RentalCustomerDTO rentalCustomerDTO = rentalCustomerDTOMap.getOrDefault(vo.getCustomerId(), null);
+            if (ObjectUtil.isNotEmpty(rentalCustomerDTO)) {
+                EmployeeDTO employeeDTO = employeeDTOMap.getOrDefault(rentalCustomerDTO.getSaleId(), null);
+                if (ObjectUtil.isNotEmpty(employeeDTO)) {
+                    customerIDCardOrgSaleName += "-" + employeeDTO.getNickName();
+                }
+            }
+
+            vo.setCustomerIDCardOrgSaleName(customerIDCardOrgSaleName);
+            vo.setCustomerName(customerIDCardOrgSaleName);
 //            for (ServeAllLeaseTermAmountVO serveAllLeaseTermAmountVO : voList) {
 //            }
         }

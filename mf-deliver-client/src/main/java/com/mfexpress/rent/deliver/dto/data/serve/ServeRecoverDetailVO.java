@@ -42,4 +42,8 @@ public class ServeRecoverDetailVO {
     @ApiModelProperty(value = "异常收车标志位，1：是，0否。")
     private Integer recoverAbnormalFlag;
 
+    private Integer customerId;
+
+    private String customerIDCardOrgSaleName;
+
 }

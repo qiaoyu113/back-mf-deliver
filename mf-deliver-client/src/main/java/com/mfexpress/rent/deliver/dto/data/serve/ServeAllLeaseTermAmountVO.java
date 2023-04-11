@@ -69,6 +69,9 @@ public class ServeAllLeaseTermAmountVO {
     @ApiModelProperty(value = "客户名称")
     private String customerName;
 
+    @ApiModelProperty(value = "客户id组织销售人员")
+    private String customerIDCardOrgSaleName;
+
     @ApiModelProperty(value = "oa合同编号")
     private String oaContractCode;
 

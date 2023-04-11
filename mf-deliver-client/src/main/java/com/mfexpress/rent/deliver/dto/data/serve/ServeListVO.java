@@ -22,6 +22,9 @@ public class ServeListVO extends ListVO {
     @ApiModelProperty(value = "客户名称")
     private String customerName;
 
+    @ApiModelProperty(value = "客户证件组织销售名称" )
+    private String customerIDCardOrgSaleName;
+
     @ApiModelProperty(value = "合同编号")
     private String contractNo;
 
