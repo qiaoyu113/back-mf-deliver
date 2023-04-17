@@ -1,8 +1,15 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import com.mfexpress.common.app.userCentre.dto.EmployeeDTO;
+import com.mfexpress.common.app.userCentre.dto.qry.UserListByEmployeeIdsQry;
 import com.mfexpress.common.domain.api.DictAggregateRootApi;
+import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
+import com.mfexpress.common.domain.api.UserAggregateRootApi;
 import com.mfexpress.common.domain.dto.DictDataDTO;
 import com.mfexpress.common.domain.dto.DictTypeDTO;
+import com.mfexpress.common.domain.dto.SysOfficeDto;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
@@ -29,6 +36,7 @@ import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.rent.vehicle.api.WarehouseAggregateRootApi;
 import com.mfexpress.rent.vehicle.data.dto.warehouse.WarehouseDto;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.dto.data.customer.CustomerEnterpriseNcInfoDTO;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
@@ -81,6 +89,12 @@ public class ServeRecoverDetailQryByDeliverExe {
     @Resource
     private BackMarketInsuranceCmdExe backMarketInsuranceCmdExe;
 
+    @Resource
+    private OfficeAggregateRootApi officeAggregateRootApi;
+
+    @Resource
+    private UserAggregateRootApi userAggregateRootApi;
+
     public ServeRecoverDetailVO execute(ServeQryByDeliverCmd cmd) {
         String deliverNo = cmd.getDeliverNo();
 
@@ -105,6 +119,9 @@ public class ServeRecoverDetailQryByDeliverExe {
         RecoverVehicleDTO recoverVehicleDTO = recoverVehicleDTOResult.getData();
         // 数据查询----end
 
+        CustomerVO customerVO = getCustomerVO(serveDTO.getCustomerId());
+        OrderVO orderVO = getOrderVO(serveDTO);
+        orderVO.setCustomerName(customerVO.getName());
         // 数据拼装----start
         ServeRecoverDetailVO serveRecoverDetailVO = new ServeRecoverDetailVO();
         serveRecoverDetailVO.setServeNo(deliverDTO.getServeNo());
@@ -165,6 +182,35 @@ public class ServeRecoverDetailQryByDeliverExe {
         }
         // 数据拼装----end
 
+        String customerIDCardOrgSaleName = customerVO.getName();
+
+        CustomerEnterpriseNcInfoDTO customerEnterpriseNcInfoDTO = ResultDataUtils.getInstance(customerAggregateRootApi.getCustomerEnterpriseNcInfoDTOByCustomerId(serveDTO.getCustomerId())).getDataOrNull();
+        if (customerEnterpriseNcInfoDTO != null) {
+            String creditCode = customerEnterpriseNcInfoDTO.getCreditCode();
+            if (StrUtil.isNotEmpty(creditCode) && creditCode.length() >= 6) {
+                customerIDCardOrgSaleName += "(**" + creditCode.substring(creditCode.length() - 6, creditCode.length()) + ")";
+            }
+        }
+
+        SysOfficeDto sysOfficeDto = ResultDataUtils.getInstance(officeAggregateRootApi.getOfficeDataById(customerVO.getOrgId())).getDataOrNull();
+        if (ObjectUtil.isNotEmpty(sysOfficeDto)) {
+            customerIDCardOrgSaleName += "-" + sysOfficeDto.getName();
+        }
+
+
+        String saleName = "";
+        UserListByEmployeeIdsQry userListByEmployeeIdsQry = new UserListByEmployeeIdsQry();
+        userListByEmployeeIdsQry.setEmployeeIds(customerVO.getSaleId().toString());
+
+        List<EmployeeDTO> employeeDTOList = ResultDataUtils.getInstance(userAggregateRootApi.getEmployeeListByEmployees(userListByEmployeeIdsQry)).getDataOrNull();
+        if (employeeDTOList != null) {
+            saleName = employeeDTOList.get(0).getNickName();
+            customerIDCardOrgSaleName += "-" + saleName;
+        }
+
+        serveRecoverDetailVO.setCustomerIDCardOrgSaleName(customerIDCardOrgSaleName);
+        orderVO.setCustomerName(customerIDCardOrgSaleName);
+
         return serveRecoverDetailVO;
     }
 
@@ -179,12 +225,16 @@ public class ServeRecoverDetailQryByDeliverExe {
         OrderVO orderVO = new OrderVO();
         orderVO.setContractNo(serveDTO.getOaContractCode());
         orderVO.setDeliveryDate(orderDTO.getDeliveryDate());
-        Result<CustomerVO> customerResult = customerAggregateRootApi.getById(orderDTO.getCustomerId());
-        if (!DeliverUtils.resultDataCheck(customerResult)) {
-            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "客户信息查询失败");
-        }
-        orderVO.setCustomerName(customerResult.getData().getName());
+//        Result<CustomerVO> customerResult = customerAggregateRootApi.getById(orderDTO.getCustomerId());
+//        if (!DeliverUtils.resultDataCheck(customerResult)) {
+//            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "客户信息查询失败");
+//        }
+//        orderVO.setCustomerName(customerResult.getData().getName());
         return orderVO;
+    }
+
+    public CustomerVO getCustomerVO(Integer customerId) {
+        return ResultDataUtils.getInstance(customerAggregateRootApi.getById(customerId)).getDataOrException();
     }
 
     public VehicleVO getVehicleVO(ServeDTO serveDTO, DeliverDTO deliverDTO, RecoverVehicleDTO recoverVehicleDTO) {

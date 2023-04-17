@@ -214,7 +214,7 @@ public class DeliverVehicleProcessCmdExe {
         return deliverVehicleProcessCmd;
     }
 
-    private String getExpectRecoverDate(Date deliverVehicleDate, Integer offsetMonths, Integer offsetDays) {
+    public static String getExpectRecoverDate(Date deliverVehicleDate, Integer offsetMonths, Integer offsetDays) {
         DateTime dateTime = DateUtil.endOfMonth(deliverVehicleDate);
         String deliverDate = DateUtil.formatDate(deliverVehicleDate);
         String endDate = DateUtil.formatDate(dateTime);

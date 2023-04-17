@@ -103,4 +103,9 @@ public class RecoverVehicleEntity implements RecoverVehicleEntityApi {
         return BeanUtil.copyToList(recoverVehicleByServeNos, RecoverVehicleDTO.class, CopyOptions.create().ignoreError());
     }
 
+    @Override
+    public Integer updateRecoverVehicleByDeliverNo(RecoverVehicleEntity recoverVehicleToUpdate) {
+        return recoverVehicleGateway.updateRecoverVehicleByDeliverNo(recoverVehicleToUpdate);
+    }
+
 }

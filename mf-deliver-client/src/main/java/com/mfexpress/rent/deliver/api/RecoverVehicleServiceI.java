@@ -1,15 +1,9 @@
 package com.mfexpress.rent.deliver.api;
 
 import com.mfexpress.component.dto.TokenInfo;
-import com.mfexpress.component.response.Result;
-import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
-import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.*;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverVehicleProcessCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.vo.SurrenderApplyVO;
 import com.mfexpress.transportation.customer.dto.entity.vo.LinkmanVo;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -21,7 +15,7 @@ public interface RecoverVehicleServiceI {
 
     String cancelRecover(RecoverCancelCmd recoverCancelCmd);
 
-    String whetherToCheck(RecoverVechicleCmd recoverVechicleCmd);
+    String whetherToCheck(RecoverVehicleCmd recoverVehicleCmd);
 
     String toBackInsure(RecoverBackInsureCmd recoverBackInsureCmd);
 
@@ -29,9 +23,9 @@ public interface RecoverVehicleServiceI {
 
     RecoverTaskListVO getRecoverListVO(RecoverQryListCmd recoverQryListCmd, TokenInfo tokenInfo);
 
-    String cacheCheckInfo(RecoverVechicleCmd recoverVechicleCmd);
+    String cacheCheckInfo(RecoverVehicleCmd recoverVehicleCmd);
 
-    RecoverVehicleVO getCachedCheckInfo(RecoverVechicleCmd recoverVechicleCmd);
+    RecoverVehicleVO getCachedCheckInfo(RecoverVehicleCmd recoverVehicleCmd);
 
     RecoverDetailVO getRecoverDetail(RecoverDetailQryCmd cmd);
 
@@ -49,4 +43,7 @@ public interface RecoverVehicleServiceI {
     LinkmanVo getRecoverVehicleDtoByDeliverNo(Integer customerId);
 
     SurrenderApplyVO backInsureByDeliver(RecoverBackInsureByDeliverCmd cmd, TokenInfo tokenInfo);
+
+    Integer offlineRecover(RecoverVehicleCmd cmd, TokenInfo tokenInfo);
+
 }

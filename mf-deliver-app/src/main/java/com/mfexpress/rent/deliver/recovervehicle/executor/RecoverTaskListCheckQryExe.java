@@ -7,7 +7,6 @@ import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverQryListCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverTaskListVO;
-import com.mfexpress.rent.deliver.recovervehicle.RecoverEnum;
 import com.mfexpress.rent.deliver.recovervehicle.RecoverQryServiceI;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;

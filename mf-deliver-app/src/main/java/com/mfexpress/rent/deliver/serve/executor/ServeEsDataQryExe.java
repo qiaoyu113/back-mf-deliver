@@ -2,7 +2,13 @@ package com.mfexpress.rent.deliver.serve.executor;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import com.mfexpress.common.app.userCentre.dto.EmployeeDTO;
+import com.mfexpress.common.app.userCentre.dto.qry.UserListByEmployeeIdsQry;
 import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
+import com.mfexpress.common.domain.api.UserAggregateRootApi;
 import com.mfexpress.common.domain.dto.SysOfficeDto;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.utils.ElasticsearchTools;
@@ -25,6 +31,7 @@ import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.ServeDictDataUtil;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.dto.data.customer.CustomerEnterpriseNcInfoDTO;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -61,6 +68,9 @@ public class ServeEsDataQryExe {
 
     @Resource
     private OfficeAggregateRootApi officeAggregateRootApi;
+
+    @Resource
+    private UserAggregateRootApi userAggregateRootApi;
 
     public ServeListVO execute(String orderId, QueryBuilder boolQueryBuilder, int nowPage, int limit, List<FieldSortBuilder> fieldSortBuilderList) {
         ServeDictDataUtil.initDictData(beanFactory);
@@ -138,6 +148,35 @@ public class ServeEsDataQryExe {
             }
         }
 
+        String customerIDCardOrgSaleName = "";
+        CustomerVO customerVO = ResultDataUtils.getInstance(customerAggregateRootApi.getById(serveListVO.getCustomerId())).getDataOrNull();
+        if (ObjectUtil.isNotEmpty(customerVO)) {
+            customerIDCardOrgSaleName = customerVO.getName();
+        }
+
+        CustomerEnterpriseNcInfoDTO customerEnterpriseNcInfoDTO = ResultDataUtils.getInstance(customerAggregateRootApi.getCustomerEnterpriseNcInfoDTOByCustomerId(serveListVO.getCustomerId())).getDataOrNull();
+        if (ObjectUtil.isNotEmpty(customerEnterpriseNcInfoDTO)) {
+            String creditCode = customerEnterpriseNcInfoDTO.getCreditCode();
+            if (StrUtil.isNotEmpty(creditCode) && creditCode.length() >= 6) {
+                customerIDCardOrgSaleName += "(**" + creditCode.substring(creditCode.length() - 6, creditCode.length()) + ")";
+            }
+        }
+
+        SysOfficeDto sysOfficeDto = ResultDataUtils.getInstance(officeAggregateRootApi.getOfficeDataById(serveListVO.getOrgId())).getDataOrNull();
+        if (ObjectUtil.isNotEmpty(sysOfficeDto)) {
+            customerIDCardOrgSaleName += "-" + sysOfficeDto.getName();
+        }
+
+        UserListByEmployeeIdsQry userListByEmployeeIdsQry = new UserListByEmployeeIdsQry();
+        userListByEmployeeIdsQry.setEmployeeIds(customerVO.getSaleId().toString());
+        List<EmployeeDTO> employeeDTOList = ResultDataUtils.getInstance(userAggregateRootApi.getEmployeeListByEmployees(userListByEmployeeIdsQry)).getDataOrNull();
+        if (CollUtil.isNotEmpty(employeeDTOList)) {
+            customerIDCardOrgSaleName += "-" + employeeDTOList.get(0).getNickName();
+        }
+
+        serveListVO.setCustomerIDCardOrgSaleName(customerIDCardOrgSaleName);
+        serveListVO.setCustomerName(customerIDCardOrgSaleName);
+
         long total = (long) map.get("total");
         BigDecimal bigDecimalTotal = new BigDecimal(total);
         BigDecimal bigDecimalLimit = new BigDecimal(limit);
@@ -149,7 +188,6 @@ public class ServeEsDataQryExe {
         serveListVO.setPage(page);
         serveListVO.setServeVOList(serveVoList);
         return serveListVO;
-
     }
 
     public void supplyVehicleInsureRequirement(List<ServeVO> serveVOList) {

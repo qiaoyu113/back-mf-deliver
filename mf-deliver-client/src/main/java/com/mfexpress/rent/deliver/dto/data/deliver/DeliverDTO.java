@@ -16,6 +16,7 @@ import java.util.Date;
 public class DeliverDTO {
     private Integer id;
 
+    private Long deliverId;
     private String deliverNo;
 
     private Integer customerId;

@@ -3,6 +3,8 @@ package com.mfexpress.rent.deliver.domainapi;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.*;
@@ -223,4 +225,11 @@ public interface ServeAggregateRootApi {
 
     @PostMapping("/extendExpectRecoverDate")
     Result<Integer> extendExpectRecoverDate(@RequestParam("serveNo") String serveNo);
+
+    @PostMapping(value = "/deliverVehicles")
+    Result<Integer> deliverVehicles(@RequestBody @Validated DeliverVehicleCmd cmd);
+
+    @PostMapping(value = "/recoverVehicle")
+    Result<Integer> recoverVehicle(@RequestBody @Validated RecoverVehicleCmd cmd);
+
 }
