@@ -1,7 +1,5 @@
 package com.mfexpress.rent.deliver.delivervehicle.executor;
 
-import javax.annotation.Resource;
-
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
@@ -49,6 +47,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Function;
@@ -127,6 +126,7 @@ public class DeliverVehicleExe {
         Result<List<PrepaymentServeMappingDTO>> prepaymentServeMappingDTOSResult = advancePaymentAggregateRootApi.getPrepaymentServeMappingDTOS(prepaymentServeMappingQry);
         List<PrepaymentServeMappingDTO> prepaymentServeMappingDTOS = Optional.ofNullable(ResultDataUtils.getInstance(prepaymentServeMappingDTOSResult).getDataOrNull()).orElse(new ArrayList<>());
         Map<String, PrepaymentServeMappingDTO> prepaymentServeMappingDTOMap = prepaymentServeMappingDTOS.stream().filter(p -> p.getStatus().equals(PrepaymentServeMappingStatusEnum.INIT.getCode())).collect(Collectors.toMap(PrepaymentServeMappingDTO::getServeNo, a -> a));
+        Map<String, DeliverDTO> deliverDTOMap = deliverDTOS.stream().collect(Collectors.toMap(DeliverDTO::getDeliverNo, Function.identity(), (v1, v2) -> v1));
 
         // 计算预计收车日期
         Map<String, String> expectRecoverDateMap = new HashMap<>(serveDTOS.size());
@@ -176,6 +176,10 @@ public class DeliverVehicleExe {
                 rentChargeCmd.setAdvancePaymentAmount(BigDecimal.ZERO);
             } else {
                 rentChargeCmd.setAdvancePaymentAmount(prepaymentServeMappingDTO.getPrepaymentAmount());
+            }
+            DeliverDTO deliverDTO = deliverDTOMap.get(deliverImgInfo.getDeliverNo());
+            if (null != deliverDTO) {
+                rentChargeCmd.setVehicleBusinessMode(deliverDTO.getVehicleBusinessMode());
             }
             mqTools.send(event, "deliver_vehicle", null, JSON.toJSONString(rentChargeCmd));
         });
