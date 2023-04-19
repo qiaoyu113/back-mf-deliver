@@ -197,6 +197,7 @@ public class RecoverVehicleCmdExe {
                             renewalCmd.setCreateId(cmd.getOperatorId());
                             renewalCmd.setRentEffectDate(FormatUtil.ymdFormatDateToString(FormatUtil.addDays(cmd.getRecoverVehicleTime(), 1)));
                             renewalCmd.setEffectFlag(true);
+                            renewalCmd.setVehicleBusinessMode(replaceDeliver.getVehicleBusinessMode());
                             //todo 增加具体业务类型
                             renewalCmd.setBusinessType(replaceServe.getBusinessType());
 
