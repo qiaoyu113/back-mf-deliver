@@ -148,6 +148,9 @@ public class RecoverVehicleCmdExe {
             recoverVehicleCmd.setCreateId(cmd.getOperatorId());
             recoverVehicleCmd.setRecoverDate(DateUtil.formatDate(cmd.getRecoverVehicleTime()));
             recoverVehicleCmd.setBusinessType(serveDTO.getBusinessType());
+            Result<DeliverDTO> deliverDTOResult = deliverAggregateRootApi.getDeliverByDeliverNo(cmd.getDeliverNo());
+            DeliverDTO deliverDTO = ResultDataUtils.getInstance(deliverDTOResult).getDataOrException();
+            recoverVehicleCmd.setVehicleBusinessMode(deliverDTO.getVehicleBusinessMode());
             log.info("正常收车时，交付域向计费域发送的收车单信息：{}", recoverVehicleCmd);
             mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(recoverVehicleCmd));
             // 服务单维修中
