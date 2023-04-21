@@ -16,4 +16,6 @@ public class RecoverDetailVO {
 
     @ApiModelProperty(value = "收车申请详情")
     private RecoverVehicleVO recoverVehicleVO;
+
+    private String customerIDCardOrgSaleName;
 }

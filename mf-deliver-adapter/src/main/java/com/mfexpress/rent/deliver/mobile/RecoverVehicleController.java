@@ -119,16 +119,16 @@ public class RecoverVehicleController {
     @ApiOperation(value = "是否可收车验车")
     @PrintParam
     @Deprecated
-    public Result<String> whetherToCheck(@RequestBody RecoverVechicleCmd recoverVechicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+    public Result<String> whetherToCheck(@RequestBody RecoverVehicleCmd recoverVehicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
 
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             //提示失败结果
             return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
-        recoverVechicleCmd.setCarServiceId(tokenInfo.getId());
+        recoverVehicleCmd.setOperatorId(tokenInfo.getId());
         //交付单更新待验车状态 完善收车单还车人合照信息
-        return Result.getInstance(recoverVehicleServiceI.whetherToCheck(recoverVechicleCmd)).success();
+        return Result.getInstance(recoverVehicleServiceI.whetherToCheck(recoverVehicleCmd)).success();
 
     }
 
@@ -187,27 +187,27 @@ public class RecoverVehicleController {
     @PostMapping("/cacheCheckInfo")
     @ApiOperation(value = "收车验车信息暂存")
     @PrintParam
-    public Result<String> cacheCheckInfo(@RequestBody RecoverVechicleCmd recoverVechicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+    public Result<String> cacheCheckInfo(@RequestBody RecoverVehicleCmd recoverVehicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             return Result.getInstance((String) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
         // 以serverNo为key
-        recoverVechicleCmd.setCarServiceId(tokenInfo.getId());
-        return Result.getInstance(recoverVehicleServiceI.cacheCheckInfo(recoverVechicleCmd)).success();
+        recoverVehicleCmd.setOperatorId(tokenInfo.getId());
+        return Result.getInstance(recoverVehicleServiceI.cacheCheckInfo(recoverVehicleCmd)).success();
     }
 
     // 获取收车验车信息暂存
     @PostMapping("/getCachedCheckInfo")
     @ApiOperation(value = "获取暂存的收车验车信息")
     @PrintParam
-    public Result<RecoverVehicleVO> getCachedCheckInfo(@RequestBody RecoverVechicleCmd recoverVechicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+    public Result<RecoverVehicleVO> getCachedCheckInfo(@RequestBody RecoverVehicleCmd recoverVehicleCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             return Result.getInstance((RecoverVehicleVO) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }
-        recoverVechicleCmd.setCarServiceId(tokenInfo.getId());
-        return Result.getInstance(recoverVehicleServiceI.getCachedCheckInfo(recoverVechicleCmd)).success();
+        recoverVehicleCmd.setOperatorId(tokenInfo.getId());
+        return Result.getInstance(recoverVehicleServiceI.getCachedCheckInfo(recoverVehicleCmd)).success();
     }
 
     // 收车申请详情页
@@ -264,4 +264,16 @@ public class RecoverVehicleController {
     public Result<DeliverProjectProperties.TimeRange> getRecoverVehicleTimeRange() {
         return Result.getInstance(DeliverProjectProperties.RECOVER_TIME_RANGE).success();
     }
+
+    @PostMapping("/offlineRecover")
+    @ApiOperation("线下收车")
+    @PrintParam
+    public Result<Integer> offlineRecover(@RequestBody @Validated RecoverVehicleCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
+        if (tokenInfo == null) {
+            return Result.getInstance((Integer) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
+        }
+        return Result.getInstance(recoverVehicleServiceI.offlineRecover(cmd, tokenInfo)).success();
+    }
+
 }

@@ -147,4 +147,7 @@ public class RecoverVehicleVO {
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date vehicleCommercialInsuranceEndDate;
 
+    @ApiModelProperty(value = "客户编码组织销售经理")
+    private String customerIDCardOrgSaleName;
+
 }

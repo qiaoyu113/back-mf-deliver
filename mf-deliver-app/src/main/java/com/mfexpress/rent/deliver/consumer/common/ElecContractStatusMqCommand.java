@@ -294,6 +294,7 @@ public class ElecContractStatusMqCommand {
             recoverVehicleCmd.setRecoverDate(DateUtil.formatDate(contractDTO.getRecoverVehicleTime()));
             recoverVehicleCmd.setRentRatio(commodityResult.getData().getRentRatio());
             recoverVehicleCmd.setBusinessType(serveDTO.getBusinessType());
+            recoverVehicleCmd.setVehicleBusinessMode(deliverDTO.getVehicleBusinessMode());
             log.info("正常收车时，交付域向计费域发送的收车单信息：{}", recoverVehicleCmd);
             mqTools.send(event, "recover_vehicle", null, JSON.toJSONString(recoverVehicleCmd));
 

@@ -1,8 +1,20 @@
 package com.mfexpress.rent.deliver.serve.executor;
 
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import com.mfexpress.common.app.userCentre.dto.EmployeeDTO;
+import com.mfexpress.common.app.userCentre.dto.qry.UserListByEmployeeIdsQry;
+import com.mfexpress.common.domain.api.OfficeAggregateRootApi;
+import com.mfexpress.common.domain.api.UserAggregateRootApi;
+import com.mfexpress.common.domain.dto.SysOfficeDto;
+import com.mfexpress.component.utils.util.ResultDataUtils;
 import com.mfexpress.rent.deliver.constant.JudgeEnum;
 import com.mfexpress.rent.deliver.constant.ServeEnum;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
+import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.api.RentalCustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.dto.data.customer.CustomerEnterpriseNcInfoDTO;
+import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -22,8 +34,17 @@ public class ServePreselectedQryExe {
     @Resource
     private ServeEsDataQryExe serveEsDataQryExe;
 
-    /*@Resource
-    private ContractAggregateRootApi contractAggregateRootApi;*/
+    @Resource
+    private RentalCustomerAggregateRootApi rentalCustomerAggregateRootApi;
+
+    @Resource
+    private CustomerAggregateRootApi customerAggregateRootApi;
+
+    @Resource
+    private OfficeAggregateRootApi officeAggregateRootApi;
+
+    @Resource
+    private UserAggregateRootApi userAggregateRootApi;
 
     /*@Resource
     private SyncServiceI syncServiceI;*/
@@ -77,6 +98,9 @@ public class ServePreselectedQryExe {
                     servePreselectedVO.setVehicleInsureRequirement(serveVO.getVehicleInsureRequirement());
                 }
             }
+
+            servePreselectedListVO.setCustomerIDCardOrgSaleName(servePreselectedListVO.getCustomerName());
+            servePreselectedListVO.setCustomerName(servePreselectedListVO.getCustomerName());
         }
 
         return servePreselectedListVO;

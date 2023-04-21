@@ -226,7 +226,7 @@ public class DeliverEachLeaseTermAmountQryExe {
                     deliverEachLeaseTermAmountVO.setPlateNumber(vehicleDto.getPlateNumber());
                     deliverEachLeaseTermAmountVO.setCarModelId(vehicleDto.getTypeId());
                     // 车型
-                    deliverEachLeaseTermAmountVO.setCarModelDisplay(vehicleTypeMap.get(vehicleDto.getBrandId()));
+                    deliverEachLeaseTermAmountVO.setCarModelDisplay(vehicleTypeMap.get(vehicleDto.getTypeId()));
                 }
             }
             if (JudgeEnum.YES.getCode().equals(serveDTO.getReplaceFlag())) {

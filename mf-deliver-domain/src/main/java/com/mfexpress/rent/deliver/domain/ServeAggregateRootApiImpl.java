@@ -29,6 +29,8 @@ import com.mfexpress.rent.deliver.domainservice.ServeDomainServiceI;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.DeliverCancelCmd;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.*;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.*;
@@ -1340,4 +1342,19 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         }
         return Result.getInstance(0).fail(ResultErrorEnum.OPER_ERROR.getCode(), "更新服务单应缴押金失败");
     }*/
+
+    @Override
+    @PostMapping(value = "/deliverVehicles")
+    @PrintParam
+    public Result<Integer> deliverVehicles(@RequestBody @Validated DeliverVehicleCmd cmd) {
+        return Result.getInstance(serveDomainServiceI.deliverVehicles(cmd)).success();
+    }
+
+    @Override
+    @PostMapping(value = "/recoverVehicle")
+    @PrintParam
+    public Result<Integer> recoverVehicle(@RequestBody @Validated RecoverVehicleCmd cmd) {
+        return Result.getInstance(serveDomainServiceI.recoverVehicle(cmd)).success();
+    }
+
 }

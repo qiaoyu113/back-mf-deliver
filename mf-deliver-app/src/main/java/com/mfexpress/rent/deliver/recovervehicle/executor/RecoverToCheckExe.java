@@ -10,7 +10,7 @@ import com.mfexpress.component.utils.util.ResultValidUtils;
 import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.constant.ContractStatusEnum;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
-import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVechicleCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -25,14 +25,14 @@ public class RecoverToCheckExe {
     @Resource
     private ContractAggregateRootApi contractAggregateRootApi;
 
-    public String execute(RecoverVechicleCmd recoverVechicleCmd) {
+    public String execute(RecoverVehicleCmd recoverVehicleCmd) {
 
         // 判断是否可以验车
         RecoverCheckJudgeCmd cmd = new RecoverCheckJudgeCmd();
-        cmd.setServeNo(recoverVechicleCmd.getServeNo());
+        cmd.setServeNo(recoverVehicleCmd.getServeNo());
         ResultValidUtils.checkResultException(serveAggregateRootApi.recoverCheckJudge(cmd));
 
-        Result<Integer> countResult = contractAggregateRootApi.getRenewalContractCountByStatusAndServeNo(ContractStatusEnum.CREATED.getCode(), recoverVechicleCmd.getServeNo());
+        Result<Integer> countResult = contractAggregateRootApi.getRenewalContractCountByStatusAndServeNo(ContractStatusEnum.CREATED.getCode(), recoverVehicleCmd.getServeNo());
         Integer count = ResultDataUtils.getInstance(countResult).getDataOrException();
         if (null == count) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "判断服务单是否已被合同续约失败");

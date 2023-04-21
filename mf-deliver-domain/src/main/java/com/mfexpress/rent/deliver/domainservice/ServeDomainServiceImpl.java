@@ -5,11 +5,18 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.json.JSONUtil;
 import com.github.pagehelper.PageInfo;
+import com.mfexpress.component.constants.ResultErrorEnum;
+import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.PagePagination;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
+import com.mfexpress.component.starter.tools.redis.RedisTools;
+import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleCmd;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleImgCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositListDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.CustomerDepositLockListDTO;
@@ -17,12 +24,16 @@ import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDepositDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.dto.ContractWillExpireInfoDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.qry.ContractWillExpireQry;
+import com.mfexpress.rent.deliver.entity.*;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
 import com.mfexpress.rent.deliver.entity.api.DeliverVehicleEntityApi;
 import com.mfexpress.rent.deliver.entity.api.RecoverVehicleEntityApi;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
+import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -35,12 +46,18 @@ public class ServeDomainServiceImpl implements ServeDomainServiceI {
 
     @Resource
     private ServeEntityApi serveEntityApi;
+
     @Resource
     private DeliverEntityApi deliverEntityApi;
+
     @Resource
     private DeliverVehicleEntityApi deliverVehicleEntityApi;
+
     @Resource
     private RecoverVehicleEntityApi recoverVehicleEntityApi;
+
+    @Resource
+    private RedisTools redisTools;
 
     @Override
     public PagePagination<ServeDepositDTO> getPageServeDeposit(CustomerDepositListDTO customerDepositListDTO) {
@@ -242,6 +259,120 @@ public class ServeDomainServiceImpl implements ServeDomainServiceI {
             serveDepositDTO.setRecoverVehicleDate(DateUtil.formatDate(recoverVehicleDTO.getRecoverVehicleTime()));
         }
 
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Integer deliverVehicles(DeliverVehicleCmd cmd) {
+        List<DeliverVehicleImgCmd> deliverInfos = cmd.getDeliverVehicleImgCmdList();
+        List<String> serveNoList = new LinkedList<>();
+        List<DeliverVehicleDTO> deliverVehicleDTOS = new LinkedList<>();
+        List<DeliverMethodPO> deliverMethodPOS = new LinkedList<>();
+        deliverInfos.forEach(deliverInfo -> {
+            DeliverVehicleDTO deliverVehicleDTO = new DeliverVehicleDTO();
+            deliverVehicleDTO.setServeNo(deliverInfo.getServeNo());
+            deliverVehicleDTO.setDeliverNo(deliverInfo.getDeliverNo());
+            deliverVehicleDTO.setImgUrl(deliverInfo.getImgUrl());
+            deliverVehicleDTO.setContactsName(cmd.getContactsName());
+            deliverVehicleDTO.setContactsPhone(cmd.getContactsPhone());
+            deliverVehicleDTO.setContactsCard(cmd.getContactsCard());
+            deliverVehicleDTO.setDeliverVehicleTime(cmd.getDeliverVehicleTime());
+            deliverVehicleDTOS.add(deliverVehicleDTO);
+            serveNoList.add(deliverInfo.getServeNo());
+        });
+
+        // 服务单状态更新为已发车 填充预计收车日期
+        Map<String, String> expectRecoverDateMap = cmd.getExpectRecoverDateMap();
+        for (String serveNo : serveNoList) {
+            ServeEntity serve = ServeEntity.builder().status(ServeEnum.DELIVER.getCode()).build();
+            String expectRecoverDate = expectRecoverDateMap.get(serveNo);
+            if (Objects.nonNull(expectRecoverDate)) {
+                serve.setExpectRecoverDate(expectRecoverDate);
+            }
+            serve.setUpdateId(cmd.getOperatorId());
+            serveEntityApi.updateServeByServeNo(serveNo, serve);
+        }
+
+        // 交付单状态更新为已发车并初始化操作状态
+        DeliverEntity deliver = DeliverEntity.builder()
+                .deliverStatus(DeliverEnum.DELIVER.getCode())
+                .isCheck(JudgeEnum.NO.getCode())
+                .isInsurance(JudgeEnum.NO.getCode())
+                .updateId(cmd.getOperatorId())
+                .build();
+        deliverEntityApi.updateDeliverByServeNoList(serveNoList, deliver);
+
+        // 生成发车单
+        List<DeliverVehicleEntity> deliverVehicleList = new ArrayList<>();
+        deliverVehicleDTOS.forEach(deliverVehicleDTO -> {
+            long incr = redisTools.incr(DeliverUtils.getEnvVariable(Constants.REDIS_DELIVER_VEHICLE_KEY) + DeliverUtils.getDateByYYMMDD(new Date()), 1);
+            String deliverVehicleNo = DeliverUtils.getNo(Constants.REDIS_DELIVER_VEHICLE_KEY, incr);
+            DeliverVehicleEntity deliverVehicle = new DeliverVehicleEntity();
+            BeanUtils.copyProperties(deliverVehicleDTO, deliverVehicle);
+            deliverVehicle.setDeliverVehicleNo(deliverVehicleNo);
+            deliverVehicleList.add(deliverVehicle);
+
+            DeliverMethodPO deliverMethodPO = new DeliverMethodPO();
+            deliverMethodPO.setDeliverType(DeliverTypeEnum.DELIVER.getCode());
+            deliverMethodPO.setDeliverNo(deliverVehicleDTO.getDeliverNo());
+            deliverMethodPO.setDeliverRecoverVehicleNo(deliverVehicleNo);
+            deliverMethodPO.setDeliverMethod(cmd.getDeliverMethod());
+            deliverMethodPO.setHandoverImgUrls(JSONUtil.toJsonStr(cmd.getHandoverImgUrls()));
+            deliverMethodPO.setCreatorId(cmd.getOperatorId());
+            deliverMethodPO.setUpdaterId(cmd.getOperatorId());
+            deliverMethodPOS.add(deliverMethodPO);
+        });
+        deliverVehicleEntityApi.addDeliverVehicle(deliverVehicleList);
+
+        // 保存发车方式
+        deliverVehicleEntityApi.saveDeliverMethods(deliverMethodPOS);
+
+        return 0;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Integer recoverVehicle(RecoverVehicleCmd cmd) {
+        // 服务单变为已收车
+        ServeEntity serve = ServeEntity.builder().status(ServeEnum.RECOVER.getCode()).updateId(cmd.getOperatorId()).build();
+        serveEntityApi.updateServeByServeNo(cmd.getServeNo(), serve);
+
+        // 交付单变为已收车
+        DeliverEntity deliverToUpdate = new DeliverEntity();
+        deliverToUpdate.setDeliverStatus(DeliverEnum.RECOVER.getCode());
+        deliverToUpdate.setUpdateId(cmd.getOperatorId());
+        deliverEntityApi.updateDeliverByServeNoList(Collections.singletonList(cmd.getServeNo()), deliverToUpdate);
+
+        // 修改收车单
+        RecoverVehicleDTO recoverVehicleDTO = recoverVehicleEntityApi.getRecoverVehicleByDeliverNo(cmd.getDeliverNo());
+        if (null == recoverVehicleDTO) {
+            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "收车单查询失败");
+        }
+        RecoverVehicleEntity recoverVehicleToUpdate = new RecoverVehicleEntity();
+        recoverVehicleToUpdate.setDeliverNo(cmd.getDeliverNo());
+        recoverVehicleToUpdate.setContactsName(cmd.getContactsName());
+        recoverVehicleToUpdate.setContactsCard(cmd.getContactsCard());
+        recoverVehicleToUpdate.setContactsPhone(cmd.getContactsPhone());
+        recoverVehicleToUpdate.setRecoverVehicleTime(cmd.getRecoverVehicleTime());
+        recoverVehicleToUpdate.setDamageFee(cmd.getDamageFee());
+        recoverVehicleToUpdate.setParkFee(cmd.getParkFee());
+        recoverVehicleToUpdate.setWareHouseId(cmd.getWareHouseId());
+        recoverVehicleToUpdate.setImgUrl(cmd.getImgUrl());
+        recoverVehicleToUpdate.setUpdateId(cmd.getOperatorId());
+        recoverVehicleEntityApi.updateRecoverVehicleByDeliverNo(recoverVehicleToUpdate);
+
+        // 保存收车方式
+        DeliverMethodPO deliverMethodPO = new DeliverMethodPO();
+        deliverMethodPO.setDeliverType(DeliverTypeEnum.RECOVER.getCode());
+        deliverMethodPO.setDeliverNo(cmd.getDeliverNo());
+        deliverMethodPO.setDeliverRecoverVehicleNo(recoverVehicleDTO.getRecoverVehicleNo());
+        deliverMethodPO.setDeliverMethod(cmd.getDeliverMethod());
+        deliverMethodPO.setHandoverImgUrls(JSONUtil.toJsonStr(cmd.getHandoverImgUrls()));
+        deliverMethodPO.setCreatorId(cmd.getOperatorId());
+        deliverMethodPO.setUpdaterId(cmd.getOperatorId());
+        deliverVehicleEntityApi.saveDeliverMethods(Collections.singletonList(deliverMethodPO));
+
+        return 0;
     }
 
 }
