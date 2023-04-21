@@ -13,7 +13,7 @@ import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.elasticsearch.mapping.mapper.builder.ESMappingBuilder;
-import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
+import com.mfexpress.component.starter.mq.relation.binlog.EsBatchSyncHandlerI;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogRelation;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogTableFullName;
 import com.mfexpress.component.starter.tools.es.ESBatchSyncTools;
@@ -36,7 +36,6 @@ import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.es.ServeES;
-import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
@@ -61,7 +60,7 @@ import java.util.stream.Collectors;
 @Service("serveSyncServiceImpl")
 @Slf4j
 @MFMqBinlogRelation
-public class ServeSyncServiceImpl implements EsSyncHandlerI {
+public class ServeSyncServiceImpl implements EsBatchSyncHandlerI {
 
     @Resource
     private ElasticsearchTools elasticsearchTools;
@@ -164,6 +163,11 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
      */
     public boolean switchAliasIndex(String alias, String newIndexVersionName) {
         return elasticsearchTools.switchAliasIndex(DeliverUtils.getEnvVariable(alias), DeliverUtils.getEnvVariable(newIndexVersionName));
+    }
+
+    @Override
+    public boolean execAll() {
+        return false;
     }
 
     @Override

@@ -8,7 +8,7 @@ import com.mfexpress.component.response.PagePagination;
 import com.mfexpress.component.response.Result;
 import com.mfexpress.component.starter.elasticsearch.mapping.mapper.builder.ESMappingBuilder;
 import com.mfexpress.component.starter.elasticsearch.setting.ESIndexSettingEnum;
-import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
+import com.mfexpress.component.starter.mq.relation.binlog.EsBatchSyncHandlerI;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogRelation;
 import com.mfexpress.component.starter.mq.relation.binlog.MFMqBinlogTableFullName;
 import com.mfexpress.component.starter.tools.es.ESBatchSyncTools;
@@ -20,7 +20,6 @@ import com.mfexpress.rent.deliver.domainapi.DeliverAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
-import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverQry;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
@@ -41,7 +40,6 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +48,7 @@ import java.util.stream.Collectors;
 @Service("deliverSyncServiceImpl")
 @Slf4j
 @MFMqBinlogRelation
-public class DeliverSyncServiceImpl implements EsSyncHandlerI {
+public class DeliverSyncServiceImpl implements EsBatchSyncHandlerI {
 
     @Resource
     private ElasticsearchTools elasticsearchTools;
@@ -129,6 +127,11 @@ public class DeliverSyncServiceImpl implements EsSyncHandlerI {
         }
 
         return indexVersionName;
+    }
+
+    @Override
+    public boolean execAll() {
+        return false;
     }
 
     @Override

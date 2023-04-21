@@ -3,6 +3,7 @@ package com.mfexpress.rent.deliver.mobile;
 
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.response.Result;
+import com.mfexpress.component.starter.mq.relation.binlog.EsBatchSyncHandlerI;
 import com.mfexpress.component.starter.mq.relation.binlog.EsSyncHandlerI;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -16,10 +17,10 @@ import java.util.Map;
 public class SyncController {
 
     @Resource(name = "serveSyncServiceImpl")
-    private EsSyncHandlerI serveSyncServiceI;
+    private EsBatchSyncHandlerI serveSyncServiceI;
 
     @Resource(name = "deliverSyncServiceImpl")
-    private EsSyncHandlerI deliverSyncServiceI;
+    private EsBatchSyncHandlerI deliverSyncServiceI;
 
     @GetMapping("/execServeAll")
     @ApiOperation("同步全部服务单")
@@ -55,7 +56,5 @@ public class SyncController {
     public Result<Boolean> switchDeliverAlias(@RequestParam("alias") String alias, @RequestParam("indexVersion") String indexVersionName){
         return Result.getInstance(deliverSyncServiceI.switchAliasIndex(alias, indexVersionName)).success();
     }
-
-
 
 }
