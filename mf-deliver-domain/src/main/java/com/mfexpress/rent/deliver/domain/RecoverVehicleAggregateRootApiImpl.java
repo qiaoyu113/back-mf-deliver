@@ -241,6 +241,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         deliverToUpdate.setDeliverStatus(DeliverEnum.RECOVER.getCode());
         deliverToUpdate.setCarServiceId(cmd.getOperatorId());
         deliverToUpdate.setUpdateId(cmd.getOperatorId());
+        deliverToUpdate.setIsInsurance(JudgeEnum.YES.getCode());
         deliverGateway.updateDeliverByDeliverNos(Collections.singletonList(deliver.getDeliverNo()), deliverToUpdate);
 
         // 服务单状态更改为已收车
@@ -292,6 +293,8 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
         deliverToUpdate.setDeliverNo(deliver.getDeliverNo());
         deliverToUpdate.setRecoverContractStatus(DeliverContractStatusEnum.COMPLETED.getCode());
         deliverToUpdate.setDeliverStatus(DeliverEnum.RECOVER.getCode());
+        //2023-0516 收车签署成功后不在操作保险
+        deliverToUpdate.setIsInsurance(JudgeEnum.YES.getCode());
         deliverGateway.updateDeliverByDeliverNos(Collections.singletonList(deliver.getDeliverNo()), deliverToUpdate);
         log.info("recovered---->deliver---->{} 结束修改", deliverNo);
         log.info("recovered---->serve---->{} 开始修改", deliver.getServeNo());
