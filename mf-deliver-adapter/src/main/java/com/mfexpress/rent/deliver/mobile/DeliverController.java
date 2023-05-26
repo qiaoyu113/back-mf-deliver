@@ -54,7 +54,7 @@ public class DeliverController {
     }
 
     @PostMapping("/preselectedVehicle")
-    @ApiOperation("预选车辆->新版->关联保险逻辑")
+    @ApiOperation("预选车辆->新版->关联保险逻辑->1.05去除保险逻辑")
     @PrintParam
     public Result<TipVO> preselectedVehicle(@RequestBody @Validated DeliverPreselectedCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
@@ -65,7 +65,7 @@ public class DeliverController {
     }
 
     @PostMapping("/replaceVehicle")
-    @ApiOperation("更换车辆->新版->关联保险逻辑")
+    @ApiOperation("更换车辆->新版->关联保险逻辑->1.05去除保险逻辑")
     @PrintParam
     public Result<TipVO> replaceVehicle(@RequestBody DeliverReplaceCmd deliverReplaceCmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
         TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
