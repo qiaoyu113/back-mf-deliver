@@ -70,10 +70,11 @@ public class DeliverToPreselectedExe {
         List<Integer> carIdList = deliverVehicleSelectCmdList.stream().map(DeliverVehicleSelectCmd::getId).collect(Collectors.toList());
         Result<List<VehicleInsuranceDTO>> vehicleInsuranceDTOSResult = vehicleAggregateRootApi.getVehicleInsuranceByVehicleIds(carIdList);
         List<VehicleInsuranceDTO> vehicleInsuranceDTOS = ResultDataUtils.getInstance(vehicleInsuranceDTOSResult).getDataOrException();
-        if (null == vehicleInsuranceDTOS || vehicleInsuranceDTOS.isEmpty() || vehicleInsuranceDTOS.size() != carIdList.size()) {
-            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆保险信息查询失败");
+
+        Map<Integer, VehicleInsuranceDTO> vehicleInsuranceDTOMap = new HashMap<>();
+        if (CollectionUtil.isNotEmpty(vehicleInsuranceDTOS)) {
+            vehicleInsuranceDTOMap = vehicleInsuranceDTOS.stream().collect(Collectors.toMap(VehicleInsuranceDTO::getVehicleId, Function.identity(), (v1, v2) -> v1));
         }
-        Map<Integer, VehicleInsuranceDTO> vehicleInsuranceDTOMap = vehicleInsuranceDTOS.stream().collect(Collectors.toMap(VehicleInsuranceDTO::getVehicleId, Function.identity(), (v1, v2) -> v1));
 
         // 重新激活的服务单在进行预选操作时需要的校验
         ReactivateServeCheckCmd reactivateServeCheckCmd = ReactivateServeCheckCmd.builder().serveNoList(deliverPreselectedCmd.getServeList()).build();
@@ -95,9 +96,23 @@ public class DeliverToPreselectedExe {
             }
 
             DeliverVehicleSelectCmd deliverVehicleSelectCmd = deliverVehicleSelectCmdList.get(i);
-            VehicleInsuranceDTO vehicleInsuranceDTO = vehicleInsuranceDTOMap.get(deliverVehicleSelectCmd.getId());
-            if (null == vehicleInsuranceDTO) {
-                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆保险信息查询失败");
+
+            // 保险相关信息
+            if (CollectionUtil.isNotEmpty(vehicleInsuranceDTOMap) && Objects.nonNull(vehicleInsuranceDTOMap.get(deliverVehicleSelectCmd.getId()))) {
+                VehicleInsuranceDTO vehicleInsuranceDTO = vehicleInsuranceDTOMap.get(deliverVehicleSelectCmd.getId());
+
+                if (((PolicyStatusEnum.EFFECT.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus() || PolicyStatusEnum.ABOUT_EXPIRED.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) &&
+                        (PolicyStatusEnum.EFFECT.getCode() == vehicleInsuranceDTO.getCommercialInsuranceStatus() || PolicyStatusEnum.ABOUT_EXPIRED.getCode() == vehicleInsuranceDTO.getCommercialInsuranceStatus())) ||
+                        (PolicyStatusEnum.EFFECT.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus() || PolicyStatusEnum.ABOUT_EXPIRED.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) &&
+                                LeaseModelEnum.SHOW.getCode() == serveDTO.getLeaseModelId()) {
+                    // 车辆保险状态都是有效，设isInsurance为true
+                    // 如果服务单租赁方式为展示，需要额外的判断逻辑，如果车辆的交强险有效，设isInsurance为true
+                    deliverDTO.setIsInsurance(JudgeEnum.YES.getCode());
+                    Result<VehicleInsuranceDto> vehicleInsuranceDtoResult = vehicleInsuranceAggregateRootApi.getVehicleInsuranceById(deliverVehicleSelectCmd.getId());
+                    if (ResultDataUtils.checkResultData(vehicleInsuranceDtoResult)) {
+                        deliverDTO.setInsuranceStartTime(DeliverUtils.getYYYYMMDDByString(vehicleInsuranceDtoResult.getData().getStartTime()));
+                    }
+                }
             }
 
             Result<VehicleInfoDto> vehicleResult = vehicleAggregateRootApi.getVehicleInfoVOById(deliverVehicleSelectCmd.getId());
@@ -105,19 +120,6 @@ public class DeliverToPreselectedExe {
                 throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), vehicleResult.getMsg());
             }
             VehicleInfoDto vehicleInfoDto = vehicleResult.getData();
-
-            if (((PolicyStatusEnum.EFFECT.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus() || PolicyStatusEnum.ABOUT_EXPIRED.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) &&
-                    (PolicyStatusEnum.EFFECT.getCode() == vehicleInsuranceDTO.getCommercialInsuranceStatus() || PolicyStatusEnum.ABOUT_EXPIRED.getCode() == vehicleInsuranceDTO.getCommercialInsuranceStatus())) ||
-                    (PolicyStatusEnum.EFFECT.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus() || PolicyStatusEnum.ABOUT_EXPIRED.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) &&
-                            LeaseModelEnum.SHOW.getCode() == serveDTO.getLeaseModelId()) {
-                // 车辆保险状态都是有效，设isInsurance为true
-                // 如果服务单租赁方式为展示，需要额外的判断逻辑，如果车辆的交强险有效，设isInsurance为true
-                deliverDTO.setIsInsurance(JudgeEnum.YES.getCode());
-                Result<VehicleInsuranceDto> vehicleInsuranceDtoResult = vehicleInsuranceAggregateRootApi.getVehicleInsuranceById(deliverVehicleSelectCmd.getId());
-                if (null != vehicleInsuranceDtoResult.getData()) {
-                    deliverDTO.setInsuranceStartTime(DeliverUtils.getYYYYMMDDByString(vehicleInsuranceDtoResult.getData().getStartTime()));
-                }
-            }
 
             deliverDTO.setCarId(deliverVehicleSelectCmd.getId());
             deliverDTO.setCarNum(deliverVehicleSelectCmd.getPlateNumber());
@@ -136,6 +138,8 @@ public class DeliverToPreselectedExe {
             preSelectedServeNoList.add(serveNoList.get(i));
             preVehicleIdList.add(deliverVehicleSelectCmd.getId());
         }
+
+
         if (CollectionUtil.isNotEmpty(preVehicleIdList)) {
             VehicleSaveCmd vehicleSaveCmd = new VehicleSaveCmd();
             vehicleSaveCmd.setId(carIdList);
