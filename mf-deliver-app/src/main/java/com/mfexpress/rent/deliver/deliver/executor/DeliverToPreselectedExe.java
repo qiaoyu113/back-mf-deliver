@@ -2,6 +2,9 @@ package com.mfexpress.rent.deliver.deliver.executor;
 
 
 import cn.hutool.core.collection.CollectionUtil;
+import com.hx.backmarket.insurance.domainapi.policy.insurance.InsurancePolicyBaseAggregateRootApi;
+import com.hx.backmarket.insurance.dto.insurance.policy.data.dto.InsurancePolicyDTO;
+import com.hx.backmarket.insurance.dto.insurance.policy.data.qry.InsurancePolicyIdsQry;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
@@ -47,10 +50,10 @@ public class DeliverToPreselectedExe {
     private VehicleAggregateRootApi vehicleAggregateRootApi;
     @Resource(name = "serveSyncServiceImpl")
     private EsSyncHandlerI syncServiceI;
-
     @Resource
     private VehicleInsuranceAggregateRootApi vehicleInsuranceAggregateRootApi;
-
+    @Resource
+    private InsurancePolicyBaseAggregateRootApi insurancePolicyBaseAggregateRootApi;
     @Resource
     private ReactiveServeCheckCmdExe reactiveServeCheck;
 
@@ -71,9 +74,46 @@ public class DeliverToPreselectedExe {
         Result<List<VehicleInsuranceDTO>> vehicleInsuranceDTOSResult = vehicleAggregateRootApi.getVehicleInsuranceByVehicleIds(carIdList);
         List<VehicleInsuranceDTO> vehicleInsuranceDTOS = ResultDataUtils.getInstance(vehicleInsuranceDTOSResult).getDataOrException();
 
+        // 车辆id, 保单状态 map
+        Map<Integer, Integer> insuranceCompulsoryPolicyStatusMap = new HashMap<>();
+        Map<Integer, Integer> insuranceCommercialPolicyStatusMap = new HashMap<>();
+
+        // 车辆id, 车辆保险信息 map
         Map<Integer, VehicleInsuranceDTO> vehicleInsuranceDTOMap = new HashMap<>();
         if (CollectionUtil.isNotEmpty(vehicleInsuranceDTOS)) {
             vehicleInsuranceDTOMap = vehicleInsuranceDTOS.stream().collect(Collectors.toMap(VehicleInsuranceDTO::getVehicleId, Function.identity(), (v1, v2) -> v1));
+
+            // 交强险/商业险 保单id
+            Set<Long> insuranceCompulsoryIdSet = vehicleInsuranceDTOS.stream().map(VehicleInsuranceDTO::getCompulsoryInsuranceId).collect(Collectors.toSet());
+            Set<Long> insuranceCommercialIdSet = vehicleInsuranceDTOS.stream().map(VehicleInsuranceDTO::getCommercialInsuranceId).collect(Collectors.toSet());
+
+            // 交强险
+            if (CollectionUtil.isNotEmpty(insuranceCompulsoryIdSet)) {
+                Result<List<InsurancePolicyDTO>> insuranceCompulsoryPolicyResult = insurancePolicyBaseAggregateRootApi.list(InsurancePolicyIdsQry.builder().policyIds(new ArrayList<>(insuranceCompulsoryIdSet)).build());
+                if (ResultDataUtils.checkResultData(insuranceCompulsoryPolicyResult) && CollectionUtil.isNotEmpty(insuranceCompulsoryPolicyResult.getData())) {
+                    List<InsurancePolicyDTO> insuranceCompulsoryPolicyDTOList = insuranceCompulsoryPolicyResult.getData();
+                    insuranceCompulsoryPolicyDTOList.forEach(policy -> {
+                        Integer policyStatus = insuranceCompulsoryPolicyStatusMap.get(Integer.valueOf(policy.getVehicleId().toString()));
+                        if (Objects.nonNull(policyStatus) && policy.getPolicyStatus() > policyStatus) {
+                            insuranceCompulsoryPolicyStatusMap.put(Integer.valueOf(policy.getVehicleId().toString()), policy.getPolicyStatus());
+                        }
+                    });
+                }
+            }
+
+            // 商业险
+            if (CollectionUtil.isNotEmpty(insuranceCommercialIdSet)) {
+                Result<List<InsurancePolicyDTO>> insuranceCommercialPolicyResult = insurancePolicyBaseAggregateRootApi.list(InsurancePolicyIdsQry.builder().policyIds(new ArrayList<>(insuranceCommercialIdSet)).build());
+                if (ResultDataUtils.checkResultData(insuranceCommercialPolicyResult) && CollectionUtil.isNotEmpty(insuranceCommercialPolicyResult.getData())) {
+                    List<InsurancePolicyDTO> insuranceCommercialPolicyDTOList = insuranceCommercialPolicyResult.getData();
+                    insuranceCommercialPolicyDTOList.forEach(policy -> {
+                        Integer policyStatus = insuranceCommercialPolicyStatusMap.get(Integer.valueOf(policy.getVehicleId().toString()));
+                        if (Objects.nonNull(policyStatus) && policy.getPolicyStatus() > policyStatus) {
+                            insuranceCommercialPolicyStatusMap.put(Integer.valueOf(policy.getVehicleId().toString()), policy.getPolicyStatus());
+                        }
+                    });
+                }
+            }
         }
 
         // 重新激活的服务单在进行预选操作时需要的校验
@@ -120,6 +160,21 @@ public class DeliverToPreselectedExe {
                 throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), vehicleResult.getMsg());
             }
             VehicleInfoDto vehicleInfoDto = vehicleResult.getData();
+
+            // 交强险退保状态判断
+            if (CollectionUtil.isNotEmpty(insuranceCompulsoryPolicyStatusMap)) {
+                Integer policyStatus = insuranceCompulsoryPolicyStatusMap.get(vehicleInfoDto.getVehicleId());
+                if (Objects.nonNull(policyStatus) && Objects.equals(policyStatus, com.hx.backmarket.insurance.constant.policy.PolicyStatusEnum.SURRENDERING.getIndex())) {
+                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在退保事项，无法进行预选");
+                }
+            }
+            // 商业险退保状态判断
+            if (CollectionUtil.isNotEmpty(insuranceCommercialPolicyStatusMap)) {
+                Integer policyStatus = insuranceCommercialPolicyStatusMap.get(vehicleInfoDto.getVehicleId());
+                if (Objects.nonNull(policyStatus) && Objects.equals(policyStatus, com.hx.backmarket.insurance.constant.policy.PolicyStatusEnum.SURRENDERING.getIndex())) {
+                    throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在退保事项，无法进行预选");
+                }
+            }
 
             deliverDTO.setCarId(deliverVehicleSelectCmd.getId());
             deliverDTO.setCarNum(deliverVehicleSelectCmd.getPlateNumber());

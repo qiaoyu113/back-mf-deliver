@@ -1,5 +1,9 @@
 package com.mfexpress.rent.deliver.deliver.executor;
 
+import cn.hutool.core.collection.CollectionUtil;
+import com.hx.backmarket.insurance.domainapi.policy.insurance.InsurancePolicyBaseAggregateRootApi;
+import com.hx.backmarket.insurance.dto.insurance.policy.data.dto.InsurancePolicyDTO;
+import com.hx.backmarket.insurance.dto.insurance.policy.data.qry.InsurancePolicyIdsQry;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
@@ -30,6 +34,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -39,18 +44,16 @@ public class DeliverToReplaceExe {
 
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
-
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
-
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
-
     @Resource
     private VehicleInsuranceAggregateRootApi vehicleInsuranceAggregateRootApi;
-
     @Resource
     private ReactiveServeCheckCmdExe reactiveServeCheck;
+    @Resource
+    private InsurancePolicyBaseAggregateRootApi insurancePolicyBaseAggregateRootApi;
 
     public TipVO execute(DeliverReplaceCmd deliverReplaceCmd) {
         String serveNo = deliverReplaceCmd.getServeList().get(0);
@@ -164,7 +167,7 @@ public class DeliverToReplaceExe {
         deliverDTO.setCarServiceId(deliverReplaceCmd.getCarServiceId());
         deliverDTO.setVehicleBusinessMode(vehicleInfoDto.getVehicleBusinessMode());
 
-        // 保险信息
+        // 车辆保险信息
         Result<List<VehicleInsuranceDTO>> vehicleInsuranceDTOSResult = vehicleAggregateRootApi.getVehicleInsuranceByVehicleIds(Collections.singletonList(vehicleId));
         List<VehicleInsuranceDTO> vehicleInsuranceDTOS = ResultDataUtils.getInstance(vehicleInsuranceDTOSResult).getDataOrException();
         VehicleInsuranceDTO vehicleInsuranceDTO = vehicleInsuranceDTOS.get(0);
@@ -175,6 +178,23 @@ public class DeliverToReplaceExe {
             }
             if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
                 deliverDTO.setCommercialPolicyId(vehicleInsuranceDTO.getCommercialInsuranceId().toString());
+            }
+        }
+
+        // 验证保单保险数据是否有退保中状态
+        if (Objects.nonNull(vehicleInsuranceDTO)) {
+            List<Long> policyIdList = new ArrayList<>();
+            policyIdList.add(vehicleInsuranceDTO.getCompulsoryInsuranceId());
+            policyIdList.add(vehicleInsuranceDTO.getCommercialInsuranceId());
+            Result<List<InsurancePolicyDTO>> insurancePolicyResult = insurancePolicyBaseAggregateRootApi.list(InsurancePolicyIdsQry.builder().policyIds(policyIdList).build());
+            if (ResultDataUtils.checkResultData(insurancePolicyResult) && CollectionUtil.isNotEmpty(insurancePolicyResult.getData())) {
+                List<InsurancePolicyDTO> insurancePolicyDTOList = insurancePolicyResult.getData();
+                for (InsurancePolicyDTO insurancePolicyDTO : insurancePolicyDTOList) {
+                    if (Objects.nonNull(insurancePolicyDTO)
+                            && Objects.equals(insurancePolicyDTO.getPolicyStatus(), com.hx.backmarket.insurance.constant.policy.PolicyStatusEnum.SURRENDERING.getIndex())) {
+                        throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在退保事项，无法进行预选");
+                    }
+                }
             }
         }
 
