@@ -7,6 +7,7 @@ import com.mfexpress.rent.deliver.dto.data.deliver.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.VehicleContractDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.dto.VehicleViolationDeliverInfoDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
@@ -170,5 +171,29 @@ public interface DeliverAggregateRootApi {
 
     @PostMapping("getLeaseDeliverByCarIdList")
     Result<List<DeliverDTO>> getLeaseDeliverByCarIdList(@RequestBody List<Integer> carIdList);
+
+    /**
+     * 违章车辆 手动绑定交付单查询
+     */
+    @PostMapping("getVehicleViolationDeliverInfoList")
+    Result<List<VehicleViolationDeliverInfoDTO>> getVehicleViolationDeliverInfoList(@RequestBody @Validated VehicleViolationDeliverInfoQry vehicleViolationDeliverInfoQry);
+
+    /**
+     * 违章车辆 自动绑定交付单查询
+     */
+    @PostMapping("getVehicleViolationDeliverInfo")
+    Result<VehicleViolationDeliverInfoDTO> getVehicleViolationDeliverInfo(@RequestBody @Validated VehicleViolationDeliverInfoQry vehicleViolationDeliverInfoQry);
+
+    /**
+     * 违章车辆 自动绑定交付单查询;批量
+     */
+    @PostMapping("getBatchVehicleViolationDeliverInfo")
+    Result<List<VehicleViolationDeliverInfoDTO>> getBatchVehicleViolationDeliverInfo(@RequestBody List<VehicleViolationDeliverInfoQry> vehicleViolationDeliverInfoQryList);
+
+    /**
+     * 违章车辆 获取收发车时间信息
+     */
+    @PostMapping("getVehicleViolationDeliverInfoByDeliverId")
+    Result<VehicleViolationDeliverInfoDTO> getVehicleViolationDeliverInfoByDeliverId(@RequestBody Long deliverId);
 
 }

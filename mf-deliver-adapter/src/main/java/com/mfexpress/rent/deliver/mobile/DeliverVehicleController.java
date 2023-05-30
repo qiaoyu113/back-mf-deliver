@@ -61,7 +61,7 @@ public class DeliverVehicleController {
     @ApiOperation("线下发车")
     @PrintParam
     public Result<Integer> offlineDeliver(@RequestBody @Validated DeliverVehicleCmd cmd, @RequestHeader(CommonConstants.TOKEN_HEADER) String jwt) {
-        TokenInfo tokenInfo = com.mfexpress.component.starter.tools.token.TokenTools.parseToken(jwt, TokenInfo.class);
+        TokenInfo tokenInfo = TokenTools.parseToken(jwt, TokenInfo.class);
         if (tokenInfo == null) {
             return Result.getInstance((Integer) null).fail(ResultErrorEnum.AUTH_ERROR.getCode(), ResultErrorEnum.AUTH_ERROR.getName());
         }

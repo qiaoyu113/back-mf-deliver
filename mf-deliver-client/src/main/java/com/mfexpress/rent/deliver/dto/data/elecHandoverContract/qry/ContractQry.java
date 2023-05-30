@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 @ApiModel(value = "ContractQry 电子交接合同查询命令")
@@ -13,6 +13,7 @@ public class ContractQry {
 
     @ApiModelProperty(value = "电子交接合同全局id", required = true)
     @NotNull(message = "合同id不能为空")
+    @Min(value = 0, message = "合同ID不能小于1")
     private Long contractId;
 
 }
