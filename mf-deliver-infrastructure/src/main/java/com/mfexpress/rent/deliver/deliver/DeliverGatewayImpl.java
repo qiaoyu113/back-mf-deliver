@@ -243,6 +243,9 @@ public class DeliverGatewayImpl implements DeliverGateway {
         if (!StringUtils.isEmpty(deliverQry.getServeNo())) {
             criteria.andEqualTo("serveNo", deliverQry.getServeNo());
         }
+        if (null != deliverQry.getServeNos() && !deliverQry.getServeNos().isEmpty()) {
+            criteria.andIn("serveNo", deliverQry.getServeNos());
+        }
         if (null != deliverQry.getDeliverStatus() && !deliverQry.getDeliverStatus().isEmpty()) {
             criteria.andIn("deliverStatus", deliverQry.getDeliverStatus());
         }

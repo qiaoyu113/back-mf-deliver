@@ -19,4 +19,8 @@ public class DeliverQry extends ListQry {
 
     @ApiModelProperty(value = "服务单编号")
     private String serveNo;
+
+    @ApiModelProperty(value = "服务单编号")
+    private List<String> serveNos;
+
 }
