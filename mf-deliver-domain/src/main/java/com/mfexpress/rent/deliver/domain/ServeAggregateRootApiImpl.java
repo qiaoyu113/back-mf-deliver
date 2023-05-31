@@ -218,11 +218,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                         servePrepaymentDTO.setCustomerId(serve.getCustomerId());
                         servePrepaymentDTO.setOrgId(serve.getOrgId());
                         servePrepaymentDTO.setCityId(serve.getCityId());
-                        mqTools.send(event + "_event", "prepayment_serve", null, JSON.toJSONString(servePrepaymentDTO));
+                        mqTools.send(event, "prepayment_serve", null, JSON.toJSONString(servePrepaymentDTO));
                     }
                 }
-
-
             }
         }
         try {
