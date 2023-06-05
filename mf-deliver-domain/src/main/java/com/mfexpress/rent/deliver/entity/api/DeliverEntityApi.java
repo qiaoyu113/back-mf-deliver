@@ -4,6 +4,7 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverInsureCmd;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.dto.VehicleViolationDeliverInfoDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.UndoReactiveServeCmd;
@@ -62,6 +63,12 @@ public interface DeliverEntityApi {
 
     List<DeliverDTO> getLeaseDeliverByCarId(List<Integer> carIdList);
 
+    List<DeliverDTO> getDeliverListByCarId(Integer vehicleId);
+
+
+    VehicleViolationDeliverInfoDTO getVehicleViolationDeliverInfoByDeliverId(Long deliverId);
+
+    List<DeliverDTO> getDeliverListByCarIdList(List<Integer> vehicleIdList);
     Integer updateDeliverByServeNoList(List<String> serveNoList, DeliverEntity deliver);
 
 }

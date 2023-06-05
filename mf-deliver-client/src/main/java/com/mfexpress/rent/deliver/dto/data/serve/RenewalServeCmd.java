@@ -6,6 +6,7 @@ import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 
 @Data
 @ApiModel("服务单续约命令")
@@ -26,6 +27,10 @@ public class RenewalServeCmd {
     @ApiModelProperty(value = "租金")
     @NotNull(message = "租金不能为空")
     private Double rent;
+
+    @ApiModelProperty(value = "租金比例")
+    @NotNull(message = "租金比例不能为空")
+    private BigDecimal rentRatio;
 
     @ApiModelProperty(value = "押金")
     @NotNull(message = "押金不能为空")

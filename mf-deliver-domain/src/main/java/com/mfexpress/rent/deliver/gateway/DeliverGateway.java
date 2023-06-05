@@ -6,7 +6,6 @@ import com.mfexpress.rent.deliver.dto.data.deliver.DeliverQry;
 import com.mfexpress.rent.deliver.entity.DeliverEntity;
 
 import java.util.List;
-import java.util.Map;
 
 public interface DeliverGateway {
     int addDeliver(List<DeliverEntity> deliverList);
@@ -15,7 +14,7 @@ public interface DeliverGateway {
 
     int updateDeliverByServeNoList(List<String> serveNoList, DeliverEntity deliver);
 
-    DeliverEntity getDeliverByServeNo(String serveNo);
+    DeliverEntity getValidDeliverByServeNo(String serveNo);
 
     DeliverEntity getDeliverByCarIdAndDeliverStatus(Integer carId, List<Integer> deliverStatus);
 
@@ -27,7 +26,7 @@ public interface DeliverGateway {
 
     List<DeliverEntity> getDeliverByServeNoList(List<String> serveNoList);
 
-    List<DeliverEntity>getDeliverByDeductStatus(List<String>serveNoList);
+    List<DeliverEntity> getDeliverByDeductStatus(List<String> serveNoList);
 
     int updateDeliverByDeliverNos(List<String> deliverNos, DeliverEntity deliver);
 
@@ -48,11 +47,17 @@ public interface DeliverGateway {
     PagePagination<DeliverEntity> getDeliverNoListByPage(DeliverQry listQry);
 
     List<DeliverEntity> getDeliverListByQry(DeliverQry deliverQry);
-    List<DeliverEntity>getDeliverNotCompleteByServeNoList(List<String>serveNoList);
+
+    List<DeliverEntity> getDeliverNotCompleteByServeNoList(List<String> serveNoList);
 
     List<DeliverEntity> getMakeDeliverDTOSByCarIdList(List<Integer> carIds, Integer type);
 
     List<DeliverEntity> getLeaseDeliverByCarIdList(List<Integer> carIds);
 
 
+    List<DeliverEntity> getDeliverListByCarIdList(List<Integer> vehicleIdList);
+
+    DeliverEntity getDeliverByServeNo(String serveNo);
+
+    DeliverEntity getDeliverByDeliverId(Long deliverId);
 }

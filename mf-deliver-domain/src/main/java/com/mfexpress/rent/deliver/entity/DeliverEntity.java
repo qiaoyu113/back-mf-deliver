@@ -14,12 +14,12 @@ import com.mfexpress.rent.deliver.dto.data.deliver.cmd.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.DeliverBatchInsureApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.DeliverInsureApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.dto.VehicleViolationDeliverInfoDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ReactivateServeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.cmd.UndoReactiveServeCmd;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
-import com.mfexpress.rent.deliver.gateway.DeliverGateway;
-import com.mfexpress.rent.deliver.gateway.InsuranceApplyGateway;
+import com.mfexpress.rent.deliver.gateway.*;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,7 +46,12 @@ public class DeliverEntity implements DeliverEntityApi {
 
     @Resource
     private DeliverGateway deliverGateway;
-
+    @Resource
+    private DeliverVehicleGateway deliverVehicleGateway;
+    @Resource
+    private RecoverVehicleGateway recoverVehicleGateway;
+    @Resource
+    private ServeGateway serveGateway;
     @Resource
     private InsuranceApplyGateway insuranceApplyGateway;
 
@@ -135,6 +140,26 @@ public class DeliverEntity implements DeliverEntityApi {
         return deliverDTO;
     }
 
+    @Override
+    public List<DeliverDTO> getValidDeliverByCarIdList(List<Integer> vehicleIds) {
+        List<DeliverEntity> deliverList = deliverGateway.getValidDeliverByCarIdList(vehicleIds);
+        if (CollectionUtil.isEmpty(deliverList)) {
+            return CollectionUtil.newArrayList();
+        }
+        //车辆对应多个有效的交付单，过滤最新的一条
+        Map<Integer, List<DeliverEntity>> deliverMap = deliverList.stream().collect(Collectors.groupingBy(DeliverEntity::getCarId));
+        List<DeliverEntity> deliverEntities = new ArrayList<>();
+        for (Integer vehicleId : vehicleIds) {
+            List<DeliverEntity> deliverEntityList = deliverMap.get(vehicleId);
+            if (CollectionUtil.isEmpty(deliverEntityList)) {
+                continue;
+            }
+            DeliverEntity deliverEntity = deliverEntityList.get(0);
+            deliverEntities.add(deliverEntity);
+
+        }
+        return BeanUtil.copyToList(deliverEntities, DeliverDTO.class, new CopyOptions().ignoreError());
+    }
 
     @Override
     public List<DeliverDTO> getDeliverNotComplete(List<String> serveNoList) {
@@ -194,7 +219,9 @@ public class DeliverEntity implements DeliverEntityApi {
         DeliverBatchInsureApplyDTO deliverBatchInsureApplyDTO = cmd.getDeliverBatchInsureApplyDTO();
         List<DeliverInsureApplyDTO> deliverInsureApplyDTOS = deliverBatchInsureApplyDTO.getDeliverInsureApplyDTOS();
         List<String> deliverNos = deliverInsureApplyDTOS.stream().map(DeliverInsureApplyDTO::getDeliverNo).collect(Collectors.toList());
-        DeliverEntity deliverEntity = DeliverEntity.builder().updateId(cmd.getOperatorId()).build();
+        DeliverEntity deliverEntity = DeliverEntity.builder()
+                .updateId(cmd.getOperatorId())
+                .build();
         deliverGateway.updateDeliverByDeliverNos(deliverNos, deliverEntity);
         // 插入投保申请数据
 
@@ -441,25 +468,57 @@ public class DeliverEntity implements DeliverEntityApi {
     }
 
     @Override
-    public List<DeliverDTO> getValidDeliverByCarIdList(List<Integer> vehicleIds) {
-        List<DeliverEntity> deliverList = deliverGateway.getValidDeliverByCarIdList(vehicleIds);
-        if (CollectionUtil.isEmpty(deliverList)) {
-            return CollectionUtil.newArrayList();
+    public List<DeliverDTO> getDeliverListByCarId(Integer vehicleId) {
+        List<DeliverEntity> deliverEntityList = deliverGateway.getDeliverByCarId(vehicleId);
+        if (CollectionUtil.isEmpty(deliverEntityList)) {
+            return new ArrayList<>();
         }
-        //车辆对应多个有效的交付单，过滤最新的一条
-        Map<Integer, List<DeliverEntity>> deliverMap = deliverList.stream().collect(Collectors.groupingBy(DeliverEntity::getCarId));
-        List<DeliverEntity> deliverEntities = new ArrayList<>();
-        for (Integer vehicleId : vehicleIds) {
-            List<DeliverEntity> deliverEntityList = deliverMap.get(vehicleId);
-            if (CollectionUtil.isEmpty(deliverEntityList)) {
-                continue;
-            }
-            DeliverEntity deliverEntity = deliverEntityList.get(0);
-            deliverEntities.add(deliverEntity);
-
-        }
-        return BeanUtil.copyToList(deliverEntities, DeliverDTO.class, new CopyOptions().ignoreError());
+        return BeanUtil.copyToList(deliverEntityList, DeliverDTO.class, CopyOptions.create().ignoreError());
     }
+
+    @Override
+	public VehicleViolationDeliverInfoDTO getVehicleViolationDeliverInfoByDeliverId(Long deliverId) {
+
+        DeliverEntity deliverEntity = deliverGateway.getDeliverByDeliverId(deliverId);
+        if (deliverEntity == null) {
+            return null;
+        }
+        String serveNo = deliverEntity.getServeNo();
+        ServeEntity serve = serveGateway.getServeByServeNo(serveNo);
+        if (serve == null) {
+            return null;
+        }
+
+        String deliverNo = deliverEntity.getDeliverNo();
+        DeliverVehicleEntity deliverVehicle = deliverVehicleGateway.getDeliverVehicleByDeliverNo(deliverNo);
+        RecoverVehicleEntity recoverVehicle = recoverVehicleGateway.getRecoverVehicleByDeliverNo(deliverNo);
+        VehicleViolationDeliverInfoDTO vehicleViolationDeliverInfoDTO = new VehicleViolationDeliverInfoDTO();
+        vehicleViolationDeliverInfoDTO.setServeNo(serveNo);
+        vehicleViolationDeliverInfoDTO.setServeId(serve.getServeId());
+        vehicleViolationDeliverInfoDTO.setDeliverId(deliverEntity.getDeliverId());
+        vehicleViolationDeliverInfoDTO.setDeliverNo(deliverNo);
+        vehicleViolationDeliverInfoDTO.setOrderId(serve.getOrderId());
+        vehicleViolationDeliverInfoDTO.setContractNo(serve.getOaContractCode());
+        vehicleViolationDeliverInfoDTO.setContractId(serve.getContractId());
+        vehicleViolationDeliverInfoDTO.setCustomerId(serve.getCustomerId());
+        if (deliverVehicle != null) {
+            vehicleViolationDeliverInfoDTO.setDeliverDate(deliverVehicle.getDeliverVehicleTime());
+        }
+        if (recoverVehicle != null) {
+            vehicleViolationDeliverInfoDTO.setRecoverDate(recoverVehicle.getRecoverVehicleTime());
+        }
+        return vehicleViolationDeliverInfoDTO;
+    }
+
+    @Override
+    public List<DeliverDTO> getDeliverListByCarIdList(List<Integer> vehicleIdList) {
+        List<DeliverEntity> deliverEntityList = deliverGateway.getDeliverListByCarIdList(vehicleIdList);
+        if (CollectionUtil.isEmpty(deliverEntityList)) {
+            return new ArrayList<>();
+        }
+        return BeanUtil.copyToList(deliverEntityList, DeliverDTO.class, CopyOptions.create().ignoreError());
+    }
+
 
     @Override
     public Integer updateDeliverByServeNoList(List<String> serveNoList, DeliverEntity deliver) {
