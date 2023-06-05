@@ -341,6 +341,7 @@ public class ServeDomainServiceImpl implements ServeDomainServiceI {
         DeliverEntity deliverToUpdate = new DeliverEntity();
         deliverToUpdate.setDeliverStatus(DeliverEnum.RECOVER.getCode());
         deliverToUpdate.setUpdateId(cmd.getOperatorId());
+        deliverToUpdate.setIsInsurance(JudgeEnum.YES.getCode());
         deliverEntityApi.updateDeliverByServeNoList(Collections.singletonList(cmd.getServeNo()), deliverToUpdate);
 
         // 修改收车单
