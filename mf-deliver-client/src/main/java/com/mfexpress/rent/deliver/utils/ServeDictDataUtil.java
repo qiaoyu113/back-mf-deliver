@@ -44,7 +44,7 @@ public class ServeDictDataUtil {
             vehicleBusinessModeMap = CommonUtil.getDictDataDTOMapByDictType(dictAggregateRootApi, Constants.VEHICLE_BUSINESS_MODE);
         }
         if (null == customerCategoryDictMap) {
-            customerCategoryDictMap = CommonUtil.getDictDataDTOMapByDictType(dictAggregateRootApi, "customer_category");
+            customerCategoryDictMap = CommonUtil.getDictDataDTOMapByDictType(dictAggregateRootApi, "category_type");
         }
         if (null == signedTypeDictMap) {
             signedTypeDictMap = CommonUtil.getDictDataDTOMapByDictType(dictAggregateRootApi, "contract_type");
