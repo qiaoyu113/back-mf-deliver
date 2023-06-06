@@ -19,6 +19,10 @@ public class ServeDictDataUtil {
 
     public static Map<String, String> vehicleBusinessModeMap;
 
+    public static Map<String, String> customerCategoryDictMap;
+
+    public static Map<String, String> signedTypeDictMap;
+
     public static void initDictData(BeanFactory beanFactory) {
 
         DictAggregateRootApi dictAggregateRootApi = beanFactory.getBean(DictAggregateRootApi.class);
@@ -38,6 +42,12 @@ public class ServeDictDataUtil {
         }
         if (null == vehicleBusinessModeMap) {
             vehicleBusinessModeMap = CommonUtil.getDictDataDTOMapByDictType(dictAggregateRootApi, Constants.VEHICLE_BUSINESS_MODE);
+        }
+        if (null == customerCategoryDictMap) {
+            customerCategoryDictMap = CommonUtil.getDictDataDTOMapByDictType(dictAggregateRootApi, "customer_category");
+        }
+        if (null == signedTypeDictMap) {
+            signedTypeDictMap = CommonUtil.getDictDataDTOMapByDictType(dictAggregateRootApi, "contract_type");
         }
     }
 }

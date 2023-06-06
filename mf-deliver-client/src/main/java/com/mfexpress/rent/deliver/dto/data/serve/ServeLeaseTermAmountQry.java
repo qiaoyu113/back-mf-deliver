@@ -48,4 +48,34 @@ public class ServeLeaseTermAmountQry extends ListQry {
     @ApiModelProperty(value = "服务单号")
     private String serveNo;
 
+    @ApiModelProperty(value = "客户类别")
+    private Integer customerCategory;
+
+    @ApiModelProperty(value = "所属销售")
+    private Integer saleId;
+
+    @ApiModelProperty(value = "历史租赁车辆id")
+    private Integer historyVehicleId;
+
+    @ApiModelProperty(value = "租赁期限")
+    private String leaseTerm;
+
+    @ApiModelProperty(value = "签约类型")
+    private Integer signedType;
+
+    @ApiModelProperty(value = "费用业务类型")
+    private Integer businessType;
+
+    @ApiModelProperty(value = "首次发车日期开始")
+    private Date firstDeliverVehicleDateStart;
+
+    @ApiModelProperty(value = "首次发车日期结束")
+    private Date firstDeliverVehicleDateEnd;
+
+    @ApiModelProperty(value = "最近收车日期开始")
+    private Date recentlyRecoverVehicleDateStart;
+
+    @ApiModelProperty(value = "最近收车日期结束")
+    private Date recentlyRecoverVehicleDateEnd;
+
 }
