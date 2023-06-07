@@ -10,6 +10,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 @ApiModel("ServeAllLeaseTermAmountVO 服务单信息和在其租赁周期中产生的计费信息聚合而成的对象")
 @Data
@@ -122,5 +123,51 @@ public class ServeAllLeaseTermAmountVO {
     @ApiModelProperty(value = "替换车标识 1是替换车,0不是")
     private Integer replaceFlag;
 
+    @ApiModelProperty(value = "客户类别")
+    private Integer customerCategory;
+
+    @ApiModelProperty(value = "客户类别含义")
+    private String customerCategoryDisplay;
+
+    @ApiModelProperty(value = "历史租赁车辆id")
+    private List<Integer> historyVehicleIds;
+
+    @ApiModelProperty(value = "历史租赁车辆车牌号")
+    private List<String> historyVehiclePlate;
+
+    @ApiModelProperty(value = "费用业务类型")
+    private Integer businessType;
+
+    @ApiModelProperty(value = "费用业务类型含义")
+    private String businessTypeDisplay;
+
+    @ApiModelProperty(value = "首次发车日期")
+    @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN, timezone = "GMT+8")
+    private Date firstDeliverVehicleDate;
+
+    @ApiModelProperty(value = "最近收车日期")
+    @JsonFormat(pattern = DatePattern.NORM_DATE_PATTERN, timezone = "GMT+8")
+    private Date recentlyRecoverVehicleDate;
+
+    @ApiModelProperty(value = "销售人员id")
+    private Integer saleId;
+
+    @ApiModelProperty(value = "销售人员名称")
+    private String salesPersonName;
+
+    @ApiModelProperty(value = "签约类型")
+    private Integer signedType;
+
+    @ApiModelProperty(value = "签约类型含义")
+    private String signedTypeDisplay;
+
+    @ApiModelProperty(value = "租赁天数")
+    private Integer leaseDays;
+
+    @ApiModelProperty(value = "租赁月数")
+    private Integer leaseMonths;
+
+    @ApiModelProperty(value = "租赁期限含义")
+    private String leaseTermDisplay;
 
 }

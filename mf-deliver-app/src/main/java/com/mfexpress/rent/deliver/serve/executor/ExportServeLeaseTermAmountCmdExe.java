@@ -44,6 +44,7 @@ public class ExportServeLeaseTermAmountCmdExe {
         List<String> headers = new ArrayList<>();
         headers.add("serveNo,租赁服务单编号");
         headers.add("plateNumber,车牌号");
+        headers.add("historyVehiclePlate,历史租赁车辆");
         headers.add("carModelDisplay,品牌车型");
         headers.add("vehicleBusinessModeDisplay,运营模式");
         headers.add("rentFee,租赁价格（元/月/台）");
@@ -55,12 +56,17 @@ public class ExportServeLeaseTermAmountCmdExe {
         headers.add("leaseModelDisplay,租赁方式");
         headers.add("serveStatusDisplay,租赁服务单状态");
         headers.add("customerName,客户名称");
+        headers.add("salesPersonName,所属销售");
+        headers.add("customerCategoryDisplay,客户类别");
         headers.add("oaContractCode,OA合同编号");
+        headers.add("signedTypeDisplay,签约类型");
+        headers.add("leaseTermDisplay,租赁期限");
+        headers.add("businessTypeDisplay,业务类型");
         headers.add("orgName,所属管理区");
-        headers.add("expectRecoverDateChar,预计收车日期");
         headers.add("firstIssueDateChar,首次发车日期");
         headers.add("recentlyIssueDateChar,最近发车日期");
         headers.add("recentlyRecoverDateChar,最近收车日期");
+        headers.add("expectRecoverDateChar,预计收车日期");
 
         map.put("header", headers);
 

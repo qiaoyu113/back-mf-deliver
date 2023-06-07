@@ -33,10 +33,7 @@ import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.dto.data.CommodityDTO;
 import com.mfexpress.order.dto.data.CommodityMapDTO;
 import com.mfexpress.order.dto.qry.CommodityMapQry;
-import com.mfexpress.rent.deliver.constant.Constants;
-import com.mfexpress.rent.deliver.constant.JudgeEnum;
-import com.mfexpress.rent.deliver.constant.LeaseModelEnum;
-import com.mfexpress.rent.deliver.constant.ServeEnum;
+import com.mfexpress.rent.deliver.constant.*;
 import com.mfexpress.rent.deliver.domainapi.DeliverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.domainapi.RecoverVehicleAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
@@ -48,12 +45,15 @@ import com.mfexpress.rent.deliver.util.AuthorityUtil;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.deliver.utils.FormatUtil;
 import com.mfexpress.rent.deliver.utils.ServeDictDataUtil;
+import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleDto;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.api.RentalCustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerEnterpriseNcInfoDTO;
 import com.mfexpress.transportation.customer.dto.rent.RentalCustomerDTO;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -105,6 +105,8 @@ public class ServeLeaseTermAmountQryExe {
     @Resource
     private UserAggregateRootApi userAggregateRootApi;
 
+    @Resource
+    private VehicleAggregateRootApi vehicleAggregateRootApi;
 
     @Resource
     private AuthorityUtil authorityUtil;
@@ -165,6 +167,8 @@ public class ServeLeaseTermAmountQryExe {
         List<String> serveNoList = new ArrayList<>();
         List<Integer> contractCommodityIdList = new ArrayList<>();
         List<Integer> customerIdList = new ArrayList<>();
+        Set<Integer> historyVehicleIdSet = new HashSet<>();
+        Set<Integer> saleIdSet = new HashSet<>();
         voList = data.stream().map(map -> {
             ServeAllLeaseTermAmountVO serveAllLeaseTermAmountVO = new ServeAllLeaseTermAmountVO();
             ServeES serveES = BeanUtil.mapToBean(map, ServeES.class, false, new CopyOptions());
@@ -187,6 +191,12 @@ public class ServeLeaseTermAmountQryExe {
             serveNoList.add(serveAllLeaseTermAmountVO.getServeNo());
             contractCommodityIdList.add(serveES.getContractCommodityId());
             customerIdList.add(serveAllLeaseTermAmountVO.getCustomerId());
+            // 历史车辆
+            if (null != serveES.getHistoryVehicleIds() && !serveES.getHistoryVehicleIds().isEmpty()) {
+                historyVehicleIdSet.addAll(serveES.getHistoryVehicleIds());
+            }
+            // 销售id
+            saleIdSet.add(serveES.getSaleId());
 
             String rentStr = String.valueOf(!Objects.isNull(map.get("rent")) ? map.get("rent") : "0.00");
             String rentRatioStr = String.valueOf(!Objects.isNull(map.get("rentRatio")) ? map.get("rentRatio") : "0.00");
@@ -213,11 +223,11 @@ public class ServeLeaseTermAmountQryExe {
 
         List<RentalCustomerDTO> rentalCustomerDTOList = ResultDataUtils.getInstance(rentalCustomerAggregateRootApi.getRentalCustomerByCustomerIdList(customerIdList)).getDataOrNull();
         Map<Integer, RentalCustomerDTO> rentalCustomerDTOMap = CollUtil.isNotEmpty(rentalCustomerDTOList)
-                ? rentalCustomerDTOList.stream().collect(Collectors.toMap(RentalCustomerDTO::getId, v -> v, (v1, v2) -> v1)): new HashMap<>();
+                ? rentalCustomerDTOList.stream().collect(Collectors.toMap(RentalCustomerDTO::getId, v -> v, (v1, v2) -> v1)) : new HashMap<>();
 
         List<CustomerEnterpriseNcInfoDTO> customerEnterpriseNcInfoDTOList = ResultDataUtils.getInstance(customerAggregateRootApi.getCustomerEnterpriseNcInfoDTOListByCustomerIdList(customerIdList)).getDataOrNull();
         Map<Integer, CustomerEnterpriseNcInfoDTO> customerEnterpriseNcInfoDTOMap = CollUtil.isNotEmpty(customerEnterpriseNcInfoDTOList)
-                ? customerEnterpriseNcInfoDTOList.stream().collect(Collectors.toMap(CustomerEnterpriseNcInfoDTO::getCustomerId, v -> v, (v1, v2) -> v1)): new HashMap<>();
+                ? customerEnterpriseNcInfoDTOList.stream().collect(Collectors.toMap(CustomerEnterpriseNcInfoDTO::getCustomerId, v -> v, (v1, v2) -> v1)) : new HashMap<>();
 
         String saleIdString = rentalCustomerDTOList.stream().map(RentalCustomerDTO::getSaleId).map(String::valueOf).collect(Collectors.joining(","));
         UserListByEmployeeIdsQry userListByEmployeeIdsQry = new UserListByEmployeeIdsQry();
@@ -292,6 +302,23 @@ public class ServeLeaseTermAmountQryExe {
         Result<List<RecoverVehicleDTO>> recoverVehicleDTOResult = recoverVehicleAggregateRootApi.getRecoverVehicleDTOByServeNos(serveNos);
         List<RecoverVehicleDTO> recoverVehicleDTOS = ResultDataUtils.getInstance(recoverVehicleDTOResult).getDataOrException();
         Map<String, List<RecoverVehicleDTO>> recoverVehicleMap = recoverVehicleDTOS.stream().collect(Collectors.groupingBy(RecoverVehicleDTO::getServeNo));
+        // 查询历史车辆
+        Result<List<VehicleDto>> vehiclesResult = vehicleAggregateRootApi.getVehicleDTOByIds(new ArrayList<>(historyVehicleIdSet));
+        List<VehicleDto> vehicles = vehiclesResult.getData();
+        Map<Integer, VehicleDto> historyVehicleMap = null;
+        if (null != vehicles && !vehicles.isEmpty()) {
+            historyVehicleMap = vehicles.stream().collect(Collectors.toMap(VehicleDto::getVehicleId, Function.identity(), (v1, v2) -> v1));
+        }
+        // 查询销售
+        String saleIdsStr = saleIdSet.stream().map(String::valueOf).collect(Collectors.joining(","));
+        UserListByEmployeeIdsQry saleQry = new UserListByEmployeeIdsQry();
+        saleQry.setEmployeeIds(saleIdsStr);
+        Result<List<EmployeeDTO>> employeesResult = userAggregateRootApi.getEmployeeListByEmployees(saleQry);
+        List<EmployeeDTO> employees = employeesResult.getData();
+        Map<Integer, EmployeeDTO> employeeMap = null;
+        if (null != employees && !employees.isEmpty()) {
+            employeeMap = employees.stream().collect(Collectors.toMap(EmployeeDTO::getId, Function.identity(), (v1, v2) -> v1));
+        }
         // 数据查询 --------------------------- end
 
         // 数据拼装 --------------------------- start
@@ -380,7 +407,7 @@ public class ServeLeaseTermAmountQryExe {
             }
 
             SysOfficeDto sysOfficeDto = sysOfficeDtoMap.getOrDefault(vo.getOrgId(), null);
-            if ( sysOfficeDto != null) {
+            if (sysOfficeDto != null) {
                 customerIDCardOrgSaleName += "-" + sysOfficeDto.getName();
             }
 
@@ -396,6 +423,58 @@ public class ServeLeaseTermAmountQryExe {
             vo.setCustomerName(customerIDCardOrgSaleName);
 //            for (ServeAllLeaseTermAmountVO serveAllLeaseTermAmountVO : voList) {
 //            }
+            // 历史租期车辆
+            if (null != historyVehicleMap) {
+                List<Integer> historyVehicleIds = vo.getHistoryVehicleIds();
+                if (null != historyVehicleIds) {
+                    List<String> historyVehiclePlates = new ArrayList<>();
+                    for (Integer historyVehicleId : historyVehicleIds) {
+                        VehicleDto vehicle = historyVehicleMap.get(historyVehicleId);
+                        if (null != vehicle) {
+                            historyVehiclePlates.add(vehicle.getPlateNumber());
+                        }
+                    }
+                    if (!historyVehiclePlates.isEmpty()) {
+                        vo.setHistoryVehiclePlate(historyVehiclePlates);
+                    }
+                    vo.setHistoryVehiclePlate(historyVehiclePlates);
+                }
+            }
+
+            // 所属销售
+            if (null != employeeMap) {
+                EmployeeDTO employeeDTO = employeeMap.get(vo.getSaleId());
+                if (null != employeeDTO) {
+                    vo.setSalesPersonName(employeeDTO.getNickName());
+                }
+            }
+            // 客户类别
+            Map<String, String> customerCategoryDictMap = ServeDictDataUtil.customerCategoryDictMap;
+            if (null != customerCategoryDictMap) {
+                if (null != vo.getCustomerCategory()) {
+                    vo.setCustomerCategoryDisplay(customerCategoryDictMap.get(vo.getCustomerCategory().toString()));
+                }
+            }
+            // 签约类型
+            Map<String, String> signedTypeMap = ServeDictDataUtil.signedTypeDictMap;
+            if (null != signedTypeMap) {
+                if (null != vo.getSignedType()) {
+                    vo.setSignedTypeDisplay(signedTypeMap.get(vo.getSignedType().toString()));
+                }
+            }
+            // 租赁期限
+            if (null != vo.getLeaseMonths() && 0 != vo.getLeaseMonths()) {
+                vo.setLeaseTermDisplay(vo.getLeaseMonths() + "个月");
+            } else {
+                vo.setLeaseTermDisplay(vo.getLeaseDays() + "天");
+            }
+            // 业务类型
+            if (null != vo.getBusinessType()) {
+                ServeContractTemplateEnum templateEnum = ServeContractTemplateEnum.getByBusinessType(vo.getBusinessType());
+                if (null != templateEnum) {
+                    vo.setBusinessTypeDisplay(templateEnum.getDesc());
+                }
+            }
         }
         // 数据拼装 --------------------------- end
 
@@ -479,6 +558,38 @@ public class ServeLeaseTermAmountQryExe {
 
         if (!StringUtils.isEmpty(qry.getServeNo())) {
             boolQueryBuilder.must(QueryBuilders.matchQuery("serveNo", qry.getServeNo()));
+        }
+        if (null != qry.getCustomerCategory() && 0 != qry.getCustomerCategory()) {
+            boolQueryBuilder.must(QueryBuilders.termQuery("customerCategory", qry.getCustomerCategory()));
+        }
+        if (null != qry.getSaleId() && 0 != qry.getSaleId()) {
+            boolQueryBuilder.must(QueryBuilders.termQuery("saleId", qry.getSaleId()));
+        }
+        if (null != qry.getHistoryVehicleId() && 0 != qry.getHistoryVehicleId()) {
+            boolQueryBuilder.must(QueryBuilders.termQuery("historyVehicleIds", qry.getHistoryVehicleId()));
+        }
+        if (!StringUtils.isEmpty(qry.getLeaseTerm())) {
+            String[] split = qry.getLeaseTerm().split("-");
+            RangeQueryBuilder queryBuilder = QueryBuilders.rangeQuery("totalLeaseDays").gte(split[0]);
+            if (split.length == 2) {
+                queryBuilder.lte(split[1]);
+            }
+            boolQueryBuilder.must(queryBuilder);
+        }
+        if (null != qry.getSignedType() && 0 != qry.getSignedType()) {
+            boolQueryBuilder.must(QueryBuilders.termQuery("signedType", qry.getSignedType()));
+        }
+        if (null != qry.getBusinessType() && 0 != qry.getBusinessType()) {
+            boolQueryBuilder.must(QueryBuilders.termQuery("businessType", qry.getBusinessType()));
+        }
+        if (null != qry.getFirstDeliverVehicleDateStart() && null != qry.getFirstDeliverVehicleDateEnd()) {
+            boolQueryBuilder.must(QueryBuilders.rangeQuery("firstDeliverVehicleDate").from(qry.getFirstDeliverVehicleDateStart()).to(qry.getFirstDeliverVehicleDateEnd()));
+        }
+        if (null != qry.getRecentlyRecoverVehicleDateStart() && null != qry.getRecentlyRecoverVehicleDateEnd()) {
+            boolQueryBuilder.must(QueryBuilders.rangeQuery("recentlyRecoverVehicleDate").from(qry.getRecentlyRecoverVehicleDateStart()).to(qry.getRecentlyRecoverVehicleDateEnd()));
+        }
+        if (null != qry.getExpectRecoverDateStart() && null != qry.getExpectRecoverDateEnd()) {
+            boolQueryBuilder.must(QueryBuilders.rangeQuery("expectRecoverDate").from(qry.getExpectRecoverDateStart().getTime()).to(qry.getExpectRecoverDateEnd().getTime()));
         }
         return boolQueryBuilder;
     }

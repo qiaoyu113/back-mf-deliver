@@ -239,5 +239,31 @@ public class ServeES {
     @ApiModelProperty(value = "实缴押金")
     private BigDecimal paidInDeposit;
 
+    @ApiModelProperty(value = "客户类别")
+    private Integer customerCategory;
+
+    @ApiModelProperty(value = "历史租赁车辆id")
+    private List<Integer> historyVehicleIds;
+
+    @ApiModelProperty(value = "租赁天数，等于租赁月数*30+租赁天数")
+    private Integer totalLeaseDays;
+
+    @ApiModelProperty(value = "费用业务类型")
+    private Integer businessType;
+
+    @ApiModelProperty(value = "首次发车日期")
+    private Date firstDeliverVehicleDate;
+
+    @ApiModelProperty(value = "最近收车日期")
+    private Date recentlyRecoverVehicleDate;
+
+    @ApiModelProperty(value = "签约类型")
+    private Integer signedType;
+
+    @ApiModelProperty(value = "租赁天数")
+    private Integer leaseDays;
+
+    @ApiModelProperty(value = "租赁月数")
+    private Integer leaseMonths;
 
 }
