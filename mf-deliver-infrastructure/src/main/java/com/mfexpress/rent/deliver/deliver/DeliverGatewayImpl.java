@@ -71,13 +71,13 @@ public class DeliverGatewayImpl implements DeliverGateway {
         //发车中交付单
         example.createCriteria().andIn("carId", carId).andEqualTo("deliverStatus", DeliverEnum.IS_DELIVER.getCode());
         DeliverEntity deliver = DeliverEntity.builder().isInsurance(status1).build();
-        int i = deliverMapper.updateByExampleSelective(deliver, example);
-        Example example1 = new Example(Deliver.class);
-        //收车中交付单
-        example1.createCriteria().andIn("carId", carId).andNotEqualTo("deliverStatus", DeliverEnum.IS_DELIVER.getCode());
-        DeliverEntity deliver1 = DeliverEntity.builder().isInsurance(status2).build();
-        int j = deliverMapper.updateByExampleSelective(deliver1, example1);
-        return i + j;
+        return  deliverMapper.updateByExampleSelective(deliver, example);
+//        Example example1 = new Example(Deliver.class);
+//        //收车中交付单
+//        example1.createCriteria().andIn("carId", carId).andNotEqualTo("deliverStatus", DeliverEnum.IS_DELIVER.getCode());
+//        DeliverEntity deliver1 = DeliverEntity.builder().isInsurance(status2).build();
+//        int j = deliverMapper.updateByExampleSelective(deliver1, example1);
+//        return i + j;
     }
 
     @Override
@@ -242,6 +242,9 @@ public class DeliverGatewayImpl implements DeliverGateway {
         Example.Criteria criteria = example.createCriteria();
         if (!StringUtils.isEmpty(deliverQry.getServeNo())) {
             criteria.andEqualTo("serveNo", deliverQry.getServeNo());
+        }
+        if (null != deliverQry.getServeNos() && !deliverQry.getServeNos().isEmpty()) {
+            criteria.andIn("serveNo", deliverQry.getServeNos());
         }
         if (null != deliverQry.getDeliverStatus() && !deliverQry.getDeliverStatus().isEmpty()) {
             criteria.andIn("deliverStatus", deliverQry.getDeliverStatus());
