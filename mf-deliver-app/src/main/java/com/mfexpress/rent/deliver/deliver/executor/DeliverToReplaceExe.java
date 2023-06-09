@@ -1,5 +1,9 @@
 package com.mfexpress.rent.deliver.deliver.executor;
 
+import cn.hutool.core.collection.CollectionUtil;
+import com.hx.backmarket.insurance.domainapi.policy.insurance.InsurancePolicyBaseAggregateRootApi;
+import com.hx.backmarket.insurance.dto.insurance.policy.data.dto.InsurancePolicyDTO;
+import com.hx.backmarket.insurance.dto.insurance.policy.data.qry.InsurancePolicyIdsQry;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.exception.CommonException;
 import com.mfexpress.component.response.Result;
@@ -30,26 +34,26 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 public class DeliverToReplaceExe {
 
     @Resource
     private ServeAggregateRootApi serveAggregateRootApi;
-
     @Resource
     private DeliverAggregateRootApi deliverAggregateRootApi;
-
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
-
     @Resource
     private VehicleInsuranceAggregateRootApi vehicleInsuranceAggregateRootApi;
-
     @Resource
     private ReactiveServeCheckCmdExe reactiveServeCheck;
+    @Resource
+    private InsurancePolicyBaseAggregateRootApi insurancePolicyBaseAggregateRootApi;
 
     public TipVO execute(DeliverReplaceCmd deliverReplaceCmd) {
         String serveNo = deliverReplaceCmd.getServeList().get(0);
@@ -62,51 +66,50 @@ public class DeliverToReplaceExe {
         ReactivateServeCheckCmd reactivateServeCheckCmd = ReactivateServeCheckCmd.builder().serveNoList(Collections.singletonList(serveNo)).build();
         reactiveServeCheck.execute(reactivateServeCheckCmd);
 
-        Result<List<VehicleInsuranceDTO>> vehicleInsuranceDTOSResult = vehicleAggregateRootApi.getVehicleInsuranceByVehicleIds(Collections.singletonList(vehicleId));
-        List<VehicleInsuranceDTO> vehicleInsuranceDTOS = ResultDataUtils.getInstance(vehicleInsuranceDTOSResult).getDataOrException();
-        if (null == vehicleInsuranceDTOS || vehicleInsuranceDTOS.isEmpty() || null == vehicleInsuranceDTOS.get(0)) {
-            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆保险信息查询失败");
-        }
-        VehicleInsuranceDTO vehicleInsuranceDTO = vehicleInsuranceDTOS.get(0);
-        if (null == vehicleInsuranceDTO.getCompulsoryInsuranceStatus() || null == vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
-            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(deliverVehicleSelectCmd.getPlateNumber()).concat("的交强险或商业险状态异常"));
-        }
-        if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) {
-            if (StringUtils.isEmpty(vehicleInsuranceDTO.getCompulsoryInsuranceId())) {
-                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(deliverVehicleSelectCmd.getPlateNumber()).concat("的交强险在保，但保单缺失"));
-            }
-        }
-        if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
-            if (StringUtils.isEmpty(vehicleInsuranceDTO.getCommercialInsuranceId())) {
-                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(deliverVehicleSelectCmd.getPlateNumber()).concat("的商业险在保，但保单缺失"));
-            }
-        }
+
+//        if (null == vehicleInsuranceDTOS || vehicleInsuranceDTOS.isEmpty() || null == vehicleInsuranceDTOS.get(0)) {
+//            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆保险信息查询失败");
+//        }
+
+//        if (null == vehicleInsuranceDTO.getCompulsoryInsuranceStatus() || null == vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
+//            throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(deliverVehicleSelectCmd.getPlateNumber()).concat("的交强险或商业险状态异常"));
+//        }
+//        if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) {
+//            if (StringUtils.isEmpty(vehicleInsuranceDTO.getCompulsoryInsuranceId())) {
+//                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(deliverVehicleSelectCmd.getPlateNumber()).concat("的交强险在保，但保单缺失"));
+//            }
+//        }
+//        if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
+//            if (StringUtils.isEmpty(vehicleInsuranceDTO.getCommercialInsuranceId())) {
+//                throw new CommonException(ResultErrorEnum.DATA_NOT_FOUND.getCode(), "车辆".concat(deliverVehicleSelectCmd.getPlateNumber()).concat("的商业险在保，但保单缺失"));
+//            }
+//        }
 
         // 进行保险校验
-        if (2 == deliverReplaceCmd.getVehicleInsureRequirement()) {
-            if (PolicyStatusEnum.EFFECT.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) {
-                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "仅能选择交强险在保车辆。");
-            } else if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
-                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "合同约定不包含商业险，请选择其他车辆。");
-            }
-        }
+//        if (2 == deliverReplaceCmd.getVehicleInsureRequirement()) {
+//            if (PolicyStatusEnum.EFFECT.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) {
+//                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "仅能选择交强险在保车辆。");
+//            } else if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
+//                throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "合同约定不包含商业险，请选择其他车辆。");
+//            }
+//        }
         TipVO tipVO = new TipVO();
-        if (JudgeEnum.NO.getCode().equals(deliverReplaceCmd.getSecondOperationFlag())) {
-            // 对车辆的保险状态不做限制
-            if (1 == deliverReplaceCmd.getVehicleInsureRequirement()) {
-                if (PolicyStatusEnum.EXPIRED.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus() || PolicyStatusEnum.EXPIRED.getCode() == vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
-                    tipVO.setTipFlag(JudgeEnum.YES.getCode());
-                    String companyInsureTipMsg = "您选择的车辆里包含保险失效车辆，如果继续，请前往待投保中，对过保车辆发起投保申请。避免因保险未生效影响用户交车。";
-                    tipVO.setTipMsg(companyInsureTipMsg);
-                    return tipVO;
-                }
-            } else if (2 == deliverReplaceCmd.getVehicleInsureRequirement()) {
-                tipVO.setTipFlag(JudgeEnum.YES.getCode());
-                String costumerInsureTipMsg = "选择车辆里包含保险失效车辆，根据合同约定不包含商业险，请联系租户获取保单信息，完成信息回填。没有有效的保单信息无法发车！";
-                tipVO.setTipMsg(costumerInsureTipMsg);
-                return tipVO;
-            }
-        }
+//        if (JudgeEnum.NO.getCode().equals(deliverReplaceCmd.getSecondOperationFlag())) {
+//            // 对车辆的保险状态不做限制
+//            if (1 == deliverReplaceCmd.getVehicleInsureRequirement()) {
+//                if (PolicyStatusEnum.EXPIRED.getCode() == vehicleInsuranceDTO.getCompulsoryInsuranceStatus() || PolicyStatusEnum.EXPIRED.getCode() == vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
+//                    tipVO.setTipFlag(JudgeEnum.YES.getCode());
+//                    String companyInsureTipMsg = "您选择的车辆里包含保险失效车辆，如果继续，请前往待投保中，对过保车辆发起投保申请。避免因保险未生效影响用户交车。";
+//                    tipVO.setTipMsg(companyInsureTipMsg);
+//                    return tipVO;
+//                }
+//            } else if (2 == deliverReplaceCmd.getVehicleInsureRequirement()) {
+//                tipVO.setTipFlag(JudgeEnum.YES.getCode());
+//                String costumerInsureTipMsg = "选择车辆里包含保险失效车辆，根据合同约定不包含商业险，请联系租户获取保单信息，完成信息回填。没有有效的保单信息无法发车！";
+//                tipVO.setTipMsg(costumerInsureTipMsg);
+//                return tipVO;
+//            }
+//        }
 
         DeliverDTO deliverDTO = new DeliverDTO();
         //原车辆未预选状态
@@ -163,12 +166,38 @@ public class DeliverToReplaceExe {
         deliverDTO.setVehicleAge(deliverVehicleSelectCmd.getVehicleAge());
         deliverDTO.setCarServiceId(deliverReplaceCmd.getCarServiceId());
         deliverDTO.setVehicleBusinessMode(vehicleInfoDto.getVehicleBusinessMode());
-        if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) {
-            deliverDTO.setCompulsoryPolicyId(vehicleInsuranceDTO.getCompulsoryInsuranceId().toString());
+
+        // 车辆保险信息
+        Result<List<VehicleInsuranceDTO>> vehicleInsuranceDTOSResult = vehicleAggregateRootApi.getVehicleInsuranceByVehicleIds(Collections.singletonList(vehicleId));
+        List<VehicleInsuranceDTO> vehicleInsuranceDTOS = ResultDataUtils.getInstance(vehicleInsuranceDTOSResult).getDataOrException();
+        VehicleInsuranceDTO vehicleInsuranceDTO = vehicleInsuranceDTOS.get(0);
+
+        if (Objects.nonNull(vehicleInsuranceDTO)) {
+            if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCompulsoryInsuranceStatus()) {
+                deliverDTO.setCompulsoryPolicyId(vehicleInsuranceDTO.getCompulsoryInsuranceId().toString());
+            }
+            if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
+                deliverDTO.setCommercialPolicyId(vehicleInsuranceDTO.getCommercialInsuranceId().toString());
+            }
         }
-        if (PolicyStatusEnum.EXPIRED.getCode() != vehicleInsuranceDTO.getCommercialInsuranceStatus()) {
-            deliverDTO.setCommercialPolicyId(vehicleInsuranceDTO.getCommercialInsuranceId().toString());
+
+        // 验证保单保险数据是否有退保中状态
+        if (Objects.nonNull(vehicleInsuranceDTO)) {
+            List<Long> policyIdList = new ArrayList<>();
+            policyIdList.add(vehicleInsuranceDTO.getCompulsoryInsuranceId());
+            policyIdList.add(vehicleInsuranceDTO.getCommercialInsuranceId());
+            Result<List<InsurancePolicyDTO>> insurancePolicyResult = insurancePolicyBaseAggregateRootApi.list(InsurancePolicyIdsQry.builder().policyIds(policyIdList).build());
+            if (ResultDataUtils.checkResultData(insurancePolicyResult) && CollectionUtil.isNotEmpty(insurancePolicyResult.getData())) {
+                List<InsurancePolicyDTO> insurancePolicyDTOList = insurancePolicyResult.getData();
+                for (InsurancePolicyDTO insurancePolicyDTO : insurancePolicyDTOList) {
+                    if (Objects.nonNull(insurancePolicyDTO)
+                            && Objects.equals(insurancePolicyDTO.getPolicyStatus(), com.hx.backmarket.insurance.constant.policy.PolicyStatusEnum.SURRENDERING.getIndex())) {
+                        throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "当前车辆存在退保事项，无法进行预选");
+                    }
+                }
+            }
         }
+
         deliverDTO.setDeliverNo(deliver.getDeliverNo());
 
         Result<String> result = deliverAggregateRootApi.toReplace(deliverDTO);
