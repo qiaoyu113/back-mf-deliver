@@ -26,7 +26,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
@@ -61,17 +60,21 @@ public class RecoverQryContext {
         RecoverTaskListVO recoverTaskListVO = bean.execute(recoverQryListCmd, tokenInfo);
         List<RecoverVehicleVO> recoverVehicleVOList = recoverTaskListVO.getRecoverVehicleVOList();
 
+        if (CollUtil.isEmpty(recoverVehicleVOList)) {
+            return recoverTaskListVO;
+        }
+
         List<SysOfficeDto> sysOfficeDtoList = ResultDataUtils.getInstance(officeAggregateRootApi.getOfficeCityListAll()).getDataOrNull();
         Map<Integer, SysOfficeDto> sysOfficeDtoMap = sysOfficeDtoList.stream().collect(Collectors.toMap(SysOfficeDto::getId, v -> v));
 
         List<Integer> customerIdList = recoverVehicleVOList.stream().map(RecoverVehicleVO::getCustomerId).collect(Collectors.toList());
         List<RentalCustomerDTO> rentalCustomerDTOList = ResultDataUtils.getInstance(rentalCustomerAggregateRootApi.getRentalCustomerByCustomerIdList(customerIdList)).getDataOrNull();
         Map<Integer, RentalCustomerDTO> rentalCustomerDTOMap = CollUtil.isNotEmpty(rentalCustomerDTOList)
-                ? rentalCustomerDTOList.stream().collect(Collectors.toMap(RentalCustomerDTO::getId, v -> v, (v1, v2) -> v1)): new HashMap<>();
+                ? rentalCustomerDTOList.stream().collect(Collectors.toMap(RentalCustomerDTO::getId, v -> v, (v1, v2) -> v1)) : new HashMap<>();
 
         List<CustomerEnterpriseNcInfoDTO> customerEnterpriseNcInfoDTOList = ResultDataUtils.getInstance(customerAggregateRootApi.getCustomerEnterpriseNcInfoDTOListByCustomerIdList(customerIdList)).getDataOrNull();
         Map<Integer, CustomerEnterpriseNcInfoDTO> customerEnterpriseNcInfoDTOMap = CollUtil.isNotEmpty(customerEnterpriseNcInfoDTOList)
-                ? customerEnterpriseNcInfoDTOList.stream().collect(Collectors.toMap(CustomerEnterpriseNcInfoDTO::getCustomerId, v -> v, (v1, v2) -> v1)): new HashMap<>();
+                ? customerEnterpriseNcInfoDTOList.stream().collect(Collectors.toMap(CustomerEnterpriseNcInfoDTO::getCustomerId, v -> v, (v1, v2) -> v1)) : new HashMap<>();
 
         String saleIdString = CollUtil.isNotEmpty(rentalCustomerDTOList)
                 ? rentalCustomerDTOList.stream().map(RentalCustomerDTO::getSaleId).map(String::valueOf).collect(Collectors.joining(",")) : "";
@@ -106,7 +109,7 @@ public class RecoverQryContext {
             }
 
             SysOfficeDto sysOfficeDto = sysOfficeDtoMap.getOrDefault(v.getOrgId(), null);
-            if ( sysOfficeDto != null) {
+            if (sysOfficeDto != null) {
                 customerIDCardOrgSaleName += "-" + sysOfficeDto.getName();
             }
 

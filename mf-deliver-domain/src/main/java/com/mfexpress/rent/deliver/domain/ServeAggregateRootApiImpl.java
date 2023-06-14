@@ -3,6 +3,7 @@ package com.mfexpress.rent.deliver.domain;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateTime;
@@ -404,9 +405,14 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
     @Override
     @PostMapping("/getServeDTOByServeNoList")
     public Result<List<ServeDTO>> getServeDTOByServeNoList(@RequestBody List<String> serveNoList) {
+        List<ServeDTO> serveDTOList = new ArrayList<>();
+        if (CollUtil.isEmpty(serveNoList)) {
+            return Result.getInstance(serveDTOList).success();
+        }
+
         List<ServeEntity> serveList = serveGateway.getServeByServeNoList(serveNoList);
         if (CollectionUtil.isEmpty(serveList)) {
-            return Result.getInstance((List<ServeDTO>) null).fail(ResultErrorEnum.DATA_NOT_FOUND.getCode(), ResultErrorEnum.DATA_NOT_FOUND.getName());
+            return Result.getInstance(serveDTOList).success();
         }
 
         // 补充是否为重新激活标志位
@@ -417,7 +423,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         }
 
         Map<String, ServeChangeRecordPO> finalServeReactiveFlagMap = serveReactiveFlagMap;
-        List<ServeDTO> serveDTOList = serveList.stream().map(serveEntity -> {
+        serveDTOList = serveList.stream().map(serveEntity -> {
             ServeDTO serveDTO = new ServeDTO();
             BeanUtils.copyProperties(serveEntity, serveDTO);
             if (null != finalServeReactiveFlagMap && null != finalServeReactiveFlagMap.get(serveEntity.getServeNo())) {
