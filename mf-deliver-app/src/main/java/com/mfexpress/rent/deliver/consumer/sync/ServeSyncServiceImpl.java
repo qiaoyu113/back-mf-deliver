@@ -20,7 +20,9 @@ import com.mfexpress.component.starter.tools.es.ESBatchSyncTools;
 import com.mfexpress.component.starter.tools.es.ElasticsearchTools;
 import com.mfexpress.component.starter.tools.es.IdListPageQry;
 import com.mfexpress.component.utils.util.ResultDataUtils;
+import com.mfexpress.order.api.app.ContractAggregateRootApi;
 import com.mfexpress.order.api.app.OrderAggregateRootApi;
+import com.mfexpress.order.dto.data.ContractDTO;
 import com.mfexpress.order.dto.data.OrderDTO;
 import com.mfexpress.order.dto.data.ProductDTO;
 import com.mfexpress.order.dto.qry.ReviewOrderQry;
@@ -32,6 +34,7 @@ import com.mfexpress.rent.deliver.domainapi.ServeAggregateRootApi;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import com.mfexpress.rent.deliver.dto.data.OrderCarModelVO;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.DeliverQry;
 import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
@@ -39,8 +42,11 @@ import com.mfexpress.rent.deliver.dto.es.ServeES;
 import com.mfexpress.rent.deliver.entity.DeliverVehicleEntity;
 import com.mfexpress.rent.deliver.utils.DeliverUtils;
 import com.mfexpress.rent.vehicle.api.VehicleAggregateRootApi;
+import com.mfexpress.rent.vehicle.data.dto.vehicle.VehicleInfoDto;
 import com.mfexpress.transportation.customer.api.CustomerAggregateRootApi;
+import com.mfexpress.transportation.customer.api.RentalCustomerAggregateRootApi;
 import com.mfexpress.transportation.customer.dto.data.customer.CustomerVO;
+import com.mfexpress.transportation.customer.dto.rent.RentalCustomerDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.settings.Settings;
@@ -51,10 +57,7 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -81,6 +84,12 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
     private OrderAggregateRootApi orderAggregateRootApi;
     @Resource
     private DictAggregateRootApi dictAggregateRootApi;
+
+    @Resource
+    private RentalCustomerAggregateRootApi rentalCustomerAggregateRootApi;
+
+    @Resource
+    private ContractAggregateRootApi contractAggregateRootApi;
 
     private ESBatchSyncTools esBatchSyncTools;
 
@@ -167,13 +176,31 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
     }
 
     @Override
-    @MFMqBinlogTableFullName({"mf-deliver.deliver", "mf-deliver.serve", "mf-deliver.deliver_vehicle", "mf-deliver.recover_vehicle"})
+    @MFMqBinlogTableFullName({"mf-deliver.deliver", "mf-deliver.serve", "mf-deliver.deliver_vehicle", "mf-deliver.recover_vehicle", "mf-customer.rental_customer"})
     public boolean execOne(Map<String, String> data) {
-        ServeES serveES = (ServeES) assembleEsData(data);
-        if (null != serveES) {
-            sendRequest(serveES);
+        if (data.containsKey("cooperation_status")) {
+            // 客户更新逻辑
+            customerUpdate(data);
+        } else {
+            ServeES serveES = (ServeES) assembleEsData(data);
+            if (null != serveES) {
+                sendRequest(serveES);
+            }
         }
         return true;
+    }
+
+    private void customerUpdate(Map<String, String> data) {
+        String customerId = data.get("id");
+        Result<List<ServeDTO>> serveResults = serveAggregateRootApi.getServeDTOByCustomerId(Integer.valueOf(customerId));
+        List<ServeDTO> serves = serveResults.getData();
+        if (null != serves && !serves.isEmpty()) {
+            Map<String, String> map = new HashMap<>();
+            for (ServeDTO serve : serves) {
+                map.put("serve_no", serve.getServeNo());
+                execOne(map);
+            }
+        }
     }
 
     @Override
@@ -307,6 +334,83 @@ public class ServeSyncServiceImpl implements EsSyncHandlerI {
             serveEs.setIsInsurance(0);
             serveEs.setIsDeduction(0);
             serveEs.setSort(DeliverSortEnum.TWO.getSort());
+        }
+
+        // 历史租赁车辆查询
+        DeliverQry deliverQry = new DeliverQry();
+        deliverQry.setServeNo(serveNo);
+        deliverQry.setStatus(Arrays.asList(DeliverStatusEnum.HISTORICAL.getCode(), DeliverStatusEnum.VALID.getCode()));
+        Result<List<DeliverDTO>> deliversResult = deliverAggregateRootApi.getDeliverListByQry(deliverQry);
+        List<DeliverDTO> delivers = deliversResult.getData();
+        if (delivers != null && !delivers.isEmpty()) {
+            List<Integer> historyCarIds = new ArrayList<>();
+            List<String> deliverNos = new ArrayList<>();
+            for (DeliverDTO deliver : delivers) {
+                if (deliver.getStatus().equals(DeliverStatusEnum.HISTORICAL.getCode())) {
+                    historyCarIds.add(deliver.getCarId());
+                }
+                deliverNos.add(deliver.getDeliverNo());
+            }
+            serveEs.setHistoryVehicleIds(historyCarIds);
+            Result<List<DeliverVehicleDTO>> deliverVehiclesResult = deliverVehicleAggregateRootApi.getDeliverVehicleByDeliverNoList(deliverNos);
+            List<DeliverVehicleDTO> deliverVehicles = deliverVehiclesResult.getData();
+            Result<List<RecoverVehicleDTO>> recoverVehicleResult = recoverVehicleAggregateRootApi.getRecoverVehicleDTOByDeliverNos(deliverNos);
+            List<RecoverVehicleDTO> recoverVehicles = recoverVehicleResult.getData();
+            if (null != deliverVehicles && !deliverVehicles.isEmpty()) {
+                Date earliestDeliverVehicleTime = null;
+                for (DeliverVehicleDTO deliverVehicle : deliverVehicles) {
+                    Date deliverVehicleTime = deliverVehicle.getDeliverVehicleTime();
+                    if (null != deliverVehicleTime) {
+                        if (earliestDeliverVehicleTime == null) {
+                            earliestDeliverVehicleTime = deliverVehicleTime;
+                        } else {
+                            if (1 == DateUtil.compare(earliestDeliverVehicleTime, deliverVehicleTime)) {
+                                earliestDeliverVehicleTime = deliverVehicleTime;
+                            }
+                        }
+                    }
+                }
+                serveEs.setFirstDeliverVehicleDate(earliestDeliverVehicleTime);
+            }
+            if (null != recoverVehicles && !recoverVehicles.isEmpty()) {
+                Date recentDeliverVehicleTime = null;
+                for (RecoverVehicleDTO recoverVehicle : recoverVehicles) {
+                    Date recoverVehicleTime = recoverVehicle.getRecoverVehicleTime();
+                    if (null != recoverVehicleTime) {
+                        if (recentDeliverVehicleTime == null) {
+                            recentDeliverVehicleTime = recoverVehicleTime;
+                        } else {
+                            if (-1 == DateUtil.compare(recentDeliverVehicleTime, recoverVehicleTime)) {
+                                recentDeliverVehicleTime = recoverVehicleTime;
+                            }
+                        }
+                    }
+                }
+                serveEs.setRecentlyRecoverVehicleDate(recentDeliverVehicleTime);
+            }
+        }
+
+        // 客户类别补充
+        Result<RentalCustomerDTO> rentalCustomerResult = rentalCustomerAggregateRootApi.getRentalCustomerByCustomerId(serveDTO.getCustomerId());
+        RentalCustomerDTO rentalCustomer = rentalCustomerResult.getData();
+        if (null != rentalCustomer) {
+            serveEs.setCustomerCategory(rentalCustomer.getCategory());
+        }
+        // 车辆运营模式
+        if (null != serveEs.getCarId()) {
+            Result<VehicleInfoDto> vehicleInfoResult = vehicleAggregateRootApi.getVehicleInfoVOById(serveEs.getCarId());
+            VehicleInfoDto vehicleInfo = vehicleInfoResult.getData();
+            serveEs.setVehicleBusinessMode(vehicleInfo.getVehicleBusinessMode());
+        }
+        // 租赁天数
+        serveEs.setTotalLeaseDays(serveDTO.getLeaseMonths() * 30 + serveDTO.getLeaseDays());
+        // 费用业务类型
+        serveEs.setBusinessType(serveDTO.getBusinessType());
+        // 签约类型
+        Result<ContractDTO> contractResult = contractAggregateRootApi.getOneByContractId(serveDTO.getContractId());
+        ContractDTO contract = contractResult.getData();
+        if (null != contract) {
+            serveEs.setSignedType(contract.getContractType());
         }
         return serveEs;
     }

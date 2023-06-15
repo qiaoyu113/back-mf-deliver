@@ -2,6 +2,7 @@ package com.mfexpress.rent.deliver.domain;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
@@ -21,14 +22,19 @@ import com.mfexpress.rent.deliver.dto.data.deliver.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.cmd.*;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.InsuranceApplyDTO;
 import com.mfexpress.rent.deliver.dto.data.deliver.dto.VehicleContractDTO;
+import com.mfexpress.rent.deliver.dto.data.deliver.dto.VehicleViolationDeliverInfoDTO;
+import com.mfexpress.rent.deliver.dto.data.delivervehicle.DeliverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverBackInsureByDeliverCmd;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverCancelByDeliverCmd;
+import com.mfexpress.rent.deliver.dto.data.recovervehicle.RecoverVehicleDTO;
 import com.mfexpress.rent.deliver.dto.data.recovervehicle.cmd.RecoverCheckJudgeCmd;
 import com.mfexpress.rent.deliver.dto.data.serve.ServeDTO;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
 import com.mfexpress.rent.deliver.entity.DeliverEntity;
 import com.mfexpress.rent.deliver.entity.RecoverVehicleEntity;
 import com.mfexpress.rent.deliver.entity.api.DeliverEntityApi;
+import com.mfexpress.rent.deliver.entity.api.DeliverVehicleEntityApi;
+import com.mfexpress.rent.deliver.entity.api.RecoverVehicleEntityApi;
 import com.mfexpress.rent.deliver.entity.api.ServeEntityApi;
 import com.mfexpress.rent.deliver.gateway.DeliverGateway;
 import com.mfexpress.rent.deliver.gateway.RecoverVehicleGateway;
@@ -63,7 +69,10 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
 
     @Resource
     private DeliverEntityApi deliverEntityApi;
-
+    @Resource
+    private DeliverVehicleEntityApi deliverVehicleEntityApi;
+    @Resource
+    private RecoverVehicleEntityApi recoverVehicleEntityApi;
     @Resource
     private ServeEntityApi serveEntityApi;
 
@@ -76,12 +85,13 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     @Resource
     private MaintenanceAggregateRootApi maintenanceAggregateRootApi;
 
+
     @Override
     @PostMapping("/getDeliverByServeNo")
     @PrintParam
     public Result<DeliverDTO> getDeliverByServeNo(@RequestParam("serveNo") String serveNo) {
         DeliverDTO deliverDTO = new DeliverDTO();
-        DeliverEntity deliver = deliverGateway.getDeliverByServeNo(serveNo);
+        DeliverEntity deliver = deliverGateway.getValidDeliverByServeNo(serveNo);
         if (deliver != null) {
             if (StringUtils.isEmpty(deliver.getInsuranceStartTime())) {
                 deliver.setInsuranceStartTime(null);
@@ -127,7 +137,7 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     // 发车验车和收车验车对deliver的更改都走的是这个接口
     public Result<Integer> toCheck(@RequestParam("serveNo") String serveNo, @RequestParam("operatorId") Integer operatorId) {
         //2021-10-13修改 收车验车时交付单变更为已收车
-        DeliverEntity deliver = deliverGateway.getDeliverByServeNo(serveNo);
+        DeliverEntity deliver = deliverGateway.getValidDeliverByServeNo(serveNo);
 
         // 2022-05-31 如果是收车 需要校验验车是否可以进行
         if (DeliverEnum.IS_RECOVER.getCode().equals(deliver.getDeliverStatus())) {
@@ -727,6 +737,248 @@ public class DeliverAggregateRootApiImpl implements DeliverAggregateRootApi {
     public Result<List<DeliverDTO>> getLeaseDeliverByCarIdList(@RequestBody List<Integer> carIdList) {
 
         return Result.getInstance(deliverEntityApi.getLeaseDeliverByCarId(carIdList)).success();
+    }
+
+    @Override
+    @PostMapping("getVehicleViolationDeliverInfoList")
+    @PrintParam
+    public Result<List<VehicleViolationDeliverInfoDTO>> getVehicleViolationDeliverInfoList(@RequestBody @Validated VehicleViolationDeliverInfoQry vehicleViolationDeliverInfoQry) {
+        List<VehicleViolationDeliverInfoDTO> result = new ArrayList<>();
+        Integer vehicleId = vehicleViolationDeliverInfoQry.getVehicleId();
+        Date violationDate = vehicleViolationDeliverInfoQry.getViolationDate();
+
+        //非无效的交付单
+        List<DeliverDTO> deliverList = deliverEntityApi.getDeliverListByCarId(vehicleId);
+        if (CollUtil.isEmpty(deliverList)) {
+            return Result.getInstance(result).success();
+        }
+
+        //组装数据,并排序
+        List<VehicleViolationDeliverInfoDTO> deliverInfoDTOList = this.deliverDtoToViolationInfo(deliverList);
+
+        //仅1条数据
+        if (deliverInfoDTOList.size() == 1) {
+            return Result.getInstance(deliverInfoDTOList).success();
+        }
+
+        return Result.getInstance(this.matchViolationInfo(violationDate, deliverInfoDTOList)).success();
+    }
+
+    @Override
+    @PrintParam
+    @PostMapping("/getVehicleViolationDeliverInfo")
+    public Result<VehicleViolationDeliverInfoDTO> getVehicleViolationDeliverInfo(@RequestBody @Validated VehicleViolationDeliverInfoQry vehicleViolationDeliverInfoQry) {
+
+        Integer vehicleId = vehicleViolationDeliverInfoQry.getVehicleId();
+        Date violationDate = vehicleViolationDeliverInfoQry.getViolationDate();
+
+        //非无效的交付单
+        List<DeliverDTO> deliverList = deliverEntityApi.getDeliverListByCarIdList(Collections.singletonList(vehicleId));
+        if (CollUtil.isEmpty(deliverList)) {
+            return Result.getInstance((VehicleViolationDeliverInfoDTO) null).success();
+        }
+
+
+        //组装数据,并排序
+        List<VehicleViolationDeliverInfoDTO> deliverInfoDTOList = this.deliverDtoToViolationInfo(deliverList);
+
+        for (VehicleViolationDeliverInfoDTO deliverInfo : deliverInfoDTOList) {
+            Date deliverDate = deliverInfo.getDeliverDate();
+            Date recoverDate = deliverInfo.getRecoverDate();
+
+            //命中判断  违章时间为 此此交付单的收/发车时间范围内
+            boolean inThisDeliverFlag;
+            if (recoverDate == null) {
+                inThisDeliverFlag = violationDate.compareTo(deliverDate) >= 0;
+            } else {
+                //命中判断  违章时间为 此此交付单的收/发车时间范围内
+                inThisDeliverFlag = DateUtil.isIn(violationDate, deliverDate, recoverDate);
+            }
+            //违章时间在交付单收发车时间内
+            if (inThisDeliverFlag) {
+                return Result.getInstance(deliverInfo).success();
+            }
+        }
+        return Result.getInstance((VehicleViolationDeliverInfoDTO) null).success();
+    }
+
+    @Override
+    @PrintParam
+    @PostMapping("getBatchVehicleViolationDeliverInfo")
+    public Result<List<VehicleViolationDeliverInfoDTO>> getBatchVehicleViolationDeliverInfo(@RequestBody List<VehicleViolationDeliverInfoQry> vehicleViolationDeliverInfoQryList) {
+
+
+        Map<Integer, VehicleViolationDeliverInfoQry> vehicleViolationDeliverInfoQryMap = vehicleViolationDeliverInfoQryList.stream()
+                .collect(Collectors.toMap(VehicleViolationDeliverInfoQry::getVehicleId, Function.identity(), (v1, v2) -> v1));
+        Set<Integer> vehicleIdSet = vehicleViolationDeliverInfoQryMap.keySet();
+
+        List<VehicleViolationDeliverInfoDTO> deliverInfoResultList = new ArrayList<>();
+
+        //非无效的交付单
+        List<DeliverDTO> deliverList = deliverEntityApi.getDeliverListByCarIdList(new ArrayList<>(vehicleIdSet));
+        if (CollUtil.isEmpty(deliverList)) {
+            return Result.getInstance(deliverInfoResultList).success();
+        }
+
+        //组装数据,并排序
+        List<VehicleViolationDeliverInfoDTO> allDeliverInfo = this.deliverDtoToViolationInfo(deliverList);
+
+        Set<Object> copyVehicleIdSet = new HashSet<>(vehicleIdSet);
+
+        for (VehicleViolationDeliverInfoDTO deliverInfo : allDeliverInfo) {
+
+            Integer vehicleId = deliverInfo.getVehicleId();
+            if (!copyVehicleIdSet.contains(vehicleId)) {
+                continue;
+            }
+
+            VehicleViolationDeliverInfoQry vehicleViolationDeliverInfoQry = vehicleViolationDeliverInfoQryMap.get(vehicleId);
+
+            Date deliverDate = deliverInfo.getDeliverDate();
+            Date recoverDate = deliverInfo.getRecoverDate();
+            Date violationDate = vehicleViolationDeliverInfoQry.getViolationDate();
+
+            boolean inThisDeliverFlag;
+            if (recoverDate == null) {
+                inThisDeliverFlag = violationDate.after(deliverDate);
+            } else {
+                //命中判断  违章时间为 此此交付单的收/发车时间范围内
+                inThisDeliverFlag = DateUtil.isIn(violationDate, deliverDate, recoverDate);
+            }
+
+            //违章时间在交付单收发车时间内
+            if (inThisDeliverFlag) {
+                copyVehicleIdSet.remove(vehicleId);
+                deliverInfoResultList.add(deliverInfo);
+            }
+
+        }
+
+        return Result.getInstance(deliverInfoResultList).success();
+    }
+
+    @Override
+    @PrintParam
+    @PostMapping("getVehicleViolationDeliverInfoByDeliverId")
+    public Result<VehicleViolationDeliverInfoDTO> getVehicleViolationDeliverInfoByDeliverId(@RequestBody Long deliverId) {
+        return Result.getInstance(deliverEntityApi.getVehicleViolationDeliverInfoByDeliverId(deliverId)).success();
+    }
+
+    private List<VehicleViolationDeliverInfoDTO> deliverDtoToViolationInfo(List<DeliverDTO> deliverList) {
+
+        HashSet<String> deliverNoSet = new HashSet<>();
+        HashSet<String> serveNoSet = new HashSet<>();
+        deliverList.forEach(deliver -> {
+            deliverNoSet.add(deliver.getDeliverNo());
+            serveNoSet.add(deliver.getServeNo());
+        });
+
+        //收/发车,服务单
+        List<DeliverVehicleDTO> deliverVehicleList = deliverVehicleEntityApi.getDeliverVehicleListByDeliverNoList(new ArrayList<>(deliverNoSet));
+        List<RecoverVehicleDTO> recoverList = recoverVehicleEntityApi.getRecoverListByDeliverNoList(new ArrayList<>(deliverNoSet));
+        List<ServeDTO> serveList = serveEntityApi.getServeListByServeNoList(new ArrayList<>(serveNoSet));
+        Map<String, DeliverVehicleDTO> deliverVehicleMap = new HashMap<>();
+        if (CollUtil.isNotEmpty(deliverVehicleList)) {
+            deliverVehicleMap = deliverVehicleList.stream().collect(Collectors.toMap(DeliverVehicleDTO::getDeliverNo, Function.identity(), (v1, v2) -> v1));
+        }
+        Map<String, RecoverVehicleDTO> recoverMap = new HashMap<>();
+        if (CollUtil.isNotEmpty(recoverList)) {
+            recoverMap = recoverList.stream().collect(Collectors.toMap(RecoverVehicleDTO::getDeliverNo, Function.identity(), (v1, v2) -> v1));
+        }
+        Map<String, ServeDTO> serveMap = new HashMap<>();
+        if (CollUtil.isNotEmpty(serveList)) {
+            serveMap = serveList.stream().collect(Collectors.toMap(ServeDTO::getServeNo, Function.identity(), (v1, v2) -> v1));
+        }
+
+        Map<String, DeliverVehicleDTO> finalDeliverVehicleMap = deliverVehicleMap;
+        Map<String, RecoverVehicleDTO> finalRecoverMap = recoverMap;
+        Map<String, ServeDTO> finalServeMap = serveMap;
+
+        return deliverList.stream().map(deliver -> {
+            VehicleViolationDeliverInfoDTO deliverInfoDTO = new VehicleViolationDeliverInfoDTO();
+            String deliverNo = deliver.getDeliverNo();
+            String serveNo = deliver.getServeNo();
+
+            deliverInfoDTO.setDeliverId(deliver.getDeliverId());
+            deliverInfoDTO.setDeliverNo(deliverNo);
+            deliverInfoDTO.setServeNo(serveNo);
+            deliverInfoDTO.setVehicleId(deliver.getCarId());
+            Optional.of(finalDeliverVehicleMap).map(map -> map.get(deliverNo)).ifPresent(deliverVehicle -> {
+                deliverInfoDTO.setDeliverDate(deliverVehicle.getDeliverVehicleTime());
+            });
+            Optional.of(finalRecoverMap).map(map -> map.get(deliverNo)).ifPresent(recoverVehicle -> {
+                deliverInfoDTO.setRecoverDate(recoverVehicle.getRecoverVehicleTime());
+            });
+            Optional.of(finalServeMap).map(map -> map.get(serveNo)).ifPresent(serve -> {
+                deliverInfoDTO.setServeId(serve.getServeId());
+                deliverInfoDTO.setContractId(serve.getContractId());
+                deliverInfoDTO.setContractNo(serve.getOaContractCode());
+                deliverInfoDTO.setOrderId(serve.getOrderId());
+                deliverInfoDTO.setCustomerId(serve.getCustomerId());
+            });
+
+            return deliverInfoDTO;
+
+        })
+                //发车时间正序排列
+                .sorted(Comparator.comparing(VehicleViolationDeliverInfoDTO::getDeliverDate))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 返回至多三个 违章时间 周围的交付单
+     */
+    private List<VehicleViolationDeliverInfoDTO> matchViolationInfo(Date violationDate, List<VehicleViolationDeliverInfoDTO> deliverInfoDTOList) {
+
+        List<VehicleViolationDeliverInfoDTO> result = new ArrayList<>();
+        for (int index = 0; index < deliverInfoDTOList.size(); index++) {
+            VehicleViolationDeliverInfoDTO thisDeliverInfo = deliverInfoDTOList.get(index);
+            Date deliverDate = thisDeliverInfo.getDeliverDate();
+            Date recoverDate = thisDeliverInfo.getRecoverDate();
+
+            //左边界判断  在最先的交付单发车时间之前,返回此交付单
+            if (index == 0 && violationDate.compareTo(deliverDate) < 0) {
+                result.add(thisDeliverInfo);
+                break;
+            }
+
+            //右边界判断  最后的交付单  -- 收车时间为空(未收车),或在 收车时间之前;获取可能的前一个和此交付单
+            if (index == deliverInfoDTOList.size() - 1 && (recoverDate == null || violationDate.compareTo(recoverDate) <= 0)) {
+                if (index > 0) {
+                    result.add(deliverInfoDTOList.get(index - 1));
+                }
+                result.add(thisDeliverInfo);
+                break;
+            }
+
+            //间隙判断  非最后一个  在此交付单收车日期和下一个交付单发车日期间隙,返回这两个交付单
+            if (index < deliverInfoDTOList.size() - 1) {
+                //在此交付单收车时间后,且在下次发车时间前的 违章
+                boolean inInterval = DateUtil.isIn(violationDate, recoverDate, deliverInfoDTOList.get(index + 1).getDeliverDate());
+                if (inInterval) {
+                    result.add(thisDeliverInfo);
+                    result.add(deliverInfoDTOList.get(index + 1));
+                    break;
+                }
+            }
+
+            //命中判断  违章时间为 此此交付单的收/发车时间范围内  返回此交付单为中点的至多可能的三个交付单
+            boolean inThisDeliverFlag = DateUtil.isIn(violationDate, deliverDate, recoverDate);
+            //违章时间在交付单收发车时间内
+            if (inThisDeliverFlag) {
+                if (index > 0) {
+                    result.add(deliverInfoDTOList.get(index - 1));
+                }
+                result.add(thisDeliverInfo);
+                if (index < deliverInfoDTOList.size() - 1) {
+                    result.add(deliverInfoDTOList.get(index + 1));
+                }
+                break;
+            }
+
+        }
+
+        return result;
     }
 
 }

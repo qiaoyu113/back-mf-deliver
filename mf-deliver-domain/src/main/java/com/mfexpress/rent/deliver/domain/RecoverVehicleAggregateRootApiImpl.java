@@ -109,7 +109,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @PrintParam
     public Result<String> cancelRecover(@RequestBody RecoverVehicleDTO recoverVehicleDTO) {
         RecoverVehicleEntity recoverVehicle = new RecoverVehicleEntity();
-        DeliverEntity deliver = deliverGateway.getDeliverByServeNo(recoverVehicle.getServeNo());
+        DeliverEntity deliver = deliverGateway.getValidDeliverByServeNo(recoverVehicle.getServeNo());
         if (null == deliver) {
             throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "交付单查询失败");
         }
@@ -167,7 +167,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @Override
     @PostMapping("/updateDeductionFee")
     public Result<Integer> updateDeductionFee(@RequestBody RecoverDeductionCmd cmd) {
-        DeliverEntity deliver = deliverGateway.getDeliverByServeNo(cmd.getServeNo());
+        DeliverEntity deliver = deliverGateway.getValidDeliverByServeNo(cmd.getServeNo());
         if (null == deliver) {
             throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "交付单查询失败");
         }
@@ -210,7 +210,7 @@ public class RecoverVehicleAggregateRootApiImpl implements RecoverVehicleAggrega
     @Transactional(rollbackFor = Exception.class)
     public Result<Integer> abnormalRecover(@RequestBody @Validated RecoverAbnormalCmd cmd) {
         // 判断deliver中的合同状态，如果不是签署中和生成中状态，不可进行此操作
-        DeliverEntity deliver = deliverGateway.getDeliverByServeNo(cmd.getServeNo());
+        DeliverEntity deliver = deliverGateway.getValidDeliverByServeNo(cmd.getServeNo());
         if (DeliverContractStatusEnum.GENERATING.getCode() != deliver.getRecoverContractStatus() && DeliverContractStatusEnum.SIGNING.getCode() != deliver.getRecoverContractStatus()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单当前状态不允许异常收车");
         }

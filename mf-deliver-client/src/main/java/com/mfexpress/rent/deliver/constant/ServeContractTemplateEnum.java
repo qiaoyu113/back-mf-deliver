@@ -36,5 +36,13 @@ public enum ServeContractTemplateEnum {
         return map.get(templateName);
     }
 
+    public static ServeContractTemplateEnum getByBusinessType(Integer businessType) {
+        for (ServeContractTemplateEnum modeEnum : ServeContractTemplateEnum.values()) {
+            if (modeEnum.getBusinessType().equals(businessType)){
+                return modeEnum;
+            }
+        }
+        return null;
+    }
 
 }

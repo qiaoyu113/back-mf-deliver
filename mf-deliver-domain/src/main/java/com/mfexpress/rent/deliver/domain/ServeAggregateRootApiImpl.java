@@ -205,9 +205,9 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
                 serve.setPaidInDeposit(BigDecimal.valueOf(serveVehicleDTO.getDeposit()));
                 serve.setRentRatio(BigDecimal.valueOf(serveVehicleDTO.getRentRatio()));
                 //增加具体业务类型
-                ServeContractTemplateEnum serveContractTemplate = ServeContractTemplateEnum.getServeContractTemplate(serveVehicleDTO.getTemplateName());
-                serve.setBusinessType(Objects.isNull(serveContractTemplate) ? ServeContractTemplateEnum.RENT.getBusinessType() : serveContractTemplate.getBusinessType());
-
+                //ServeContractTemplateEnum serveContractTemplate = ServeContractTemplateEnum.getServeContractTemplate(serveVehicleDTO.getTemplateName());
+                //serve.setBusinessType(Objects.isNull(serveContractTemplate) ? ServeContractTemplateEnum.RENT.getBusinessType() : serveContractTemplate.getBusinessType());
+				serve.setBusinessType(serveAddDTO.getBusinessType());
                 serveList.add(serve);
 
                 //预付款
@@ -635,6 +635,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
             serve.setContractId(cmd.getContractId());
             serve.setOaContractCode(cmd.getOaContractCode());
             serve.setRent(BigDecimal.valueOf(renewalServeCmd.getRent()));
+            serve.setRentRatio(renewalServeCmd.getRentRatio());
             serve.setUpdateId(cmd.getOperatorId());
             serve.setRenewalType(ServeRenewalTypeEnum.ACTIVE.getCode());
             serve.setExpectRecoverDate(renewalServeCmd.getLeaseEndDate());
@@ -885,7 +886,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
 
             //发生计费
             //在这里查询交付单 后续看情况做修改
-            DeliverEntity deliver = deliverGateway.getDeliverByServeNo(serve.getServeNo());
+            DeliverEntity deliver = deliverGateway.getValidDeliverByServeNo(serve.getServeNo());
             RenewalChargeCmd renewalChargeCmd = new RenewalChargeCmd();
             renewalChargeCmd.setServeNo(serve.getServeNo());
             renewalChargeCmd.setCreateId(cmd.getOperatorId());
@@ -1102,7 +1103,7 @@ public class ServeAggregateRootApiImpl implements ServeAggregateRootApi {
         if (LeaseModelEnum.NORMAL.getCode() != serveEntity.getLeaseModelId() && LeaseModelEnum.DISCOUNT.getCode() != serveEntity.getLeaseModelId() && LeaseModelEnum.SHOW.getCode() != serveEntity.getLeaseModelId()) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "服务单当前租赁方式不允许重新激活");
         }
-        DeliverEntity deliverEntity = deliverGateway.getDeliverByServeNo(serveEntity.getServeNo());
+        DeliverEntity deliverEntity = deliverGateway.getValidDeliverByServeNo(serveEntity.getServeNo());
         if (null == deliverEntity || (!DeliverEnum.RECOVER.getCode().equals(deliverEntity.getDeliverStatus()) && !DeliverEnum.COMPLETED.getCode().equals(deliverEntity.getDeliverStatus()))) {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "交付单状态异常");
         }

@@ -1,8 +1,12 @@
 package com.mfexpress.rent.deliver.deliver;
 
+import cn.hutool.core.collection.CollUtil;
 import com.github.pagehelper.PageHelper;
 import com.mfexpress.component.response.PagePagination;
-import com.mfexpress.rent.deliver.constant.*;
+import com.mfexpress.rent.deliver.constant.DeliverEnum;
+import com.mfexpress.rent.deliver.constant.DeliverStatusEnum;
+import com.mfexpress.rent.deliver.constant.JudgeEnum;
+import com.mfexpress.rent.deliver.constant.ValidStatusEnum;
 import com.mfexpress.rent.deliver.deliver.repository.DeliverMapper;
 import com.mfexpress.rent.deliver.dto.data.deliver.DeliverQry;
 import com.mfexpress.rent.deliver.dto.entity.Deliver;
@@ -13,6 +17,7 @@ import org.springframework.util.StringUtils;
 import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +55,7 @@ public class DeliverGatewayImpl implements DeliverGateway {
 
 
     @Override
-    public DeliverEntity getDeliverByServeNo(String serveNo) {
+    public DeliverEntity getValidDeliverByServeNo(String serveNo) {
         Example example = new Example(DeliverEntity.class);
         example.createCriteria().andEqualTo("serveNo", serveNo).andEqualTo("status", DeliverStatusEnum.VALID.getCode());
         return deliverMapper.selectOneByExample(example);
@@ -137,6 +142,9 @@ public class DeliverGatewayImpl implements DeliverGateway {
 
     @Override
     public List<DeliverEntity> getDeliverByCarId(Integer carId) {
+        if (carId == null || carId == 0) {
+            return new ArrayList<>();
+        }
         Example example = new Example(DeliverEntity.class);
         example.createCriteria()
                 .andEqualTo("carId", carId).andNotEqualTo("status", ValidStatusEnum.INVALID.getCode());
@@ -189,6 +197,40 @@ public class DeliverGatewayImpl implements DeliverGateway {
         example.createCriteria().andIn("deliverStatus", Arrays.asList(DeliverEnum.DELIVER.getCode(), DeliverEnum.IS_RECOVER.getCode()))
                 .andIn("carId", carIds);
         return deliverMapper.selectByExample(example);
+    }
+
+    @Override
+    public List<DeliverEntity> getDeliverListByCarIdList(List<Integer> vehicleIdList) {
+        if (CollUtil.isEmpty(vehicleIdList)) {
+            return new ArrayList<>();
+
+        }
+        Example example = new Example(DeliverEntity.class);
+        example.createCriteria()
+                .andIn("carId", vehicleIdList).andNotEqualTo("status", DeliverStatusEnum.INVALID.getCode());
+        example.setOrderByClause("create_time desc");
+        return deliverMapper.selectByExample(example);
+    }
+
+    @Override
+    public DeliverEntity getDeliverByServeNo(String serveNo) {
+        if (StringUtils.isEmpty(serveNo)) {
+            return null;
+        }
+        Example example = new Example(DeliverEntity.class);
+        example.createCriteria().andEqualTo("serveNo", serveNo).andNotEqualTo("status", DeliverStatusEnum.INVALID.getCode());
+        return deliverMapper.selectOneByExample(example);
+    }
+
+    @Override
+    public DeliverEntity getDeliverByDeliverId(Long deliverId) {
+        if (deliverId == null) {
+            return null;
+
+        }
+        Example example = new Example(DeliverEntity.class);
+        example.createCriteria().andEqualTo("deliverId", deliverId);
+        return deliverMapper.selectOneByExample(example);
     }
 
     @Override
