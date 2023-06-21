@@ -245,6 +245,15 @@ public class DeliverEntity implements DeliverEntityApi {
             throw new CommonException(ResultErrorEnum.OPER_ERROR.getCode(), "商业险保单已存在");
         }*/
 
+        // 如果交强险有效，可以走这个逻辑，如果失效，不可以走这个逻辑
+        if (cmd.getCompulsoryStatus()) {
+            DeliverEntity deliverEntityToUpdate = new DeliverEntity();
+            deliverEntityToUpdate.setDeliverNo(cmd.getDeliverNo());
+            deliverEntityToUpdate.setIsInsurance(JudgeEnum.YES.getCode());
+            deliverEntityToUpdate.setUpdateId(cmd.getOperatorId());
+            deliverGateway.updateDeliverByDeliverNo(cmd.getDeliverNo(), deliverEntityToUpdate);
+        }
+
         DeliverEntity deliverEntityToUpdate = new DeliverEntity();
         deliverEntityToUpdate.setDeliverNo(cmd.getDeliverNo());
         deliverEntityToUpdate.setIsInsurance(JudgeEnum.YES.getCode());

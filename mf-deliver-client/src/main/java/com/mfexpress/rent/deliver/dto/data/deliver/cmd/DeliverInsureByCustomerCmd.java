@@ -52,4 +52,7 @@ public class DeliverInsureByCustomerCmd extends BaseCmd {
     @ApiModelProperty(value = "商业险保单id")
     private String commercialPolicyId;
 
+    @ApiModelProperty(value = "交强险状态是否生效中 true-生效中 false-非生效中")
+    private Boolean compulsoryStatus;
+
 }

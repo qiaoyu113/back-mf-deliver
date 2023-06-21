@@ -1,5 +1,11 @@
 package com.mfexpress.rent.deliver.deliver.executor;
 
+import cn.hutool.core.collection.CollectionUtil;
+import com.hx.backmarket.insurance.constant.policy.PolicyStatusEnum;
+import com.hx.backmarket.insurance.constant.policy.PolicyTypeEnum;
+import com.hx.backmarket.insurance.domainapi.policy.insurance.InsurancePolicyBaseAggregateRootApi;
+import com.hx.backmarket.insurance.dto.insurance.policy.data.dto.InsurancePolicyDTO;
+import com.hx.backmarket.insurance.dto.insurance.policy.data.qry.VehiclePolicyQry;
 import com.mfexpress.component.constants.ResultErrorEnum;
 import com.mfexpress.component.dto.TokenInfo;
 import com.mfexpress.component.exception.CommonException;
@@ -22,6 +28,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 public class InsureByCustomerCmdExe {
@@ -37,6 +44,9 @@ public class InsureByCustomerCmdExe {
 
     @Resource
     private VehicleAggregateRootApi vehicleAggregateRootApi;
+
+    @Resource
+    private InsurancePolicyBaseAggregateRootApi insurancePolicyBaseAggregateRootApi;
 
     /*@Resource
     private ExternalRequestUtil externalRequestUtil;*/
@@ -61,6 +71,24 @@ public class InsureByCustomerCmdExe {
 
         // 访问后市场执行创建保单操作
         String policyId = createInsurancePolicy(cmd, deliverDTO, tokenInfo);
+
+        // 判断交强险是否生效中
+        // 交强险状态
+        boolean compulsoryStatus = false;
+        Integer carId = deliverDTO.getCarId();
+        Result<List<InsurancePolicyDTO>> compulsoryListResult = insurancePolicyBaseAggregateRootApi.list(VehiclePolicyQry.builder().vehicleId(Long.valueOf(carId)).policyType(PolicyTypeEnum.COMPULSORY.getIndex()).build());
+        if (!ResultDataUtils.checkResultData(compulsoryListResult)) {
+            throw new CommonException(ResultErrorEnum.SERRVER_ERROR.getCode(), "交强险信息查询失败");
+        }
+        List<InsurancePolicyDTO> compulsoryList = compulsoryListResult.getData();
+        if (CollectionUtil.isNotEmpty(compulsoryList)) {
+            for (InsurancePolicyDTO insurancePolicyDTO : compulsoryList) {
+                if (Objects.equals(insurancePolicyDTO.getPolicyStatus(), PolicyStatusEnum.IN_EFFECT.getIndex())) {
+                    compulsoryStatus = true;
+                }
+            }
+        }
+        cmd.setCompulsoryStatus(compulsoryStatus);
 
         // 补充商业险保单号，置交付单到下一状态
         cmd.setOperatorId(tokenInfo.getId());
