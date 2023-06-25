@@ -254,12 +254,6 @@ public class DeliverEntity implements DeliverEntityApi {
             deliverGateway.updateDeliverByDeliverNo(cmd.getDeliverNo(), deliverEntityToUpdate);
         }
 
-        DeliverEntity deliverEntityToUpdate = new DeliverEntity();
-        deliverEntityToUpdate.setDeliverNo(cmd.getDeliverNo());
-        deliverEntityToUpdate.setIsInsurance(JudgeEnum.YES.getCode());
-        deliverEntityToUpdate.setUpdateId(cmd.getOperatorId());
-        deliverGateway.updateDeliverByDeliverNo(cmd.getDeliverNo(), deliverEntityToUpdate);
-
         InsuranceApplyPO originalApplyPO = insuranceApplyGateway.getByDeliverNoAndType(cmd.getDeliverNo(), InsuranceApplyTypeEnum.INSURE.getCode());
         InsuranceApplyPO applyPOToUpdate = new InsuranceApplyPO();
         // 补充保单号
