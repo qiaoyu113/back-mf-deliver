@@ -93,6 +93,9 @@ public class DeliverToPreselectedExe {
                 if (ResultDataUtils.checkResultData(insuranceCompulsoryPolicyResult) && CollectionUtil.isNotEmpty(insuranceCompulsoryPolicyResult.getData())) {
                     List<InsurancePolicyDTO> insuranceCompulsoryPolicyDTOList = insuranceCompulsoryPolicyResult.getData();
                     insuranceCompulsoryPolicyDTOList.forEach(policy -> {
+                        if (CollectionUtil.isEmpty(insuranceCompulsoryPolicyStatusMap)) {
+                            insuranceCompulsoryPolicyStatusMap.put(Integer.valueOf(policy.getVehicleId().toString()), policy.getPolicyStatus());
+                        }
                         Integer policyStatus = insuranceCompulsoryPolicyStatusMap.get(Integer.valueOf(policy.getVehicleId().toString()));
                         if (Objects.nonNull(policyStatus) && policy.getPolicyStatus() > policyStatus) {
                             insuranceCompulsoryPolicyStatusMap.put(Integer.valueOf(policy.getVehicleId().toString()), policy.getPolicyStatus());
@@ -107,6 +110,9 @@ public class DeliverToPreselectedExe {
                 if (ResultDataUtils.checkResultData(insuranceCommercialPolicyResult) && CollectionUtil.isNotEmpty(insuranceCommercialPolicyResult.getData())) {
                     List<InsurancePolicyDTO> insuranceCommercialPolicyDTOList = insuranceCommercialPolicyResult.getData();
                     insuranceCommercialPolicyDTOList.forEach(policy -> {
+                        if (CollectionUtil.isEmpty(insuranceCommercialPolicyStatusMap)) {
+                            insuranceCommercialPolicyStatusMap.put(Integer.valueOf(policy.getVehicleId().toString()), policy.getPolicyStatus());
+                        }
                         Integer policyStatus = insuranceCommercialPolicyStatusMap.get(Integer.valueOf(policy.getVehicleId().toString()));
                         if (Objects.nonNull(policyStatus) && policy.getPolicyStatus() > policyStatus) {
                             insuranceCommercialPolicyStatusMap.put(Integer.valueOf(policy.getVehicleId().toString()), policy.getPolicyStatus());
