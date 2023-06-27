@@ -552,9 +552,6 @@ public class ServeLeaseTermAmountQryExe {
         if (null != qry.getVehicleBusinessMode() && 0 != qry.getVehicleBusinessMode()) {
             boolQueryBuilder.must(QueryBuilders.termQuery("vehicleBusinessMode", qry.getVehicleBusinessMode()));
         }
-        if (null != qry.getExpectRecoverDateStart() && null != qry.getExpectRecoverDateEnd()) {
-            boolQueryBuilder.must(QueryBuilders.rangeQuery("expectRecoverDate").from(qry.getExpectRecoverDateStart().getTime()).to(qry.getExpectRecoverDateEnd().getTime()));
-        }
 
         if (!StringUtils.isEmpty(qry.getServeNo())) {
             boolQueryBuilder.must(QueryBuilders.matchQuery("serveNo", qry.getServeNo()));
@@ -583,10 +580,10 @@ public class ServeLeaseTermAmountQryExe {
             boolQueryBuilder.must(QueryBuilders.termQuery("businessType", qry.getBusinessType()));
         }
         if (null != qry.getFirstDeliverVehicleDateStart() && null != qry.getFirstDeliverVehicleDateEnd()) {
-            boolQueryBuilder.must(QueryBuilders.rangeQuery("firstDeliverVehicleDate").from(qry.getFirstDeliverVehicleDateStart()).to(qry.getFirstDeliverVehicleDateEnd()));
+            boolQueryBuilder.must(QueryBuilders.rangeQuery("firstDeliverVehicleDate").from(qry.getFirstDeliverVehicleDateStart().getTime()).to(qry.getFirstDeliverVehicleDateEnd().getTime()));
         }
         if (null != qry.getRecentlyRecoverVehicleDateStart() && null != qry.getRecentlyRecoverVehicleDateEnd()) {
-            boolQueryBuilder.must(QueryBuilders.rangeQuery("recentlyRecoverVehicleDate").from(qry.getRecentlyRecoverVehicleDateStart()).to(qry.getRecentlyRecoverVehicleDateEnd()));
+            boolQueryBuilder.must(QueryBuilders.rangeQuery("recentlyRecoverVehicleDate").from(qry.getRecentlyRecoverVehicleDateStart().getTime()).to(qry.getRecentlyRecoverVehicleDateEnd().getTime()));
         }
         if (null != qry.getExpectRecoverDateStart() && null != qry.getExpectRecoverDateEnd()) {
             boolQueryBuilder.must(QueryBuilders.rangeQuery("expectRecoverDate").from(qry.getExpectRecoverDateStart().getTime()).to(qry.getExpectRecoverDateEnd().getTime()));
