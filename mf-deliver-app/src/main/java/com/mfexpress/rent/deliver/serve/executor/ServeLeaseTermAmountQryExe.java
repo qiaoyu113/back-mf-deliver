@@ -4,7 +4,6 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -553,9 +552,6 @@ public class ServeLeaseTermAmountQryExe {
         if (null != qry.getVehicleBusinessMode() && 0 != qry.getVehicleBusinessMode()) {
             boolQueryBuilder.must(QueryBuilders.termQuery("vehicleBusinessMode", qry.getVehicleBusinessMode()));
         }
-        if (null != qry.getExpectRecoverDateStart() && null != qry.getExpectRecoverDateEnd()) {
-            boolQueryBuilder.must(QueryBuilders.rangeQuery("expectRecoverDate").from(qry.getExpectRecoverDateStart().getTime()).to(qry.getExpectRecoverDateEnd().getTime()));
-        }
 
         if (!StringUtils.isEmpty(qry.getServeNo())) {
             boolQueryBuilder.must(QueryBuilders.matchQuery("serveNo", qry.getServeNo()));
@@ -584,19 +580,13 @@ public class ServeLeaseTermAmountQryExe {
             boolQueryBuilder.must(QueryBuilders.termQuery("businessType", qry.getBusinessType()));
         }
         if (null != qry.getFirstDeliverVehicleDateStart() && null != qry.getFirstDeliverVehicleDateEnd()) {
-            Date firstDate = qry.getFirstDeliverVehicleDateStart();
-            Date endDate = qry.getFirstDeliverVehicleDateEnd();
-            boolQueryBuilder.must(QueryBuilders.rangeQuery("firstDeliverVehicleDate").from(firstDate instanceof DateTime ? ((DateTime) firstDate).toJdkDate() : firstDate).to(endDate instanceof DateTime ? ((DateTime) endDate).toJdkDate() : endDate));
+            boolQueryBuilder.must(QueryBuilders.rangeQuery("firstDeliverVehicleDate").from(qry.getFirstDeliverVehicleDateStart().getTime()).to(qry.getFirstDeliverVehicleDateEnd().getTime()));
         }
         if (null != qry.getRecentlyRecoverVehicleDateStart() && null != qry.getRecentlyRecoverVehicleDateEnd()) {
-            Date firstDate = qry.getRecentlyRecoverVehicleDateStart();
-            Date endDate = qry.getRecentlyRecoverVehicleDateEnd();
-            boolQueryBuilder.must(QueryBuilders.rangeQuery("recentlyRecoverVehicleDate").from(firstDate instanceof DateTime ? ((DateTime) firstDate).toJdkDate() : firstDate).to(endDate instanceof DateTime ? ((DateTime) endDate).toJdkDate() : endDate));
+            boolQueryBuilder.must(QueryBuilders.rangeQuery("recentlyRecoverVehicleDate").from(qry.getRecentlyRecoverVehicleDateStart().getTime()).to(qry.getRecentlyRecoverVehicleDateEnd().getTime()));
         }
         if (null != qry.getExpectRecoverDateStart() && null != qry.getExpectRecoverDateEnd()) {
-            Date firstDate = qry.getExpectRecoverDateStart();
-            Date endDate = qry.getExpectRecoverDateEnd();
-            boolQueryBuilder.must(QueryBuilders.rangeQuery("expectRecoverDate").from(firstDate instanceof DateTime ? ((DateTime) firstDate).toJdkDate() : firstDate).to(endDate instanceof DateTime ? ((DateTime) endDate).toJdkDate() : endDate));
+            boolQueryBuilder.must(QueryBuilders.rangeQuery("expectRecoverDate").from(qry.getExpectRecoverDateStart().getTime()).to(qry.getExpectRecoverDateEnd().getTime()));
         }
         return boolQueryBuilder;
     }
