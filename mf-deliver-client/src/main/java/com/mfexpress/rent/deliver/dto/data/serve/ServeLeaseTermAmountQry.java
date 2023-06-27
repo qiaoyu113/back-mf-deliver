@@ -1,5 +1,6 @@
 package com.mfexpress.rent.deliver.dto.data.serve;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.mfexpress.rent.deliver.dto.data.ListQry;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -40,9 +41,11 @@ public class ServeLeaseTermAmountQry extends ListQry {
     private Integer vehicleBusinessMode;
 
     @ApiModelProperty(value = "预计收车日期开始")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date expectRecoverDateStart;
 
     @ApiModelProperty(value = "预计收车日期结束")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date expectRecoverDateEnd;
 
     @ApiModelProperty(value = "服务单号")
@@ -67,15 +70,19 @@ public class ServeLeaseTermAmountQry extends ListQry {
     private Integer businessType;
 
     @ApiModelProperty(value = "首次发车日期开始")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date firstDeliverVehicleDateStart;
 
     @ApiModelProperty(value = "首次发车日期结束")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date firstDeliverVehicleDateEnd;
 
     @ApiModelProperty(value = "最近收车日期开始")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date recentlyRecoverVehicleDateStart;
 
     @ApiModelProperty(value = "最近收车日期结束")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date recentlyRecoverVehicleDateEnd;
 
 }
